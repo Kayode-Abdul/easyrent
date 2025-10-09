@@ -1,0 +1,439 @@
+@extends('layout')
+
+@section('content')
+<div class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="card-title">Regional Performance Analytics</h4>
+                            <p class="card-category">Comprehensive analytics for your region's performance</p>
+                        </div>
+                        <div>
+                            <a href="{{ route('regional.dashboard') }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fa fa-arrow-left"></i> Back to Dashboard
+                            </a>
+                            <a href="{{ route('regional.analytics.export') }}" class="btn btn-sm btn-outline-success ml-2">
+                                <i class="fa fa-download"></i> Export Data
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Monthly Performance Trends</h5>
+                    <p class="card-category">6-month performance history of your region</p>
+                </div>
+                <div class="card-body">
+                    <canvas id="regionalPerformanceChart" height="300"></canvas>
+                </div>
+                <div class="card-footer">
+                    <div class="stats">
+                        <i class="fa fa-history"></i> Updated automatically
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Performance Distribution</h5>
+                    <p class="card-category">Key metrics breakdown</p>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceDistributionChart" height="240"></canvas>
+                </div>
+                <div class="card-footer">
+                    <div class="stats">
+                        <i class="fa fa-check"></i> Data validated
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Property Metrics</h5>
+                    <p class="card-category">Property distribution by type and status</p>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="chart-container" style="position: relative; height: 200px;">
+                                <canvas id="propertyTypeChart"></canvas>
+                            </div>
+                            <div class="text-center mt-3">
+                                <h6>Distribution by Type</h6>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container" style="position: relative; height: 200px;">
+                                <canvas id="propertyStatusChart"></canvas>
+                            </div>
+                            <div class="text-center mt-3">
+                                <h6>Distribution by Status</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="stats">
+                        <i class="fa fa-calendar"></i> Last 6 months
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Commission Analysis</h5>
+                    <p class="card-category">Monthly commission earnings and trends</p>
+                </div>
+                <div class="card-body">
+                    <canvas id="commissionChart" height="260"></canvas>
+                </div>
+                <div class="card-footer">
+                    <div class="stats">
+                        <i class="fa fa-money"></i> Total: ₦{{ number_format(array_sum(array_column($performanceData, 'commissions')), 0) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Top Performing Marketers</h5>
+                    <p class="card-category">Marketers with the highest referral count in your region</p>
+                </div>
+                <div class="card-body">
+                    @if($topMarketers->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="text-primary">
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Marketer</th>
+                                        <th>Contact</th>
+                                        <th>Referrals</th>
+                                        <th>Properties</th>
+                                        <th>Success Rate</th>
+                                        <th>Commissions</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($topMarketers as $index => $marketer)
+                                        <tr>
+                                            <td>
+                                                @if($index < 3)
+                                                    <div class="badge badge-{{ $index == 0 ? 'warning' : ($index == 1 ? 'light' : 'secondary') }} p-2">
+                                                        <i class="fa fa-trophy"></i> {{ $index + 1 }}
+                                                    </div>
+                                                @else
+                                                    {{ $index + 1 }}
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if($marketer->profile_photo)
+                                                        <div class="mr-3">
+                                                            <img src="{{ asset('storage/' . $marketer->profile_photo) }}" alt="{{ $marketer->first_name }}" class="rounded-circle" width="40">
+                                                        </div>
+                                                    @else
+                                                        <div class="mr-3">
+                                                            <div class="avatar-placeholder rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                {{ substr($marketer->first_name, 0, 1) }}{{ substr($marketer->last_name, 0, 1) }}
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                    {{ $marketer->first_name }} {{ $marketer->last_name }}
+                                                </div>
+                                            </td>
+                                            <td>{{ $marketer->email }}</td>
+                                            <td>{{ $marketer->referrals_count }}</td>
+                                            <td>
+                                                @php
+                                                    $propertyCount = \App\Models\Property::whereHas('referrals', function($q) use ($marketer) {
+                                                        $q->where('referrer_id', $marketer->user_id);
+                                                    })->count();
+                                                @endphp
+                                                {{ $propertyCount }}
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $successfulReferrals = $marketer->referrals()->whereHas('referred', function($q) {
+                                                        $q->where('role', 2); // Landlord role
+                                                    })->count();
+                                                    
+                                                    $successRate = $marketer->referrals_count > 0 
+                                                        ? round(($successfulReferrals / $marketer->referrals_count) * 100, 1) 
+                                                        : 0;
+                                                @endphp
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress flex-grow-1" style="height: 5px;">
+                                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ $successRate }}%" aria-valuenow="{{ $successRate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    </div>
+                                                    <span class="ml-2">{{ $successRate }}%</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $totalCommissions = \App\Models\ReferralReward::where('marketer_id', $marketer->user_id)
+                                                        ->whereIn('status', ['approved', 'paid'])
+                                                        ->sum('amount');
+                                                @endphp
+                                                ₦{{ number_format($totalCommissions, 0) }}
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('regional.marketer.properties', $marketer->user_id) }}" class="btn btn-sm btn-info">
+                                                    <i class="fa fa-eye"></i> Details
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="text-center py-5">
+                            <i class="fa fa-users fa-4x text-muted mb-3"></i>
+                            <h4>No Marketers Data</h4>
+                            <p class="text-muted">There are currently no marketers with performance data in your region.</p>
+                        </div>
+                    @endif
+                </div>
+                <div class="card-footer">
+                    <div class="stats">
+                        <i class="fa fa-trophy"></i> Based on all-time performance
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Parse the performance data passed from the controller
+        const performanceData = @json($performanceData);
+        
+        const months = performanceData.map(data => data.month);
+        const referrals = performanceData.map(data => data.referrals);
+        const properties = performanceData.map(data => data.properties);
+        const commissions = performanceData.map(data => data.commissions);
+        
+        // Regional Performance Chart
+        const performanceCtx = document.getElementById('regionalPerformanceChart').getContext('2d');
+        const performanceChart = new Chart(performanceCtx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Referrals',
+                        data: referrals,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Properties',
+                        data: properties,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Commissions (₦)',
+                        data: commissions,
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Performance Distribution Chart
+        const distributionCtx = document.getElementById('performanceDistributionChart').getContext('2d');
+        const totalReferrals = referrals.reduce((a, b) => a + b, 0);
+        const totalProperties = properties.reduce((a, b) => a + b, 0);
+        const totalCommissions = commissions.reduce((a, b) => a + b, 0);
+        
+        const distributionChart = new Chart(distributionCtx, {
+            type: 'polarArea',
+            data: {
+                labels: ['Referrals', 'Properties', 'Commissions (₦)'],
+                datasets: [{
+                    data: [
+                        totalReferrals, 
+                        totalProperties, 
+                        totalCommissions / 10000 // Scaled down to be comparable
+                    ],
+                    backgroundColor: [
+                        'rgba(0, 123, 255, 0.7)',
+                        'rgba(40, 167, 69, 0.7)',
+                        'rgba(220, 53, 69, 0.7)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+        // Get property stats from the controller
+        const propertyStats = @json($propertyStatsJson ?? null);
+        
+        // Property Type Chart
+        const propertyTypeCtx = document.getElementById('propertyTypeChart').getContext('2d');
+        const propertyTypeChart = new Chart(propertyTypeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Apartment', 'House', 'Land', 'Commercial'],
+                datasets: [{
+                    data: [45, 25, 15, 15],
+                    backgroundColor: [
+                        '#4e73df',
+                        '#1cc88a',
+                        '#36b9cc',
+                        '#f6c23e'
+                    ],
+                    hoverBackgroundColor: [
+                        '#2e59d9',
+                        '#17a673',
+                        '#2c9faf',
+                        '#dda20a'
+                    ],
+                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // Property Status Chart
+        const propertyStatusCtx = document.getElementById('propertyStatusChart').getContext('2d');
+        const propertyStatusChart = new Chart(propertyStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Available', 'Occupied', 'Pending'],
+                datasets: [{
+                    data: [60, 30, 10],
+                    backgroundColor: [
+                        '#36b9cc',
+                        '#1cc88a',
+                        '#f6c23e'
+                    ],
+                    hoverBackgroundColor: [
+                        '#2c9faf',
+                        '#17a673',
+                        '#dda20a'
+                    ],
+                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // Commission Chart
+        const commissionCtx = document.getElementById('commissionChart').getContext('2d');
+        const commissionChart = new Chart(commissionCtx, {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Commission Earned (₦)',
+                    data: commissions,
+                    backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                    borderColor: '#dc3545',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₦' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Property type chart data update with real data if available
+        if (typeof propertyStats !== 'undefined' && propertyStats.by_type) {
+            let propertyTypes = Object.keys(propertyStats.by_type);
+            let propertyTypeCounts = Object.values(propertyStats.by_type);
+            
+            propertyTypeChart.data.labels = propertyTypes;
+            propertyTypeChart.data.datasets[0].data = propertyTypeCounts;
+            propertyTypeChart.update();
+            
+            // Update status chart as well
+            propertyStatusChart.data.datasets[0].data = [
+                propertyStats.available || 0,
+                propertyStats.occupied || 0,
+                propertyStats.pending || 0
+            ];
+            propertyStatusChart.update();
+        }
+    });
+</script>
+@endsection

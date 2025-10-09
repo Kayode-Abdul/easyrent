@@ -1,66 +1,98 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<p align="center"><h1>EasyRent</h1></p>
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+A comprehensive property rental management platform built with Laravel
 </p>
 
-## About Laravel
+## About EasyRent
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+EasyRent is a full-featured property rental management system designed to streamline the rental process for landlords, tenants, and property managers. The platform facilitates property listings, tenant management, rent collection, and communication between all parties involved in the rental ecosystem.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Key Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### User Roles and Management
+- **Multi-role system**: Support for landlords, tenants, agents/marketers, regional managers, and administrators
+- **User authentication**: Secure login and registration with email verification
+- **Role-based access control**: Different permissions and views based on user roles
 
-## Learning Laravel
+### Property Management
+- **Property listings**: Landlords can add and manage multiple properties
+- **Apartment management**: Support for multiple apartments within a property
+- **Amenities tracking**: Record and display property amenities and features
+- **Occupancy tracking**: Monitor apartment availability and occupancy status
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Financial Management
+- **Proforma invoices**: Generate and send rent proforma invoices to tenants
+- **Online payments**: Integrated Paystack payment gateway for secure transactions
+- **Receipt generation**: Automatic PDF receipt generation after successful payments
+- **Email notifications**: Send payment receipts to both landlords and tenants
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Tenant Management
+- **Tenant profiles**: Comprehensive tenant information management
+- **Lease tracking**: Monitor lease start and end dates
+- **Tenant communication**: Built-in messaging system between landlords and tenants
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Marketing and Referrals
+- **Marketer system**: Support for property marketers with commission tracking
+- **Referral program**: Multi-tier referral system with commission distribution
+- **Regional management**: Regional scope management for property listings
 
-## Laravel Sponsors
+### Communication Tools
+- **Messaging system**: Internal communication between users
+- **Email notifications**: Automated emails for important events and updates
+- **Email templates**: Customizable email templates for system communications
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+## Payment Flow
 
-### Premium Partners
+EasyRent implements a comprehensive payment flow:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+1. **Proforma Generation**: Landlords create proforma invoices with detailed cost breakdowns
+2. **Tenant Review**: Tenants can review, accept, or reject proforma invoices
+3. **Payment Processing**: Upon acceptance, tenants are redirected to the payment form
+4. **Secure Transactions**: Integration with Paystack for secure payment processing
+5. **Receipt Generation**: Automatic generation of PDF receipts after successful payment
+6. **Email Notifications**: Receipts are emailed to both tenant and landlord
+7. **Apartment Updates**: Successful payments automatically update apartment occupancy status and lease dates
 
-## Contributing
+## Technology Stack
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **Framework**: Laravel PHP Framework
+- **Database**: MySQL
+- **Frontend**: Blade templates, JavaScript, jQuery
+- **Payment Processing**: Paystack Integration
+- **PDF Generation**: Laravel PDF library
+- **Email**: Laravel Mail with SMTP support
 
-## Code of Conduct
+## Installation
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/easyrent.git
+```
 
-## Security Vulnerabilities
+2. Install dependencies
+```bash
+composer install
+npm install
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+3. Configure environment
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+4. Set up database
+```bash
+php artisan migrate
+php artisan db:seed
+```
+
+5. Start the development server
+```bash
+php artisan serve
+```
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+The EasyRent application is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
