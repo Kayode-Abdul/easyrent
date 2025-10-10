@@ -1,10 +1,7 @@
 @extends('layout')
 
 
-@section('content')
-<!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<meta name="csrf-token" content="{{ csrf_token() }}"> -->
+@section('content') 
 @php
     $landlord = $proforma->owner;
     $tenant = $proforma->tenant;
@@ -14,7 +11,7 @@
     $apartmentAmount = $apartment->amount ?? 0;
 @endphp
 
-<div class="content" style="max-width:700px;margin:0 auto;font-family:sans-serif;">
+<div class="content" style="max-width:700px;margin:90px auto;font-family:sans-serif;">
     <h2 style="text-align:center;">Rent/Service Invoice (Estimated)</h2>
     
     @if(auth()->user()->user_id === $proforma->tenant_id)

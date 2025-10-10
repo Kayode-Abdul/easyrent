@@ -65,7 +65,7 @@ class ProfomaController extends Controller
                             . (optional($apartment->property)->name ? ("Property: " . $apartment->property->name . "\n") : '')
                             . (property_exists($apartment, 'name') && $apartment->name ? ("Apartment: " . $apartment->name . "\n") : '')
                             . (isset($duration) ? ("Duration: {$duration} months\n\n") : "\n")
-                            . "You can  <a href=\"" . route('proforma.view', ['id' => $existing->id]) . "\">view the proforma</a>"
+                            . "You can  <a class=\"btn btn-primary\" href=\"" . route('proforma.view', ['id' => $existing->id]) . "\">view the proforma</a>"
                     ]);
                 }
                 return response()->json([
@@ -102,7 +102,7 @@ class ProfomaController extends Controller
                         . (optional($apartment->property)->name ? ("Property: " . $apartment->property->name . "\n") : '')
                         . (property_exists($apartment, 'name') && $apartment->name ? ("Apartment: " . $apartment->name . "\n") : '')
                         . (isset($duration) ? ("Duration: {$duration} months\n\n") : "\n")
-                        . "You can  <a href=\"" . route('proforma.view', ['id' => $proforma->id]) . "\">view the proforma</a>"
+                        . "You can  <a  class=\"btn btn-primary\" href=\"" . route('proforma.view', ['id' => $proforma->id]) . "\">view the proforma</a>"
                 ]);
             }
             return response()->json([

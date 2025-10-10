@@ -126,7 +126,7 @@
             }
         }
     </style> 
-    <div class="receipt">
+    <div class="receipt content">
         <div class="header">
             <div class="print-section">
                 <button onclick="window.print();" class="print-button">Print Receipt</button>

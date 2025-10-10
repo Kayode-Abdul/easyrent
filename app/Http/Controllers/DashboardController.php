@@ -51,7 +51,7 @@ class DashboardController extends Controller
         $recentActivities = [];
         $greeting = $this->getGreeting();
 
-        if ($isAdmin || $userRole == 1) {
+        if ($isAdmin || $userRole == 7) {
             // Super Admin Dashboard
             $stats = $this->getAdminStats();
             $chartData = $this->getAdminChartData();

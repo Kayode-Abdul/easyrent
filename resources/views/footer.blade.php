@@ -42,34 +42,120 @@
 </script>
 @else
 <!-- ======= Footer ======= -->
-<footer id="footer">
+<footer id="footer" style="background: linear-gradient(to right, #1a1a1a, #2d2d2d); color: #f8f9fa; padding-top: 60px; font-family: 'Poppins', sans-serif;">
   <div class="footer-top">
     <div class="container">
       <div class="row">
-        <div class="col-md-6 footer-links">
-          <h4>Useful Links</h4>
-          <ul>
-            <li><i class="bx bx-chevron-right"></i> <a href="#hero">Home</a></li>
-            <li><i class="bx bx-chevron-right"></i> <a href="#menu">About</a></li>
-            <li><i class="bx bx-chevron-right"></i> <a href="#events">Services</a></li>
-            <li><i class="bx bx-chevron-right"></i> <a href="#specials">Contact</a></li>
+        <div class="col-lg-4 col-md-6 mb-4 mb-md-0">
+          <h4 style="color: #ff5e15; font-weight: 600; margin-bottom: 25px; font-size: 1.5rem; position: relative; padding-bottom: 10px;">
+            EasyRent
+            <span style="display: block; width: 50px; height: 3px; background: #ff5e15; margin-top: 10px;"></span>
+          </h4>
+          <p style="color: #adb5bd; line-height: 1.8; margin-bottom: 20px;">
+            Find your perfect home with EasyRent. We make property rental simple, secure, and stress-free.
+          </p>
+          <div class="social-links" style="margin-top: 20px;">
+            <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; margin-right: 10px; transition: all 0.3s ease;">
+              <i class="bx bxl-facebook" style="color: #ff5e15; font-size: 18px;"></i>
+            </a>
+            <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; margin-right: 10px; transition: all 0.3s ease;">
+              <i class="bx bxl-twitter" style="color: #ff5e15; font-size: 18px;"></i>
+            </a>
+            <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; margin-right: 10px; transition: all 0.3s ease;">
+              <i class="bx bxl-instagram" style="color: #ff5e15; font-size: 18px;"></i>
+            </a>
+            <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; transition: all 0.3s ease;">
+              <i class="bx bxl-linkedin" style="color: #ff5e15; font-size: 18px;"></i>
+            </a>
+          </div>
+        </div>
+        
+        <div class="col-lg-2 col-md-6 mb-4 mb-md-0">
+          <h4 style="color: #ff5e15; font-weight: 600; margin-bottom: 25px; font-size: 1.2rem; position: relative; padding-bottom: 10px;">
+            Quick Links
+            <span style="display: block; width: 50px; height: 3px; background: #ff5e15; margin-top: 10px;"></span>
+          </h4>
+          <ul style="list-style: none; padding-left: 0;">
+            <li style="margin-bottom: 12px;">
+              <i class="bx bx-chevron-right" style="color: #ff5e15; font-size: 18px;"></i> 
+              <a href="#hero" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">Home</a>
+            </li>
+            <li style="margin-bottom: 12px;">
+              <i class="bx bx-chevron-right" style="color: #ff5e15; font-size: 18px;"></i> 
+              <a href="#menu" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">About</a>
+            </li>
+            <li style="margin-bottom: 12px;">
+              <i class="bx bx-chevron-right" style="color: #ff5e15; font-size: 18px;"></i> 
+              <a href="#events" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">Services</a>
+            </li>
+            <li style="margin-bottom: 12px;">
+              <i class="bx bx-chevron-right" style="color: #ff5e15; font-size: 18px;"></i> 
+              <a href="#specials" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">Contact</a>
+            </li>
           </ul>
         </div>
-        <div class="col-md-6 footer-newsletter">
-          <h4>Our Social</h4>
-          <div class="social-links mt-3">
-            <p>Follow us on social media for updates on our latest specials!</p>
-            <a href="#" class="instagram"><i class="bx bxl-instagram"></i></a>
+        
+        <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+          <h4 style="color: #ff5e15; font-weight: 600; margin-bottom: 25px; font-size: 1.2rem; position: relative; padding-bottom: 10px;">
+            Our Services
+            <span style="display: block; width: 50px; height: 3px; background: #ff5e15; margin-top: 10px;"></span>
+          </h4>
+          <ul style="list-style: none; padding-left: 0;">
+            <li style="margin-bottom: 12px;">
+              <i class="bx bx-check-circle" style="color: #ff5e15; font-size: 18px;"></i> 
+              <span style="color: #adb5bd;">Property Listings</span>
+            </li>
+            <li style="margin-bottom: 12px;">
+              <i class="bx bx-check-circle" style="color: #ff5e15; font-size: 18px;"></i> 
+              <span style="color: #adb5bd;">Tenant Screening</span>
+            </li>
+            <li style="margin-bottom: 12px;">
+              <i class="bx bx-check-circle" style="color: #ff5e15; font-size: 18px;"></i> 
+              <span style="color: #adb5bd;">Online Payments</span>
+            </li>
+            <li style="margin-bottom: 12px;">
+              <i class="bx bx-check-circle" style="color: #ff5e15; font-size: 18px;"></i> 
+              <span style="color: #adb5bd;">Property Management</span>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+          <h4 style="color: #ff5e15; font-weight: 600; margin-bottom: 25px; font-size: 1.2rem; position: relative; padding-bottom: 10px;">
+            Contact Us
+            <span style="display: block; width: 50px; height: 3px; background: #ff5e15; margin-top: 10px;"></span>
+          </h4>
+          <div style="margin-bottom: 15px;">
+            <i class="bx bx-map" style="color: #ff5e15; font-size: 20px; margin-right: 10px; float: left;"></i>
+            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">123 Rental Street, Lagos, Nigeria</p>
+          </div>
+          <div style="margin-bottom: 15px;">
+            <i class="bx bx-phone" style="color: #ff5e15; font-size: 20px; margin-right: 10px; float: left;"></i>
+            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">+234 123 456 7890</p>
+          </div>
+          <div style="margin-bottom: 15px;">
+            <i class="bx bx-envelope" style="color: #ff5e15; font-size: 20px; margin-right: 10px; float: left;"></i>
+            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">info@easyrent.com</p>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div class="container">
-    <div class="copyright">
-      &copy; Copyright <strong><span>EasyRent</span></strong>. All Rights Reserved
-    </div>
-    <div class="credits"> Designed by <a href="https://bootstrapmade.com/">Walls and Gates</a>
+  
+  <div style="background: #1a1a1a; padding: 20px 0; margin-top: 40px; text-align: center;">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-6 text-md-left text-center mb-3 mb-md-0">
+          <div class="copyright" style="color: #adb5bd;">
+            &copy; <script>document.write(new Date().getFullYear())</script> <strong><span style="color: #ff5e15;">EasyRent</span></strong>. All Rights Reserved
+          </div>
+        </div>
+        <div class="col-md-6 text-md-right text-center">
+          <div class="credits" style="color: #adb5bd;"> 
+            Designed with <i class="bx bx-heart" style="color: #ff5e15;"></i> by <a href="https://wandggroup.com/" style="color: #ff5e15; text-decoration: none;">Walls and Gates</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </footer><!-- End Footer -->

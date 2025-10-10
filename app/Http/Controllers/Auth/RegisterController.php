@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RegisterController extends Controller
 {
@@ -144,7 +145,7 @@ class RegisterController extends Controller
                 $referral = \App\Models\Referral::create($referralData);
                 
                 // Create commission reward if user registers as landlord
-                $landlordRoleId = \DB::table('roles')->where('name', 'landlord')->value('id');
+                $landlordRoleId = DB::table('roles')->where('name', 'landlord')->value('id');
                 if ($user->role == $landlordRoleId) { // Landlord role
                     $this->createCommissionReward($referrerId, $referral->id);
                 }

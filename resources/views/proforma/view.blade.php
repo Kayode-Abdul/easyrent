@@ -1,25 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rent Proforma - {{ optional(optional($proforma->apartment)->property)->prop_id }}</title>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: #333; margin: 0; }
-        .section { margin-bottom: 20px; }
-        .section h2 { color: #444; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-        .details { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .property-details { margin-top: 30px; }
-        .amount { font-size: 24px; color: #2c3e50; margin: 20px 0; }
-        .footer { margin-top: 40px; text-align: center; color: #666; }
-        @media print { body { padding: 0; } .container { box-shadow: none; } }
-    </style>
-</head>
-<body>
-    <div class="container">
+@extends('layout')
+
+@section('content')
+    <div class="container content">
         <div class="header">
             <h1>Rent Proforma</h1>
             <p>Transaction ID: {{ $proforma->transaction_id }}</p>
@@ -208,5 +190,4 @@
             }
         });
     </script>
-</body>
-</html>
+@endsection
