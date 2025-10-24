@@ -8,7 +8,7 @@
                 <h2>Regional Manager Management</h2>
                 <div>
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bulkAssignModal">
-                        <i class="fas fa-users"></i> Bulk Assign Regions
+                        <i class="fa fa-users"></i> Bulk Assign Regions
                     </button>
                 </div>
             </div>
@@ -35,10 +35,10 @@
                         </div>
                         <div class="col-md-4 d-flex align-items-end">
                             <button type="submit" class="btn btn-outline-primary me-2">
-                                <i class="fas fa-search"></i> Filter
+                                <i class="fa fa-search"></i> Filter
                             </button>
                             <a href="{{ route('admin.regional-managers.index') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times"></i> Clear
+                                <i class="fa fa-times"></i> Clear
                             </a>
                         </div>
                     </form>
@@ -113,21 +113,21 @@
                                                 <div class="btn-group" role="group">
                                                     <a href="{{ route('admin.regional-managers.show', $manager) }}" 
                                                        class="btn btn-sm btn-outline-primary" title="View Details">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="fa fa-eye"></i>
                                                     </a>
                                                     <button type="button" class="btn btn-sm btn-outline-info" 
                                                             onclick="editRegionalManager({{ $manager->user_id }}, '{{ $manager->first_name }}', '{{ $manager->last_name }}', '{{ $manager->email }}')"
                                                             title="Edit Regional Manager">
-                                                        <i class="fas fa-edit"></i>
+                                                        <i class="fa fa-edit"></i>
                                                     </button>
                                                     <a href="{{ route('admin.regional-managers.assign-regions', $manager) }}" 
                                                        class="btn btn-sm btn-outline-success" title="Assign Regions">
-                                                        <i class="fas fa-plus"></i>
+                                                        <i class="fa fa-plus"></i>
                                                     </a>
                                                     <button type="button" class="btn btn-sm btn-outline-danger" 
                                                             onclick="confirmRemoveAllScopes({{ $manager->user_id }}, '{{ $manager->first_name }} {{ $manager->last_name }}')"
                                                             title="Remove All Regions">
-                                                        <i class="fas fa-trash"></i>
+                                                        <i class="fa fa-trash"></i>
                                                     </button>
                                                 </div>
                                             </td>
@@ -147,7 +147,7 @@
                         </div>
                     @else
                         <div class="text-center py-4">
-                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <i class="fa fa-users fa-3x text-muted mb-3"></i>
                             <h5>No Regional Managers Found</h5>
                             <p class="text-muted">No regional managers match your current filters.</p>
                         </div>
@@ -200,14 +200,14 @@
                                     </div>
                                     <div class="col-md-1">
                                         <button type="button" class="btn btn-outline-danger remove-state" disabled>
-                                            <i class="fas fa-times"></i>
+                                            <i class="fa fa-times"></i>
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <button type="button" class="btn btn-outline-primary btn-sm" id="addStateBtn">
-                            <i class="fas fa-plus"></i> Add Another State
+                            <i class="fa fa-plus"></i> Add Another State
                         </button>
                     </div>
                 </div>

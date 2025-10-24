@@ -93,7 +93,7 @@
                                         </div>
                                         <div class="col-md-2 d-flex align-items-end">
                                             <button type="button" class="btn btn-outline-danger remove-assignment" disabled>
-                                                <i class="fas fa-times"></i>
+                                                <i class="fa fa-times"></i>
                                             </button>
                                         </div>
                                     </div>
@@ -101,12 +101,12 @@
                             </div>
 
                             <button type="button" class="btn btn-outline-primary btn-sm" id="addAssignmentBtn">
-                                <i class="fas fa-plus"></i> Add Another Assignment
+                                <i class="fa fa-plus"></i> Add Another Assignment
                             </button>
                         </div>
 
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i>
+                            <i class="fa fa-info-circle"></i>
                             <strong>Note:</strong> 
                             <ul class="mb-0 mt-2">
                                 <li>Selecting a state without an LGA gives access to the entire state</li>
@@ -119,10 +119,10 @@
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('admin.regional-managers.show', $regionalManager) }}" 
                                class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Back to Details
+                                <i class="fa fa-arrow-left"></i> Back to Details
                             </a>
                             <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i> Assign Regions
+                                <i class="fa fa-save"></i> Assign Regions
                             </button>
                         </div>
                     </form>

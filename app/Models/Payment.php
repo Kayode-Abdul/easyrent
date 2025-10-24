@@ -34,6 +34,7 @@ class Payment extends Model
     // Status constants
     const STATUS_PENDING = 'pending';
     const STATUS_SUCCESS = 'success';
+    const STATUS_COMPLETED = 'completed';
     const STATUS_FAILED = 'failed';
 
     public function tenant(): BelongsTo
@@ -64,7 +65,7 @@ class Payment extends Model
     public function getStatusBadgeClass(): string
     {
         return match($this->status) {
-            self::STATUS_SUCCESS => 'badge-success',
+            self::STATUS_SUCCESS, self::STATUS_COMPLETED => 'badge-success',
             self::STATUS_FAILED => 'badge-danger',
             default => 'badge-warning'
         };

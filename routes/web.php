@@ -14,6 +14,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\ConfirmPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
+use App\Http\Controllers\BillingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,7 +39,7 @@ Route::get('/contact', function () {
 }); 
 
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('auth');  
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');  
 Route::get('/dashupload', function () {
     return view('show');
 });  
@@ -78,6 +79,8 @@ Route::get('/dashboard/myproperty', [PropertyController::class, 'userProperty'])
 Route::get('/dashboard/users', [UserController::class, 'allUsers']);
 Route::get('/dashboard/user', [UserController::class, 'user']);
 Route::get('/dashboard/tenant/{id}', [UserController::class, 'getTenantDetails']);
+// Billing Route
+Route::get('/dashboard/billing', [BillingController::class, 'index'])->middleware('auth')->name('billing.index');
 //User Route
 Route::get('/blog', [UserController::class, 'blog']);
 
@@ -147,6 +150,72 @@ Route::get('/dashboard/agents/search', [UserController::class, 'searchAgents'])-
 Route::post('/pay', [PaymentController::class, 'redirectToGateway'])->name('pay');
 Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
 Route::post('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback.post');
+
+// Test route for payment callback (remove in production)
+Route::get('/test-payment-callback', function() {
+    return app(App\Http\Controllers\PaymentController::class)->handleGatewayCallback(
+        new Illuminate\Http\Request(['reference' => 'test_' . time()])
+    );
+})->name('test.payment.callback');
+
+// Debug route to check if callback is reached
+Route::any('/debug-callback', function(Illuminate\Http\Request $request) {
+    \Log::info('Debug callback reached', [
+        'method' => $request->method(),
+        'all_data' => $request->all(),
+        'headers' => $request->headers->all()
+    ]);
+    
+    return response()->json([
+        'status' => 'callback_reached',
+        'method' => $request->method(),
+        'data' => $request->all(),
+        'timestamp' => now()
+    ]);
+})->name('debug.callback');
+
+// Manual payment creation for testing
+Route::get('/create-test-payment', function() {
+    try {
+        $user = App\Models\User::first();
+        $apartment = App\Models\Apartment::first();
+        
+        if (!$user || !$apartment) {
+            return response()->json(['error' => 'No user or apartment found for testing']);
+        }
+        
+        $payment = new App\Models\Payment();
+        $payment->transaction_id = 'manual_test_' . time();
+        $payment->payment_reference = 'manual_ref_' . time();
+        $payment->amount = 25000;
+        $payment->tenant_id = $user->user_id;
+        $payment->landlord_id = $user->user_id;
+        $payment->apartment_id = $apartment->apartment_id;
+        $payment->status = 'completed';
+        $payment->payment_method = 'manual_test';
+        $payment->duration = 12;
+        $payment->paid_at = now();
+        
+        $saved = $payment->save();
+        
+        if ($saved) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Test payment created successfully',
+                'payment_id' => $payment->id,
+                'payment_data' => $payment->toArray()
+            ]);
+        } else {
+            return response()->json(['error' => 'Payment save returned false']);
+        }
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+})->name('create.test.payment');
 Route::get('/payment/receipt/{id}', [PaymentController::class, 'showReceipt'])->name('payment.receipt');
 Route::get('/payment/download/{id}', [PaymentController::class, 'downloadReceipt'])->name('payment.download');
 Route::get('/dashboard/payments/{reference}/receipt', [PaymentController::class, 'showReceiptByReference'])->name('payment.receipt.reference');
@@ -256,9 +325,11 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Commission Management (scenario-based) Routes
     Route::prefix('commission-management')->name('commission-management.')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\CommissionManagementController::class, 'index'])->name('index');
+        Route::get('/regional-manager', [App\Http\Controllers\Admin\CommissionManagementController::class, 'regionalManager'])->name('regional-manager');
         Route::get('/create', [App\Http\Controllers\Admin\CommissionManagementController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\Admin\CommissionManagementController::class, 'store'])->name('store');
-        Route::get('/{region}', [App\Http\Controllers\Admin\CommissionManagementController::class, 'showRegion'])->name('region');
+        Route::get('/region/{region}', [App\Http\Controllers\Admin\CommissionManagementController::class, 'getRegionRates'])->name('region.rates');
+        Route::post('/region/bulk-save', [App\Http\Controllers\Admin\CommissionManagementController::class, 'bulkSaveRegion'])->name('region.bulk-save');
         Route::get('/rate/{commissionRate}/edit', [App\Http\Controllers\Admin\CommissionManagementController::class, 'edit'])->name('edit');
         Route::put('/rate/{commissionRate}', [App\Http\Controllers\Admin\CommissionManagementController::class, 'update'])->name('update');
         Route::delete('/rate/{commissionRate}', [App\Http\Controllers\Admin\CommissionManagementController::class, 'destroy'])->name('destroy');

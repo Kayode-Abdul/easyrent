@@ -15,6 +15,9 @@
                             <p class="text-muted mb-0">Manage commission rates for different property management scenarios</p>
                         </div>
                         <div>
+                            <a href="{{ route('admin.commission-management.regional-manager') }}" class="btn btn-success me-2">
+                                <i class="fas fa-map-marked-alt me-2"></i>Regional Manager
+                            </a>
                             <a href="{{ route('admin.commission-management.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus me-2"></i>Add New Rate
                             </a>

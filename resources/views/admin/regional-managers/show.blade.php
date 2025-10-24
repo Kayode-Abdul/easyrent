@@ -20,12 +20,12 @@
                 <div>
                     <a href="{{ route('admin.regional-managers.assign-regions', $regionalManager) }}" 
                        class="btn btn-success">
-                        <i class="fas fa-plus"></i> Assign New Regions
+                        <i class="fa fa-plus"></i> Assign New Regions
                     </a>
                     @if($scopes->count() > 0)
                         <button type="button" class="btn btn-danger" 
                                 onclick="confirmRemoveAllScopes({{ $regionalManager->user_id }}, '{{ $regionalManager->first_name }} {{ $regionalManager->last_name }}')">
-                            <i class="fas fa-trash"></i> Remove All Assignments
+                            <i class="fa fa-trash"></i> Remove All Assignments
                         </button>
                     @endif
                 </div>
@@ -117,23 +117,23 @@
                                                     <div class="d-flex justify-content-between align-items-start">
                                                         <div>
                                                             <h6 class="mb-1">
-                                                                <i class="fas fa-map-marker-alt text-primary me-1"></i>
+                                                                <i class="fa fa-map-marker-alt text-primary me-1"></i>
                                                                 {{ $scope->state }}
                                                             </h6>
                                                             @if($scope->lga)
                                                                 <p class="text-muted mb-0">
-                                                                    <small><i class="fas fa-location-dot me-1"></i>{{ $scope->lga }}</small>
+                                                                    <small><i class="fa fa-location-dot me-1"></i>{{ $scope->lga }}</small>
                                                                 </p>
                                                             @else
                                                                 <p class="text-success mb-0">
-                                                                    <small><i class="fas fa-globe me-1"></i>All LGAs</small>
+                                                                    <small><i class="fa fa-globe me-1"></i>All LGAs</small>
                                                                 </p>
                                                             @endif
                                                         </div>
                                                         <div class="dropdown">
                                                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
                                                                     type="button" data-bs-toggle="dropdown">
-                                                                <i class="fas fa-ellipsis-v"></i>
+                                                                <i class="fa fa-ellipsis-v"></i>
                                                             </button>
                                                             <ul class="dropdown-menu">
                                                                 @php
@@ -151,7 +151,7 @@
                                                                     <li>
                                                                         <button type="button" class="dropdown-item text-danger" 
                                                                                 onclick="confirmRemoveScope({{ $matchingRawScope->id }}, '{{ $scope->state }}{{ $scope->lga ? ' / ' . $scope->lga : ' (All LGAs)' }}')">
-                                                                            <i class="fas fa-trash me-1"></i> Remove Assignment
+                                                                            <i class="fa fa-trash me-1"></i> Remove Assignment
                                                                         </button>
                                                                     </li>
                                                                 @endif
@@ -165,12 +165,12 @@
                                 </div>
                             @else
                                 <div class="text-center py-5">
-                                    <i class="fas fa-map fa-3x text-muted mb-3"></i>
+                                    <i class="fa fa-map fa-3x text-muted mb-3"></i>
                                     <h5>No Regional Assignments</h5>
                                     <p class="text-muted">This regional manager has no assigned regions.</p>
                                     <a href="{{ route('admin.regional-managers.assign-regions', $regionalManager) }}" 
                                        class="btn btn-primary">
-                                        <i class="fas fa-plus"></i> Assign Regions
+                                        <i class="fa fa-plus"></i> Assign Regions
                                     </a>
                                 </div>
                             @endif
@@ -209,7 +209,7 @@
                                                     <td>
                                                         <button type="button" class="btn btn-sm btn-outline-danger" 
                                                                 onclick="confirmRemoveScope({{ $rawScope->id }}, '{{ $rawScope->scope_type }}: {{ $rawScope->scope_value }}')">
-                                                            <i class="fas fa-trash"></i>
+                                                            <i class="fa fa-trash"></i>
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -239,7 +239,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
+                        <i class="fa fa-exclamation-triangle"></i>
                         <strong>Warning!</strong> This action cannot be undone.
                     </div>
                     <p>Are you sure you want to remove the assignment for <strong id="scopeToRemove"></strong>?</p>
@@ -267,7 +267,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle"></i>
+                        <i class="fa fa-exclamation-triangle"></i>
                         <strong>Danger!</strong> This action cannot be undone.
                     </div>
                     <p>Are you sure you want to remove ALL regional assignments for <strong id="managerNameToRemove"></strong>?</p>

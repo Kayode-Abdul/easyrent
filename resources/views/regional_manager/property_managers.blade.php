@@ -6,7 +6,7 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h4 class="mb-1">
-                        <i class="fas fa-user-tie text-info me-2"></i>
+                        <i class="fa fa-user-tie text-info me-2"></i>
                         Property Managers
                     </h4>
                     <p class="text-muted">Manage property managers in your region.</p>
@@ -60,10 +60,10 @@
                                             <td>
                                                 <div class="btn-group">
                                                     <a href="{{ route('user.profile', $manager->user_id) }}" class="btn btn-sm btn-info">
-                                                        <i class="fas fa-user"></i> View Profile
+                                                        <i class="fa fa-user"></i> View Profile
                                                     </a>
                                                     <a href="{{ route('manager.properties', $manager->user_id) }}" class="btn btn-sm btn-primary">
-                                                        <i class="fas fa-building"></i> View Properties
+                                                        <i class="fa fa-building"></i> View Properties
                                                     </a>
                                                 </div>
                                             </td>
@@ -75,7 +75,7 @@
                         {{ $managers->links() }}
                     @else
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
+                            <i class="fa fa-info-circle me-2"></i>
                             No property managers found in your region.
                         </div>
                     @endif

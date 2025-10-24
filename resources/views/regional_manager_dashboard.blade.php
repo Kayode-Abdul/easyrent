@@ -9,14 +9,14 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="mb-1">
-                                <i class="fas fa-map-marked-alt text-primary me-2"></i>
+                                <i class="fa fa-map-marked-alt text-primary me-2"></i>
                                 Regional Manager Dashboard
                             </h4>
                             <p class="text-muted mb-0">{{ $greeting ?? 'Welcome! Manage your regional operations and performance metrics.' }}</p>
                         </div>
                         <div>
                             <span class="badge bg-primary fs-6">
-                                <i class="fas fa-globe"></i> Region: {{ $stats['region'] ?? 'All Regions' }}
+                                <i class="fa fa-globe"></i> Region: {{ $stats['region'] ?? 'All Regions' }}
                             </span>
                         </div>
                     </div>
@@ -32,7 +32,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="rounded-circle p-3 bg-primary-light">
-                            <i class="fas fa-building text-primary"></i>
+                            <i class="fa fa-building text-primary"></i>
                         </div>
                         <div class="ms-3">
                             <h4 class="mb-0">{{ number_format($stats['total_properties'] ?? 0) }}</h4>
@@ -48,7 +48,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="rounded-circle p-3 bg-success-light">
-                            <i class="fas fa-home text-success"></i>
+                            <i class="fa fa-home text-success"></i>
                         </div>
                         <div class="ms-3">
                             <h4 class="mb-0">{{ number_format($stats['total_apartments'] ?? 0) }}</h4>
@@ -64,7 +64,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="rounded-circle p-3 bg-info-light">
-                            <i class="fas fa-user-friends text-info"></i>
+                            <i class="fa fa-user-friends text-info"></i>
                         </div>
                         <div class="ms-3">
                             <h4 class="mb-0">{{ number_format($stats['landlords_count'] ?? 0) }}</h4>
@@ -80,7 +80,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="rounded-circle p-3 bg-warning-light">
-                            <i class="fas fa-dollar-sign text-warning"></i>
+                            <i class="fa fa-dollar-sign text-warning"></i>
                         </div>
                         <div class="ms-3">
                             <h4 class="mb-0">${{ number_format($stats['total_revenue'] ?? 0, 2) }}</h4>
@@ -101,21 +101,21 @@
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <div class="card card-body border">
-                                <h5><i class="fas fa-chart-bar text-primary"></i> Analytics</h5>
+                                <h5><i class="fa fa-chart-bar text-primary"></i> Analytics</h5>
                                 <p>View detailed analytics for your region</p>
                                 <a href="{{ route('regional.analytics') ?? '#' }}" class="btn btn-outline-primary">Go to Analytics</a>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
                             <div class="card card-body border">
-                                <h5><i class="fas fa-building text-success"></i> Properties</h5>
+                                <h5><i class="fa fa-building text-success"></i> Properties</h5>
                                 <p>Manage properties in your region</p>
                                 <a href="{{ route('regional.properties') ?? '#' }}" class="btn btn-outline-success">Go to Properties</a>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
                             <div class="card card-body border">
-                                <h5><i class="fas fa-bullhorn text-warning"></i> Marketers</h5>
+                                <h5><i class="fa fa-bullhorn text-warning"></i> Marketers</h5>
                                 <p>Manage marketers in your region</p>
                                 <a href="{{ route('regional.marketers') ?? '#' }}" class="btn btn-outline-warning">Go to Marketers</a>
                             </div>
@@ -132,7 +132,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header bg-transparent">
-                    <h5 class="mb-0"><i class="fas fa-bell text-info me-2"></i>Recent Activities</h5>
+                    <h5 class="mb-0"><i class="fa fa-bell text-info me-2"></i>Recent Activities</h5>
                 </div>
                 <div class="card-body">
                     <div class="list-group">

@@ -436,7 +436,7 @@
                                 <a href="{{ route('payments.index') }}" class="btn btn-primary btn-block">
                                     <i class="nc-icon nc-money-coins"></i> Make Payment
                                 </a>
-                                <a href="{{ route('payments.index') }}" class="btn btn-info btn-block">
+                                <a href="{{ route('billing.index') }}" class="btn btn-info btn-block">
                                     <i class="nc-icon nc-paper"></i> Payment History
                                 </a>
                                 <a href="/dashboard/messages/inbox" class="btn btn-success btn-block">

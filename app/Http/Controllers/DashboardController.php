@@ -114,6 +114,13 @@ class DashboardController extends Controller
                 'failed_payments' => Payment::where('status', 'failed')->count(),
                 'average_transaction_value' => Payment::where('status', 'completed')->avg('amount'),
                 
+                // Company Commission Revenue
+                'company_commission_today' => $this->getCompanyCommissionRevenue('today'),
+                'company_commission_this_month' => $this->getCompanyCommissionRevenue('this_month'),
+                'company_commission_last_month' => $this->getCompanyCommissionRevenue('last_month'),
+                'company_commission_total' => $this->getCompanyCommissionRevenue('total'),
+                'commission_breakdown' => $this->getCommissionBreakdown(),
+                
                 // System Health
                 'platform_uptime' => '99.9%', // This would be calculated from monitoring system
                 'database_size' => $this->getDatabaseSize(),
@@ -732,5 +739,182 @@ class DashboardController extends Controller
             'unreadMessages' => $unreadMessages,
             'recentMessages' => $recentMessages,
         ];
+    }
+
+    /**
+     * Calculate company commission revenue based on the new commission structure
+     */
+    private function getCompanyCommissionRevenue($period = 'total')
+    {
+        $query = Payment::where('status', 'completed');
+        
+        switch ($period) {
+            case 'today':
+                $query->whereDate('created_at', Carbon::today());
+                break;
+            case 'this_month':
+                $query->whereMonth('created_at', Carbon::now()->month)
+                      ->whereYear('created_at', Carbon::now()->year);
+                break;
+            case 'last_month':
+                $query->whereMonth('created_at', Carbon::now()->subMonth()->month)
+                      ->whereYear('created_at', Carbon::now()->subMonth()->year);
+                break;
+            case 'total':
+            default:
+                // No additional filter for total
+                break;
+        }
+        
+        $payments = $query->get();
+        $totalCommission = 0;
+        
+        foreach ($payments as $payment) {
+            // Calculate commission based on property management status and hierarchy
+            $commissionAmount = $this->calculatePaymentCommission($payment);
+            $totalCommission += $commissionAmount['company_commission'];
+        }
+        
+        return $totalCommission;
+    }
+
+    /**
+     * Calculate commission for a specific payment
+     */
+    private function calculatePaymentCommission($payment)
+    {
+        // Default commission structure (you can enhance this based on actual property data)
+        $rentAmount = $payment->amount;
+        
+        // Determine if property is managed (simplified - you can enhance this)
+        $isManaged = $this->isPropertyManaged($payment);
+        $hasSuperMarketer = $this->paymentHasSuperMarketer($payment);
+        
+        // Get commission rates based on scenario
+        if ($isManaged) {
+            if ($hasSuperMarketer) {
+                // Managed with Super Marketer: 2.5% total
+                return [
+                    'super_marketer_commission' => $rentAmount * 0.0025, // 0.25%
+                    'marketer_commission' => $rentAmount * 0.005,       // 0.5%
+                    'regional_manager_commission' => $rentAmount * 0.001, // 0.1%
+                    'company_commission' => $rentAmount * 0.0165,       // 1.65%
+                    'total_commission' => $rentAmount * 0.025           // 2.5%
+                ];
+            } else {
+                // Managed without Super Marketer: 2.5% total
+                return [
+                    'super_marketer_commission' => 0,
+                    'marketer_commission' => $rentAmount * 0.0075,      // 0.75%
+                    'regional_manager_commission' => $rentAmount * 0.001, // 0.1%
+                    'company_commission' => $rentAmount * 0.0165,       // 1.65%
+                    'total_commission' => $rentAmount * 0.025           // 2.5%
+                ];
+            }
+        } else {
+            if ($hasSuperMarketer) {
+                // Unmanaged with Super Marketer: 5% total
+                return [
+                    'super_marketer_commission' => $rentAmount * 0.005,  // 0.5%
+                    'marketer_commission' => $rentAmount * 0.01,        // 1.0%
+                    'regional_manager_commission' => $rentAmount * 0.0025, // 0.25%
+                    'company_commission' => $rentAmount * 0.0325,       // 3.25%
+                    'total_commission' => $rentAmount * 0.05            // 5%
+                ];
+            } else {
+                // Unmanaged without Super Marketer: 5% total
+                return [
+                    'super_marketer_commission' => 0,
+                    'marketer_commission' => $rentAmount * 0.015,       // 1.5%
+                    'regional_manager_commission' => $rentAmount * 0.0025, // 0.25%
+                    'company_commission' => $rentAmount * 0.0325,       // 3.25%
+                    'total_commission' => $rentAmount * 0.05            // 5%
+                ];
+            }
+        }
+    }
+
+    /**
+     * Check if a property is managed (has project manager/agent)
+     */
+    private function isPropertyManaged($payment)
+    {
+        // You can enhance this by checking if the property has an agent_id or project_manager_id
+        // For now, return false as default (unmanaged)
+        return false; // Simplified - enhance based on your property management logic
+    }
+
+    /**
+     * Check if payment involves a Super Marketer in the referral chain
+     */
+    private function paymentHasSuperMarketer($payment)
+    {
+        // You can enhance this by checking the referral chain
+        // For now, return false as default
+        return false; // Simplified - enhance based on your referral chain logic
+    }
+
+    /**
+     * Get detailed commission breakdown for admin dashboard
+     */
+    private function getCommissionBreakdown()
+    {
+        $thisMonth = Carbon::now();
+        $lastMonth = Carbon::now()->subMonth();
+        
+        $thisMonthPayments = Payment::where('status', 'completed')
+            ->whereMonth('created_at', $thisMonth->month)
+            ->whereYear('created_at', $thisMonth->year)
+            ->get();
+            
+        $lastMonthPayments = Payment::where('status', 'completed')
+            ->whereMonth('created_at', $lastMonth->month)
+            ->whereYear('created_at', $lastMonth->year)
+            ->get();
+        
+        $thisMonthBreakdown = $this->calculateTotalCommissionBreakdown($thisMonthPayments);
+        $lastMonthBreakdown = $this->calculateTotalCommissionBreakdown($lastMonthPayments);
+        
+        return [
+            'this_month' => $thisMonthBreakdown,
+            'last_month' => $lastMonthBreakdown,
+            'growth' => [
+                'company_commission' => $lastMonthBreakdown['company_commission'] > 0 
+                    ? (($thisMonthBreakdown['company_commission'] - $lastMonthBreakdown['company_commission']) / $lastMonthBreakdown['company_commission']) * 100 
+                    : 0,
+                'total_commission' => $lastMonthBreakdown['total_commission'] > 0 
+                    ? (($thisMonthBreakdown['total_commission'] - $lastMonthBreakdown['total_commission']) / $lastMonthBreakdown['total_commission']) * 100 
+                    : 0
+            ]
+        ];
+    }
+
+    /**
+     * Calculate total commission breakdown for a collection of payments
+     */
+    private function calculateTotalCommissionBreakdown($payments)
+    {
+        $breakdown = [
+            'super_marketer_commission' => 0,
+            'marketer_commission' => 0,
+            'regional_manager_commission' => 0,
+            'company_commission' => 0,
+            'total_commission' => 0,
+            'total_rent' => 0,
+            'payment_count' => $payments->count()
+        ];
+        
+        foreach ($payments as $payment) {
+            $paymentCommission = $this->calculatePaymentCommission($payment);
+            
+            $breakdown['super_marketer_commission'] += $paymentCommission['super_marketer_commission'];
+            $breakdown['marketer_commission'] += $paymentCommission['marketer_commission'];
+            $breakdown['regional_manager_commission'] += $paymentCommission['regional_manager_commission'];
+            $breakdown['company_commission'] += $paymentCommission['company_commission'];
+            $breakdown['total_commission'] += $paymentCommission['total_commission'];
+            $breakdown['total_rent'] += $payment->amount;
+        }
+        
+        return $breakdown;
     }
 }

@@ -6,7 +6,7 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h4 class="mb-1">
-                        <i class="fas fa-history text-primary me-2"></i>
+                        <i class="fa fa-history text-primary me-2"></i>
                         Regional Activities Log
                     </h4>
                     <p class="text-muted">View all recent activities in your managed region.</p>
@@ -24,7 +24,7 @@
                             @foreach($sorted as $activity)
                                 <div class="timeline-item">
                                     <div class="timeline-marker {{ $activity['color'] ?? 'bg-primary' }}">
-                                        <i class="{{ $activity['icon'] ?? 'fas fa-circle' }}"></i>
+                                        <i class="{{ $activity['icon'] ?? 'fa fa-circle' }}"></i>
                                     </div>
                                     <div class="timeline-content">
                                         <div class="d-flex justify-content-between">
@@ -41,7 +41,7 @@
                         </div>
                     @else
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
+                            <i class="fa fa-info-circle me-2"></i>
                             No recent activities recorded.
                         </div>
                     @endif

@@ -2,12 +2,13 @@
 @php
     // Default to showing all available roles for this user
     $roleMap = [
-        1 => 'admin',
+        7 => 'admin',
         2 => 'landlord', 
-        3 => 'tenant', 
-        4 => 'property_manager',
-        5 => 'marketer',
-        6 => 'regional_manager'
+        1 => 'tenant', 
+        6 => 'property_manager',
+        3 => 'marketer',
+        5 => 'artisan',
+        9 => 'regional_manager'
     ];
     
     // Get all roles the user has

@@ -26,7 +26,7 @@
     @include('role_switcher')
 
     <!-- Super Admin Dashboard -->
-    @if(auth()->user()->admin == 1 || auth()->user()->role == 1)
+    @if(auth()->user()->admin == 1 || auth()->user()->role == 7)
         
         <!-- System Overview Header -->
         <div class="row mb-4">
@@ -39,8 +39,13 @@
                                 <p class="mb-0">Platform Uptime: <strong>{{ $stats['platform_uptime'] ?? '99.9%' }}</strong> | Active Sessions: <strong>{{ $stats['active_sessions'] ?? 0 }}</strong> | Database Size: <strong>{{ $stats['database_size'] ?? 'Unknown' }}</strong></p>
                             </div>
                             <div class="col-md-4 text-right">
-                                <h4>${{ number_format($stats['total_revenue'] ?? 0, 2) }}</h4>
-                                <small>Total Revenue</small>
+                                <h4>₦{{ number_format($stats['company_commission_total'] ?? 0, 0) }}</h4>
+                                <small>EasyRent Total Commission</small>
+                                <div class="mt-2">
+                                    <span class="badge badge-success">
+                                        ₦{{ number_format($stats['company_commission_this_month'] ?? 0, 0) }} this month
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -283,6 +288,259 @@
             </div>
         </div>
 
+        <!-- Company Commission Revenue -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4 class="text-primary"><i class="nc-icon nc-money-coins"></i> Company Commission Revenue</h4>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-5 col-md-4">
+                                <div class="icon-big text-center icon-warning">
+                                    <i class="nc-icon nc-money-coins text-success"></i>
+                                </div>
+                            </div>
+                            <div class="col-7 col-md-8">
+                                <div class="numbers">
+                                    <p class="card-category">Commission Today</p>
+                                    <p class="card-title">₦{{ number_format($stats['company_commission_today'] ?? 0, 0) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <hr>
+                        <div class="stats">
+                            <i class="fa fa-calendar text-success"></i>
+                            EasyRent earnings today
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-5 col-md-4">
+                                <div class="icon-big text-center icon-warning">
+                                    <i class="nc-icon nc-chart-bar-32 text-info"></i>
+                                </div>
+                            </div>
+                            <div class="col-7 col-md-8">
+                                <div class="numbers">
+                                    <p class="card-category">Commission This Month</p>
+                                    <p class="card-title">₦{{ number_format($stats['company_commission_this_month'] ?? 0, 0) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <hr>
+                        <div class="stats">
+                            <i class="fa fa-arrow-up text-success"></i>
+                            @if(isset($stats['commission_breakdown']['growth']['company_commission']))
+                                {{ number_format($stats['commission_breakdown']['growth']['company_commission'], 1) }}% vs last month
+                            @else
+                                Monthly earnings
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-5 col-md-4">
+                                <div class="icon-big text-center icon-warning">
+                                    <i class="nc-icon nc-diamond text-warning"></i>
+                                </div>
+                            </div>
+                            <div class="col-7 col-md-8">
+                                <div class="numbers">
+                                    <p class="card-category">Total Commission</p>
+                                    <p class="card-title">₦{{ number_format($stats['company_commission_total'] ?? 0, 0) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <hr>
+                        <div class="stats">
+                            <i class="fa fa-gem text-warning"></i>
+                            All-time company earnings
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-5 col-md-4">
+                                <div class="icon-big text-center icon-warning">
+                                    <i class="nc-icon nc-settings-gear-65 text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="col-7 col-md-8">
+                                <div class="numbers">
+                                    <p class="card-category">Commission Rate</p>
+                                    <p class="card-title">
+                                        @if(isset($stats['commission_breakdown']['this_month']['total_rent']) && $stats['commission_breakdown']['this_month']['total_rent'] > 0)
+                                            {{ number_format(($stats['commission_breakdown']['this_month']['company_commission'] / $stats['commission_breakdown']['this_month']['total_rent']) * 100, 2) }}%
+                                        @else
+                                            3.25%
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <hr>
+                        <div class="stats">
+                            <i class="fa fa-cog text-primary"></i>
+                            <a href="{{ route('admin.commission-management.regional-manager') }}" class="text-primary">Manage Rates</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commission Breakdown Detail -->
+        @if(isset($stats['commission_breakdown']))
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="nc-icon nc-chart-pie-35 text-primary"></i>
+                            Commission Breakdown - This Month
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Role</th>
+                                                <th>Commission Amount</th>
+                                                <th>Percentage of Total Rent</th>
+                                                <th>Growth vs Last Month</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="table-success">
+                                                <td><strong><i class="fa fa-building me-2"></i>Company (EasyRent)</strong></td>
+                                                <td><strong>₦{{ number_format($stats['commission_breakdown']['this_month']['company_commission'] ?? 0, 0) }}</strong></td>
+                                                <td>
+                                                    @if($stats['commission_breakdown']['this_month']['total_rent'] > 0)
+                                                        {{ number_format(($stats['commission_breakdown']['this_month']['company_commission'] / $stats['commission_breakdown']['this_month']['total_rent']) * 100, 2) }}%
+                                                    @else
+                                                        0%
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <span class="badge {{ $stats['commission_breakdown']['growth']['company_commission'] >= 0 ? 'bg-success' : 'bg-danger' }}">
+                                                        {{ number_format($stats['commission_breakdown']['growth']['company_commission'] ?? 0, 1) }}%
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fa fa-users me-2"></i>Super Marketers</td>
+                                                <td>₦{{ number_format($stats['commission_breakdown']['this_month']['super_marketer_commission'] ?? 0, 0) }}</td>
+                                                <td>
+                                                    @if($stats['commission_breakdown']['this_month']['total_rent'] > 0)
+                                                        {{ number_format(($stats['commission_breakdown']['this_month']['super_marketer_commission'] / $stats['commission_breakdown']['this_month']['total_rent']) * 100, 2) }}%
+                                                    @else
+                                                        0%
+                                                    @endif
+                                                </td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fa fa-user me-2"></i>Marketers</td>
+                                                <td>₦{{ number_format($stats['commission_breakdown']['this_month']['marketer_commission'] ?? 0, 0) }}</td>
+                                                <td>
+                                                    @if($stats['commission_breakdown']['this_month']['total_rent'] > 0)
+                                                        {{ number_format(($stats['commission_breakdown']['this_month']['marketer_commission'] / $stats['commission_breakdown']['this_month']['total_rent']) * 100, 2) }}%
+                                                    @else
+                                                        0%
+                                                    @endif
+                                                </td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fa fa-map-marker me-2"></i>Regional Managers</td>
+                                                <td>₦{{ number_format($stats['commission_breakdown']['this_month']['regional_manager_commission'] ?? 0, 0) }}</td>
+                                                <td>
+                                                    @if($stats['commission_breakdown']['this_month']['total_rent'] > 0)
+                                                        {{ number_format(($stats['commission_breakdown']['this_month']['regional_manager_commission'] / $stats['commission_breakdown']['this_month']['total_rent']) * 100, 2) }}%
+                                                    @else
+                                                        0%
+                                                    @endif
+                                                </td>
+                                                <td>-</td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot class="table-light">
+                                            <tr>
+                                                <th>Total Commission</th>
+                                                <th>₦{{ number_format($stats['commission_breakdown']['this_month']['total_commission'] ?? 0, 0) }}</th>
+                                                <th>
+                                                    @if($stats['commission_breakdown']['this_month']['total_rent'] > 0)
+                                                        {{ number_format(($stats['commission_breakdown']['this_month']['total_commission'] / $stats['commission_breakdown']['this_month']['total_rent']) * 100, 2) }}%
+                                                    @else
+                                                        0%
+                                                    @endif
+                                                </th>
+                                                <th>
+                                                    <span class="badge {{ $stats['commission_breakdown']['growth']['total_commission'] >= 0 ? 'bg-success' : 'bg-danger' }}">
+                                                        {{ number_format($stats['commission_breakdown']['growth']['total_commission'] ?? 0, 1) }}%
+                                                    </span>
+                                                </th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h3 class="text-success">₦{{ number_format($stats['commission_breakdown']['this_month']['company_commission'] ?? 0, 0) }}</h3>
+                                    <p class="text-muted">Company Revenue This Month</p>
+                                    <div class="progress mb-3">
+                                        @php
+                                            $companyPercentage = $stats['commission_breakdown']['this_month']['total_commission'] > 0 
+                                                ? ($stats['commission_breakdown']['this_month']['company_commission'] / $stats['commission_breakdown']['this_month']['total_commission']) * 100 
+                                                : 0;
+                                        @endphp
+                                        <div class="progress-bar bg-success" style="width: {{ $companyPercentage }}%"></div>
+                                    </div>
+                                    <small class="text-muted">{{ number_format($companyPercentage, 1) }}% of total commission</small>
+                                    <div class="mt-3">
+                                        <a href="{{ route('admin.commission-management.regional-manager') }}" class="btn btn-primary btn-sm">
+                                            <i class="fa fa-cog me-1"></i>Manage Commission Rates
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- System Health Monitoring -->
         <div class="row mb-4">
             <div class="col-12">
@@ -416,92 +674,92 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-2 mb-3">
+                            <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
                                 <a href="{{ route('admin.users') }}" class="btn btn-primary btn-block btn-admin-action">
                                     <i class="nc-icon nc-single-02"></i><br>
                                     <strong>User Management</strong><br>
                                     <small>Manage all users</small>
                                 </a>
                             </div>
-                            <div class="col-md-2 mb-3">
+                            <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
                                 <a href="{{ route('admin.properties') }}" class="btn btn-success btn-block btn-admin-action">
                                     <i class="nc-icon nc-istanbul"></i><br>
                                     <strong>Property Oversight</strong><br>
                                     <small>Monitor properties</small>
                                 </a>
                             </div>
-                            <div class="col-md-2 mb-3">
+                            <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
                                 <a href="{{ route('payments.analytics') }}" class="btn btn-warning btn-block">
                                     <i class="nc-icon nc-chart-bar-32"></i><br>
                                     <strong>Financial Analytics</strong><br>
                                     <small>Revenue & payments</small>
                                 </a>
                             </div>
-                            <div class="col-md-2 mb-3">
+                            <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
+                                <a href="/dashboard/billing" class="btn btn-success btn-block btn-admin-action">
+                                    <i class="nc-icon nc-money-coins"></i><br>
+                                    <strong>Billing Center</strong><br>
+                                    <small>View payments & bills</small>
+                                </a>
+                            </div>
+                            <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
                                 <a href="{{ route('admin.system-health') }}" class="btn btn-info btn-block btn-admin-action">
                                     <i class="nc-icon nc-settings-gear-65"></i><br>
                                     <strong>System Health</strong><br>
                                     <small>Server monitoring</small>
                                 </a>
                             </div>
-                            <div class="col-md-2 mb-3">
+                            <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
                                 <a href="{{ route('admin.reports') }}" class="btn btn-secondary btn-block btn-admin-action">
                                     <i class="nc-icon nc-paper"></i><br>
                                     <strong>Advanced Reports</strong><br>
                                     <small>Export & analytics</small>
                                 </a>
                             </div>
-                            <div class="col-md-2 mb-3">
+                        </div>
+                        
+                        <!-- Second Row of Actions -->
+                        <div class="row mt-3">
+                            <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
                                 <a href="{{ route('admin.audit-logs') }}" class="btn btn-dark btn-block btn-admin-action">
                                     <i class="nc-icon nc-tile-56"></i><br>
                                     <strong>Audit Logs</strong><br>
                                     <small>System activity</small>
                                 </a>
                             </div>
-                        </div>
-                        
-                        <!-- Second Row of Actions -->
-                        <div class="row mt-3">
-                            <div class="col-md-2 mb-3">
+                            <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
                                 <a href="{{ route('admin.backup') }}" class="btn btn-outline-danger btn-block btn-admin-action">
                                     <i class="nc-icon nc-refresh-02"></i><br>
                                     <strong>Backup & Restore</strong><br>
                                     <small>Data management</small>
                                 </a>
                             </div>
-                            <div class="col-md-2 mb-3">
+                            <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
                                 <a href="{{ route('admin.security') }}" class="btn btn-outline-warning btn-block btn-admin-action">
                                     <i class="nc-icon nc-lock-circle-open"></i><br>
                                     <strong>Security Center</strong><br>
                                     <small>Access control</small>
                                 </a>
                             </div>
-                            <div class="col-md-2 mb-3">
+                            <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
                                 <a href="#" class="btn btn-outline-info btn-block btn-admin-action" data-action="maintenance" onclick="toggleMaintenance()">
                                     <i class="nc-icon nc-settings"></i><br>
                                     <strong>Maintenance Mode</strong><br>
                                     <small>System updates</small>
                                 </a>
                             </div>
-                            <div class="col-md-2 mb-3">
+                            <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
                                 <a href="{{ route('admin.email-center') }}" class="btn btn-outline-success btn-block btn-admin-action">
                                     <i class="nc-icon nc-email-85"></i><br>
                                     <strong>Email Center</strong><br>
                                     <small>Bulk messaging</small>
                                 </a>
                             </div>
-                            <div class="col-md-2 mb-3">
+                            <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
                                 <a href="{{ route('admin.api-management') }}" class="btn btn-outline-primary btn-block btn-admin-action">
                                     <i class="nc-icon nc-atom"></i><br>
                                     <strong>API Management</strong><br>
                                     <small>External integrations</small>
-                                </a>
-                            </div>
-                            <div class="col-md-2 mb-3">
-                                <a href="{{ route('admin.logs') }}" class="btn btn-outline-dark btn-block btn-admin-action">
-                                    <i class="nc-icon nc-paper-2"></i><br>
-                                    <strong>System Logs</strong><br>
-                                    <small>Debug & monitor</small>
                                 </a>
                             </div>
                         </div>

@@ -6,9 +6,9 @@
             <div class="card shadow">
               <div class="card-header bg-gradient-primary text-white">
                 <div class="d-flex justify-content-between align-items-center">
-                  <h4 class="card-title mb-0"> <i class="fas fa-building mr-2"></i> All Properties</h4>
+                  <h4 class="card-title mb-0"> <i class="fa fa-building mr-2"></i> All Properties</h4>
                   <a href="/listing" class="btn btn-light btn-sm">
-                    <i class="fas fa-plus"></i> Add New Property
+                    <i class="fa fa-plus"></i> Add New Property
                   </a>
                 </div>
               </div>
@@ -20,7 +20,7 @@
                       <input type="text" id="propertySearch" class="form-control" placeholder="Search properties...">
                       <div class="input-group-append">
                         <button class="btn btn-primary" type="button">
-                          <i class="fas fa-search"></i>
+                          <i class="fa fa-search"></i>
                         </button>
                       </div>
                     </div>
@@ -28,7 +28,7 @@
                   <div class="col-md-6 text-right">
                     <div class="btn-group">
                       <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown">
-                        <i class="fas fa-filter"></i> Filter
+                        <i class="fa fa-filter"></i> Filter
                       </button>
                       <div class="dropdown-menu">
                         <a class="dropdown-item" href="#">All Properties</a>
@@ -43,22 +43,22 @@
                 
                 @if(empty($all_properties))
                   <div class="alert alert-info text-center p-5">
-                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <i class="fa fa-info-circle fa-3x mb-3"></i>
                     <h4>No properties found</h4>
                     <p>There are currently no properties in the system.</p>
                     <a href="/listing" class="btn btn-primary mt-3">
-                      <i class="fas fa-plus"></i> Add Your First Property
+                      <i class="fa fa-plus"></i> Add Your First Property
                     </a>
                   </div>
                 @else
                 <div class="table-responsive">
                   <table class="table table-hover table-striped">
                     <thead class="thead-dark">
-                      <th><i class="fas fa-user mr-1"></i> Owner</th>
-                      <th><i class="fas fa-hashtag mr-1"></i> Property ID</th>
-                      <th><i class="fas fa-map-marker-alt mr-1"></i> Address</th>
-                      <th><i class="fas fa-map mr-1"></i> Location</th>
-                      <th><i class="fas fa-tools mr-1"></i> Actions</th>
+                      <th><i class="fa fa-user mr-1"></i> Owner</th>
+                      <th><i class="fa fa-hashtag mr-1"></i> Property ID</th>
+                      <th><i class="fa fa-map-marker-alt mr-1"></i> Address</th>
+                      <th><i class="fa fa-map mr-1"></i> Location</th>
+                      <th><i class="fa fa-tools mr-1"></i> Actions</th>
                     </thead>
                     <tbody>
                       @foreach($all_properties as $property)
@@ -70,13 +70,13 @@
                           <td>
                             <div class="btn-group">
                               <a href="/dashboard/property/{{ $property->prop_id }}" class="btn btn-info btn-sm" data-toggle="tooltip" title="View Details">
-                                <i class="fas fa-eye"></i>
+                                <i class="fa fa-eye"></i>
                               </a>
                               <a href="/dashboard/property/{{ $property->prop_id }}/edit" class="btn btn-warning btn-sm" data-toggle="tooltip" title="Edit Property">
-                                <i class="fas fa-edit"></i>
+                                <i class="fa fa-edit"></i>
                               </a>
                               <button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Delete Property" onclick="confirmDelete('{{ $property->prop_id }}')">
-                                <i class="fas fa-trash"></i>
+                                <i class="fa fa-trash"></i>
                               </button>
                             </div>
                           </td>

@@ -87,3 +87,101 @@ function toggleOccupied(button) {
         button.innerHTML = '<i class="fa fa-times"></i>';
     }
 }
+
+/**
+ * View apartment details
+ * @param {string} apartmentId - The ID of the apartment to view
+ */
+function viewApartment(apartmentId) {
+    // Redirect to the apartment details page
+    window.location.href = `/dashboard/apartment/${apartmentId}`;
+}
+
+/**
+ * Edit apartment details
+ * @param {string} apartmentId - The ID of the apartment to edit
+ */
+function editApartment(apartmentId) {
+    // Fetch apartment data and populate the modal
+    fetch(`/api/apartment/${apartmentId}`)
+        .then(response => response.json())
+        .then(data => {
+            // Set the modal title
+            document.getElementById('apartmentModalLabel').textContent = 'Edit Apartment';
+            
+            // Populate the form fields
+            const form = document.getElementById('apartmentForm');
+            form.action = `/apartment/${apartmentId}`;
+            
+            // Add method override for PUT
+            let methodField = form.querySelector('input[name="_method"]');
+            if (!methodField) {
+                methodField = document.createElement('input');
+                methodField.type = 'hidden';
+                methodField.name = '_method';
+                form.appendChild(methodField);
+            }
+            methodField.value = 'PUT';
+            
+            // Populate form fields with apartment data
+            form.querySelector('select[name="apartmentType"]').value = data.apartment_type;
+            form.querySelector('input[name="tenantId"]').value = data.tenant_id || '';
+            form.querySelector('select[name="duration"]').value = data.duration || '';
+            form.querySelector('input[name="fromDate"]').value = data.range_start || '';
+            form.querySelector('input[name="toDate"]').value = data.range_end || '';
+            form.querySelector('input[name="price"]').value = data.amount || '';
+            
+            // Show the modal
+            $('#apartmentModal').modal('show');
+        })
+        .catch(error => {
+            console.error('Error fetching apartment data:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load apartment data. Please try again.'
+            });
+        });
+}
+
+/**
+ * Confirm deletion of an apartment
+ * @param {string} apartmentId - The ID of the apartment to delete
+ */
+function confirmDeleteApartment(apartmentId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Create form for deletion
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/apartment/${apartmentId}`;
+            form.style.display = 'none';
+            
+            // Add CSRF token
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            form.appendChild(csrfToken);
+            
+            // Add method override for DELETE
+            const methodField = document.createElement('input');
+            methodField.type = 'hidden';
+            methodField.name = '_method';
+            methodField.value = 'DELETE';
+            form.appendChild(methodField);
+            
+            // Submit the form
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}

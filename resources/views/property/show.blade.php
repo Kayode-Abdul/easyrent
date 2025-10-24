@@ -1,11 +1,28 @@
-@include('header')
+@extends('layouts.app')
+
+@section('content')
 <!-- Add jQuery, Bootstrap JS, and SweetAlert2 -->
- <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script> 
-
-
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('assets/js/apartment-functions.js') }}"></script>
+
+<style>
+.border-left-info {
+    border-left: 4px solid #17a2b8 !important;
+}
+.alert-info {
+    background-color: #e7f3ff;
+    border-color: #b8daff;
+}
+.security-notice {
+    animation: fadeIn 0.5s ease-in;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
 @php
     $types = [
         1 => 'Mansion',
@@ -17,6 +34,25 @@
 
 
 <div class="content">
+    @if(auth()->user()->user_id != $property->user_id && !auth()->user()->admin)
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="alert alert-info border-left-info security-notice">
+                <div class="d-flex align-items-center">
+                    <i class="fa fa-info-circle fa-2x text-info me-3"></i>
+                    <div>
+                        <h6 class="mb-1"><i class="fa fa-shield-alt me-1"></i>Limited Access Notice</h6>
+                        <p class="mb-0">You are viewing this property with restricted permissions. Some actions may not be available to you.</p>
+                        @if(auth()->user()->role == 5)
+                            <small class="text-muted"><i class="fa fa-user-tie me-1"></i>Regional Manager View</small>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+    
     <div class="row">
         <div class="col-md-12">
             <div class="card">
@@ -29,25 +65,59 @@
                                     <i class="fa fa-user-tie"></i> View Property Manager
                                 </button>
                             @else
-                                <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#agentModal">
-                                    <i class="fa fa-user-tie"></i> Assign Property Manager
-                                </button>
+                                @if(auth()->user()->user_id == $property->user_id)
+                                    <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#agentModal">
+                                        <i class="fa fa-user-tie"></i> Assign Property Manager
+                                    </button>
+                                @elseif(auth()->user()->admin)
+                                    <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#agentModal">
+                                        <i class="fa fa-user-tie"></i> Admin Assign Manager
+                                    </button>
+                                @else
+                                    <span class="badge bg-secondary text-white px-2 py-1">
+                                        <i class="fa fa-user-tie me-1"></i>No Manager Assigned
+                                    </span>
+                                @endif
                             @endif
                         </div>
                         <div class="btn-group">
                             <a href="{{ url('/dashboard/myproperty') }}" class="btn btn-primary btn-sm">
                                 <i class="fa fa-arrow-left"></i> Back to My Properties
                             </a>
-                            <button type="button" class="btn btn-warning btn-sm" onclick="editProperty('{{ $property->prop_id }}')">
-                                <i class="fa fa-edit"></i> Edit Property
-                            </button>
-                            <form action="{{ url('/dashboard/property/' . $property->prop_id) }}" method="POST" style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this property?')">
-                                    <i class="fa fa-trash"></i> Delete Property
+                            @if(auth()->user()->user_id == $property->user_id)
+                                <button type="button" class="btn btn-warning btn-sm" onclick="editProperty('{{ $property->prop_id }}')">
+                                    <i class="fa fa-edit"></i> Edit Property
                                 </button>
-                            </form>
+                                <form action="{{ url('/dashboard/property/' . $property->prop_id) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this property?')">
+                                        <i class="fa fa-trash"></i> Delete Property
+                                    </button>
+                                </form>
+                            @elseif(auth()->user()->admin)
+                                <button type="button" class="btn btn-warning btn-sm" onclick="editProperty('{{ $property->prop_id }}')">
+                                    <i class="fa fa-edit"></i> Admin Edit
+                                </button>
+                                <form action="{{ url('/dashboard/property/' . $property->prop_id) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this property? This action cannot be undone.')">
+                                        <i class="fa fa-trash"></i> Admin Delete
+                                    </button>
+                                </form>
+                            @else
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-info text-white px-3 py-2 me-2">
+                                        <i class="fa fa-eye me-1"></i>View Only Access
+                                    </span>
+                                    @if(auth()->user()->role == 5) {{-- Regional Manager --}}
+                                        <small class="text-muted">Regional Manager View</small>
+                                    @else
+                                        <small class="text-muted">Limited Access</small>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -107,9 +177,15 @@
                             <div class="small text-muted">
                                 Vacant: {{ $apartments->where('tenant_id', null)->count() }}
                             </div>
-                            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#apartmentModal">
-                                <i class="fa fa-plus"></i> Add Apartment
-                            </button>
+                            @if(auth()->user()->user_id == $property->user_id)
+                                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#apartmentModal">
+                                    <i class="fa fa-plus"></i> Add Apartment
+                                </button>
+                            @elseif(auth()->user()->admin)
+                                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#apartmentModal">
+                                    <i class="fa fa-plus"></i> Admin Add Apartment
+                                </button>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -172,12 +248,21 @@
                                             <button type="button" class="btn btn-info btn-sm" onclick="viewApartment('{{ $apartment->apartment_id }}')">
                                                 <i class="fa fa-eye"></i>
                                             </button>
-                                            <button type="button" class="btn btn-warning btn-sm" onclick="editApartment('{{ $apartment->apartment_id }}')">
-                                                <i class="fa fa-edit"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDeleteApartment('{{ $apartment->id }}')">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
+                                            @if(auth()->user()->user_id == $property->user_id)
+                                                <button type="button" class="btn btn-warning btn-sm" onclick="editApartment('{{ $apartment->apartment_id }}')">
+                                                    <i class="fa fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDeleteApartment('{{ $apartment->id }}')">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            @elseif(auth()->user()->admin)
+                                                <button type="button" class="btn btn-warning btn-sm" onclick="editApartment('{{ $apartment->apartment_id }}')">
+                                                    <i class="fa fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDeleteApartment('{{ $apartment->id }}')">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -988,3 +1073,4 @@ function getCities() {
         });
     }
 </script>
+@endsection

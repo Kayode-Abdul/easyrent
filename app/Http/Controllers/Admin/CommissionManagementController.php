@@ -266,4 +266,101 @@ class CommissionManagementController extends Controller
         return redirect()->route('admin.commission-management.index')
             ->with('success', 'Commission rate deleted successfully.');
     }
+
+    /**
+     * Show regional commission manager
+     */
+    public function regionalManager()
+    {
+        return view('admin.commission-management.regional-manager');
+    }
+
+    /**
+     * Get commission rates for a specific region (AJAX)
+     */
+    public function getRegionRates(string $region)
+    {
+        $rates = CommissionRate::where('region', $region)
+            ->get()
+            ->groupBy(['property_management_status', 'hierarchy_status']);
+
+        $formattedRates = [];
+        
+        foreach ($rates as $propertyStatus => $propertyRates) {
+            foreach ($propertyRates as $hierarchyStatus => $rateCollection) {
+                $rate = $rateCollection->first();
+                $key = $propertyStatus . '_' . str_replace('_super_marketer', '', $hierarchyStatus);
+                
+                $formattedRates[$key] = [
+                    'super_marketer_rate' => $rate->super_marketer_rate,
+                    'marketer_rate' => $rate->marketer_rate,
+                    'regional_manager_rate' => $rate->regional_manager_rate,
+                    'company_rate' => $rate->company_rate,
+                    'total_commission_rate' => $rate->total_commission_rate
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'rates' => $formattedRates
+        ]);
+    }
+
+    /**
+     * Bulk save commission rates for a region
+     */
+    public function bulkSaveRegion(Request $request)
+    {
+        $request->validate([
+            'region' => 'required|string|max:100',
+            'scenarios' => 'required|json'
+        ]);
+
+        $scenarios = json_decode($request->scenarios, true);
+        
+        DB::transaction(function () use ($request, $scenarios) {
+            foreach ($scenarios as $scenario) {
+                // Validate that rates sum to total
+                $sum = ($scenario['super_marketer_rate'] ?? 0) + 
+                       $scenario['marketer_rate'] + 
+                       ($scenario['regional_manager_rate'] ?? 0) + 
+                       $scenario['company_rate'];
+
+                if (abs($sum - $scenario['total_commission_rate']) > 0.001) {
+                    throw new \Exception('Invalid rate sum for scenario: ' . $scenario['property_management_status'] . ' + ' . $scenario['hierarchy_status']);
+                }
+
+                // Update or create the commission rate
+                CommissionRate::updateOrCreate(
+                    [
+                        'region' => $request->region,
+                        'property_management_status' => $scenario['property_management_status'],
+                        'hierarchy_status' => $scenario['hierarchy_status']
+                    ],
+                    [
+                        'super_marketer_rate' => $scenario['super_marketer_rate'],
+                        'marketer_rate' => $scenario['marketer_rate'],
+                        'regional_manager_rate' => $scenario['regional_manager_rate'],
+                        'company_rate' => $scenario['company_rate'],
+                        'total_commission_rate' => $scenario['total_commission_rate'],
+                        'description' => ucfirst($scenario['property_management_status']) . ' properties ' . 
+                                       str_replace('_', ' ', $scenario['hierarchy_status']),
+                        'role_id' => 1, // Default role
+                        'commission_percentage' => $scenario['total_commission_rate'],
+                        'effective_from' => Carbon::now(),
+                        'created_by' => Auth::id(),
+                        'updated_by' => Auth::id(),
+                        'last_updated_at' => Carbon::now(),
+                        'is_active' => true
+                    ]
+                );
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Commission rates saved successfully for ' . $request->region
+        ]);
+    }
 }

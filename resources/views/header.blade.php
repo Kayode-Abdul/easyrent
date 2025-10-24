@@ -150,10 +150,10 @@ $.ajaxSetup({
                             <p>My Property(s)</p>
                         </a>
                     </li>
-                    <li class="{{ request()->is('dashboard/user/payments*') ? 'active' : '' }}">
-                        <a href="{{ route('payments.index') }}">
-                            <i class="nc-icon nc-money-coins"></i>
-                            <p>Payments</p>
+                    <li class="{{ request()->is('dashboard/billing*') ? 'active' : '' }}">
+                        <a href="/dashboard/billing">
+                            <i class="nc-icon nc-credit-card"></i>
+                            <p>Billing</p>
                         </a>
                     </li>
                     <!-- Messages Dropdown -->
@@ -188,6 +188,12 @@ $.ajaxSetup({
                         </div>
                     </li>
                     @if(auth()->check() && Auth::user()->admin)
+                    <li class="{{ request()->is('dashboard/user/payments*') ? 'active' : '' }}">
+                        <a href="{{ route('payments.index') }}">
+                            <i class="nc-icon nc-money-coins"></i>
+                            <p>Payments</p>
+                        </a>
+                    </li>
                     <li class="{{ request()->is('dashboard/properties') ? 'active' : '' }}">
                         <a href="/dashboard/properties">
                             <i class="nc-icon nc-diamond"></i>
@@ -225,7 +231,7 @@ $.ajaxSetup({
                         </a>
                     </li>
                     <li class="{{ request()->is('admin/commission-management*') ? 'active' : '' }}">
-                        <a href="{{ route('admin.commission-management.index') }}">
+                        <a href="{{ route('admin.commission-management.regional-manager') }}">
                             <i class="nc-icon nc-settings-gear-65"></i>
                             <p>Commission Management</p>
                         </a>

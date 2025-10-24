@@ -50,7 +50,7 @@
 
     @if(!$hasData)
         <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> No data found for the selected filters. Try adjusting your date range or filter criteria.
+            <i class="fa fa-info-circle"></i> No data found for the selected filters. Try adjusting your date range or filter criteria.
         </div>
     @else
 

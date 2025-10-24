@@ -316,13 +316,23 @@
                                                             <a href="{{ url('/dashboard/property/'.$property->prop_id) }}" class="btn btn-info btn-sm" title="View Details">
                                                                 <i class="fa fa-eye"></i>
                                                             </a>
-                                                            <a href="{{ url('/dashboard/property/'.$property->prop_id.'/edit') }}" class="btn btn-warning btn-sm" title="Edit Property">
-                                                                <i class="fa fa-edit"></i>
-                                                            </a>
-                                                            <button type="button" class="btn btn-danger btn-sm" title="Delete Property" 
-                                                                    onclick="confirmDelete('{{ $property->prop_id }}')">
-                                                                <i class="fa fa-trash"></i>
-                                                            </button>
+                                                            @if(auth()->user()->user_id == $property->user_id)
+                                                                <a href="{{ url('/dashboard/property/'.$property->prop_id.'/edit') }}" class="btn btn-warning btn-sm" title="Edit Property">
+                                                                    <i class="fa fa-edit"></i>
+                                                                </a>
+                                                                <button type="button" class="btn btn-danger btn-sm" title="Delete Property" 
+                                                                        onclick="confirmDelete('{{ $property->prop_id }}')">
+                                                                    <i class="fa fa-trash"></i>
+                                                                </button>
+                                                            @elseif(auth()->user()->admin)
+                                                                <a href="{{ url('/dashboard/property/'.$property->prop_id.'/edit') }}" class="btn btn-warning btn-sm" title="Admin Edit Property">
+                                                                    <i class="fa fa-edit"></i> Admin
+                                                                </a>
+                                                                <button type="button" class="btn btn-danger btn-sm" title="Admin Delete Property" 
+                                                                        onclick="confirmDelete('{{ $property->prop_id }}')">
+                                                                    <i class="fa fa-trash"></i> Admin
+                                                                </button>
+                                                            @endif
                                                         </div>
                                                     </td>
                                                 </tr>

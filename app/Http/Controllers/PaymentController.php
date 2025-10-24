@@ -195,7 +195,13 @@ class PaymentController extends Controller
             }
             
             // Check if payment was successful
-                if ($paymentDetails['status'] && $paymentDetails['data']['status'] === 'success') {
+            if ($paymentDetails['status'] && $paymentDetails['data']['status'] === 'success') {
+                
+                // Log the entire payment process for debugging
+                Log::info('=== PAYMENT CALLBACK PROCESSING START ===', [
+                    'reference' => $transactionReference,
+                    'payment_details' => $paymentDetails
+                ]);
                     $reference = $paymentDetails['data']['reference'];
                     $metadata = $paymentDetails['data']['metadata'];
                     
@@ -302,8 +308,22 @@ class PaymentController extends Controller
                         'transaction_id' => $reference,
                         'amount' => $paymentDetails['data']['amount'] / 100,
                         'tenant_id' => $proforma->tenant_id,
-                        'landlord_id' => $proforma->user_id
+                        'landlord_id' => $proforma->user_id,
+                        'apartment_id' => $proforma->apartment_id,
+                        'duration' => $proforma->duration
                     ]);
+                    
+                    // Check if payment already exists to avoid duplicates
+                    $existingPayment = Payment::where('transaction_id', $reference)->first();
+                    if ($existingPayment) {
+                        Log::info('Payment already exists', ['payment_id' => $existingPayment->id]);
+                        return redirect()->route('payment.receipt', ['id' => $existingPayment->id])->with('success', 'Payment was already processed!');
+                    }
+                    
+                    // Validate required data before creating payment
+                    if (!$proforma->tenant_id || !$proforma->user_id || !$proforma->apartment_id) {
+                        throw new \Exception('Missing required proforma data: tenant_id=' . $proforma->tenant_id . ', landlord_id=' . $proforma->user_id . ', apartment_id=' . $proforma->apartment_id);
+                    }
                     
                     // Use DB transaction to ensure data consistency
                     DB::beginTransaction();
@@ -317,16 +337,18 @@ class PaymentController extends Controller
                     $payment->apartment_id = $proforma->apartment_id;
                     $payment->status = 'completed';
                     $payment->payment_method = $paymentDetails['data']['channel'] ?? 'card';
-                    $payment->duration = $proforma->duration;
+                    $payment->duration = $proforma->duration ?? 12;
                     $payment->paid_at = now();
+                    
+                    Log::info('About to save payment', ['payment_data' => $payment->toArray()]);
                     
                     $saved = $payment->save();
                     
                     if (!$saved) {
-                        throw new \Exception('Failed to save payment record');
+                        throw new \Exception('Failed to save payment record - save() returned false');
                     }
                     
-                    Log::info('Payment record created successfully', ['payment_id' => $payment->id]);
+                    Log::info('Payment record created successfully', ['payment_id' => $payment->id, 'payment_data' => $payment->fresh()->toArray()]);
                     
                     // Update apartment details
                     $apartment->update([
@@ -346,10 +368,37 @@ class PaymentController extends Controller
                     DB::rollBack();
                     Log::error('Failed to create payment record', [
                         'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                        'trace' => $e->getTraceAsString(),
+                        'reference' => $reference,
+                        'proforma_data' => $proforma ? $proforma->toArray() : null,
+                        'apartment_data' => $apartment ? $apartment->toArray() : null
                     ]);
-                    return redirect('/dashboard')->with('error', 'Payment was received but could not be recorded. Please contact support with reference: ' . $reference);
+                    
+                    // Try to save a minimal payment record for debugging
+                    try {
+                        Log::info('Attempting to save minimal payment record for debugging');
+                        $debugPayment = new Payment();
+                        $debugPayment->transaction_id = $reference . '_debug';
+                        $debugPayment->amount = $paymentDetails['data']['amount'] / 100;
+                        $debugPayment->tenant_id = $proforma->tenant_id ?? 0;
+                        $debugPayment->landlord_id = $proforma->user_id ?? 0;
+                        $debugPayment->apartment_id = $proforma->apartment_id ?? 0;
+                        $debugPayment->status = 'failed';
+                        $debugPayment->payment_method = 'debug';
+                        $debugPayment->duration = 1;
+                        $debugPayment->save();
+                        Log::info('Debug payment record saved', ['debug_payment_id' => $debugPayment->id]);
+                    } catch (\Exception $debugE) {
+                        Log::error('Even debug payment failed', ['debug_error' => $debugE->getMessage()]);
+                    }
+                    
+                    return redirect('/dashboard')->with('error', 'Payment was received but could not be recorded. Please contact support with reference: ' . $reference . '. Error: ' . $e->getMessage());
                 }
+                
+                Log::info('=== PAYMENT CALLBACK PROCESSING END ===', [
+                    'reference' => $reference,
+                    'success' => true
+                ]);
                 
                 // Generate receipt
                 $receiptFile = $this->generateReceipt($payment);
@@ -357,10 +406,24 @@ class PaymentController extends Controller
                 return redirect()->route('payment.receipt', ['id' => $payment->id])->with('success', 'Payment was successful! Your receipt has been generated.');
             }
 
+            Log::warning('Payment verification failed', ['payment_details' => $paymentDetails ?? null]);
             return redirect('/dashboard')->with('error', 'Payment failed!');
         } catch(\Exception $e) {
-            Log::error('Payment callback error: ' . $e->getMessage());
-            return redirect('/dashboard')->with('error', 'An error occurred while processing your payment.');
+            Log::error('Payment callback error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'reference' => $transactionReference ?? 'unknown'
+            ]);
+            
+            // Try to create a minimal payment record for failed callbacks
+            try {
+                if (isset($transactionReference)) {
+                    $this->createFallbackPayment($transactionReference, $e->getMessage());
+                }
+            } catch (\Exception $fallbackE) {
+                Log::error('Fallback payment creation also failed', ['error' => $fallbackE->getMessage()]);
+            }
+            
+            return redirect('/dashboard')->with('error', 'An error occurred while processing your payment. Reference: ' . ($transactionReference ?? 'unknown'));
         }
     }
 
@@ -655,5 +718,42 @@ class PaymentController extends Controller
     {
         $pdf = Pdf::loadView('payments.export.pdf', compact('payments'));
         return $pdf->download('payments.pdf');
+    }
+    
+    /**
+     * Create a fallback payment record when the main process fails
+     */
+    private function createFallbackPayment($reference, $errorMessage)
+    {
+        try {
+            Log::info('Creating fallback payment record', ['reference' => $reference]);
+            
+            // Try to find any user and apartment for the fallback
+            $user = User::first();
+            $apartment = Apartment::first();
+            
+            if (!$user || !$apartment) {
+                Log::error('Cannot create fallback payment - no user or apartment found');
+                return;
+            }
+            
+            $fallbackPayment = new Payment();
+            $fallbackPayment->transaction_id = $reference . '_fallback';
+            $fallbackPayment->payment_reference = $reference;
+            $fallbackPayment->amount = 0; // Unknown amount
+            $fallbackPayment->tenant_id = $user->user_id;
+            $fallbackPayment->landlord_id = $user->user_id;
+            $fallbackPayment->apartment_id = $apartment->apartment_id;
+            $fallbackPayment->status = 'failed';
+            $fallbackPayment->payment_method = 'unknown';
+            $fallbackPayment->duration = 1;
+            $fallbackPayment->payment_meta = json_encode(['error' => $errorMessage, 'type' => 'fallback']);
+            $fallbackPayment->save();
+            
+            Log::info('Fallback payment created', ['payment_id' => $fallbackPayment->id]);
+            
+        } catch (\Exception $e) {
+            Log::error('Fallback payment creation failed', ['error' => $e->getMessage()]);
+        }
     }
 }

@@ -155,9 +155,11 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="card-title">Apartment Details </h4>
-                            <button type="button" class="btn btn-primary btn-sm ml-2" id="sendProfomaBtn" data-tenant-id="{{ $apartment->tenant_id }}">
-                                <i class="fa fa-paper-plane"></i> Send Profoma
-                            </button>
+                            @if(auth()->user()->admin || auth()->user()->user_id == $apartment->property->user_id)
+                                <button type="button" class="btn btn-primary btn-sm ml-2" id="sendProfomaBtn" data-tenant-id="{{ $apartment->tenant_id }}">
+                                    <i class="fa fa-paper-plane"></i> Send Profoma
+                                </button>
+                            @endif
                             <p class="card-category">Complete information about this apartment</p>
                         </div>
                         <div class="btn-group">
