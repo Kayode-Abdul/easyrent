@@ -52,13 +52,24 @@ class DashboardController extends Controller
         $greeting = $this->getGreeting();
 
         if ($isAdmin || $userRole == 7) {
-            // Super Admin Dashboard
-            $stats = $this->getAdminStats();
-            $chartData = $this->getAdminChartData();
-            $recentActivities = $this->getAdminActivities();
-            return view('admin-dashboard', compact('stats', 'chartData', 'recentActivities', 'greeting'));
-        } elseif ($userRole == 2) {
-            // Landlord Dashboard
+            // Super Admin Dashboard - check mode preference
+            $adminMode = session('admin_dashboard_mode', 'personal');
+            if ($adminMode === 'admin') {
+                $stats = $this->getAdminStats();
+                $chartData = $this->getAdminChartData();
+                $recentActivities = $this->getAdminActivities();
+                return view('admin-dashboard', compact('stats', 'chartData', 'recentActivities', 'greeting'));
+            }
+            // If mode is 'personal', continue to personal dashboard below
+        } elseif (in_array($userRole, [6, 8])) {
+            // Property Manager Dashboard - check mode preference
+            $mode = session('dashboard_mode', 'property_manager');
+            if ($mode === 'property_manager') {
+                return redirect()->route('property-manager.dashboard');
+            }
+            // If mode is 'personal', continue to personal dashboard below
+        } elseif ($userRole == 2 || (in_array($userRole, [6, 8]) && session('dashboard_mode') === 'personal') || (($isAdmin || $userRole == 7) && session('admin_dashboard_mode') === 'personal')) {
+            // Landlord Dashboard, Property Manager in Personal Mode, or Admin in Personal Mode
             $stats = $this->getLandlordStats($userId);
             $chartData = $this->getLandlordChartData($userId);
             $recentActivities = $this->getLandlordActivities($userId);
@@ -724,6 +735,56 @@ class DashboardController extends Controller
         ];
     }
     
+    /**
+     * Switch dashboard mode for property managers
+     */
+    public function switchPropertyManagerMode(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Verify user is a property manager
+        if (!in_array($user->role, [6, 8])) {
+            return response()->json(['success' => false, 'message' => 'Access denied']);
+        }
+        
+        $mode = $request->input('mode', 'property_manager');
+        
+        // Validate mode
+        if (!in_array($mode, ['property_manager', 'personal'])) {
+            return response()->json(['success' => false, 'message' => 'Invalid mode']);
+        }
+        
+        // Store mode in session
+        session(['dashboard_mode' => $mode]);
+        
+        return response()->json(['success' => true, 'mode' => $mode]);
+    }
+
+    /**
+     * Switch dashboard mode for admin users
+     */
+    public function switchAdminMode(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Verify user is an admin
+        if (!($user->admin == 1 || $user->role == 7)) {
+            return response()->json(['success' => false, 'message' => 'Access denied']);
+        }
+        
+        $mode = $request->input('mode', 'admin');
+        
+        // Validate mode
+        if (!in_array($mode, ['admin', 'personal'])) {
+            return response()->json(['success' => false, 'message' => 'Invalid mode']);
+        }
+        
+        // Store mode in session
+        session(['admin_dashboard_mode' => $mode]);
+        
+        return response()->json(['success' => true, 'mode' => $mode]);
+    }
+
     /**
      * Common dashboard data for all users
      */

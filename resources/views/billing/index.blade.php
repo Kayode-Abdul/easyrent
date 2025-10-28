@@ -3,7 +3,7 @@
 <!-- section('title', 'Billing & Payments') -->
 
 @section('content')
-<div class="container-fluid py-4">
+<div class="content">
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">

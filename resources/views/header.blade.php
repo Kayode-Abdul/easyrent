@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta charset="utf-8"> 
     <link rel="icon" type="image/png" href="/favicon.png">
-    @php $currentSegment = request()->segment(1); $isDashboard = in_array($currentSegment, ['dashboard','admin', 'proforma']); @endphp
+    @php $currentSegment = request()->segment(1); $isDashboard = in_array($currentSegment, ['dashboard','admin', 'proforma', 'property-manager']); @endphp
     @if(!$isDashboard)
     <!-- Add CSRF Token meta tag -->
     <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:200,300,400,600,700,800,900&display=swap" rel="stylesheet">

@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Commission Transparency')
+@extends('layout')
 
 @section('content')
 <div class="content">
@@ -410,20 +408,28 @@ function clearFilters() {
 
 // Load commission history
 $('#commissionHistoryModal').on('show.bs.modal', function() {
+    // Show loading state
+    $('#commissionHistoryContent').html('<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading commission history...</div>');
+    
     $.ajax({
         url: '/dashboard/commission-rate-history',
         method: 'GET',
         success: function(response) {
-            if (response.success && response.history.length > 0) {
+            console.log('Commission history response:', response); // Debug log
+            
+            if (response.success && response.history && response.history.length > 0) {
                 let content = `
+                    <div class="mb-3">
+                        <strong>Region:</strong> ${response.region || 'Default'} 
+                        <span class="badge badge-info ml-2">${response.total_records || response.history.length} records</span>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
+                        <table class="table table-striped" id="commissionHistoryTable">
+                            <thead class="thead-light">
                                 <tr>
                                     <th>Date</th>
                                     <th>Role</th>
-                                    <th>Old Rate</th>
-                                    <th>New Rate</th>
+                                    <th>Commission Rate</th>
                                     <th>Changed By</th>
                                     <th>Effective From</th>
                                 </tr>
@@ -434,12 +440,11 @@ $('#commissionHistoryModal').on('show.bs.modal', function() {
                 response.history.forEach(function(item) {
                     content += `
                         <tr>
-                            <td>${item.created_at}</td>
-                            <td>${item.role_name}</td>
-                            <td>${item.old_rate ? item.old_rate + '%' : 'N/A'}</td>
-                            <td>${item.commission_percentage}%</td>
-                            <td>${item.created_by}</td>
-                            <td>${item.effective_from}</td>
+                            <td>${item.created_at || 'N/A'}</td>
+                            <td><span class="badge badge-primary">${item.role_name || 'Unknown'}</span></td>
+                            <td><strong>${item.commission_percentage || 0}%</strong></td>
+                            <td>${item.created_by || 'System'}</td>
+                            <td>${item.effective_from || item.created_at || 'N/A'}</td>
                         </tr>
                     `;
                 });
@@ -451,12 +456,49 @@ $('#commissionHistoryModal').on('show.bs.modal', function() {
                 `;
                 
                 $('#commissionHistoryContent').html(content);
+                
+                // Initialize DataTable without conflicting options
+                setTimeout(function() {
+                    if ($.fn.DataTable && $('#commissionHistoryTable').length) {
+                        try {
+                            $('#commissionHistoryTable').DataTable({
+                                "pageLength": 10,
+                                "order": [[ 0, "desc" ]],
+                                "responsive": true,
+                                "destroy": true // Allow reinitialization
+                            });
+                        } catch (e) {
+                            console.log('DataTable initialization skipped:', e.message);
+                        }
+                    }
+                }, 100);
+                
             } else {
-                $('#commissionHistoryContent').html('<div class="alert alert-info">No commission rate history available.</div>');
+                $('#commissionHistoryContent').html(`
+                    <div class="alert alert-info">
+                        <h5>No Commission History</h5>
+                        <p>No commission rate changes found for your region (${response.region || 'Default'}).</p>
+                    </div>
+                `);
             }
         },
-        error: function() {
-            $('#commissionHistoryContent').html('<div class="alert alert-danger">Error loading commission history.</div>');
+        error: function(xhr, status, error) {
+            console.error('Commission history error:', xhr.responseText); // Debug log
+            let errorMessage = 'Error loading commission history.';
+            
+            if (xhr.status === 500) {
+                errorMessage = 'Server error occurred. Please try again later.';
+            } else if (xhr.status === 401) {
+                errorMessage = 'You are not authorized to view this data.';
+            }
+            
+            $('#commissionHistoryContent').html(`
+                <div class="alert alert-danger">
+                    <h5>Error</h5>
+                    <p>${errorMessage}</p>
+                    ${xhr.responseText ? '<small class="text-muted">Details: ' + xhr.responseText + '</small>' : ''}
+                </div>
+            `);
         }
     });
 });

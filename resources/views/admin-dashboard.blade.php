@@ -12,6 +12,20 @@
 <!-- end of header -->
 
 <div class="content">
+    <!-- Admin Dashboard Mode Toggle -->
+    <div class="container-fluid mb-3">
+        <div class="d-flex justify-content-end align-items-center">
+            <div>
+                <span class="switch-label-left">Admin Dashboard</span>
+                <label class="switch mb-0">
+                    <input type="checkbox" id="adminDashboardSwitch">
+                    <span class="slider"></span>
+                </label>
+                <span class="switch-label">Personal Dashboard</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Role-based greeting -->
     <div class="row mb-3">
         <div class="col-md-12">
@@ -1069,9 +1083,94 @@
         }, 3000);
     }
 @endif
+
+// Admin Dashboard Toggle
+$(function() {
+    $('#adminDashboardSwitch').on('change', function() {
+        var mode = this.checked ? 'personal' : 'admin';
+        var $switch = $(this);
+        $switch.prop('disabled', true); // Prevent double clicks
+        
+        console.log('Admin toggle clicked, switching to mode:', mode);
+        
+        $.ajax({
+            url: '/dashboard/switch-admin-mode',
+            method: 'POST',
+            data: { mode: mode },
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                console.log('Success response:', res);
+                if(res.success) {
+                    if (mode === 'personal') {
+                        // Redirect to personal dashboard
+                        window.location.href = '/dashboard';
+                    } else {
+                        // Reload admin dashboard
+                        location.reload();
+                    }
+                } else {
+                    $switch.prop('disabled', false);
+                    alert('Failed to switch admin mode: ' + (res.message || 'Unknown error'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Error response:', xhr.responseText);
+                console.log('Status:', status, 'Error:', error);
+                $switch.prop('disabled', false);
+                alert('Error switching admin mode. Please check console for details.');
+            }
+        });
+    });
+});
 </script>
 
 <style>
+/* Modern switch toggle for admin */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+.switch input {display:none;}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #007bff;
+}
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+.switch-label {
+  margin-left: 12px;
+  font-weight: bold;
+  vertical-align: middle;
+}
+.switch-label-left {
+  margin-right: 12px;
+  font-weight: bold;
+  vertical-align: middle;
+}
+
 .alert-gradient-primary {
     background: linear-gradient(45deg, #51cbce, #6bd098);
     color: white;

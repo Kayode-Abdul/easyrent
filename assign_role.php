@@ -43,25 +43,24 @@ if (!$currentUser || (!$currentUser->admin && $currentUser->role != 1)) {
 // Define role restrictions based on business rules
 $userSelectedRoles = [
     2 => 'Landlord',        // User selects during registration or from dashboard
-    3 => 'Tenant',          // User selects during registration or from dashboard  
-    4 => 'Artisan',         // User selects during registration or from dashboard
-    5 => 'Marketer',        // User selects during registration, activated by referrals
-    7 => 'Property Manager', // User selects during registration or from dashboard
+    1 => 'Tenant',          // User selects during registration or from dashboard  
+    5 => 'Artisan',         // User selects during registration or from dashboard
+    3 => 'Marketer',        // User selects during registration, activated by referrals
+    6 => 'Property Manager', // User selects during registration or from dashboard
 ];
 
 $automaticRoles = [
-    9 => 'Super Marketer',  // Automatically assigned when marketer refers another marketer who refers a landlord
+    4 => 'Super Marketer',  // Automatically assigned when marketer refers another marketer who refers a landlord
 ];
 
-$adminOnlyRoles = [
-    1 => 'Super Admin',     // Only super admins can assign
-    6 => 'Admin',           // Only super admins can assign
-    8 => 'Regional Manager', // Only admins can assign
+$adminOnlyRoles = [     // Only super admins can assign
+    7 => 'Admin',           // Only super admins can assign
+    9 => 'Regional Manager', // Only admins can assign
 ];
 
 $upgradeRoles = [
     // Roles that are upgrades from base roles (admin can assign these)
-    // 7 -> Verified Property Manager (admin upgrades from Property Manager)
+     8 => 'Verified Property Manager', //(admin upgrades from Property Manager)
 ];
 
 // Check if current user is super admin
@@ -142,15 +141,15 @@ $users = \App\Models\User::orderBy('first_name')->get();
 
 // Get role names
 $roleNames = [
-    1 => 'Super Admin',
+    1 => 'Tenant',
     2 => 'Landlord',
-    3 => 'Tenant',
-    4 => 'Artisan',
-    5 => 'Marketer',
-    6 => 'Admin',
-    7 => 'Property Manager',
-    8 => 'Regional Manager',
-    9 => 'Super Marketer'
+    3 => 'Marketer',
+    4 => 'Super Marketer',
+    5 => 'Artisan',
+    6 => 'Property Manager',
+    7 => 'Admin',
+    8 => 'Verified Property Manager',
+    9 => 'Regional Manager'
 ];
 
 // Filter roles based on admin permissions

@@ -16,6 +16,10 @@ use Illuminate\Support\Str;
 
 class PropertyController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
     public function properties(Request $request): \Illuminate\View\View
     {
         $perPage = 10; // Number of properties per page
@@ -135,17 +139,34 @@ class PropertyController extends Controller
         return response()->json(['success' => true, 'message' => 'Dashboard mode switched', 'mode' => $mode]);
     }
 
-    public function userProperty(): \Illuminate\View\View
+    public function userProperty()
     {
         if (!auth()->check()) {
             return view('auth.login');
         }
         $userId = auth()->user()->user_id;
+        $user = auth()->user();
         $hasProperties = Property::where('user_id', $userId)->exists();
-        $mode = session('dashboard_mode');
-        if (!$mode) {
-            $mode = $hasProperties ? 'landlord' : 'tenant';
-            session(['dashboard_mode' => $mode]);
+        
+        // Handle mode for property managers and regular users
+        if (in_array($user->role, [6, 8])) {
+            // Property manager - check their dashboard mode preference
+            $dashboardMode = session('dashboard_mode', 'landlord');
+            
+            // If they have explicitly set landlord/tenant mode, use that
+            if (in_array($dashboardMode, ['landlord', 'tenant'])) {
+                $mode = $dashboardMode;
+            } else {
+                // Default to landlord mode for their personal properties
+                $mode = 'landlord';
+            }
+        } else {
+            // Regular user mode handling
+            $mode = session('dashboard_mode');
+            if (!$mode) {
+                $mode = $hasProperties ? 'landlord' : 'tenant';
+                session(['dashboard_mode' => $mode]);
+            }
         }
         $myProperties = collect();
         $myApartment = collect();
@@ -368,6 +389,8 @@ class PropertyController extends Controller
         ]);
     }
 
+
+
     /**
      * Get detailed commission breakdown for a specific payment
      */
@@ -585,26 +608,35 @@ class PropertyController extends Controller
      */
     public function getCommissionRateHistory(Request $request): JsonResponse
     {
-        if (!auth()->check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
+        try {
+            if (!auth()->check()) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
 
-        $userId = auth()->user()->user_id;
-        
-        // Get landlord's region
-        $landlordRegion = Property::where('user_id', $userId)->first()?->state ?? 'Default';
+            $userId = auth()->user()->user_id;
+            
+            // Get landlord's region
+            $landlordRegion = Property::where('user_id', $userId)->first()?->state ?? 'Default';
         
         // Get rate history for the region
         $history = \App\Models\CommissionRate::where('region', $landlordRegion)
-            ->with('createdBy')
             ->orderBy('created_at', 'desc')
             ->limit(50)
             ->get();
+            
+        // If no records found for specific region, try default region
+        if ($history->isEmpty() && $landlordRegion !== 'Default') {
+            $history = \App\Models\CommissionRate::where('region', 'Default')
+                ->orderBy('created_at', 'desc')
+                ->limit(50)
+                ->get();
+        }
 
         $formattedHistory = $history->map(function ($rate) {
             $roleNames = [
                 5 => 'Marketer',
                 6 => 'Regional Manager',
+                8 => 'Property Manager',
                 9 => 'Super Marketer'
             ];
 
@@ -613,16 +645,27 @@ class PropertyController extends Controller
                 'created_at' => $rate->created_at->format('Y-m-d H:i:s'),
                 'role_name' => $roleNames[$rate->role_id] ?? "Role {$rate->role_id}",
                 'commission_percentage' => $rate->commission_percentage,
-                'effective_from' => $rate->effective_from->format('Y-m-d H:i:s'),
-                'created_by' => $rate->createdBy ? $rate->createdBy->first_name . ' ' . $rate->createdBy->last_name : 'System',
-                'old_rate' => null // This would require tracking previous rates
+                'effective_from' => $rate->effective_from ? $rate->effective_from->format('Y-m-d H:i:s') : $rate->created_at->format('Y-m-d H:i:s'),
+                'created_by' => 'System', // Simplified since createdBy relationship doesn't exist
+                'region' => $rate->region
             ];
         });
 
         return response()->json([
             'success' => true,
-            'history' => $formattedHistory
+            'history' => $formattedHistory->toArray(), // Convert Collection to array
+            'region' => $landlordRegion,
+            'total_records' => $formattedHistory->count()
         ]);
+        
+        } catch (\Exception $e) {
+            \Log::error('Commission Rate History Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to load commission rate history',
+                'message' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
     }
 
     // New helper methods
