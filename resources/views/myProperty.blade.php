@@ -2,24 +2,58 @@
 @section('content')
 
 <div class="content">
-    @if($hasProperties || !$myApartment->isEmpty())
-        <!-- Dashboard Mode Toggle: Directly under navbar, above statistics cards -->
-        <div class="container-fluid mb-3">
-            <div class="d-flex justify-content-end align-items-center">
-                <span class="switch-label-left">Landlord</span>
-                <label class="switch mb-0">
-                    <input type="checkbox" id="dashboardSwitch" {{ $mode != 'tenant' ? '' : 'checked' }} {{ !$hasProperties ? 'disabled' : '' }}>
-                    <span class="slider"></span>
-                </label>
-                <span class="switch-label">Tenant</span>
+    <!-- Dashboard Mode Controls -->
+    <div class="container-fluid mb-3">
+        <div class="row">
+            @if(in_array(auth()->user()->role, [6, 8]))
+                <!-- Property Manager Tabs (only for PMs) -->
+                <div class="col-md-6">
+                    <ul class="nav nav-tabs pm-tabs" id="pmTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link active" id="personal-tab" data-toggle="tab" href="#personal" role="tab" aria-controls="personal" aria-selected="true">
+                                <i class="nc-icon nc-single-02"></i> Personal
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link" id="property-manager-tab" data-toggle="tab" href="#property-manager" role="tab" aria-controls="property-manager" aria-selected="false">
+                                <i class="nc-icon nc-settings-gear-65"></i> Property Manager
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            @endif
+            
+            <!-- Landlord/Tenant Toggle (for everyone) -->
+            <div class="col-md-6 d-flex justify-content-end align-items-center">
+                <div>
+                    <span class="switch-label-left">Landlord</span>
+                    <label class="switch mb-0">
+                        <input type="checkbox" id="dashboardSwitch" {{ $mode == 'tenant' ? 'checked' : '' }}>
+                        <span class="slider"></span>
+                    </label>
+                    <span class="switch-label">Tenant</span>
+                </div>
             </div>
         </div>
-        <script>
+    </div>
+
+    <!-- JavaScript for toggles - always load -->
+    <script>
         $(function() {
+            // Debug: Check if elements exist
+            console.log('jQuery loaded:', typeof $ !== 'undefined');
+            console.log('Dashboard switch element found:', $('#dashboardSwitch').length);
+            console.log('PM switch element found:', $('#propertyManagerSwitch').length);
+            console.log('Current mode from toggle:', $('#dashboardSwitch').is(':checked') ? 'tenant' : 'landlord');
+            // Landlord/Tenant Toggle (works for everyone)
             $('#dashboardSwitch').on('change', function() {
                 var mode = this.checked ? 'tenant' : 'landlord';
                 var $switch = $(this);
                 $switch.prop('disabled', true); // Prevent double clicks
+                
+                console.log('Toggle clicked, switching to mode:', mode);
+                console.log('CSRF Token:', $('meta[name="csrf-token"]').attr('content'));
+                
                 $.ajax({
                     url: '/dashboard/switch-mode',
                     method: 'POST',
@@ -28,15 +62,68 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(res) {
-                        if(res.success) location.reload();
-                        else $switch.prop('disabled', false);
+                        console.log('Success response:', res);
+                        if(res.success) {
+                            location.reload();
+                        } else {
+                            $switch.prop('disabled', false);
+                            alert('Failed to switch mode: ' + (res.message || 'Unknown error'));
+                        }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.log('Error response:', xhr.responseText);
+                        console.log('Status:', status, 'Error:', error);
                         $switch.prop('disabled', false);
+                        alert('Error switching mode. Please check console for details.');
                     }
                 });
             });
+
+            // Property Manager Tabs (only for PMs)
+            $('#property-manager-tab').on('click', function(e) {
+                e.preventDefault();
+                
+                $.ajax({
+                    url: '/dashboard/switch-property-manager-mode',
+                    method: 'POST',
+                    data: { mode: 'property_manager' },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(res) {
+                        if(res.success) {
+                            window.location.href = '/property-manager/dashboard';
+                        } else {
+                            alert('Failed to switch to Property Manager mode: ' + (res.message || 'Unknown error'));
+                        }
+                    },
+                    error: function() {
+                        alert('Error switching to Property Manager mode. Please try again.');
+                    }
+                });
+            });
+            
+            // Personal tab is already active, no action needed for personal tab click
         });
+
+        // Tenant action functions
+        function makePayment(apartmentId) {
+            alert('Payment functionality for apartment ' + apartmentId + ' - Feature coming soon!');
+            // TODO: Redirect to payment page or open payment modal
+        }
+
+        function viewPaymentHistory(apartmentId) {
+            alert('Payment history for apartment ' + apartmentId + ' - Feature coming soon!');
+            // TODO: Open payment history modal or redirect to payments page
+        }
+
+        function contactLandlord(email) {
+            if (email && email !== 'undefined') {
+                window.location.href = 'mailto:' + email;
+            } else {
+                alert('Landlord email not available');
+            }
+        }
         </script>
 
         @if($mode === 'landlord')
@@ -146,6 +233,134 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Managed Properties Card (for Property Managers in PM mode only) -->
+            @if(in_array(auth()->user()->role, [6, 8]) && session('dashboard_mode', 'property_manager') === 'property_manager')
+                @php
+                    $managedProperties = \App\Models\Property::where('agent_id', auth()->user()->user_id)
+                        ->with(['owner', 'apartments'])
+                        ->limit(5)
+                        ->get();
+                    $totalManagedProperties = \App\Models\Property::where('agent_id', auth()->user()->user_id)->count();
+                @endphp
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h4 class="card-title">
+                                            <i class="nc-icon nc-settings-gear-65 text-primary"></i>
+                                            Managed Properties
+                                        </h4>
+                                        <p class="card-category">Properties assigned to you for management</p>
+                                    </div>
+                                    <div>
+                                        <span class="badge badge-primary badge-lg">{{ $totalManagedProperties }} Total</span>
+                                        <a href="{{ route('property-manager.dashboard') }}" class="btn btn-primary btn-sm ml-2">
+                                            <i class="fa fa-tachometer-alt"></i> Manager Dashboard
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                @if($managedProperties->isEmpty())
+                                    <div class="alert alert-info text-center">
+                                        <i class="nc-icon nc-settings-gear-65" style="font-size: 48px; opacity: 0.3;"></i>
+                                        <h5>No Properties Assigned</h5>
+                                        <p>You don't have any properties assigned to manage yet.</p>
+                                        <p class="text-muted">Contact your administrator to get properties assigned to you for management.</p>
+                                    </div>
+                                @else
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead class="text-primary">
+                                                <tr>
+                                                    <th>Property ID</th>
+                                                    <th>Address</th>
+                                                    <th>Owner</th>
+                                                    <th>Apartments</th>
+                                                    <th>Occupancy</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($managedProperties as $property)
+                                                    @php
+                                                        $totalApartments = $property->apartments->count();
+                                                        $occupiedApartments = $property->apartments->where('occupied', true)->count();
+                                                        $occupancyRate = $totalApartments > 0 ? round(($occupiedApartments / $totalApartments) * 100, 1) : 0;
+                                                    @endphp
+                                                    <tr>
+                                                        <td>
+                                                            <span class="font-weight-bold text-primary">{{ $property->prop_id }}</span>
+                                                        </td>
+                                                        <td>
+                                                            <div>
+                                                                <strong>{{ $property->address }}</strong><br>
+                                                                <small class="text-muted">{{ $property->lga }}, {{ $property->state }}</small>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            @if($property->owner)
+                                                                <div>
+                                                                    <strong>{{ $property->owner->first_name }} {{ $property->owner->last_name }}</strong><br>
+                                                                    <small class="text-muted">{{ $property->owner->email }}</small>
+                                                                </div>
+                                                            @else
+                                                                <span class="text-muted">N/A</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge badge-info">{{ $totalApartments }} Units</span>
+                                                            @if($occupiedApartments > 0)
+                                                                <br><span class="badge badge-success">{{ $occupiedApartments }} Occupied</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            <div class="progress" style="height: 20px; min-width: 80px;">
+                                                                <div class="progress-bar bg-{{ $occupancyRate >= 80 ? 'success' : ($occupancyRate >= 50 ? 'warning' : 'danger') }}" 
+                                                                     role="progressbar" 
+                                                                     style="width: {{ $occupancyRate }}%"
+                                                                     aria-valuenow="{{ $occupancyRate }}" 
+                                                                     aria-valuemin="0" 
+                                                                     aria-valuemax="100">
+                                                                    {{ $occupancyRate }}%
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="btn-group">
+                                                                <a href="{{ route('property-manager.property-details', $property->prop_id) }}" 
+                                                                   class="btn btn-info btn-sm" title="View Details">
+                                                                    <i class="fa fa-eye"></i>
+                                                                </a>
+                                                                <a href="{{ route('property-manager.property-apartments', $property->prop_id) }}" 
+                                                                   class="btn btn-success btn-sm" title="View Apartments">
+                                                                    <i class="fa fa-home"></i>
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    @if($totalManagedProperties > 5)
+                                        <div class="text-center mt-3">
+                                            <a href="{{ route('property-manager.managed-properties') }}" class="btn btn-outline-primary">
+                                                <i class="fa fa-list"></i> View All {{ $totalManagedProperties }} Managed Properties
+                                            </a>
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <!-- Commission Transparency Section -->
             @if(isset($commissionData) && $commissionData['transparency_enabled'])
@@ -352,8 +567,126 @@
             </div>
         @elseif($mode === 'tenant')
             <div class="row">
-                <!-- Statistics Cards (optional: show only tenant-relevant stats, or remove entirely) -->
-                <!-- Tenancy Table -->
+                <!-- Tenant Statistics Cards -->
+                @php
+                    $totalRentals = $myApartment->count();
+                    $activeRentals = $myApartment->where('range_end', '>', now())->count();
+                    $expiredRentals = $myApartment->where('range_end', '<=', now())->count();
+                    
+                    // Get payment statistics for tenant
+                    $tenantPayments = \App\Models\Payment::where('tenant_id', auth()->user()->user_id)->get();
+                    $totalPaid = $tenantPayments->where('status', 'completed')->sum('amount');
+                    $pendingPayments = $tenantPayments->where('status', 'pending')->count();
+                    $overduePayments = $tenantPayments->where('status', 'pending')->where('due_date', '<', now())->count();
+                    $upcomingPayments = $tenantPayments->where('status', 'pending')->where('due_date', '>=', now())->where('due_date', '<=', now()->addDays(7))->count();
+                @endphp
+
+                <div class="col-lg-3 col-md-6 col-sm-6">
+                    <div class="card card-stats">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-5 col-md-4">
+                                    <div class="icon-big text-center icon-warning">
+                                        <i class="nc-icon nc-home-gear text-primary"></i>
+                                    </div>
+                                </div>
+                                <div class="col-7 col-md-8">
+                                    <div class="numbers">
+                                        <p class="card-category">Active Rentals</p>
+                                        <p class="card-title">{{ $activeRentals }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <hr>
+                            <div class="stats">
+                                <i class="fa fa-home"></i> {{ $totalRentals }} Total Rentals
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 col-sm-6">
+                    <div class="card card-stats">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-5 col-md-4">
+                                    <div class="icon-big text-center icon-warning">
+                                        <i class="nc-icon nc-money-coins text-success"></i>
+                                    </div>
+                                </div>
+                                <div class="col-7 col-md-8">
+                                    <div class="numbers">
+                                        <p class="card-category">Total Paid</p>
+                                        <p class="card-title">₦{{ number_format($totalPaid, 0) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <hr>
+                            <div class="stats">
+                                <i class="fa fa-check-circle"></i> Completed Payments
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 col-sm-6">
+                    <div class="card card-stats">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-5 col-md-4">
+                                    <div class="icon-big text-center icon-warning">
+                                        <i class="nc-icon nc-alert-circle-i text-danger"></i>
+                                    </div>
+                                </div>
+                                <div class="col-7 col-md-8">
+                                    <div class="numbers">
+                                        <p class="card-category">Overdue</p>
+                                        <p class="card-title">{{ $overduePayments }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <hr>
+                            <div class="stats">
+                                <i class="fa fa-exclamation-triangle"></i> Payments Overdue
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 col-sm-6">
+                    <div class="card card-stats">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-5 col-md-4">
+                                    <div class="icon-big text-center icon-warning">
+                                        <i class="nc-icon nc-time-alarm text-warning"></i>
+                                    </div>
+                                </div>
+                                <div class="col-7 col-md-8">
+                                    <div class="numbers">
+                                        <p class="card-category">Due Soon</p>
+                                        <p class="card-title">{{ $upcomingPayments }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <hr>
+                            <div class="stats">
+                                <i class="fa fa-calendar"></i> Next 7 Days
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tenancy Table -->
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header">
@@ -371,30 +704,97 @@
                                     <table class="table">
                                         <thead class="text-primary">
                                             <tr>
-                                                <th>Apartment ID</th>
-                                                <th>Type</th>
+                                                <th>Apartment</th>
                                                 <th>Property Address</th>
                                                 <th>Rent Amount</th>
-                                                <th>Lease Start</th>
-                                                <th>Lease End</th>
+                                                <th>Lease Period</th>
+                                                <th>Payment Status</th>
                                                 <th>Status</th>
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach($myApartment as $apartment)
+                                                @php
+                                                    $latestPayment = \App\Models\Payment::where('tenant_id', auth()->user()->user_id)
+                                                        ->where('apartment_id', $apartment->apartment_id)
+                                                        ->orderBy('created_at', 'desc')
+                                                        ->first();
+                                                    
+                                                    $overduePayment = \App\Models\Payment::where('tenant_id', auth()->user()->user_id)
+                                                        ->where('apartment_id', $apartment->apartment_id)
+                                                        ->where('status', 'pending')
+                                                        ->where('due_date', '<', now())
+                                                        ->exists();
+                                                        
+                                                    $upcomingPayment = \App\Models\Payment::where('tenant_id', auth()->user()->user_id)
+                                                        ->where('apartment_id', $apartment->apartment_id)
+                                                        ->where('status', 'pending')
+                                                        ->where('due_date', '>=', now())
+                                                        ->where('due_date', '<=', now()->addDays(7))
+                                                        ->first();
+                                                @endphp
                                                 <tr>
-                                                    <td>{{ $apartment->apartment_id }}</td>
-                                                    <td>{{ $apartment->apartment_type }}</td>
+                                                    <td>
+                                                        <div>
+                                                            <strong>{{ $apartment->apartment_id }}</strong><br>
+                                                            <small class="text-muted">{{ $apartment->apartment_type ?? 'N/A' }}</small>
+                                                        </div>
+                                                    </td>
                                                     <td>{{ $apartment->property->address ?? '-' }}</td>
-                                                    <td>{{ $apartment->amount }}</td>
-                                                    <td>{{ $apartment->range_start ? $apartment->range_start->format('Y-m-d') : '-' }}</td>
-                                                    <td>{{ $apartment->range_end ? $apartment->range_end->format('Y-m-d') : '-' }}</td>
+                                                    <td>
+                                                        <strong>₦{{ number_format($apartment->amount ?? 0, 2) }}</strong><br>
+                                                        <small class="text-muted">Monthly</small>
+                                                    </td>
+                                                    <td>
+                                                        @if($apartment->range_start && $apartment->range_end)
+                                                            <div>
+                                                                <strong>{{ $apartment->range_start->format('M d, Y') }}</strong><br>
+                                                                <small class="text-muted">to {{ $apartment->range_end->format('M d, Y') }}</small>
+                                                            </div>
+                                                        @else
+                                                            <span class="text-muted">No lease period</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if($overduePayment)
+                                                            <span class="badge badge-danger">Overdue</span>
+                                                        @elseif($upcomingPayment)
+                                                            <span class="badge badge-warning">Due {{ $upcomingPayment->due_date->format('M d') }}</span>
+                                                        @elseif($latestPayment && $latestPayment->status === 'completed')
+                                                            <span class="badge badge-success">Paid</span>
+                                                        @elseif($latestPayment && $latestPayment->status === 'pending')
+                                                            <span class="badge badge-info">Pending</span>
+                                                        @else
+                                                            <span class="badge badge-secondary">No Payments</span>
+                                                        @endif
+                                                    </td>
                                                     <td>
                                                         @if($apartment->range_end && $apartment->range_end > now())
                                                             <span class="badge badge-success">Active</span>
+                                                            @if($apartment->range_end <= now()->addDays(30))
+                                                                <br><small class="text-warning">Expires {{ $apartment->range_end->diffForHumans() }}</small>
+                                                            @endif
                                                         @else
-                                                            <span class="badge badge-secondary">Inactive</span>
+                                                            <span class="badge badge-secondary">Expired</span>
                                                         @endif
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group-vertical">
+                                                            @if($overduePayment || $upcomingPayment)
+                                                                <button class="btn btn-primary btn-sm mb-1" onclick="makePayment('{{ $apartment->apartment_id }}')">
+                                                                    <i class="fa fa-credit-card"></i> Pay
+                                                                </button>
+                                                            @endif
+                                                            <button class="btn btn-info btn-sm mb-1" onclick="viewPaymentHistory('{{ $apartment->apartment_id }}')">
+                                                                <i class="fa fa-history"></i> History
+                                                            </button>
+                                                            @if($apartment->property && $apartment->property->owner)
+                                                                <button class="btn btn-success btn-sm" onclick="contactLandlord('{{ $apartment->property->owner->email }}')">
+                                                                    <i class="fa fa-envelope"></i> Contact
+                                                                </button>
+                                                            @endif
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -407,7 +807,8 @@
                 </div>
             </div>
         @endif
-    @else
+    
+    @if($myProperties->isEmpty() && $myApartment->isEmpty())
         <div class="row mt-4">
             <div class="col-md-12">
                 <div class="alert alert-info text-center p-5">
@@ -420,6 +821,75 @@
         </div>
     @endif
 </div>
+
+<!-- JavaScript for toggles - moved outside conditionals to always load -->
+<script>
+$(function() {
+    // Debug: Check if elements exist
+    console.log('jQuery loaded:', typeof $ !== 'undefined');
+    console.log('Dashboard switch element found:', $('#dashboardSwitch').length);
+    console.log('PM switch element found:', $('#propertyManagerSwitch').length);
+    console.log('Current mode from toggle:', $('#dashboardSwitch').is(':checked') ? 'tenant' : 'landlord');
+
+    // Landlord/Tenant Toggle (works for everyone)
+    $('#dashboardSwitch').on('change', function() {
+        var mode = this.checked ? 'tenant' : 'landlord';
+        var $switch = $(this);
+        $switch.prop('disabled', true); // Prevent double clicks
+        
+        console.log('Toggle clicked, switching to mode:', mode);
+        console.log('CSRF Token:', $('meta[name="csrf-token"]').attr('content'));
+        
+        $.ajax({
+            url: '/dashboard/switch-mode',
+            method: 'POST',
+            data: { mode: mode },
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                console.log('Success response:', res);
+                if(res.success) {
+                    location.reload();
+                } else {
+                    $switch.prop('disabled', false);
+                    alert('Failed to switch mode: ' + (res.message || 'Unknown error'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Error response:', xhr.responseText);
+                console.log('Status:', status, 'Error:', error);
+                $switch.prop('disabled', false);
+                alert('Error switching mode. Please check console for details.');
+            }
+        });
+    });
+
+    // Tenant action functions
+    function makePayment(apartmentId) {
+        alert('Payment functionality for apartment ' + apartmentId + ' - Feature coming soon!');
+        // TODO: Redirect to payment page or open payment modal
+    }
+
+    function viewPaymentHistory(apartmentId) {
+        alert('Payment history for apartment ' + apartmentId + ' - Feature coming soon!');
+        // TODO: Open payment history modal or redirect to payments page
+    }
+
+    function contactLandlord(email) {
+        if (email && email !== 'undefined') {
+            window.location.href = 'mailto:' + email;
+        } else {
+            alert('Landlord email not available');
+        }
+    }
+
+    // Make functions global so they can be called from HTML
+    window.makePayment = makePayment;
+    window.viewPaymentHistory = viewPaymentHistory;
+    window.contactLandlord = contactLandlord;
+});
+</script>
 
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
@@ -1040,6 +1510,18 @@ input:checked + .slider:before {
   margin-right: 12px;
   font-weight: bold;
   vertical-align: middle;
+}
+
+/* Spacing for multiple toggles */
+.mr-4 {
+  margin-right: 1.5rem;
+}
+
+/* Toggle container styling */
+.d-flex .switch-label-left,
+.d-flex .switch-label {
+  font-size: 14px;
+  color: #495057;
 }
 </style>
 @endsection

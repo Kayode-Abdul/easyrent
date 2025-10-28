@@ -414,11 +414,29 @@ Route::middleware(['auth'])
         Route::post('/property/{propId}/activate', [App\Http\Controllers\RegionalManagerController::class, 'activateProperty'])->name('property.activate');
         Route::post('/property/{propId}/suspend', [App\Http\Controllers\RegionalManagerController::class, 'suspendProperty'])->name('property.suspend');
         Route::get('/analytics/export', [App\Http\Controllers\RegionalManagerController::class, 'exportAnalytics'])->name('analytics.export');
+        Route::get('/analytics/export/multi-tier', [App\Http\Controllers\RegionalManagerController::class, 'exportMultiTierAnalytics'])->name('analytics.export.multi-tier');
     });
+
+    // Property Manager Routes
+    Route::prefix('property-manager')->name('property-manager.')->middleware(['auth'])->group(function () {
+        Route::get('/dashboard', [App\Http\Controllers\PropertyManagerController::class, 'dashboard'])->name('dashboard');
+        Route::get('/managed-properties', [App\Http\Controllers\PropertyManagerController::class, 'managedProperties'])->name('managed-properties');
+        Route::get('/property/{propertyId}/details', [App\Http\Controllers\PropertyManagerController::class, 'propertyDetails'])->name('property-details');
+        Route::get('/property/{propertyId}/apartments', [App\Http\Controllers\PropertyManagerController::class, 'propertyApartments'])->name('property-apartments');
+        Route::get('/payments', [App\Http\Controllers\PropertyManagerController::class, 'payments'])->name('payments');
+        Route::get('/analytics', [App\Http\Controllers\PropertyManagerController::class, 'analytics'])->name('analytics');
+    });
+
+    // Property Manager Dashboard Mode Switching
+    Route::post('/dashboard/switch-property-manager-mode', [App\Http\Controllers\DashboardController::class, 'switchPropertyManagerMode'])->middleware('auth');
+    
+    // Admin Dashboard Mode Switching
+    Route::post('/dashboard/switch-admin-mode', [App\Http\Controllers\DashboardController::class, 'switchAdminMode'])->middleware('auth');
 
 // Commission Transparency Routes
 Route::middleware(['auth'])->group(function(){
     Route::get('/dashboard/commission-transparency', [App\Http\Controllers\PropertyController::class, 'commissionTransparency'])->name('landlord.commission-transparency');
+    Route::get('/dashboard/commission-rate-history', [App\Http\Controllers\PropertyController::class, 'getCommissionRateHistory']);
     Route::get('/dashboard/commission-notifications', [App\Http\Controllers\PropertyController::class, 'getCommissionRateNotifications']);
     Route::get('/dashboard/payment/{paymentId}/commission-details', [App\Http\Controllers\PropertyController::class, 'getPaymentCommissionDetails']);
     Route::get('/dashboard/commission-report/export', [App\Http\Controllers\PropertyController::class, 'exportCommissionReport'])->name('landlord.commission-report.export');

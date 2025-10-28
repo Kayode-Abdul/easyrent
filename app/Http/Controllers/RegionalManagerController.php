@@ -15,6 +15,10 @@ use App\Models\RegionalScope;
 
 class RegionalManagerController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
     public function dashboard(Request $request)
     {
         $manager = $request->user();

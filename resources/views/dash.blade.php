@@ -11,6 +11,25 @@
 <!-- end of header -->
 
 <div class="content">
+    <!-- Dashboard Mode Toggles -->
+    <div class="container-fluid mb-3">
+        <div class="d-flex justify-content-end align-items-center">
+            
+            @if(auth()->user()->admin == 1 || auth()->user()->role == 7)
+                <!-- Admin Toggle (only for admins) -->
+                <div>
+                    <span class="switch-label-left">Personal</span>
+                    <label class="switch mb-0">
+                        <input type="checkbox" id="adminDashboardSwitch">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="switch-label">Admin Dashboard</span>
+                </div>
+            @endif
+            
+        </div>
+    </div>
+
     <!-- Role-based greeting -->
     <div class="row mb-3">
         <div class="col-md-12">
@@ -653,7 +672,109 @@
     color: #666;
     font-size: 0.9em;
 }
+
+/* Modern switch toggle */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+.switch input {display:none;}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #007bff;
+}
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+.switch-label {
+  margin-left: 12px;
+  font-weight: bold;
+  vertical-align: middle;
+}
+.switch-label-left {
+  margin-right: 12px;
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+/* Spacing for multiple toggles */
+.mr-4 {
+  margin-right: 1.5rem;
+}
+
+/* Toggle container styling */
+.d-flex .switch-label-left,
+.d-flex .switch-label {
+  font-size: 14px;
+  color: #495057;
+}
 </style>
+
+<script>
+$(function() {
+    // Debug: Check if elements exist
+    console.log('jQuery loaded:', typeof $ !== 'undefined');
+    console.log('Admin switch element found:', $('#adminDashboardSwitch').length);
+    console.log('PM switch element found:', $('#propertyManagerSwitch').length);
+
+    // Admin Dashboard Toggle (only for admins)
+    $('#adminDashboardSwitch').on('change', function() {
+        var mode = this.checked ? 'admin' : 'personal';
+        var $switch = $(this);
+        $switch.prop('disabled', true); // Prevent double clicks
+        
+        console.log('Admin toggle clicked, switching to mode:', mode);
+        
+        $.ajax({
+            url: '/dashboard/switch-admin-mode',
+            method: 'POST',
+            data: { mode: mode },
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                console.log('Success response:', res);
+                if(res.success) {
+                    if (mode === 'admin') {
+                        window.location.href = '/dashboard';
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    $switch.prop('disabled', false);
+                    alert('Failed to switch admin mode: ' + (res.message || 'Unknown error'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Error response:', xhr.responseText);
+                console.log('Status:', status, 'Error:', error);
+                $switch.prop('disabled', false);
+                alert('Error switching admin mode. Please check console for details.');
+            }
+        });
+    });
+});
+</script>
 
 @include('footer')
 <!-- Footer area end -->
