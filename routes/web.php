@@ -32,14 +32,25 @@ Route::get('/', function () {
 });
 Route::get('/about', function () {
     return view('about');
-}); 
+});
 
-Route::get('/contact', function () {
-    return view('contact');
-}); 
+Route::get('/services', function () {
+    return view('services');
+})->name('services'); 
+
+Route::get('/contact', [App\Http\Controllers\ContactController::class, 'index'])->name('contact');
+Route::post('/contact', [App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
+
+Route::get('/benefits', function () {
+    return view('benefits');
+})->name('benefits');
+
+Route::get('/faq', function () {
+    return view('faq');
+})->name('faq'); 
 
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');  
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');  
 Route::get('/dashupload', function () {
     return view('show');
 });  
@@ -83,6 +94,17 @@ Route::get('/dashboard/tenant/{id}', [UserController::class, 'getTenantDetails']
 Route::get('/dashboard/billing', [BillingController::class, 'index'])->middleware('auth')->name('billing.index');
 //User Route
 Route::get('/blog', [UserController::class, 'blog']);
+Route::get('/readmore/{topic_url}', [App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+
+// Admin Blog Management Routes
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/blog', [App\Http\Controllers\BlogController::class, 'adminIndex'])->name('admin.blog.index');
+    Route::get('/blog/create', [App\Http\Controllers\BlogController::class, 'create'])->name('admin.blog.create');
+    Route::post('/blog', [App\Http\Controllers\BlogController::class, 'store'])->name('admin.blog.store');
+    Route::get('/blog/{id}/edit', [App\Http\Controllers\BlogController::class, 'edit'])->name('admin.blog.edit');
+    Route::put('/blog/{id}', [App\Http\Controllers\BlogController::class, 'update'])->name('admin.blog.update');
+    Route::delete('/blog/{id}', [App\Http\Controllers\BlogController::class, 'destroy'])->name('admin.blog.destroy');
+});
 
 // Auth routes
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
@@ -103,6 +125,31 @@ Route::middleware('guest')->group(function () {
     Route::get('password/confirm', [ConfirmPasswordController::class, 'showConfirmForm'])->name('password.confirm');
     Route::post('password/confirm', [ConfirmPasswordController::class, 'confirm']);
 });
+
+// Email Verification routes
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [VerificationController::class, 'show'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])->name('verification.verify');
+    Route::post('/email/resend', [VerificationController::class, 'resend'])->name('verification.resend');
+});
+
+// Session Management API
+Route::get('/api/session-status', function () {
+    if (!auth()->check()) {
+        return response()->json(['authenticated' => false], 401);
+    }
+    
+    $sessionLifetime = config('session.lifetime') * 60; // Convert minutes to seconds
+    $lastActivity = session()->get('_token') ? time() - session()->get('last_activity', time()) : 0;
+    $expiresIn = max(0, $sessionLifetime - $lastActivity) * 1000; // Convert to milliseconds
+    
+    return response()->json([
+        'authenticated' => true,
+        'expires_in' => $expiresIn,
+        'user_id' => auth()->id(),
+        'session_lifetime' => $sessionLifetime
+    ]);
+})->middleware('web');
 
 Route::get('/users', [UserController::class, 'users']);
 Route::put('/user/{id}', [UserController::class, 'update']);

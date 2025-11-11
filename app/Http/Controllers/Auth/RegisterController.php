@@ -199,10 +199,15 @@ class RegisterController extends Controller
      */
     protected function registered($request, $user)
     {
-        // Log the user out if auto-login is enabled by the trait
+        // Send email verification notification
+        $user->sendEmailVerificationNotification();
+        
+        // Log the user out since they need to verify email first
         $this->guard()->logout();
-        // Redirect to login with a success message
-        return redirect('/login')->with('status', 'Registration successful! Please log in.');
+        
+        // Redirect to email verification notice
+        return redirect()->route('verification.notice')
+            ->with('status', 'Registration successful! Please check your email to verify your account.');
     }
     
     /**

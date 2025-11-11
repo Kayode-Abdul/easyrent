@@ -58,9 +58,9 @@
             <h4>Useful Links</h4>
             <ul>
               <li><i class="bx bx-chevron-right"></i> <a href="#hero">Home</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#menu">About</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#events">Services</a></li>
-              <li><i class="bx bx-chevron-right"></i> <a href="#specials">Contact</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#benefit">Benefit</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#faq">FAQ</a></li>
+              <!-- <li><i class="bx bx-chevron-right"></i> <a href="#specials">Contact</a></li> -->
             </ul>
           </div>
 

@@ -160,15 +160,21 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 pr-1">
-                                <div class="form-group">
+                                <div class="form-group position-relative">
                                     <label>New Password</label>
-                                    <input type="password" class="form-control" name="password">
+                                    <input type="password" class="form-control" name="password" id="new-password">
+                                    <button type="button" class="password-toggle-btn-user" onclick="togglePasswordVisibility('new-password')">
+                                        <i class="fas fa-eye" id="new-password-toggle-icon"></i>
+                                    </button>
                                 </div>
                             </div>
                             <div class="col-md-6 pl-1">
-                                <div class="form-group">
+                                <div class="form-group position-relative">
                                     <label>Confirm New Password</label>
-                                    <input type="password" class="form-control" name="password_confirmation">
+                                    <input type="password" class="form-control" name="password_confirmation" id="confirm-password">
+                                    <button type="button" class="password-toggle-btn-user" onclick="togglePasswordVisibility('confirm-password')">
+                                        <i class="fas fa-eye" id="confirm-password-toggle-icon"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div> 
@@ -206,7 +212,47 @@
     </div>
 </div>
 <!-- Footer area end -->
+<style>
+.password-toggle-btn-user {
+    position: absolute;
+    right: 10px;
+    top: 35px;
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 5px;
+    z-index: 10;
+    transition: color 0.3s ease;
+}
+
+.password-toggle-btn-user:hover {
+    color: #667eea;
+}
+
+.password-toggle-btn-user:focus {
+    outline: none;
+    color: #667eea;
+}
+</style>
+
 <script>
+// Password visibility toggle function
+function togglePasswordVisibility(fieldId) {
+    const passwordField = document.getElementById(fieldId);
+    const toggleIcon = document.getElementById(fieldId + '-toggle-icon');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+    }
+}
+
 function previewProfilePhoto(event) {
     const input = event.target;
     const img = document.getElementById('profile-photo-preview');

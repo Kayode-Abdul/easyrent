@@ -52,8 +52,8 @@
             <span style="display: block; width: 50px; height: 3px; background: #ff5e15; margin-top: 10px;"></span>
           </h4>
           <p style="color: #adb5bd; line-height: 1.8; margin-bottom: 20px;">
-            Find your perfect home with EasyRent. We make property rental simple, secure, and stress-free.
-          </p>
+                Manage your properties and tenants easily. We make property administration, rent collection and tenant management simple, secure, and stress-free.
+        </p>
           <div class="social-links" style="margin-top: 20px;">
             <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; margin-right: 10px; transition: all 0.3s ease;">
               <i class="bx bxl-facebook" style="color: #ff5e15; font-size: 18px;"></i>
@@ -78,15 +78,15 @@
           <ul style="list-style: none; padding-left: 0;">
             <li style="margin-bottom: 12px;">
               <i class="bx bx-chevron-right" style="color: #ff5e15; font-size: 18px;"></i> 
-              <a href="#hero" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">Home</a>
+              <a href="/" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">Home</a>
             </li>
             <li style="margin-bottom: 12px;">
               <i class="bx bx-chevron-right" style="color: #ff5e15; font-size: 18px;"></i> 
-              <a href="#menu" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">About</a>
+              <a href="/benefits" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">Benefit</a>
             </li>
             <li style="margin-bottom: 12px;">
               <i class="bx bx-chevron-right" style="color: #ff5e15; font-size: 18px;"></i> 
-              <a href="#events" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">Services</a>
+              <a href="/faq" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">FAQ</a>
             </li>
             <li style="margin-bottom: 12px;">
               <i class="bx bx-chevron-right" style="color: #ff5e15; font-size: 18px;"></i> 
@@ -127,15 +127,15 @@
           </h4>
           <div style="margin-bottom: 15px;">
             <i class="bx bx-map" style="color: #ff5e15; font-size: 20px; margin-right: 10px; float: left;"></i>
-            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">123 Rental Street, Lagos, Nigeria</p>
+            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">33 Adegoke Street, Surulere  Lagos, Nigeria</p>
           </div>
           <div style="margin-bottom: 15px;">
             <i class="bx bx-phone" style="color: #ff5e15; font-size: 20px; margin-right: 10px; float: left;"></i>
-            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">+234 123 456 7890</p>
+            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">+234 9092469137</p>
           </div>
           <div style="margin-bottom: 15px;">
             <i class="bx bx-envelope" style="color: #ff5e15; font-size: 20px; margin-right: 10px; float: left;"></i>
-            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">info@easyrent.com</p>
+            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">info@easyrent.africa</p>
           </div>
         </div>
       </div>
@@ -152,7 +152,7 @@
         </div>
         <div class="col-md-6 text-md-right text-center">
           <div class="credits" style="color: #adb5bd;"> 
-            Designed with <i class="bx bx-heart" style="color: #ff5e15;"></i> by <a href="https://wandggroup.com/" style="color: #ff5e15; text-decoration: none;">Walls and Gates</a>
+            Designed by <a href="https://wandggroup.com/" style="color: #ff5e15; text-decoration: none;">Walls and Gates</a>
           </div>
         </div>
       </div>

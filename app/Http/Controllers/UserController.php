@@ -201,7 +201,8 @@ class UserController extends Controller
     public function blog(Request $request){
         $logged_in = session('loggedIn') ? 1 : 0;
         
-        $blog = DB::select('select * from blog WHERE hide IS NULL');
+        // Use the Blog model instead of raw SQL
+        $blog = \App\Models\Blog::published()->recent()->get();
      
         return view('blog', ["logged_in"=>$logged_in, 'blog'=>$blog]);
    }

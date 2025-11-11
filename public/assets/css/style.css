@@ -56,7 +56,9 @@ html {
 .copyright {
     text-align: center;
 }
-
+.pt-pad{
+    margin-top: 90px;
+}
 .user_img {
     max-width: 10px;
 }
@@ -10847,8 +10849,8 @@ h5,
     height: 850px;
 }
 .slider-text h1 {
-    font-size: 60px;
-    color: #e6ae5f;
+    font-size: 50px;
+    color: rgb(12 84 85);
     line-height: 1.1;
     font-weight: 800;
 }
@@ -10948,7 +10950,7 @@ h5,
     width: 70px;
     height: 70px;
     border-radius: 0 50% 50% 50%;
-    background: rgb(12 84 85);
+    background: rgb(239 123 98);
 }
 .search-location .form-group button span {
     font-size: 30px;
@@ -11589,8 +11591,8 @@ h5,
     color: rgba(0, 0, 0, 0.8);
 }
 .services .media-body h3 {
-    font-size: 24px;
-    font-weight: 500;
+    font-size: 22px;
+    font-weight: 600;
     color: #000000;
 }
 .services .media-body p {
@@ -13151,4 +13153,186 @@ textarea.form-control {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}/* E
+nhanced Mobile Navigation Fixes */
+@media (max-width: 991px) {
+    .ftco_navbar {
+        padding: 15px 0;
+    }
+    
+    .navbar-brand img {
+        max-height: 35px;
+        width: auto;
+    }
+    
+    .navbar-toggler {
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .navbar-toggler:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .navbar-toggler:focus {
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+        outline: none;
+    }
+    
+    .navbar-toggler .oi {
+        font-size: 18px;
+        color: white;
+        margin-right: 8px;
+    }
+    
+    .navbar-collapse {
+        margin-top: 20px;
+        background: rgba(0, 0, 0, 0.9);
+        border-radius: 12px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .navbar-nav {
+        width: 100%;
+    }
+    
+    .navbar-nav .nav-item {
+        margin: 5px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .navbar-nav .nav-item:last-child {
+        border-bottom: none;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 15px 20px;
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+    
+    .navbar-nav .nav-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white !important;
+        transform: translateX(5px);
+    }
+    
+    .navbar-nav .nav-item.active .nav-link {
+        background: linear-gradient(45deg, #3e8189, #51cbce);
+        color: white !important;
+        font-weight: 600;
+    }
+    
+    .navbar-nav .nav-link::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 0;
+        background: #51cbce;
+        border-radius: 2px;
+        transition: height 0.3s ease;
+    }
+    
+    .navbar-nav .nav-item.active .nav-link::before,
+    .navbar-nav .nav-link:hover::before {
+        height: 60%;
+    }
+}
+
+/* Fix for mobile menu animation */
+.navbar-collapse.collapsing {
+    transition: height 0.35s ease;
+}
+
+.navbar-collapse.show {
+    animation: slideDown 0.35s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced mobile menu button */
+@media (max-width: 991px) {
+    .navbar-toggler-icon {
+        display: none;
+    }
+    
+    .navbar-toggler {
+        position: relative;
+        width: 50px;
+        height: 40px;
+    }
+    
+    .navbar-toggler .oi-menu {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    /* Hamburger animation */
+    .navbar-toggler[aria-expanded="true"] .oi-menu::before {
+        transform: rotate(45deg);
+    }
+    
+    .navbar-toggler[aria-expanded="true"] .oi-menu::after {
+        transform: rotate(-45deg);
+    }
+}
+
+/* Fix for overlapping content */
+@media (max-width: 991px) {
+    .ftco_navbar {
+        z-index: 1050;
+        position: relative;
+    }
+    
+    .navbar-collapse {
+        position: absolute;
+        top: 100%;
+        left: 15px;
+        right: 15px;
+        z-index: 1000;
+    }
+}
+
+/* Smooth scrolling for mobile navigation */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Touch improvements for mobile */
+@media (max-width: 991px) {
+    .nav-link {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .navbar-toggler {
+        min-height: 44px;
+        min-width: 44px;
+    }
 }

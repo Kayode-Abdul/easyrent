@@ -1,8 +1,8 @@
-<!-- Header area start -->
-<?php @include(app_path().'/header.php'); ?>
-@include('header')
+<!-- Header area start --> 
+@include('header') 
 <!-- Header area end -->
         <!-- start wpo-page-title -->
+    <div class="container">
         <section class="wpo-page-title">
             <div class="container">
                 <div class="row">
@@ -270,8 +270,7 @@
                     ?>
         </section>
         <!-- end wpo-blog-pg-section -->
-        
-<!-- Footer area start -->
-<?php @include(app_path().'/footer.php'); ?>
+            </div>
+<!-- Footer area start --> 
 @include('footer')
 <!-- Footer area end -->
