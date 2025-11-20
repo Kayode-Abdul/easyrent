@@ -261,8 +261,8 @@
 
 /* Debug styles to make sure button is visible */
 .password-toggle-btn {
-    background-color: rgba(255, 0, 0, 0.1) !important; /* Temporary red background for debugging */
-    border: 1px solid red !important; /* Temporary red border for debugging */
+    /* background-color: rgba(255, 0, 0, 0.1) !important; Temporary red background for debugging */
+    /*border: 1px solid red !important;  Temporary red border for debugging */
     min-width: 30px !important;
     min-height: 30px !important;
 }

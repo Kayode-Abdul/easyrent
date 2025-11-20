@@ -7,7 +7,9 @@ use App\Models\User;
 use App\Models\Apartment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\JsonResponse;
+use App\Mail\MessageNotification;
 
 class ProfomaController extends Controller
 {
@@ -57,7 +59,7 @@ class ProfomaController extends Controller
                 $existing->save();
                 // Always send notification message to tenant on update
                 if ($existing->tenant_id) {
-                    Message::create([
+                    $message = Message::create([
                         'sender_id' => $user->user_id,
                         'receiver_id' => $existing->tenant_id,
                         'subject' => 'Rent Proforma',
@@ -67,6 +69,16 @@ class ProfomaController extends Controller
                             . (isset($duration) ? ("Duration: {$duration} months\n\n") : "\n")
                             . "You can  <a class=\"btn btn-primary\" href=\"" . route('proforma.view', ['id' => $existing->id]) . "\">view the proforma</a>"
                     ]);
+                    
+                    // Send email notification
+                    try {
+                        $tenant = User::where('user_id', $existing->tenant_id)->first();
+                        if ($tenant && $tenant->email) {
+                            Mail::to($tenant->email)->send(new MessageNotification($message));
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to send proforma email: ' . $e->getMessage());
+                    }
                 }
                 return response()->json([
                     'success' => true,
@@ -94,7 +106,7 @@ class ProfomaController extends Controller
             ]);
             // Always send notification message to tenant on create
             if ($proforma->tenant_id) {
-                Message::create([
+                $message = Message::create([
                     'sender_id' => $user->user_id,
                     'receiver_id' => $proforma->tenant_id,
                     'subject' => 'Rent Proforma',
@@ -102,8 +114,18 @@ class ProfomaController extends Controller
                         . (optional($apartment->property)->name ? ("Property: " . $apartment->property->name . "\n") : '')
                         . (property_exists($apartment, 'name') && $apartment->name ? ("Apartment: " . $apartment->name . "\n") : '')
                         . (isset($duration) ? ("Duration: {$duration} months\n\n") : "\n")
-                        . "You can  <a  class=\"btn btn-primary\" href=\"" . route('proforma.view', ['id' => $proforma->id]) . "\">view the proforma</a>"
+                        . "You can  <a class=\"btn btn-primary\" href=\"" . route('proforma.view', ['id' => $proforma->id]) . "\">view the proforma</a>"
                 ]);
+                
+                // Send email notification
+                try {
+                    $tenant = User::where('user_id', $proforma->tenant_id)->first();
+                    if ($tenant && $tenant->email) {
+                        Mail::to($tenant->email)->send(new MessageNotification($message));
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send proforma email: ' . $e->getMessage());
+                }
             }
             return response()->json([
                 'success' => true,
@@ -212,6 +234,37 @@ class ProfomaController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Proforma rejected successfully!'
+        ]);
+    }
+
+    /**
+     * Check payment status for a proforma
+     */
+    public function checkPaymentStatus($id)
+    {
+        $proforma = ProfomaReceipt::findOrFail($id);
+        $user = Auth::user();
+        
+        // Check if user has permission to view this proforma
+        if ($user->user_id !== $proforma->user_id && $user->user_id !== $proforma->tenant_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+        
+        $hasPayment = $proforma->hasSuccessfulPayment();
+        $payment = $proforma->getSuccessfulPayment();
+        
+        return response()->json([
+            'success' => true,
+            'has_payment' => $hasPayment,
+            'payment' => $payment ? [
+                'reference' => $payment->payment_reference ?? $payment->transaction_id,
+                'amount' => $payment->amount,
+                'status' => $payment->status,
+                'paid_at' => $payment->paid_at
+            ] : null
         ]);
     }
 }

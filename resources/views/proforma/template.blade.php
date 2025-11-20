@@ -106,11 +106,47 @@
                 <button id="accept-proforma" class="btn-accept" style="background:#28a745;color:white;border:none;padding:10px 20px;margin-right:10px;border-radius:5px;cursor:pointer;">
                     Accept Proforma
                 </button>
-                <button id="reject-proforma" class="btn-reject" style="background:#dc3545;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">
+                <button id="reject-proforma" class="btn-reject" style="background:#dc3545;color:white;border:none;padding:10px 20px;margin-right:10px;border-radius:5px;cursor:pointer;">
                     Reject Proforma
                 </button>
+                <button id="invite-benefactor" class="btn-benefactor" style="background:#6f42c1;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">
+                    <i class="fas fa-user-plus"></i> Invite Someone to Pay
+                </button>
             @elseif($proforma->status === \App\Models\ProfomaReceipt::STATUS_CONFIRMED)
-                <p style="color:#28a745;font-weight:bold;">You have accepted this proforma.</p>
+                @if($proforma->hasSuccessfulPayment())
+                    @php $completedPayment = $proforma->getSuccessfulPayment(); @endphp
+                    <div style="background:#d4edda;padding:15px;border-radius:5px;margin-bottom:10px;">
+                        <p style="margin:0;color:#155724;font-weight:bold;">✅ Payment Completed</p>
+                        <p style="margin:5px 0 0 0;color:#155724;font-size:14px;">
+                            Payment Reference: {{ $completedPayment->payment_reference ?? $completedPayment->transaction_id }}
+                        </p>
+                        <p style="margin:5px 0 0 0;color:#155724;font-size:14px;">
+                            Amount Paid: ₦{{ number_format($completedPayment->amount, 2) }}
+                        </p>
+                    </div>
+                @else
+                    <div style="background:#fff3cd;padding:15px;border-radius:5px;margin-bottom:10px;">
+                        <p style="margin:0;color:#856404;font-weight:bold;">⏳ Payment Pending</p>
+                        <p style="margin:5px 0 0 0;color:#856404;font-size:14px;">
+                            You have accepted this proforma. Please proceed to complete payment.
+                        </p>
+                    </div>
+                    
+                    <div style="text-align:center;margin-top:20px;">
+                        <a href="{{ route('proforma.payment.form', ['id' => $proforma->id]) }}" 
+                           class="btn-payment" 
+                           style="background:#007bff;color:white;border:none;padding:12px 30px;border-radius:5px;text-decoration:none;display:inline-block;font-weight:bold;transition:background-color 0.3s ease;">
+                            💳 Proceed to Payment
+                        </a>
+                        
+                        @php $failedPayments = $proforma->payments()->where('status', \App\Models\Payment::STATUS_FAILED); @endphp
+                        @if($failedPayments->count() > 0)
+                            <p style="margin-top:10px;color:#dc3545;font-size:12px;">
+                                Previous payment attempts: {{ $failedPayments->count() }} failed
+                            </p>
+                        @endif
+                    </div>
+                @endif
             @endif
         </div>
     @endif
@@ -213,6 +249,161 @@ $(document).ready(function() {
             }
         });
     });
+
+    $('#invite-benefactor').on('click', function() {
+        Swal.fire({
+            title: 'Invite Someone to Pay',
+            html: `
+                <div style="text-align:left;">
+                    <p style="margin-bottom:15px;">Invite a benefactor (employer, parent, sponsor, etc.) to pay this proforma on your behalf.</p>
+                    <label style="display:block;margin-bottom:5px;font-weight:bold;">Benefactor Email *</label>
+                    <input type="email" id="benefactor-email" class="swal2-input" placeholder="benefactor@example.com" style="width:100%;margin-bottom:15px;">
+                    <label style="display:block;margin-bottom:5px;font-weight:bold;">Message (Optional)</label>
+                    <textarea id="benefactor-message" class="swal2-textarea" placeholder="Add a personal message..." style="width:100%;height:80px;"></textarea>
+                </div>
+            `,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#6f42c1',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Send Invitation',
+            preConfirm: () => {
+                const email = document.getElementById('benefactor-email').value;
+                const message = document.getElementById('benefactor-message').value;
+                
+                if (!email) {
+                    Swal.showValidationMessage('Please enter benefactor email');
+                    return false;
+                }
+                
+                // Basic email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    Swal.showValidationMessage('Please enter a valid email address');
+                    return false;
+                }
+                
+                return { email: email, message: message };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '{{ route("tenant.invite.benefactor") }}',
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        benefactor_email: result.value.email,
+                        proforma_id: {{ $proforma->id }},
+                        amount: {{ $proforma->total }},
+                        message: result.value.message
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire(
+                                'Invitation Sent!',
+                                'The benefactor will receive an email with payment instructions.',
+                                'success'
+                            );
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                response.message || 'Failed to send invitation.',
+                                'error'
+                            );
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = 'Failed to send invitation.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        Swal.fire(
+                            'Error!',
+                            errorMsg,
+                            'error'
+                        );
+                    }
+                });
+            }
+        });
+    });
 }); 
+
+// Add hover effect for payment button
+$('.btn-payment').hover(
+    function() {
+        $(this).css('background-color', '#0056b3');
+    },
+    function() {
+        $(this).css('background-color', '#007bff');
+    }
+);// Add hover effect for payment button
+$(document).ready(function() {
+    $('.btn-payment').hover(
+        function() {
+            $(this).css('background-color', '#0056b3');
+        },
+        function() {
+            $(this).css('background-color', '#007bff');
+        }
+    );
+});
 </script>
+
+<style>
+.btn-payment:hover {
+    background-color: #0056b3 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+}
+
+.btn-payment:active {
+    transform: translateY(0);
+}
+</style>
 @endsection
+
+<!--<function_calls>-->
+<!--<invoke name="strReplace">-->
+<!--<parameter name="oldStr">        return response()->json([-->
+<!--            'success' => true,-->
+<!--            'message' => 'Proforma rejected successfully!'-->
+<!--        ]);-->
+<!--    }-->
+<!--}turn response()->json([-->
+<!--            'success' => true,-->
+<!--            'message' => 'Proforma rejected successfully!'-->
+<!--        ]);-->
+<!--    }-->
+
+<!--    /**-->
+<!--     * Check payment status for a proforma-->
+<!--     */-->
+<!--    public function checkPaymentStatus($id)-->
+<!--    {-->
+<!--        $proforma = ProfomaReceipt::findOrFail($id);-->
+<!--        $user = Auth::user();-->
+        
+<!--        // Check if user has permission to view this proforma-->
+<!--        if ($user->user_id !== $proforma->user_id && $user->user_id !== $proforma->tenant_id) {-->
+<!--            return response()->json([-->
+<!--                'success' => false,-->
+<!--                'message' => 'Unauthorized'-->
+<!--            ], 403);-->
+<!--        }-->
+        
+<!--        $hasPayment = $proforma->hasSuccessfulPayment();-->
+<!--        $payment = $proforma->getSuccessfulPayment();-->
+        
+<!--        return response()->json([-->
+<!--            'success' => true,-->
+<!--            'has_payment' => $hasPayment,-->
+<!--            'payment' => $payment ? [-->
+<!--                'reference' => $payment->payment_reference ?? $payment->transaction_id,-->
+<!--                'amount' => $payment->amount,-->
+<!--                'status' => $payment->status,-->
+<!--                'paid_at' => $payment->paid_at-->
+<!--            ] : null-->
+<!--        ]);-->
+<!--    }-->
+<!--}-->

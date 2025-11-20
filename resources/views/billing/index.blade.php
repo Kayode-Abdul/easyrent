@@ -87,7 +87,7 @@
                     
                     @if($payments->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0">
+                            <table class="table table-hover mb-0 datatable" id="billing-table">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Date</th>
@@ -170,3 +170,18 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#billing-table').DataTable({
+        "order": [[4, "desc"]], // Sort by date column
+        "pageLength": 25,
+        "responsive": true
+    });
+});
+</script>
+@endpush

@@ -5,7 +5,7 @@
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
-    <table class="table">
+    <table class="table datatable" id="inbox-table">
         <thead>
             <tr>
                 <th>From</th>
@@ -29,3 +29,18 @@
     </table>
 </div>
 @endsection
+
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#inbox-table').DataTable({
+        "order": [[3, "desc"]], // Sort by date column
+        "pageLength": 25,
+        "responsive": true
+    });
+});
+</script>
+@endpush

@@ -23,24 +23,140 @@
                 </div>
                 <div class="card-footer">
                     <hr>
-                    <div class="mb-3 text-center">
-                        <label><strong>Your Referral Link:</strong></label>
+                    <div class="mb-3">
+                        <label class="text-center d-block"><strong>Your Referral Link:</strong></label>
+                        
+                        @php
+                            $userRoles = [];
+                            $currentRole = auth()->user()->role;
+                            
+                            // Check if user is a marketer (role 3)
+                            if ($currentRole == 3) {
+                                $userRoles[] = ['id' => 3, 'name' => 'Marketer', 'param' => 'marketer'];
+                            }
+                            
+                            // Check if user is a landlord (role 2 or has properties)
+                            if ($currentRole == 2 || \App\Models\Property::where('user_id', auth()->user()->user_id)->exists()) {
+                                $userRoles[] = ['id' => 2, 'name' => 'Landlord', 'param' => 'landlord'];
+                            }
+                            
+                            // Check if user is a property manager (role 6)
+                            if ($currentRole == 6) {
+                                $userRoles[] = ['id' => 6, 'name' => 'Property Manager', 'param' => 'property_manager'];
+                            }
+                            
+                            // Check if user is a tenant (role 1)
+                            if ($currentRole == 1) {
+                                $userRoles[] = ['id' => 1, 'name' => 'Tenant', 'param' => 'tenant'];
+                            }
+                            
+                            // If no specific roles, add default
+                            if (empty($userRoles)) {
+                                $userRoles[] = ['id' => $currentRole, 'name' => 'User', 'param' => 'user'];
+                            }
+                        @endphp
+                        
+                        @if(count($userRoles) > 1)
+                            <div class="referral-role-selector mb-3">
+                                <label class="d-block text-center mb-2"><small>Share as:</small></label>
+                                <div class="btn-group btn-group-toggle d-flex justify-content-center flex-wrap" data-toggle="buttons">
+                                    @foreach($userRoles as $index => $role)
+                                        <label class="btn btn-sm btn-outline-primary {{ $index === 0 ? 'active' : '' }}" style="margin: 2px;">
+                                            <input type="radio" name="referral_role" value="{{ $role['param'] }}" {{ $index === 0 ? 'checked' : '' }} onchange="updateReferralLink()">
+                                            <i class="nc-icon nc-single-02"></i> {{ $role['name'] }}
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                        
                         <div class="input-group">
                             <input type="text" class="form-control" value="{{ auth()->user()->getReferralLink() }}" readonly id="referralLinkInput">
                             <div class="input-group-append">
-                                <button class="btn btn-outline-secondary" type="button" onclick="copyReferralLink()">Copy</button>
+                                <button class="btn btn-primary" type="button" onclick="copyReferralLink()" title="Copy to clipboard">
+                                    <i class="nc-icon nc-single-copy-04"></i> Copy
+                                </button>
                             </div>
                         </div>
-                        <small class="form-text text-muted">Share this link to invite new users and earn rewards!</small>
+                        <small class="form-text text-muted text-center d-block mt-2">
+                            <span id="referralRoleText">Share this link to invite new users and earn rewards!</span>
+                        </small>
                     </div>
+                    
+                    <style>
+                    .referral-role-selector .btn-outline-primary {
+                        border-color: #51cbce;
+                        color: #51cbce;
+                    }
+                    
+                    .referral-role-selector .btn-outline-primary.active {
+                        background-color: #51cbce;
+                        color: white;
+                    }
+                    
+                    .referral-role-selector .btn-outline-primary:hover {
+                        background-color: #51cbce;
+                        color: white;
+                    }
+                    
+                    #referralLinkInput {
+                        font-size: 0.85rem;
+                        background-color: #f4f3ef;
+                    }
+                    </style>
+                    
                     <script>
+                    function updateReferralLink() {
+                        const selectedRole = document.querySelector('input[name="referral_role"]:checked');
+                        if (!selectedRole) return;
+                        
+                        const roleParam = selectedRole.value;
+                        const baseUrl = "{{ url('/register') }}";
+                        const referralCode = "{{ auth()->user()->referral_code ?? auth()->user()->user_id }}";
+                        
+                        // Build the referral link with role parameter
+                        const referralLink = `${baseUrl}?ref=${referralCode}&source=${roleParam}`;
+                        
+                        // Update the input field
+                        document.getElementById('referralLinkInput').value = referralLink;
+                        
+                        // Update the description text
+                        const roleTexts = {
+                            'marketer': 'Share as a Marketer to earn commissions on referred landlords!',
+                            'landlord': 'Share as a Landlord to invite other property owners!',
+                            'property_manager': 'Share as a Property Manager to grow your network!',
+                            'tenant': 'Share as a Tenant to help others find great properties!',
+                            'user': 'Share this link to invite new users and earn rewards!'
+                        };
+                        
+                        document.getElementById('referralRoleText').textContent = roleTexts[roleParam] || roleTexts['user'];
+                    }
+                    
                     function copyReferralLink() {
-                        var copyText = document.getElementById('referralLinkInput');
+                        const copyText = document.getElementById('referralLinkInput');
                         copyText.select();
                         copyText.setSelectionRange(0, 99999); // For mobile devices
-                        document.execCommand('copy');
-                        alert('Referral link copied!');
+                        
+                        // Modern clipboard API
+                        if (navigator.clipboard) {
+                            navigator.clipboard.writeText(copyText.value).then(function() {
+                                showToast('Referral link copied to clipboard!', 'success');
+                            }).catch(function() {
+                                // Fallback
+                                document.execCommand('copy');
+                                showToast('Referral link copied!', 'success');
+                            });
+                        } else {
+                            // Fallback for older browsers
+                            document.execCommand('copy');
+                            showToast('Referral link copied!', 'success');
+                        }
                     }
+                    
+                    // Initialize the referral link on page load
+                    document.addEventListener('DOMContentLoaded', function() {
+                        updateReferralLink();
+                    });
                     </script>
                     <div class="button-container">
                         <div class="row">

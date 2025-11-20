@@ -254,7 +254,7 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <table class="table table-striped datatable" id="properties-table">
                             <thead class="text-primary">
                                 <th>
                                     <input type="checkbox" id="selectAll">
@@ -517,3 +517,18 @@ function showNotification(message, type = 'info') {
 </style>
 
 @endsection
+
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#properties-table').DataTable({
+        "order": [[0, "desc"]], // Sort by ID column
+        "pageLength": 25,
+        "responsive": true
+    });
+});
+</script>
+@endpush

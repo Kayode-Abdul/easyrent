@@ -32,6 +32,7 @@ class ProfomaReceipt extends Model
     const STATUS_REJECTED = 0;
     const STATUS_CONFIRMED = 1;
     const STATUS_NEW = 2;
+    const STATUS_PAID = 4;
 
     public function apartment()
     {
@@ -60,8 +61,64 @@ class ProfomaReceipt extends Model
                 return 'New';
             case 3:
                 return 'Draft'; // legacy/new-unsent by landlord
+            case self::STATUS_PAID:
+                return 'Paid';
             default:
                 return (string) $this->status;
         }
+    }
+
+    /**
+     * Get benefactor payment invitations for this proforma
+     */
+    public function benefactorInvitations()
+    {
+        return $this->hasMany(PaymentInvitation::class, 'proforma_id');
+    }
+
+    /**
+     * Get benefactor payments for this proforma
+     */
+    public function benefactorPayments()
+    {
+        return $this->hasMany(BenefactorPayment::class, 'proforma_id');
+    }
+
+    /**
+     * Check if proforma has been paid by benefactor
+     */
+    public function isPaidByBenefactor(): bool
+    {
+        return $this->benefactorPayments()
+            ->where('status', 'completed')
+            ->exists();
+    }
+
+    /**
+     * Check if this proforma has been paid successfully
+     */
+    public function hasSuccessfulPayment(): bool
+    {
+        return Payment::where('transaction_id', $this->transaction_id)
+            ->whereIn('status', [Payment::STATUS_SUCCESS, Payment::STATUS_COMPLETED])
+            ->exists();
+    }
+
+    /**
+     * Get the successful payment for this proforma
+     */
+    public function getSuccessfulPayment()
+    {
+        return Payment::where('transaction_id', $this->transaction_id)
+            ->whereIn('status', [Payment::STATUS_SUCCESS, Payment::STATUS_COMPLETED])
+            ->first();
+    }
+
+    /**
+     * Get any payment attempts for this proforma
+     */
+    public function payments()
+    {
+        return Payment::where('transaction_id', $this->transaction_id)->get();
     }
 }

@@ -132,8 +132,8 @@
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
                                     <a class="dropdown-item" href="{{ url('/dashboard/user') }}">Profile</a>
                                     <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="{{ route('logout') }}"
-                                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    <a class="dropdown-item" href="#"
+                                       onclick="handleLogout('logout-form')">
                                         Logout
                                     </a>
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -179,6 +179,15 @@
     
     <!-- Paper Dashboard CORE plugins -->
     <script src="{{ asset('assets/js/paper-dashboard.min.js') }}"></script>
+    
+    <!-- Global logout handler -->
+    <script src="{{ asset('assets/js/logout-handler.js') }}"></script>
+    
+    <!-- Chrome Dark Mode System -->
+    <link rel="stylesheet" href="{{ asset('assets/css/chrome-dark-mode.css') }}">
+    <script src="{{ asset('assets/js/chrome-dark-mode.js') }}"></script>
+    
+
     
     <!-- DataTables (optional) -->
     <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>

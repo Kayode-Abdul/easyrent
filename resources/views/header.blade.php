@@ -7,6 +7,72 @@
     <meta name="description" content="Property and Tenant Management, Automated Rent Invoicing and Payment">
     <meta charset="utf-8"> 
     <link rel="icon" type="image/png" href="/favicon.png">
+    
+    <!-- CRITICAL DARK MODE CSS - Prevents Flash of Unstyled Content -->
+    <style>
+    /* Immediate dark mode application - prevents FOUC */
+    html[data-chrome-dark="true"] {
+      filter: invert(1) hue-rotate(180deg) !important;
+      background-color: #121212 !important;
+    }
+    
+    /* Restore images immediately */
+    html[data-chrome-dark="true"] img,
+    html[data-chrome-dark="true"] video,
+    html[data-chrome-dark="true"] iframe,
+    html[data-chrome-dark="true"] canvas,
+    html[data-chrome-dark="true"] svg {
+      filter: invert(1) hue-rotate(180deg) !important;
+    }
+    
+    /* Hero section immediate fix */
+    html[data-chrome-dark="true"] .hero-wrap {
+      filter: none !important;
+    }
+    
+    /* html[data-chrome-dark="true"] .hero-wrap.ftco-degree-bg {
+      filter: brightness(0.4) contrast(1.3) saturate(0.7) !important;
+    } */
+    
+    /* Prevent transitions on initial load */
+    html:not(.transitions-enabled) * {
+      transition: none !important;
+    }
+    </style>
+    
+    <!-- IMMEDIATE DARK MODE SCRIPT - Loads before any content -->
+    <script>
+    (function() {
+      const STORAGE_KEY = 'chrome-dark-mode-preference';
+      const stored = localStorage.getItem(STORAGE_KEY);
+      let shouldBeDark = false;
+
+      if (stored === 'true') {
+        shouldBeDark = true;
+      } else if (stored === 'false') {
+        shouldBeDark = false;
+      } else if (stored === 'timer') {
+        const hour = new Date().getHours();
+        shouldBeDark = hour >= 19 || hour < 7;
+      } else if (stored === 'auto') {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          shouldBeDark = true;
+        }
+      } else {
+        // DEFAULT: No preference stored - use timer mode (7PM-7AM)
+        localStorage.setItem(STORAGE_KEY, 'timer');
+        const hour = new Date().getHours();
+        shouldBeDark = hour >= 19 || hour < 7;
+      }
+
+      if (shouldBeDark) {
+        document.documentElement.setAttribute('data-chrome-dark', 'true');
+      } else {
+        document.documentElement.setAttribute('data-chrome-dark', 'false');
+      }
+    })();
+    </script>
+    
     @php $currentSegment = request()->segment(1); $isDashboard = in_array($currentSegment, ['dashboard','admin', 'proforma', 'property-manager']); @endphp
     @if(!$isDashboard)
     <!-- Add CSRF Token meta tag -->
@@ -35,15 +101,70 @@
     <link rel="stylesheet" href="/assets/css/custom-fixes.css">
     <link rel="stylesheet" href="/assets/css/modern-toasts.css">
     <link rel="stylesheet" href="/assets/css/password-toggle.css">
+    <link rel="stylesheet" href="/assets/css/chrome-dark-mode.css">
+    <link rel="stylesheet" href="/assets/css/hero-dark-fix.css">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/assets/js/modern-toasts.js"></script>
     <script src="/assets/js/password-toggle.js"></script>
+    <script src="/assets/js/chrome-dark-mode.js"></script>
+    <script src="/assets/js/dark-mode-debug.js"></script>
     @else
     <meta charset="utf-8" />
     <link rel="apple-touch-icon" sizes="76x76" href="/assets/img/apple-icon.png">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
+    
+    <!-- CRITICAL DARK MODE CSS - Dashboard Version -->
+    <style>
+    html[data-chrome-dark="true"] {
+      filter: invert(1) hue-rotate(180deg) !important;
+      background-color: #121212 !important;
+    }
+    html[data-chrome-dark="true"] img,
+    html[data-chrome-dark="true"] video,
+    html[data-chrome-dark="true"] iframe,
+    html[data-chrome-dark="true"] canvas,
+    html[data-chrome-dark="true"] svg {
+      filter: invert(1) hue-rotate(180deg) !important;
+    }
+    html:not(.transitions-enabled) * {
+      transition: none !important;
+    }
+    </style>
+    
+    <!-- IMMEDIATE DARK MODE SCRIPT - Dashboard Version -->
+    <script>
+    (function() {
+      const STORAGE_KEY = 'chrome-dark-mode-preference';
+      const stored = localStorage.getItem(STORAGE_KEY);
+      let shouldBeDark = false;
+
+      if (stored === 'true') {
+        shouldBeDark = true;
+      } else if (stored === 'false') {
+        shouldBeDark = false;
+      } else if (stored === 'timer') {
+        const hour = new Date().getHours();
+        shouldBeDark = hour >= 19 || hour < 7;
+      } else if (stored === 'auto') {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          shouldBeDark = true;
+        }
+      } else {
+        // DEFAULT: No preference stored - use timer mode (7PM-7AM)
+        localStorage.setItem(STORAGE_KEY, 'timer');
+        const hour = new Date().getHours();
+        shouldBeDark = hour >= 19 || hour < 7;
+      }
+
+      if (shouldBeDark) {
+        document.documentElement.setAttribute('data-chrome-dark', 'true');
+      } else {
+        document.documentElement.setAttribute('data-chrome-dark', 'false');
+      }
+    })();
+    </script>
     <!-- Add CSRF Token meta tag -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <!-- Add jQuery -->
@@ -70,9 +191,14 @@ $.ajaxSetup({
     <link href="/assets/css/bootstrap/paper-dashboard.css?v=2.0.1" rel="stylesheet" />
     <!-- CSS Just for demo purpose, don't include it in your project --> 
     <link rel="stylesheet" href="/assets/css/custom-fixes.css">
+    <link rel="stylesheet" href="/assets/css/chrome-dark-mode.css">
+    <link rel="stylesheet" href="/assets/css/hero-dark-fix.css">
 
  
     @endif
+
+    <script src="/assets/js/logout-handler.js"></script>
+    <script src="/assets/js/chrome-dark-mode.js"></script>
     @yield('styles')
    @stack('styles')
   </head>
@@ -109,7 +235,10 @@ $.ajaxSetup({
                 </li>
                
                 <li class="nav-item">
-                  <a href="/logout" class="nav-link">Logout</a>
+                  <form id="logout-form-mobile" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                  </form>
+                  <a href="#" class="nav-link" onclick="handleLogout('logout-form-mobile')">Logout</a>
                 </li>
               @else
                 <li class="nav-item {{ $currentSegment === 'register' ? 'active' : '' }}">
@@ -403,7 +532,7 @@ $.ajaxSetup({
                             <p>Users</p>
                         </a>
                     </li>
-                    <li class="{{ request()->is('admin/dashboard/roles*') ? 'active' : '' }}">
+                    <li class="{{ request()->is('admin/dashboard/roles') ? 'active' : '' }}">
                         <a href="{{ route('admin.roles.index') }}">
                             <i class="nc-icon nc-key-25"></i>
                             <p>Role Management</p>
@@ -428,7 +557,7 @@ $.ajaxSetup({
                         </a>
                     </li>
                     <li class="{{ request()->is('admin/commission-management*') ? 'active' : '' }}">
-                        <a href="{{ route('admin.commission-management.regional-manager') }}">
+                        <a href="{{ route('admin.commission-management.index') }}">
                             <i class="nc-icon nc-settings-gear-65"></i>
                             <p>Commission Management</p>
                         </a>
@@ -494,7 +623,7 @@ $.ajaxSetup({
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                             @csrf
                         </form>
-                        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                        <a href="#" onclick="handleLogout('logout-form')">
                             <i class="nc-icon nc-spaceship"></i>
                             <p>Log Out</p>
                         </a>

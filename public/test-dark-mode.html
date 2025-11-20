@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dark Mode Test</title>
+    <link rel="stylesheet" href="/assets/css/chrome-dark-mode.css">
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        .hero-wrap {
+            width: 100%;
+            height: 400px;
+            background-image: url('assets/images/bg_1.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        .test-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <button class="test-button" onclick="toggleTest()">Toggle Dark Mode Test</button>
+    
+    <h1>Dark Mode Test Page</h1>
+    <p>This is a test to see if dark mode is working.</p>
+    
+    <div class="hero-wrap ftco-degree-bg" style="background-image: url('assets/images/bg_1.jpg');">
+        <div>Hero Section - Should be darkened in dark mode</div>
+    </div>
+    
+    <p>Regular content below hero section.</p>
+    <img src="assets/images/bg_1.jpg" alt="Test Image" style="width: 200px; height: 150px; object-fit: cover;">
+    <p>This image should appear normal in dark mode.</p>
+    
+    <script src="/assets/js/chrome-dark-mode.js"></script>
+    <script>
+        function toggleTest() {
+            if (document.documentElement.getAttribute('data-chrome-dark') === 'true') {
+                document.documentElement.setAttribute('data-chrome-dark', 'false');
+            } else {
+                document.documentElement.setAttribute('data-chrome-dark', 'true');
+            }
+        }
+        
+        // Debug info
+        setTimeout(() => {
+            console.log('=== DARK MODE TEST DEBUG ===');
+            console.log('Chrome dark mode CSS loaded:', !!document.querySelector('link[href*="chrome-dark-mode.css"]'));
+            console.log('Chrome dark mode JS loaded:', typeof window.ChromeDarkMode !== 'undefined');
+            console.log('Current theme attribute:', document.documentElement.getAttribute('data-chrome-dark'));
+            console.log('Hero element found:', !!document.querySelector('.hero-wrap'));
+            console.log('============================');
+        }, 1000);
+    </script>
+</body>
+</html>

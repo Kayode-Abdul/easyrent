@@ -3,7 +3,7 @@
       <div class="overlay"></div>
       <div class="container">
         <div class="row no-gutters slider-text justify-content-center align-items-center">
-          <div class="col-lg-8 col-md-6 ftco-animate d-flex align-items-end" style="top: -110px;">
+          <div class="col-lg-8 col-md-6 ftco-animate d-flex align-items-end" style="top: -170px;">
           	<div class="text text-center">
 	            <h1 class="mb-4">The Smartest <br>Way for Property Owners to Collect Rent and Manage Property</h1>
 	            <!-- <h1 class="mb-4">The Simplest <br>Way to Pay your rent</h1> -->

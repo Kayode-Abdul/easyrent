@@ -617,10 +617,10 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 img.src = e.target.result;
-                preview.style.transform = 'scale(1.05)';
-                setTimeout(() => {
-                    preview.style.transform = 'scale(1)';
-                }, 200);
+                // preview.style.transform = 'scale(1.05)';
+                // setTimeout(() => {
+                //     preview.style.transform = 'scale(1)';
+                // }, 200);
             }
             reader.readAsDataURL(input.files[0]);
         } else {

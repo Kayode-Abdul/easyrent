@@ -111,7 +111,6 @@ Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->na
 Route::post('/register', [RegisterController::class, 'register']);
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
-Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Password Reset routes (fixes Route [password.request] not defined)
@@ -487,4 +486,32 @@ Route::middleware(['auth'])->group(function(){
     Route::get('/dashboard/commission-notifications', [App\Http\Controllers\PropertyController::class, 'getCommissionRateNotifications']);
     Route::get('/dashboard/payment/{paymentId}/commission-details', [App\Http\Controllers\PropertyController::class, 'getPaymentCommissionDetails']);
     Route::get('/dashboard/commission-report/export', [App\Http\Controllers\PropertyController::class, 'exportCommissionReport'])->name('landlord.commission-report.export');
+});
+
+
+// Benefactor Payment Routes
+Route::prefix('benefactor')->name('benefactor.')->group(function () {
+    // Public routes (guest access)
+    Route::get('/payment/{token}', [App\Http\Controllers\BenefactorPaymentController::class, 'show'])->name('payment.show');
+    Route::post('/payment/{token}/approve', [App\Http\Controllers\BenefactorPaymentController::class, 'approve'])->name('payment.approve');
+    Route::post('/payment/{token}/decline', [App\Http\Controllers\BenefactorPaymentController::class, 'decline'])->name('payment.decline');
+    Route::post('/payment/{token}/process', [App\Http\Controllers\BenefactorPaymentController::class, 'processPayment'])->name('payment.process');
+    Route::get('/payment/{payment}/gateway', [App\Http\Controllers\BenefactorPaymentController::class, 'paymentGateway'])->name('payment.gateway');
+    Route::get('/payment/callback', [App\Http\Controllers\BenefactorPaymentController::class, 'paymentCallback'])->name('payment.callback');
+    Route::get('/payment/{payment}/success', [App\Http\Controllers\BenefactorPaymentController::class, 'paymentSuccess'])->name('payment.success');
+    
+    // Authenticated routes
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/dashboard', [App\Http\Controllers\BenefactorPaymentController::class, 'dashboard'])->name('dashboard');
+        Route::post('/payment/{payment}/pause', [App\Http\Controllers\BenefactorPaymentController::class, 'pauseRecurring'])->name('payment.pause');
+        Route::post('/payment/{payment}/resume', [App\Http\Controllers\BenefactorPaymentController::class, 'resumeRecurring'])->name('payment.resume');
+        Route::post('/payment/{payment}/cancel', [App\Http\Controllers\BenefactorPaymentController::class, 'cancelRecurring'])->name('payment.cancel');
+    });
+});
+
+// Tenant routes for creating payment invitations
+Route::middleware(['auth'])->prefix('tenant')->name('tenant.')->group(function () {
+    Route::post('/invite-benefactor', [App\Http\Controllers\TenantBenefactorController::class, 'inviteBenefactor'])->name('invite.benefactor');
+    Route::get('/benefactor-invitations', [App\Http\Controllers\TenantBenefactorController::class, 'invitations'])->name('benefactor.invitations');
+    Route::post('/benefactor-invitation/{invitation}/cancel', [App\Http\Controllers\TenantBenefactorController::class, 'cancelInvitation'])->name('benefactor.cancel');
 });

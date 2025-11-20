@@ -16,7 +16,7 @@
                         </div>
                     @else
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table datatable" id="payments-table">
                                 <thead>
                                     <tr>
                                         <th>Transaction ID</th>
@@ -85,3 +85,25 @@ function viewReceipt(transactionId) {
 }
 </script>
 @endsection
+
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<function_calls>
+<invoke name="strReplace">
+<parameter name="oldStr">@endsectionndsection
+
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#payments-table').DataTable({
+        "order": [[6, "desc"]], // Sort by date column
+        "pageLength": 25,
+        "responsive": true
+    });
+});
+</script>
+@endpush

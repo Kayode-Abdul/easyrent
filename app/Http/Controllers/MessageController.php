@@ -5,6 +5,8 @@ use Illuminate\Http\Request;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\MessageNotification;
 
 class MessageController extends Controller
 {
@@ -35,12 +37,23 @@ class MessageController extends Controller
             'body' => 'required|string',
         ]);
 
-        Message::create([
+        $message = Message::create([
             'sender_id' => Auth::user()->user_id,
             'receiver_id' => $request->receiver_id,
-            'subject' => $request->subject,
+            'subject' => $request->subject ?? 'New Message',
             'body' => $request->body,
         ]);
+
+        // Send email notification to receiver
+        try {
+            $receiver = User::where('user_id', $request->receiver_id)->first();
+            if ($receiver && $receiver->email) {
+                Mail::to($receiver->email)->send(new MessageNotification($message));
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the request
+            \Log::error('Failed to send message email notification: ' . $e->getMessage());
+        }
 
         return redirect()->route('messages.sent')->with('success', 'Message sent!');
     }

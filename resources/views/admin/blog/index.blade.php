@@ -21,7 +21,7 @@
                     @endif
 
                     <div class="table-responsive">
-                        <table class="table">
+                        <table class="table datatable" id="blog-table">
                             <thead class="text-primary">
                                 <tr>
                                     <th>Title</th>
@@ -84,3 +84,18 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#blog-table').DataTable({
+        "order": [[2, "desc"]], // Sort by date column
+        "pageLength": 10,
+        "responsive": true
+    });
+});
+</script>
+@endpush
