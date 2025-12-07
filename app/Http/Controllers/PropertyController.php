@@ -44,22 +44,83 @@ class PropertyController extends Controller
                 ], 401);
             }
             $userId = auth()->user()->user_id;
+            
+            // Create the property with basic fields
             $property = Property::create([
                 'user_id' => $userId,
-                'prop_id' => $this->generateUniquePropertyId(),
+                'property_id' => $this->generateUniquePropertyId(),
                 'prop_type' => $request->propertyType,
                 'address' => $request->address,
                 'state' => $request->state,
                 'lga' => $request->city,
-                'no_of_apartment' => $request->noOfApartment,
-                'created_at' => now() // Removed, use created_at
+                'no_of_apartment' => $request->noOfApartment ?? null,
+                'size_value' => $request->size_value ?? null,
+                'size_unit' => $request->size_unit ?? null,
+                'created_at' => now()
             ]);
+
+            // Save property-specific attributes based on property type
+            $propType = (int)$request->propertyType;
+            
+            // Warehouse attributes (Type 5)
+            if ($propType === 5) {
+                if ($request->filled('height_clearance')) {
+                    $property->setPropertyAttribute('height_clearance', $request->height_clearance);
+                }
+                if ($request->filled('loading_docks')) {
+                    $property->setPropertyAttribute('loading_docks', $request->loading_docks);
+                }
+                if ($request->filled('storage_type')) {
+                    $property->setPropertyAttribute('storage_type', $request->storage_type);
+                }
+            }
+            
+            // Land/Farm attributes (Type 6 or 7)
+            elseif ($propType === 6 || $propType === 7) {
+                if ($request->filled('land_type')) {
+                    $property->setPropertyAttribute('land_type', $request->land_type);
+                }
+                if ($request->filled('soil_type')) {
+                    $property->setPropertyAttribute('soil_type', $request->soil_type);
+                }
+                if ($request->filled('water_access')) {
+                    $property->setPropertyAttribute('water_access', $request->water_access);
+                }
+                if ($request->filled('water_source')) {
+                    $property->setPropertyAttribute('water_source', $request->water_source);
+                }
+                if ($request->filled('topography')) {
+                    $property->setPropertyAttribute('topography', $request->topography);
+                }
+            }
+            
+            // Store/Shop attributes (Type 8 or 9)
+            elseif ($propType === 8 || $propType === 9) {
+                if ($request->filled('frontage_width')) {
+                    $property->setPropertyAttribute('frontage_width', $request->frontage_width);
+                }
+                if ($request->filled('store_type')) {
+                    $property->setPropertyAttribute('store_type', $request->store_type);
+                }
+                if ($request->filled('foot_traffic')) {
+                    $property->setPropertyAttribute('foot_traffic', $request->foot_traffic);
+                }
+                if ($request->filled('parking_spaces')) {
+                    $property->setPropertyAttribute('parking_spaces', $request->parking_spaces);
+                }
+            }
+
+            Log::info('Property created successfully with type: ' . $property->getPropertyTypeName(), [
+                'property_id' => $property->property_id,
+                'prop_type' => $propType
+            ]);
+
             return response()->json([
                 'success' => true,
                 'messages' => [
                     'message' => 'Property Listed Successfully!',
                     'more' => true,
-                    'propId' => $property->prop_id
+                    'propId' => $property->property_id
                 ]
             ]);
         } catch (\Exception $e) {
@@ -78,7 +139,7 @@ class PropertyController extends Controller
         // }
         try {
             Log::info('Apartment creation request data:', $request->all());
-            $property = Property::where('prop_id', $request->propertyId)->firstOrFail();
+            $property = Property::where('property_id', $request->propertyId)->firstOrFail();
             $startDate = $request->tenantId ? Carbon::parse($request->fromRange) : null;
             $endDate = null;
             if ($startDate && $request->duration) {
@@ -88,7 +149,7 @@ class PropertyController extends Controller
             $transactionId = (int)mt_rand(1000000, 9999999);
             $apartment = Apartment::create([
                 'apartment_id' => $transactionId, // Generate a unique ID for the apartment  
-                'property_id' => $property->prop_id, // Use prop_id instead of id
+                'property_id' => $property->property_id, // Use property_id instead of id
                 'apartment_type' => $request->apartmentType,
                 'tenant_id' => $request->tenantId ?: null,
                 'user_id' => auth()->user()->user_id,
@@ -199,7 +260,7 @@ class PropertyController extends Controller
     {
         do {
             $id = mt_rand(1000000, 9999999);
-        } while (Property::where('prop_id', $id)->exists());
+        } while (Property::where('property_id', $id)->exists());
 
         return $id;
     }
@@ -210,7 +271,7 @@ class PropertyController extends Controller
     private function getCommissionTransparencyData($userId): array
     {
         // Get landlord's properties
-        $propertyIds = Property::where('user_id', $userId)->pluck('prop_id');
+        $propertyIds = Property::where('user_id', $userId)->pluck('property_id');
         
         // Get payments for these properties via apartment -> property_id
         $payments = \App\Models\Payment::whereHas('apartment', function($q) use ($propertyIds) {
@@ -441,7 +502,7 @@ class PropertyController extends Controller
         
         // Get landlord's properties
         $properties = Property::where('user_id', $userId)->get();
-        $propertyIds = $properties->pluck('prop_id');
+        $propertyIds = $properties->pluck('property_id');
 
         // Apply filters
         $dateFrom = $request->input('date_from', now()->subMonth()->format('Y-m-d'));
@@ -509,7 +570,7 @@ class PropertyController extends Controller
         $format = $request->input('format', 'csv');
         
         // Get filtered data
-        $propertyIds = Property::where('user_id', $userId)->pluck('prop_id');
+        $propertyIds = Property::where('user_id', $userId)->pluck('property_id');
         $dateFrom = $request->input('date_from', now()->subMonth()->format('Y-m-d'));
         $dateTo = $request->input('date_to', now()->format('Y-m-d'));
         $propertyId = $request->input('property_id');
@@ -675,7 +736,7 @@ class PropertyController extends Controller
             // Redirect, but cast to View to satisfy return type
             return view('auth.login');
         }
-        $property = Property::where('prop_id', $propId)
+        $property = Property::where('property_id', $propId)
             ->with(['apartments.tenant', 'owner', 'agent'])
             ->firstOrFail();
         $userId = auth()->check() ? auth()->user()->user_id : null;
@@ -735,7 +796,7 @@ class PropertyController extends Controller
                 ], 422);
             }
 
-            $property = Property::where('prop_id', $propId)->firstOrFail();
+            $property = Property::where('property_id', $propId)->firstOrFail();
             $property->agent_id = $agent->user_id;
             $property->save();
 
@@ -763,7 +824,7 @@ class PropertyController extends Controller
     public function getPropertyDetails(string $propId): JsonResponse
     {
         try {
-            $property = Property::where('prop_id', $propId)
+            $property = Property::where('property_id', $propId)
                 ->with(['apartments.tenant', 'owner'])
                 ->firstOrFail();
 
@@ -873,7 +934,7 @@ class PropertyController extends Controller
     public function removeAgent(Request $request, string $propId): JsonResponse
     {
         try {
-            $property = Property::where('prop_id', $propId)->firstOrFail();
+            $property = Property::where('property_id', $propId)->firstOrFail();
             $property->agent_id = null;
             $property->save();
             return response()->json([
@@ -923,7 +984,7 @@ class PropertyController extends Controller
         if (!auth()->check()) {
             return view('auth.login');
         }
-        $property = Property::where('prop_id', $propId)->firstOrFail();
+        $property = Property::where('property_id', $propId)->firstOrFail();
         $locations = json_decode(File::get(resource_path('/states-and-cities.json')), true);
         return view('property.edit', compact('property', 'locations'));
     }
@@ -931,7 +992,7 @@ class PropertyController extends Controller
     public function update(Request $request, string $propId): JsonResponse
     {
         try {
-            $property = Property::where('prop_id', $propId)->firstOrFail();
+            $property = Property::where('property_id', $propId)->firstOrFail();
             $property->update([
                 'prop_type' => $request->propertyType,
                 'address' => $request->address,
@@ -955,7 +1016,7 @@ class PropertyController extends Controller
     public function destroy(string $propId): JsonResponse
     {
         try {
-            $property = Property::where('prop_id', $propId)->firstOrFail();
+            $property = Property::where('property_id', $propId)->firstOrFail();
             $property->delete();
             return response()->json([
                 'success' => true,

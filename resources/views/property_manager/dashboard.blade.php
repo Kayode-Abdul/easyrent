@@ -192,7 +192,7 @@
                                         @endphp
                                         <tr>
                                             <td>
-                                                <span class="font-weight-bold">{{ $property->prop_id }}</span>
+                                                <span class="font-weight-bold">{{ $property->property_id }}</span>
                                             </td>
                                             <td>
                                                 <div>
@@ -228,11 +228,11 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{{ route('property-manager.property-details', $property->prop_id) }}" 
+                                                    <a href="{{ route('property-manager.property-details', $property->property_id) }}" 
                                                        class="btn btn-info btn-sm" title="View Details">
                                                         <i class="fa fa-eye"></i>
                                                     </a>
-                                                    <a href="{{ route('property-manager.property-apartments', $property->prop_id) }}" 
+                                                    <a href="{{ route('property-manager.property-apartments', $property->property_id) }}" 
                                                        class="btn btn-success btn-sm" title="View Apartments">
                                                         <i class="fa fa-home"></i>
                                                     </a>

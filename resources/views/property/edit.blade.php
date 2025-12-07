@@ -9,7 +9,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h4 class="card-title">Edit Property</h4>
-                        <a href="{{ url('/dashboard/property/'.$property->prop_id) }}" class="btn btn-primary btn-round">
+                        <a href="{{ url('/dashboard/property/'.$property->property_id) }}" class="btn btn-primary btn-round">
                             <i class="fa fa-arrow-left"></i> Back to Details
                         </a>
                     </div>
@@ -23,11 +23,22 @@
                                 <div class="form-group">
                                     <label for="property-type">Property Type</label>
                                     <select name="propertyType" id="property-type" class="form-control" required>
-                                        <option value="" disabled {{ !$property->prop_type ? 'selected' : '' }}>Select Property Type</option>
-                                        <option value="1" {{ $property->prop_type == 1 ? 'selected' : '' }}>Mansion</option>
-                                        <option value="2" {{ $property->prop_type == 2 ? 'selected' : '' }}>Duplex</option>
-                                        <option value="3" {{ $property->prop_type == 3 ? 'selected' : '' }}>Flat</option>
-                                        <option value="4" {{ $property->prop_type == 4 ? 'selected' : '' }}>Terrace</option>
+                                        <option value="" disabled {{ !$property->prop_type ? 'selected' : '' }}>-- Select Property Type --</option>
+                                        <optgroup label="Residential">
+                                            <option value="1" {{ $property->prop_type == 1 ? 'selected' : '' }}>Mansion</option>
+                                            <option value="2" {{ $property->prop_type == 2 ? 'selected' : '' }}>Duplex</option>
+                                            <option value="3" {{ $property->prop_type == 3 ? 'selected' : '' }}>Flat</option>
+                                            <option value="4" {{ $property->prop_type == 4 ? 'selected' : '' }}>Terrace</option>
+                                        </optgroup>
+                                        <optgroup label="Commercial">
+                                            <option value="5" {{ $property->prop_type == 5 ? 'selected' : '' }}>Warehouse</option>
+                                            <option value="8" {{ $property->prop_type == 8 ? 'selected' : '' }}>Store</option>
+                                            <option value="9" {{ $property->prop_type == 9 ? 'selected' : '' }}>Shop</option>
+                                        </optgroup>
+                                        <optgroup label="Land/Agricultural">
+                                            <option value="6" {{ $property->prop_type == 6 ? 'selected' : '' }}>Land</option>
+                                            <option value="7" {{ $property->prop_type == 7 ? 'selected' : '' }}>Farm</option>
+                                        </optgroup>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -122,7 +133,7 @@ $('#editPropertyForm').off('submit').on('submit', function(e) {
     const form = $(this);
     const formData = form.serialize();
     $.ajax({
-        url: '/dashboard/property/{{ $property->prop_id }}',
+        url: '/dashboard/property/{{ $property->property_id }}',
         type: 'POST',
         data: formData,
         headers: {

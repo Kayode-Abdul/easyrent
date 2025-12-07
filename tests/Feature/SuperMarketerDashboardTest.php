@@ -27,9 +27,9 @@ class SuperMarketerDashboardTest extends TestCase
         parent::setUp();
         
         // Create roles
-        Role::create(['id' => 2, 'name' => 'landlord']);
-        Role::create(['id' => 3, 'name' => 'marketer']);
-        Role::create(['id' => 9, 'name' => 'super_marketer']);
+        Role::firstOrCreate(['id' => 2], ['name' => 'landlord']);
+        Role::firstOrCreate(['id' => 3], ['name' => 'marketer']);
+        Role::firstOrCreate(['id' => 9], ['name' => 'super_marketer']);
         
         // Create users
         $this->superMarketer = User::factory()->create([

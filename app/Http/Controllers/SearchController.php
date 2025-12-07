@@ -143,7 +143,7 @@ class SearchController extends Controller
      */
     public function searchApartments(Request $request)
     {
-        $query = Apartment::with(['property:id,prop_id,address,state,lga', 'tenant:user_id,first_name,last_name']);
+        $query = Apartment::with(['property:id,property_id,address,state,lga', 'tenant:user_id,first_name,last_name']);
 
         // Text search (search in property details)
         if ($request->filled('q')) {

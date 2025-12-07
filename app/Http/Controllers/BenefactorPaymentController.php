@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Benefactor;
 use App\Models\BenefactorPayment;
 use App\Models\PaymentInvitation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -96,19 +97,26 @@ class BenefactorPaymentController extends Controller
 
         // Validate invitation
         if ($invitation->isExpired() || $invitation->isAccepted()) {
-            return back()->with('error', 'This payment link is no longer valid.');
+            return back()->withInput()->with('error', 'This payment link is no longer valid.');
         }
 
-        $validated = $request->validate([
-            'payment_type' => 'required|in:one_time,recurring',
-            'frequency' => 'required_if:payment_type,recurring|in:monthly,quarterly,annually',
-            'payment_day_of_month' => 'nullable|integer|min:1|max:31',
-            'relationship_type' => 'required|in:employer,parent,guardian,sponsor,organization,other',
-            'full_name' => 'required_if:guest_checkout,true|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'create_account' => 'nullable|boolean',
-            'password' => 'required_if:create_account,true|min:8|confirmed',
-        ]);
+        // Check if user is logged in
+        $isLoggedIn = Auth::check();
+
+        try {
+            $validated = $request->validate([
+                'payment_type' => 'required|in:one_time,recurring',
+                'frequency' => 'required_if:payment_type,recurring|in:monthly,quarterly,annually',
+                'payment_day_of_month' => 'nullable|integer|min:1|max:31',
+                'relationship_type' => 'required|in:employer,parent,guardian,sponsor,organization,other',
+                'full_name' => $isLoggedIn ? 'nullable|string|max:255' : 'required|string|max:255',
+                'phone' => 'nullable|string|max:20',
+                'create_account' => 'nullable|boolean',
+                'password' => 'required_if:create_account,1|min:8|confirmed',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->validator)->withInput();
+        }
 
         DB::beginTransaction();
         try {
@@ -116,22 +124,42 @@ class BenefactorPaymentController extends Controller
             $benefactor = null;
             
             if (Auth::check()) {
-                // Registered user
-                $benefactor = Benefactor::firstOrCreate(
-                    ['email' => Auth::user()->email],
-                    [
-                        'user_id' => Auth::id(),
-                        'full_name' => Auth::user()->first_name . ' ' . Auth::user()->last_name,
-                        'phone' => Auth::user()->phone ?? $request->phone,
+                // Registered user - verify user exists
+                $user = Auth::user();
+                
+                // Use the correct primary key (user_id, not id)
+                $userId = $user->user_id;
+                
+                // Double check user exists in database
+                $userExists = User::where('user_id', $userId)->first();
+                if (!$userExists) {
+                    throw new \Exception('User account not found. Please log out and log in again.');
+                }
+                
+                // Check if benefactor already exists by email first
+                $benefactor = Benefactor::where('email', $user->email)->first();
+                
+                if ($benefactor) {
+                    // Update existing benefactor
+                    $benefactor->update([
+                        'user_id' => $userId,
+                        'full_name' => $user->first_name . ' ' . $user->last_name,
+                        'phone' => $user->phone ?? $request->phone ?? $benefactor->phone,
                         'type' => 'registered',
                         'relationship_type' => $validated['relationship_type'],
                         'is_registered' => true,
-                    ]
-                );
-                
-                // Update relationship type if already exists
-                if (!$benefactor->wasRecentlyCreated) {
-                    $benefactor->update(['relationship_type' => $validated['relationship_type']]);
+                    ]);
+                } else {
+                    // Create new benefactor
+                    $benefactor = Benefactor::create([
+                        'user_id' => $userId,
+                        'email' => $user->email,
+                        'full_name' => $user->first_name . ' ' . $user->last_name,
+                        'phone' => $user->phone ?? $request->phone,
+                        'type' => 'registered',
+                        'relationship_type' => $validated['relationship_type'],
+                        'is_registered' => true,
+                    ]);
                 }
             } else {
                 // Guest user or creating account
@@ -205,7 +233,12 @@ class BenefactorPaymentController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'An error occurred. Please try again.');
+            \Log::error('Benefactor payment processing error: ' . $e->getMessage(), [
+                'token' => $token,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->withInput()->with('error', 'An error occurred: ' . $e->getMessage());
         }
     }
 
@@ -220,26 +253,73 @@ class BenefactorPaymentController extends Controller
     }
 
     /**
-     * Handle payment callback
+     * Handle payment callback from Paystack
      */
     public function paymentCallback(Request $request)
     {
-        // Handle payment gateway callback
-        // This will vary based on your payment provider (Paystack, Flutterwave, etc.)
+        $reference = $request->query('reference');
         
-        $reference = $request->reference;
-        $payment = BenefactorPayment::where('payment_reference', $reference)->firstOrFail();
+        if (!$reference) {
+            return redirect()->route('dashboard')->with('error', 'Invalid payment reference.');
+        }
 
-        // Verify payment with gateway
-        // ... payment verification logic ...
-
-        // Mark as completed
-        $payment->markAsCompleted($request->transaction_id);
-
-        // Send notifications
-        // ... notification logic ...
-
-        return redirect()->route('benefactor.payment.success', ['payment' => $payment->id]);
+        try {
+            // Verify payment with Paystack
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => "https://api.paystack.co/transaction/verify/" . rawurlencode($reference),
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    "Authorization: Bearer " . config('services.paystack.secret_key'),
+                    "Cache-Control: no-cache",
+                ],
+            ));
+            
+            $response = curl_exec($curl);
+            $err = curl_error($curl);
+            curl_close($curl);
+            
+            if ($err) {
+                \Log::error('Paystack verification error: ' . $err);
+                return redirect()->route('dashboard')->with('error', 'Payment verification failed.');
+            }
+            
+            $result = json_decode($response);
+            
+            if (!$result->status || $result->data->status !== 'success') {
+                return redirect()->route('dashboard')->with('error', 'Payment was not successful.');
+            }
+            
+            // Extract payment ID from reference (format: BEN-{payment_id}-{random})
+            $parts = explode('-', $reference);
+            if (count($parts) < 2) {
+                return redirect()->route('dashboard')->with('error', 'Invalid payment reference format.');
+            }
+            
+            $paymentId = $parts[1];
+            $payment = BenefactorPayment::findOrFail($paymentId);
+            
+            // Check if already processed
+            if ($payment->status === 'completed') {
+                return redirect()->route('benefactor.payment.success', ['payment' => $payment->id]);
+            }
+            
+            // Mark as completed
+            $payment->markAsCompleted($result->data->reference);
+            
+            // Send notification to tenant
+            try {
+                Mail::to($payment->tenant->email)->send(new \App\Mail\BenefactorPaymentSuccessMail($payment));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send payment success email: ' . $e->getMessage());
+            }
+            
+            return redirect()->route('benefactor.payment.success', ['payment' => $payment->id]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Payment callback error: ' . $e->getMessage());
+            return redirect()->route('dashboard')->with('error', 'An error occurred processing your payment.');
+        }
     }
 
     /**

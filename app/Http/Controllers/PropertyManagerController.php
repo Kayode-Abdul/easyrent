@@ -70,7 +70,7 @@ class PropertyManagerController extends Controller
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
                 $q->where('address', 'LIKE', "%{$search}%")
-                  ->orWhere('prop_id', 'LIKE', "%{$search}%")
+                  ->orWhere('property_id', 'LIKE', "%{$search}%")
                   ->orWhere('state', 'LIKE', "%{$search}%")
                   ->orWhere('lga', 'LIKE', "%{$search}%");
             });
@@ -114,7 +114,7 @@ class PropertyManagerController extends Controller
             return redirect()->route('dashboard')->with('error', 'Access denied.');
         }
 
-        $property = Property::where('prop_id', $propertyId)
+        $property = Property::where('property_id', $propertyId)
             ->where('agent_id', $user->user_id)
             ->with(['owner', 'apartments.tenant'])
             ->firstOrFail();
@@ -149,7 +149,7 @@ class PropertyManagerController extends Controller
             return redirect()->route('dashboard')->with('error', 'Access denied.');
         }
 
-        $property = Property::where('prop_id', $propertyId)
+        $property = Property::where('property_id', $propertyId)
             ->where('agent_id', $user->user_id)
             ->with('owner')
             ->firstOrFail();
@@ -177,7 +177,7 @@ class PropertyManagerController extends Controller
 
         // Get property IDs managed by this user
         $managedPropertyIds = Property::where('agent_id', $user->user_id)
-            ->pluck('prop_id');
+            ->pluck('property_id');
 
         $query = Payment::whereHas('apartment', function($q) use ($managedPropertyIds) {
                 $q->whereIn('property_id', $managedPropertyIds);
@@ -207,7 +207,7 @@ class PropertyManagerController extends Controller
 
         // Get managed properties for filter dropdown
         $managedProperties = Property::where('agent_id', $user->user_id)
-            ->select('prop_id', 'address')
+            ->select('property_id', 'address')
             ->get();
 
         return view('property_manager.payments', compact(
@@ -232,7 +232,7 @@ class PropertyManagerController extends Controller
 
         // Get managed property IDs
         $managedPropertyIds = Property::where('agent_id', $user->user_id)
-            ->pluck('prop_id');
+            ->pluck('property_id');
 
         // Get analytics data
         $analytics = $this->getAnalyticsData($managedPropertyIds, $startDate, $endDate);
@@ -257,7 +257,7 @@ class PropertyManagerController extends Controller
      */
     private function getPropertyManagerStats($userId)
     {
-        $managedPropertyIds = Property::where('agent_id', $userId)->pluck('prop_id');
+        $managedPropertyIds = Property::where('agent_id', $userId)->pluck('property_id');
         
         $totalProperties = $managedPropertyIds->count();
         
@@ -298,7 +298,7 @@ class PropertyManagerController extends Controller
     {
         $activities = collect();
         
-        $managedPropertyIds = Property::where('agent_id', $userId)->pluck('prop_id');
+        $managedPropertyIds = Property::where('agent_id', $userId)->pluck('property_id');
 
         // Recent payments
         $recentPayments = Payment::whereHas('apartment', function($query) use ($managedPropertyIds) {

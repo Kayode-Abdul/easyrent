@@ -36,6 +36,7 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\EasyRentPerformanceMonitoring::class,
         ],
 
         'api' => [
@@ -67,5 +68,11 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'super.admin' => \App\Http\Middleware\SuperAdminOnly::class,
+        'invitation.session' => \App\Http\Middleware\InvitationSessionMiddleware::class,
+        'easyrent.performance' => \App\Http\Middleware\EasyRentPerformanceMonitoring::class,
+        'invitation.rate.limit' => \App\Http\Middleware\InvitationRateLimitMiddleware::class,
+        'enhanced.csrf' => \App\Http\Middleware\EnhancedCsrfProtection::class,
+        'easyrent.error.handler' => \App\Http\Middleware\EasyRentErrorHandler::class,
+        'api.auth' => \App\Http\Middleware\ApiAuthMiddleware::class,
     ];
 }

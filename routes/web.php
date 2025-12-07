@@ -153,7 +153,7 @@ Route::get('/api/session-status', function () {
 Route::get('/users', [UserController::class, 'users']);
 Route::put('/user/{id}', [UserController::class, 'update']);
 Route::post('/user/{id}', [UserController::class, 'update']);
-Route::post('/dashboard/users/profile/{id}', [UserController::class, 'show'])->name('users.profile');
+Route::post('/dashboard/users/profile/{id}', [UserController::class, 'show'])->name('users.profile.update');
 Route::get('/dashboard/users/profile/{id}', [UserController::class, 'show'])->name('users.profile');
  
 // Booking routes
@@ -185,6 +185,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/dashboard/messages/send', [MessageController::class, 'send'])->name('messages.send');
     Route::get('/dashboard/messages/{id}', [MessageController::class, 'show'])->name('messages.show');
     
+    // User lookup API for tenant ID validation
+    Route::get('/api/user/lookup/{userId}', [UserController::class, 'lookup'])->name('user.lookup');
+    
     // Payment routes
     Route::get('/dashboard/payments', [PaymentController::class, 'index'])->name('payments.index');
     Route::get('/dashboard/payments/analytics', [PaymentController::class, 'analytics'])->name('payments.analytics');
@@ -194,6 +197,7 @@ Route::get('/dashboard/agents/search', [UserController::class, 'searchAgents'])-
 // Agent Ratings
 // Payment routes - publicly accessible for callbacks
 Route::post('/pay', [PaymentController::class, 'redirectToGateway'])->name('pay');
+Route::post('/payment/pay', [PaymentController::class, 'redirectToGateway'])->name('payment.pay'); // Alias for compatibility
 Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
 Route::post('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback.post');
 
@@ -270,8 +274,8 @@ Route::middleware(['auth'])->group(function() {
     Route::post('/dashboard/agent/rate', [\App\Http\Controllers\AgentRatingController::class, 'store'])->name('agent.rate');
     Route::get('/dashboard/agent/{agentId}/ratings', [\App\Http\Controllers\AgentRatingController::class, 'show'])->name('agent.ratings');
     Route::get('/proforma/view/{id}', [ProfomaController::class, 'view'])->name('proforma.view');
-Route::post('/proforma/{id}/accept', [ProfomaController::class, 'accept'])->name('proforma.accept');
-Route::post('/proforma/{id}/reject', [ProfomaController::class, 'reject'])->name('proforma.reject');
+Route::post('/proforma/{id}/accept', [ProfomaController::class, 'accept'])->name('proforma.accept.post');
+Route::post('/proforma/{id}/reject', [ProfomaController::class, 'reject'])->name('proforma.reject.post');
 Route::get('/proforma/{id}/accept', [ProfomaController::class, 'accept'])->name('proforma.accept');
 Route::get('/proforma/{id}/reject', [ProfomaController::class, 'reject'])->name('proforma.reject');
 Route::get('/proforma/{id}/payment', [PaymentController::class, 'showProformaPaymentForm'])->name('proforma.payment.form');
@@ -390,6 +394,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::post('/{regionalManager}/assignments', [App\Http\Controllers\Admin\RegionalManagerManagementController::class, 'storeRegionalAssignments'])->name('store-assignments');
         Route::delete('/{regionalManager}/remove-scope', [App\Http\Controllers\Admin\RegionalManagerManagementController::class, 'removeRegionalScope'])->name('remove-scope');
         Route::delete('/{regionalManager}/remove-all-scopes', [App\Http\Controllers\Admin\RegionalManagerManagementController::class, 'removeAllRegionalScopes'])->name('remove-all-scopes');
+        Route::delete('/{regionalManager}/remove-role', [App\Http\Controllers\Admin\RegionalManagerManagementController::class, 'removeRegionalManagerRole'])->name('remove-role');
         Route::post('/bulk-assign', [App\Http\Controllers\Admin\RegionalManagerManagementController::class, 'bulkAssignRegions'])->name('bulk-assign');
         Route::put('/{regionalManager}/update', [App\Http\Controllers\Admin\RegionalManagerManagementController::class, 'updateRegionalManager'])->name('update');
         // Optional AJAX data endpoint
@@ -492,12 +497,13 @@ Route::middleware(['auth'])->group(function(){
 // Benefactor Payment Routes
 Route::prefix('benefactor')->name('benefactor.')->group(function () {
     // Public routes (guest access)
+    // Note: callback route must come before {payment} routes to avoid conflicts
+    Route::get('/payment/callback', [App\Http\Controllers\BenefactorPaymentController::class, 'paymentCallback'])->name('payment.callback');
     Route::get('/payment/{token}', [App\Http\Controllers\BenefactorPaymentController::class, 'show'])->name('payment.show');
     Route::post('/payment/{token}/approve', [App\Http\Controllers\BenefactorPaymentController::class, 'approve'])->name('payment.approve');
     Route::post('/payment/{token}/decline', [App\Http\Controllers\BenefactorPaymentController::class, 'decline'])->name('payment.decline');
     Route::post('/payment/{token}/process', [App\Http\Controllers\BenefactorPaymentController::class, 'processPayment'])->name('payment.process');
     Route::get('/payment/{payment}/gateway', [App\Http\Controllers\BenefactorPaymentController::class, 'paymentGateway'])->name('payment.gateway');
-    Route::get('/payment/callback', [App\Http\Controllers\BenefactorPaymentController::class, 'paymentCallback'])->name('payment.callback');
     Route::get('/payment/{payment}/success', [App\Http\Controllers\BenefactorPaymentController::class, 'paymentSuccess'])->name('payment.success');
     
     // Authenticated routes
@@ -514,4 +520,29 @@ Route::middleware(['auth'])->prefix('tenant')->name('tenant.')->group(function (
     Route::post('/invite-benefactor', [App\Http\Controllers\TenantBenefactorController::class, 'inviteBenefactor'])->name('invite.benefactor');
     Route::get('/benefactor-invitations', [App\Http\Controllers\TenantBenefactorController::class, 'invitations'])->name('benefactor.invitations');
     Route::post('/benefactor-invitation/{invitation}/cancel', [App\Http\Controllers\TenantBenefactorController::class, 'cancelInvitation'])->name('benefactor.cancel');
+});
+
+// EasyRent Link Routes (Public - no authentication required for viewing)
+Route::prefix('apartment/invite')->name('apartment.invite.')->group(function () {
+    // Public routes for unauthenticated users
+    Route::get('/{token}', [App\Http\Controllers\ApartmentInvitationController::class, 'show'])->name('show');
+    Route::post('/{token}/apply', [App\Http\Controllers\ApartmentInvitationController::class, 'apply'])->name('apply');
+    Route::post('/store-session', [App\Http\Controllers\ApartmentInvitationController::class, 'storeSession'])->name('store-session');
+    Route::get('/{token}/payment/{payment}', [App\Http\Controllers\ApartmentInvitationController::class, 'payment'])->name('payment');
+    Route::post('/{token}/payment/callback', [App\Http\Controllers\ApartmentInvitationController::class, 'paymentCallback'])->name('payment.callback');
+    Route::get('/{token}/success', [App\Http\Controllers\ApartmentInvitationController::class, 'success'])->name('success');
+    
+    // Error pages
+    Route::get('/{token}/expired', function($token) {
+        return view('apartment.invite.expired', compact('token'));
+    })->name('expired');
+    Route::get('/{token}/not-found', function($token) {
+        return view('apartment.invite.not-found', compact('token'));
+    })->name('not-found');
+});
+
+// Landlord routes for generating invitation links (requires authentication)
+Route::middleware(['auth'])->group(function () {
+    Route::post('/apartment/{apartment}/generate-link', [App\Http\Controllers\ApartmentInvitationController::class, 'generateLink'])->name('apartment.generate-link');
+    Route::get('/apartment/{apartment}/invitation-stats', [App\Http\Controllers\ApartmentInvitationController::class, 'invitationStats'])->name('apartment.invitation-stats');
 });

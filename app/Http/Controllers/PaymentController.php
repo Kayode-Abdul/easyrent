@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use App\Models\Apartment;
 use App\Models\ProfomaReceipt;
+use App\Models\ApartmentInvitation;
+use App\Services\Payment\PaymentIntegrationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -14,9 +16,17 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Unicodeveloper\Paystack\Facades\Paystack;
 use App\Mail\PaymentReceiptMail;
 use Illuminate\Support\Facades\DB;
+use App\Traits\LogsEasyRentEvents;
 
 class PaymentController extends Controller
 {
+    use LogsEasyRentEvents;
+    protected $paymentIntegrationService;
+
+    public function __construct(PaymentIntegrationService $paymentIntegrationService)
+    {
+        $this->paymentIntegrationService = $paymentIntegrationService;
+    }
     public function index(Request $request)
     {
         $query = Payment::query();
@@ -117,7 +127,10 @@ class PaymentController extends Controller
     public function handleGatewayCallback(Request $request)
     {
         try {
-            Log::info('Payment callback received', ['request' => $request->all(), 'method' => $request->method()]);
+            $this->logPaymentEvent('payment_callback_received', new Payment(), [
+                'request_method' => $request->method(),
+                'has_reference' => $request->has('reference'),
+            ]);
             
             // Set the base URL for Paystack API
             config(['paystack.paymentUrl' => env('PAYSTACK_PAYMENT_URL', 'https://api.paystack.co')]);
@@ -127,7 +140,7 @@ class PaymentController extends Controller
             $transactionReference = $request->input('reference') ?? $request->query('reference') ?? $request->query('trxref');
             
             if (!$transactionReference) {
-                Log::error('No transaction reference found in callback');
+                $this->logEasyRentError('No transaction reference found in callback', new \Exception('Missing transaction reference'), []);
                 return redirect('/dashboard')->with('error', 'Payment verification failed: No transaction reference');
             }
             
@@ -198,9 +211,9 @@ class PaymentController extends Controller
             if ($paymentDetails['status'] && $paymentDetails['data']['status'] === 'success') {
                 
                 // Log the entire payment process for debugging
-                Log::info('=== PAYMENT CALLBACK PROCESSING START ===', [
+                $this->logPaymentEvent('payment_callback_processing_start', new Payment(), [
                     'reference' => $transactionReference,
-                    'payment_details' => $paymentDetails
+                    'payment_status' => $paymentDetails['data']['status'] ?? 'unknown',
                 ]);
                     $reference = $paymentDetails['data']['reference'];
                     $metadata = $paymentDetails['data']['metadata'];
@@ -317,6 +330,20 @@ class PaymentController extends Controller
                     $existingPayment = Payment::where('transaction_id', $reference)->first();
                     if ($existingPayment) {
                         Log::info('Payment already exists', ['payment_id' => $existingPayment->id]);
+                        
+                        // Check if this is an invitation-based payment that needs processing
+                        if ($this->isInvitationBasedPayment($existingPayment)) {
+                            $result = $this->paymentIntegrationService->processInvitationPayment(
+                                $existingPayment, 
+                                $paymentDetails['data']
+                            );
+                            
+                            if ($result['success']) {
+                                return redirect()->route('apartment.invite.success', $result['invitation']->invitation_token)
+                                    ->with('success', 'Payment completed and apartment assigned successfully!');
+                            }
+                        }
+                        
                         return redirect()->route('payment.receipt', ['id' => $existingPayment->id])->with('success', 'Payment was already processed!');
                     }
                     
@@ -350,20 +377,49 @@ class PaymentController extends Controller
                     
                     Log::info('Payment record created successfully', ['payment_id' => $payment->id, 'payment_data' => $payment->fresh()->toArray()]);
                     
-                    // Update apartment details
-                    $apartment->update([
-                        'tenant_id' => $proforma->tenant_id,
-                        'occupied' => true,
-                        'range_start' => now(),
-                        'range_end' => now()->addMonths($proforma->duration)
-                    ]);
+                    // Check if this is an invitation-based payment
+                    if ($this->isInvitationBasedPayment($payment)) {
+                        // Process through invitation payment service
+                        $result = $this->paymentIntegrationService->processInvitationPayment(
+                            $payment, 
+                            $paymentDetails['data']
+                        );
+                        
+                        if ($result['success']) {
+                            DB::commit();
+                            
+                            Log::info('Invitation payment processed successfully', [
+                                'payment_id' => $payment->id,
+                                'invitation_id' => $result['invitation']->id
+                            ]);
+                            
+                            // Generate receipt
+                            $receiptFile = $this->generateReceipt($payment);
+                            
+                            return redirect()->route('apartment.invite.success', $result['invitation']->invitation_token)
+                                ->with('success', 'Payment completed and apartment assigned successfully!');
+                        } else {
+                            // Handle invitation payment failure
+                            DB::rollBack();
+                            return redirect('/dashboard')->with('error', 'Payment was received but apartment assignment failed: ' . $result['error']);
+                        }
+                    } else {
+                        // Handle regular proforma payment
+                        // Update apartment details
+                        $apartment->update([
+                            'tenant_id' => $proforma->tenant_id,
+                            'occupied' => true,
+                            'range_start' => now(),
+                            'range_end' => now()->addMonths($proforma->duration)
+                        ]);
 
-                    // Update proforma status
-                    $proforma->update(['status' => ProfomaReceipt::STATUS_CONFIRMED]);
-                    
-                    DB::commit();
-                    
-                    Log::info('All payment related updates completed successfully');
+                        // Update proforma status
+                        $proforma->update(['status' => ProfomaReceipt::STATUS_CONFIRMED]);
+                        
+                        DB::commit();
+                        
+                        Log::info('Regular payment processing completed successfully');
+                    }
                 } catch (\Exception $e) {
                     DB::rollBack();
                     Log::error('Failed to create payment record', [
@@ -434,7 +490,7 @@ class PaymentController extends Controller
     {
         try {
             // Load payment with relationships
-            $payment = Payment::with(['tenant', 'landlord', 'apartment'])
+            $payment = Payment::with(['tenant', 'landlord', 'apartment.property'])
                 ->where('id', $payment->id)
                 ->firstOrFail();
                 
@@ -442,19 +498,72 @@ class PaymentController extends Controller
             $filename = 'receipt_' . $payment->transaction_id . '.pdf';
             Storage::put('receipts/' . $filename, $pdf->output());
             
-            // Send receipt via email
+            // Send receipt via email to tenant
             if ($payment->tenant && $payment->tenant->email) {
                 Mail::to($payment->tenant->email)->send(new PaymentReceiptMail($payment));
             }
             
+            // Send landlord-specific notification email
             if ($payment->landlord && $payment->landlord->email) {
-                Mail::to($payment->landlord->email)->send(new PaymentReceiptMail($payment));
+                Mail::to($payment->landlord->email)->send(new \App\Mail\LandlordPaymentNotification($payment));
             }
+            
+            // Create in-app message for landlord
+            $this->createLandlordPaymentMessage($payment);
             
             return $filename;
         } catch(\Exception $e) {
             Log::error('Receipt generation failed: ' . $e->getMessage());
             return null;
+        }
+    }
+
+    /**
+     * Create in-app message notification for landlord
+     */
+    private function createLandlordPaymentMessage($payment)
+    {
+        try {
+            $commissionAmount = $payment->amount * 0.025;
+            $netAmount = $payment->amount - $commissionAmount;
+            
+            $messageBody = sprintf(
+                "You have received a rent payment from %s %s.\n\n" .
+                "Property: %s\n" .
+                "Apartment: %s\n" .
+                "Gross Amount: ₦%s\n" .
+                "Platform Fee (2.5%%): ₦%s\n" .
+                "Net Amount: ₦%s\n\n" .
+                "Transaction ID: %s\n" .
+                "Payment Date: %s\n" .
+                "Duration: %d %s",
+                $payment->tenant->first_name,
+                $payment->tenant->last_name,
+                $payment->apartment->property->address ?? 'N/A',
+                $payment->apartment->apartment_type ?? 'N/A',
+                number_format($payment->amount, 2),
+                number_format($commissionAmount, 2),
+                number_format($netAmount, 2),
+                $payment->transaction_id,
+                $payment->paid_at ? $payment->paid_at->format('M d, Y h:i A') : $payment->created_at->format('M d, Y h:i A'),
+                $payment->duration,
+                \Illuminate\Support\Str::plural('Month', $payment->duration)
+            );
+            
+            \App\Models\Message::create([
+                'sender_id' => 0, // System message
+                'receiver_id' => $payment->landlord_id,
+                'subject' => 'Payment Received - ₦' . number_format($netAmount, 2),
+                'body' => $messageBody,
+                'is_read' => false,
+            ]);
+            
+            Log::info('Landlord payment message created', [
+                'landlord_id' => $payment->landlord_id,
+                'payment_id' => $payment->id
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to create landlord payment message: ' . $e->getMessage());
         }
     }
 
@@ -720,6 +829,30 @@ class PaymentController extends Controller
         return $pdf->download('payments.pdf');
     }
     
+    /**
+     * Check if a payment is invitation-based
+     */
+    private function isInvitationBasedPayment(Payment $payment): bool
+    {
+        // Check if payment reference contains invitation token
+        if (str_contains($payment->payment_reference, 'easyrent_')) {
+            return true;
+        }
+        
+        // Check if payment metadata contains invitation token
+        if ($payment->payment_meta && isset($payment->payment_meta['invitation_token'])) {
+            return true;
+        }
+        
+        // Check if there's an active invitation for this apartment and tenant
+        $invitation = ApartmentInvitation::where('apartment_id', $payment->apartment_id)
+            ->where('tenant_user_id', $payment->tenant_id)
+            ->where('status', '!=', ApartmentInvitation::STATUS_USED)
+            ->first();
+            
+        return $invitation !== null;
+    }
+
     /**
      * Create a fallback payment record when the main process fails
      */

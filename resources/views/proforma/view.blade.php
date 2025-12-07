@@ -31,7 +31,7 @@
         <div class="section property-details">
             <h2>Property Details</h2>
             <p>
-                <strong>Property ID:</strong> {{ optional(optional($proforma->apartment)->property)->prop_id }}<br>
+                <strong>Property ID:</strong> {{ optional(optional($proforma->apartment)->property)->property_id }}<br>
                 <strong>Apartment Type:</strong> {{ optional($proforma->apartment)->apartment_type }}<br>
                 <strong>Duration:</strong> {{ $proforma->duration ? $proforma->duration . ' months' : 'N/A' }}<br>
                 <strong>Monthly Rent:</strong> 

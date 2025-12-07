@@ -21,15 +21,14 @@ class AdminRegionalRateManagementTest extends TestCase
         parent::setUp();
         
         // Create roles
-        Role::create(['id' => 1, 'name' => 'admin']);
-        Role::create(['id' => 3, 'name' => 'marketer']);
-        Role::create(['id' => 5, 'name' => 'regional_manager']);
-        Role::create(['id' => 9, 'name' => 'super_marketer']);
+        Role::firstOrCreate(['id' => 1], ['name' => 'admin', 'description' => 'Administrator']);
+        Role::firstOrCreate(['id' => 3], ['name' => 'marketer', 'description' => 'Marketer']);
+        Role::firstOrCreate(['id' => 5], ['name' => 'regional_manager', 'description' => 'Regional Manager']);
+        Role::firstOrCreate(['id' => 9], ['name' => 'super_marketer', 'description' => 'Super Marketer']);
         
         // Create users
         $this->adminUser = User::factory()->create([
             'user_id' => 1001,
-            'name' => 'Admin User',
             'email' => 'admin@example.com'
         ]);
         

@@ -3,14 +3,14 @@
 <div class="content">
     <div class="row">
         <div class="col-md-4">
-            <div class="card card-user">
-                <div class="image">
+            <div class="card card-user mt-5">
+                <!-- <div class="image">
                     <img src="{{ asset('assets/img/damir-bosnjak.jpg') }}" alt="...">
-                </div>
+                </div> -->
                 <div class="card-body">
                     <div class="author text-center">
                         <input id="profile-photo-input" type="file" class="d-none" name="photo" accept="image/*" onchange="previewProfilePhoto(event)">
-                        <div style="display:inline-block; cursor:pointer;" onclick="document.getElementById('profile-photo-input').click()">
+                        <div style="display:inline-block; cursor:pointer;text-align: -webkit-center;" onclick="document.getElementById('profile-photo-input').click()">
                             <img class="avatar border-gray user-img" id="profile-photo-preview" src="{{ auth()->user()->photo ? asset(auth()->user()->photo) : asset('assets/images/default-avatar.png') }}" alt="..." style="object-fit:cover; border-radius:50%; max-width:120px; max-height:120px;">
                             <div class="text-muted" style="font-size:0.9em;">Click to change photo</div>
                             <small class="form-text text-muted">Upload a new profile photo (optional)</small>
@@ -26,7 +26,7 @@
                     <div class="mb-3">
                         <label class="text-center d-block"><strong>Your Referral Link:</strong></label>
                         
-                        @php
+                        <!-- @.  php
                             $userRoles = [];
                             $currentRole = auth()->user()->role;
                             
@@ -54,21 +54,21 @@
                             if (empty($userRoles)) {
                                 $userRoles[] = ['id' => $currentRole, 'name' => 'User', 'param' => 'user'];
                             }
-                        @endphp
+                        @.  endphp -->
                         
-                        @if(count($userRoles) > 1)
+                        <!-- @    if(count($userRoles) > 1)
                             <div class="referral-role-selector mb-3">
                                 <label class="d-block text-center mb-2"><small>Share as:</small></label>
                                 <div class="btn-group btn-group-toggle d-flex justify-content-center flex-wrap" data-toggle="buttons">
-                                    @foreach($userRoles as $index => $role)
-                                        <label class="btn btn-sm btn-outline-primary {{ $index === 0 ? 'active' : '' }}" style="margin: 2px;">
-                                            <input type="radio" name="referral_role" value="{{ $role['param'] }}" {{ $index === 0 ? 'checked' : '' }} onchange="updateReferralLink()">
-                                            <i class="nc-icon nc-single-02"></i> {{ $role['name'] }}
+                                    @. foreach($userRoles as $index => $role)
+                                        <label class="btn btn-sm btn-outline-primary { { $index === 0 ? 'active' : '' } }" style="margin: 2px;">
+                                            <input type="radio" name="referral_role" value="{ { $role['param'] } }" { {  $index === 0 ? 'checked' : '' }} onchange="updateReferralLink()">
+                                            <i class="nc-icon nc-single-02"></i> { { $role['name'] } }
                                         </label>
-                                    @endforeach
+                                    @.  endforeach
                                 </div>
                             </div>
-                        @endif
+                        @ endif -->
                         
                         <div class="input-group">
                             <input type="text" class="form-control" value="{{ auth()->user()->getReferralLink() }}" readonly id="referralLinkInput">
@@ -170,15 +170,15 @@
                                 </h5>
                             </div>
                         </div>
-                        @if(isset($profile) && auth()->id() !== $profile->id)
+                        <!-- @.  if(isset($profile) && auth()->id() !== $profile->id)
                             <div class="row mt-3">
                                 <div class="col text-center">
-                                    <a href="{{ url('/messages/compose?to=' . $profile->user_id) }}" class="btn btn-success">
+                                    <a href="{ { url('/messages/compose?to=' . $profile->user_id) }. }" class="btn btn-success">
                                         <i class="fa fa-envelope"></i> Message
                                     </a>
                                 </div>
                             </div>
-                        @endif
+                        @.  endif -->
                     </div>
                 </div>
             </div>

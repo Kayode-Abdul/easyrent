@@ -163,7 +163,7 @@
                             <p class="card-category">Complete information about this apartment</p>
                         </div>
                         <div class="btn-group">
-                            <a href="{{ url('/dashboard/property/'.$apartment->property->prop_id) }}" class="btn btn-primary btn-sm">
+                            <a href="{{ url('/dashboard/property/'.$apartment->property->property_id) }}" class="btn btn-primary btn-sm">
                                 <i class="fa fa-arrow-left"></i> Back to Property
                             </a>
                             <button type="button" class="btn btn-warning btn-sm" onclick="editApartment('{{ $apartment->apartment_id }}')">
@@ -280,7 +280,7 @@
                 <div id="apartmentMessage"></div>
                 <form id="apartmentForm" class="p-3">
                     @csrf
-                    <input type="hidden" name="propertyId" value="{{ $apartment->property->prop_id }}">
+                    <input type="hidden" name="propertyId" value="{{ $apartment->property->property_id }}">
                     <div class="table-responsive">
                         <table id="apartmentTable" class="table">
                             <thead>

@@ -33,12 +33,12 @@
             <div class="col-lg-4 col-md-6">
                 <div class="contact-method">
                     <div class="method-icon">
-                        <i class="fas fa-phone"></i>
+                        <i class="bi bi-telephone"></i>
                     </div>
                     <div class="method-content">
                         <h3>Call Us</h3>
                         <p>Speak directly with our team</p>
-                        <a href="tel:+2348123456789" class="contact-link">+234 812 345 6789</a>
+                        <a href="tel:+234-805-2345-312" class="contact-link">+2348052345312</a>
                         <p><small>Mon - Fri: 9:00 AM - 6:00 PM</small></p>
                     </div>
                 </div>
@@ -46,7 +46,7 @@
             <div class="col-lg-4 col-md-6">
                 <div class="contact-method">
                     <div class="method-icon">
-                        <i class="fas fa-envelope"></i>
+                        <i class="bi bi-envelope"></i>
                     </div>
                     <div class="method-content">
                         <h3>Email Us</h3>
@@ -59,7 +59,7 @@
             <div class="col-lg-4 col-md-6">
                 <div class="contact-method">
                     <div class="method-icon">
-                        <i class="fas fa-map-marker-alt"></i>
+                        <i class="bi bi-geo-alt"></i>
                     </div>
                     <div class="method-content">
                         <h3>Visit Us</h3>

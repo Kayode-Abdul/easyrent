@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             RolesTableSeeder::class,
+            CommissionRatesSeeder::class,
             MarketerSystemSeeder::class,
             SimpleMarketerSeeder::class,
             SuperMarketerSystemSeeder::class,

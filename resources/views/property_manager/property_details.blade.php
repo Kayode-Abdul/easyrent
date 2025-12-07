@@ -7,7 +7,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h4 class="card-title">Property Details - {{ $property->prop_id }}</h4>
+                            <h4 class="card-title">Property Details - {{ $property->property_id }}</h4>
                             <p class="card-category">Detailed information about this managed property</p>
                         </div>
                         <div>
@@ -37,7 +37,7 @@
                             <table class="table table-borderless">
                                 <tr>
                                     <td><strong>Property ID:</strong></td>
-                                    <td>{{ $property->prop_id }}</td>
+                                    <td>{{ $property->property_id }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Address:</strong></td>
@@ -247,7 +247,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title">Apartments Overview</h5>
-                        <a href="{{ route('property-manager.property-apartments', $property->prop_id) }}" class="btn btn-info btn-sm">
+                        <a href="{{ route('property-manager.property-apartments', $property->property_id) }}" class="btn btn-info btn-sm">
                             <i class="fa fa-home"></i> View All Apartments
                         </a>
                     </div>
@@ -301,7 +301,7 @@
                         
                         @if($property->apartments->count() > 5)
                             <div class="text-center mt-3">
-                                <a href="{{ route('property-manager.property-apartments', $property->prop_id) }}" class="btn btn-outline-info">
+                                <a href="{{ route('property-manager.property-apartments', $property->property_id) }}" class="btn btn-outline-info">
                                     View All {{ $property->apartments->count() }} Apartments
                                 </a>
                             </div>
@@ -317,7 +317,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title">Recent Payments</h5>
-                        <a href="{{ route('property-manager.payments') }}?property_id={{ $property->prop_id }}" class="btn btn-info btn-sm">
+                        <a href="{{ route('property-manager.payments') }}?property_id={{ $property->property_id }}" class="btn btn-info btn-sm">
                             <i class="fa fa-money-bill"></i> All
                         </a>
                     </div>
@@ -366,13 +366,13 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3">
-                            <a href="{{ route('property-manager.property-apartments', $property->prop_id) }}" class="btn btn-outline-primary btn-block">
+                            <a href="{{ route('property-manager.property-apartments', $property->property_id) }}" class="btn btn-outline-primary btn-block">
                                 <i class="nc-icon nc-home-gear"></i><br>
                                 Manage Apartments
                             </a>
                         </div>
                         <div class="col-md-3">
-                            <a href="{{ route('property-manager.payments') }}?property_id={{ $property->prop_id }}" class="btn btn-outline-success btn-block">
+                            <a href="{{ route('property-manager.payments') }}?property_id={{ $property->property_id }}" class="btn btn-outline-success btn-block">
                                 <i class="nc-icon nc-money-coins"></i><br>
                                 View Payments
                             </a>

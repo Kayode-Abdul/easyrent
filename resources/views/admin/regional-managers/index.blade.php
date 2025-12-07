@@ -1,17 +1,171 @@
-@extends('layout')
+@extends('layouts.admin')
+
+@section('title', 'Regional Manager Management')
+
+@push('styles')
+<style>
+    .page-header-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 32px;
+        border-radius: 16px;
+        margin-bottom: 32px;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stats-mini-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease;
+        border-left: 4px solid #3e8189;
+    }
+    
+    .stats-mini-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    
+    .stats-mini-card .icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content-center;
+        color: white;
+        font-size: 20px;
+    }
+    
+    .stats-mini-card .value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+    }
+    
+    .stats-mini-card .label {
+        font-size: 13px;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .manager-avatar-enhanced {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 18px;
+        box-shadow: 0 4px 12px rgba(62, 129, 137, 0.3);
+    }
+    
+    .region-badge-enhanced {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        color: #1976d2;
+        border: 1px solid #90caf9;
+        margin: 2px;
+    }
+    
+    .action-btn-enhanced {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        transition: all 0.2s ease;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+        transform: scale(1.01);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+</style>
+@endpush
 
 @section('content')
 <div class="content">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>Regional Manager Management</h2>
-                <div>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bulkAssignModal">
-                        <i class="fa fa-users"></i> Bulk Assign Regions
-                    </button>
+    <!-- Enhanced Page Header -->
+    <div class="page-header-custom">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2"><i class="fa fa-users-cog me-3"></i>Regional Manager Management</h1>
+                <p class="mb-0 opacity-90">Manage regional managers and their assigned territories</p>
+            </div>
+            <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#bulkAssignModal">
+                <i class="fa fa-plus-circle me-2"></i>Bulk Assign Regions
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Mini Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-mini-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon me-3">
+                        <i class="fa fa-users"></i>
+                    </div>
+                    <div>
+                        <div class="value">{{ $regionalManagers->total() }}</div>
+                        <div class="label">Total Managers</div>
+                    </div>
                 </div>
             </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-mini-card" style="border-left-color: #51cbce;">
+                <div class="d-flex align-items-center">
+                    <div class="icon me-3" style="background: linear-gradient(135deg, #51cbce 0%, #3e8189 100%);">
+                        <i class="fa fa-map-marker-alt"></i>
+                    </div>
+                    <div>
+                        <div class="value">{{ $allRegions->count() }}</div>
+                        <div class="label">Total Regions</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-mini-card" style="border-left-color: #f5576c;">
+                <div class="d-flex align-items-center">
+                    <div class="icon me-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <i class="fa fa-check-circle"></i>
+                    </div>
+                    <div>
+                        <div class="value">{{ $regionalManagers->sum(function($m) { return $m->regionalScopes->count(); }) }}</div>
+                        <div class="label">Active Assignments</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-mini-card" style="border-left-color: #00f2fe;">
+                <div class="d-flex align-items-center">
+                    <div class="icon me-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <i class="fa fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <div class="value">{{ $regionalManagers->count() > 0 ? number_format($regionalManagers->sum(function($m) { return $m->regionalScopes->count(); }) / $regionalManagers->count(), 1) : 0 }}</div>
+                        <div class="label">Avg per Manager</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
 
             <!-- Filters -->
             <div class="card mb-4">
@@ -78,10 +232,8 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
-                                                        <span class="text-white fw-bold">
-                                                            {{ strtoupper(substr($manager->first_name, 0, 1)) }}{{ strtoupper(substr($manager->last_name, 0, 1)) }}
-                                                        </span>
+                                                    <div class="manager-avatar-enhanced me-3">
+                                                        {{ strtoupper(substr($manager->first_name, 0, 1)) }}{{ strtoupper(substr($manager->last_name, 0, 1)) }}
                                                     </div>
                                                     <div>
                                                         <div class="fw-bold">{{ $manager->first_name }} {{ $manager->last_name }}</div>
@@ -93,8 +245,8 @@
                                             <td>
                                                 @if($scopes->count() > 0)
                                                     @foreach($scopes->take(3) as $scope)
-                                                        <span class="badge bg-info me-1 mb-1">
-                                                            {{ $scope->state }}{{ $scope->lga ? ' / ' . $scope->lga : ' (All)' }}
+                                                        <span class="region-badge-enhanced">
+                                                            <i class="fa fa-map-pin me-1"></i>{{ $scope->state }}{{ $scope->lga ? ' / ' . $scope->lga : '' }}
                                                         </span>
                                                     @endforeach
                                                     @if($scopes->count() > 3)
@@ -112,22 +264,22 @@
                                             <td>
                                                 <div class="btn-group" role="group">
                                                     <a href="{{ route('admin.regional-managers.show', $manager) }}" 
-                                                       class="btn btn-sm btn-outline-primary" title="View Details">
+                                                       class="btn btn-sm btn-outline-primary" title="View Manager Details & Roles">
                                                         <i class="fa fa-eye"></i>
                                                     </a>
                                                     <button type="button" class="btn btn-sm btn-outline-info" 
-                                                            onclick="editRegionalManager({{ $manager->user_id }}, '{{ $manager->first_name }}', '{{ $manager->last_name }}', '{{ $manager->email }}')"
-                                                            title="Edit Regional Manager">
+                                                            onclick="editManagerRegions({{ $manager->user_id }}, '{{ $manager->first_name }} {{ $manager->last_name }}')"
+                                                            title="Edit Assigned Regions">
                                                         <i class="fa fa-edit"></i>
                                                     </button>
                                                     <a href="{{ route('admin.regional-managers.assign-regions', $manager) }}" 
-                                                       class="btn btn-sm btn-outline-success" title="Assign Regions">
+                                                       class="btn btn-sm btn-outline-success" title="Add New Regions">
                                                         <i class="fa fa-plus"></i>
                                                     </a>
                                                     <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                            onclick="confirmRemoveAllScopes({{ $manager->user_id }}, '{{ $manager->first_name }} {{ $manager->last_name }}')"
-                                                            title="Remove All Regions">
-                                                        <i class="fa fa-trash"></i>
+                                                            onclick="confirmRemoveRegionalManagerRole({{ $manager->user_id }}, '{{ $manager->first_name }} {{ $manager->last_name }}')"
+                                                            title="Remove Regional Manager Role">
+                                                        <i class="fa fa-user-times"></i>
                                                     </button>
                                                 </div>
                                             </td>
@@ -220,69 +372,61 @@
     </div>
 </div>
 
-@push('modals')
-<!-- Remove All Scopes Modal -->
-<div class="modal fade" id="removeAllScopesModal" tabindex="-1" aria-labelledby="removeAllScopesModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<!-- Edit Manager Regions Modal -->
+<div class="modal fade" id="editManagerRegionsModal" tabindex="-1" aria-labelledby="editManagerRegionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="removeAllScopesModalLabel">Confirm Remove All Regions</h5>
+                <h5 class="modal-title" id="editManagerRegionsModalLabel">Edit Assigned Regions</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to remove all assigned regions from <strong id="managerNameToRemove"></strong>?</p>
-                <p class="text-danger">This action cannot be undone.</p>
+                <p>Managing regions for: <strong id="editManagerName"></strong></p>
+                <div id="assignedRegionsList">
+                    <!-- Regions will be loaded here -->
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="removeAllScopesForm" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Remove All Regions</button>
-                </form>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveRegionChanges()">Save Changes</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Edit Regional Manager Modal -->
-<div class="modal fade" id="editRegionalManagerModal" tabindex="-1" aria-labelledby="editRegionalManagerModalLabel" aria-hidden="true">
+<!-- Remove Regional Manager Role Modal -->
+<div class="modal fade" id="removeRegionalManagerRoleModal" tabindex="-1" aria-labelledby="removeRegionalManagerRoleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editRegionalManagerModalLabel">Edit Regional Manager</h5>
+                <h5 class="modal-title" id="removeRegionalManagerRoleModalLabel">Remove Regional Manager Role</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="editRegionalManagerForm" method="POST">
-                @csrf
-                @method('PUT')
-                <div class="modal-body">
-                    <input type="hidden" id="edit_user_id" name="user_id">
-                    
-                    <div class="mb-3">
-                        <label for="edit_first_name" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="edit_first_name" name="first_name" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="edit_last_name" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="edit_last_name" name="last_name" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="edit_email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="edit_email" name="email" required>
-                    </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <strong>Warning!</strong> This will completely remove the Regional Manager role from this user.
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Regional Manager</button>
-                </div>
-            </form>
+                <p>Are you sure you want to remove the Regional Manager role from <strong id="managerNameToRemoveRole"></strong>?</p>
+                <p class="text-danger">This action will:</p>
+                <ul class="text-danger">
+                    <li>Remove all assigned regions</li>
+                    <li>Remove Regional Manager role</li>
+                    <li>Revoke all regional management permissions</li>
+                    <li>This action cannot be undone</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="removeRegionalManagerRoleForm" method="POST" style="display: inline;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">Remove Regional Manager Role</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
-@endpush
 
 @endsection
 
@@ -297,6 +441,38 @@
 
 @push('scripts')
 <script>
+// Debug function to check if Bootstrap is loaded
+function checkBootstrap() {
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap 5 is not loaded. Falling back to jQuery modal.');
+        return false;
+    }
+    return true;
+}
+
+// Fallback modal function for older Bootstrap/jQuery
+function showModal(modalId) {
+    console.log('Attempting to show modal:', modalId);
+    
+    const modalElement = document.getElementById(modalId);
+    if (!modalElement) {
+        console.error('Modal element not found:', modalId);
+        alert(`Modal ${modalId} not found. Please refresh the page.`);
+        return;
+    }
+    
+    if (checkBootstrap()) {
+        console.log('Using Bootstrap 5 modal');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    } else if (typeof $ !== 'undefined') {
+        console.log('Using jQuery modal');
+        $('#' + modalId).modal('show');
+    } else {
+        console.error('No modal system available');
+        alert('Modal system not available. Please refresh the page.');
+    }
+}
 // LGA options for each state (guard global)
 window.lgaOptions = Object.assign({}, window.lgaOptions || {}, {
     'Lagos': ['Ikeja', 'Victoria Island', 'Lekki', 'Surulere', 'Yaba', 'Apapa', 'Ikoyi'],
@@ -308,13 +484,18 @@ window.lgaOptions = Object.assign({}, window.lgaOptions || {}, {
 });
 
 // Handle select all checkbox
-document.getElementById('selectAll').addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.manager-checkbox');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = this.checked;
+const selectAllElement = document.getElementById('selectAll');
+if (selectAllElement) {
+    selectAllElement.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.manager-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateSelectedManagers();
     });
-    updateSelectedManagers();
-});
+} else {
+    console.warn('selectAll element not found');
+}
 
 // Handle individual checkboxes
 document.addEventListener('change', function(e) {
@@ -373,23 +554,28 @@ document.addEventListener('change', function(e) {
 });
 
 // Add new state group
-document.getElementById('addStateBtn').addEventListener('click', function() {
-    const container = document.getElementById('statesContainer');
-    const newGroup = document.querySelector('.state-group').cloneNode(true);
-    
-    // Reset values
-    newGroup.querySelector('.state-select').value = '';
-    newGroup.querySelector('.lga-select').innerHTML = '<option value="">All LGAs</option>';
-    
-    // Enable remove button
-    const removeBtn = newGroup.querySelector('.remove-state');
-    removeBtn.disabled = false;
-    removeBtn.addEventListener('click', function() {
-        newGroup.remove();
+const addStateBtnElement = document.getElementById('addStateBtn');
+if (addStateBtnElement) {
+    addStateBtnElement.addEventListener('click', function() {
+        const container = document.getElementById('statesContainer');
+        const newGroup = document.querySelector('.state-group').cloneNode(true);
+        
+        // Reset values
+        newGroup.querySelector('.state-select').value = '';
+        newGroup.querySelector('.lga-select').innerHTML = '<option value="">All LGAs</option>';
+        
+        // Enable remove button
+        const removeBtn = newGroup.querySelector('.remove-state');
+        removeBtn.disabled = false;
+        removeBtn.addEventListener('click', function() {
+            newGroup.remove();
+        });
+        
+        container.appendChild(newGroup);
     });
-    
-    container.appendChild(newGroup);
-});
+} else {
+    console.warn('addStateBtn element not found');
+}
 
 // Remove state group
 document.addEventListener('click', function(e) {
@@ -401,30 +587,238 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Confirm remove all scopes
-function confirmRemoveAllScopes(managerId, managerName) {
-    document.getElementById('managerNameToRemove').textContent = managerName;
-    document.getElementById('removeAllScopesForm').action = 
-        `{{ route('admin.regional-managers.index') }}/${managerId}/remove-all-scopes`;
+// Add click handlers for action buttons with error handling
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - Initializing Regional Manager Management');
     
-    const modal = new bootstrap.Modal(document.getElementById('removeAllScopesModal'));
-    modal.show();
+    // Test if all required elements exist
+    const requiredElements = [
+        'selectAll',
+        'selectedManagers', 
+        'selectedManagerIds',
+        'addStateBtn',
+        'statesContainer',
+        'editManagerRegionsModal',
+        'removeRegionalManagerRoleModal',
+        'removeRegionalManagerRoleForm',
+        'managerNameToRemoveRole',
+        'editManagerName',
+        'assignedRegionsList'
+    ];
+    
+    const missingElements = requiredElements.filter(id => !document.getElementById(id));
+    if (missingElements.length > 0) {
+        console.error('Missing required elements:', missingElements);
+        console.log('Available elements:', requiredElements.filter(id => document.getElementById(id)));
+    } else {
+        console.log('All required elements found');
+    }
+    
+    // Test if action buttons exist
+    const actionButtons = document.querySelectorAll('[onclick*="editRegionalManager"], [onclick*="confirmRemoveAllScopes"]');
+    console.log('Found action buttons:', actionButtons.length);
+    
+    // Add form submission handlers with validation
+    const forms = document.querySelectorAll('form');
+    forms.forEach((form, index) => {
+        console.log(`Form ${index + 1}:`, form.id || 'unnamed', form.action);
+        
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+                
+                // Re-enable after 5 seconds to prevent permanent disable
+                setTimeout(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }, 5000);
+            }
+        });
+    });
+    
+    // Test Bootstrap availability
+    console.log('Bootstrap available:', typeof bootstrap !== 'undefined');
+    console.log('jQuery available:', typeof $ !== 'undefined');
+    
+    console.log('Regional Manager Management page initialized successfully');
+});
+
+// Edit manager regions - show assigned regions with ability to remove
+function editManagerRegions(managerId, managerName) {
+    console.log('Edit regions button clicked for manager:', managerId);
+    
+    try {
+        // Check if CSRF token exists
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfToken) {
+            console.error('CSRF token meta tag not found');
+            alert('CSRF token not found. Please refresh the page.');
+            return;
+        }
+        
+        document.getElementById('editManagerName').textContent = managerName;
+        
+        // Load assigned regions via AJAX
+        fetch(`/admin/regional-managers/${managerId}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    displayAssignedRegions(data.regions, managerId);
+                    showModal('editManagerRegionsModal');
+                } else {
+                    alert('Failed to load manager regions: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error loading regions:', error);
+                console.error('Full error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    managerId: managerId,
+                    url: `/admin/regional-managers/${managerId}`
+                });
+                alert('Error loading regions: ' + error.message + '. Please check the console for details.');
+            });
+    } catch (error) {
+        console.error('Error in editManagerRegions:', error);
+        alert('Error opening edit regions modal. Please check the console for details.');
+    }
+}
+
+// Display assigned regions with remove buttons
+function displayAssignedRegions(regions, managerId) {
+    const container = document.getElementById('assignedRegionsList');
+    
+    if (!regions || regions.length === 0) {
+        container.innerHTML = '<p class="text-muted">No regions assigned to this manager.</p>';
+        return;
+    }
+    
+    let html = '<div class="row">';
+    regions.forEach(region => {
+        html += `
+            <div class="col-md-6 mb-2">
+                <div class="card">
+                    <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                        <span>
+                            <strong>${region.state}</strong>
+                            ${region.lga ? ` / ${region.lga}` : ' (All LGAs)'}
+                        </span>
+                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                onclick="removeRegion(${region.id}, ${managerId})"
+                                title="Remove this region">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Remove a specific region
+function removeRegion(regionId, managerId) {
+    if (confirm('Are you sure you want to remove this region assignment?')) {
+        fetch(`/admin/regional-managers/${managerId}/remove-scope`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ scope_id: regionId })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                // If not JSON, it's likely a redirect response (success)
+                return { success: true };
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                // Reload the regions list
+                editManagerRegions(managerId, document.getElementById('editManagerName').textContent);
+                // Show success message
+                alert('Region removed successfully');
+            } else {
+                alert('Failed to remove region: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error removing region:', error);
+            alert('Error removing region. Please try again.');
+        });
+    }
+}
+
+// Save region changes (placeholder for future functionality)
+function saveRegionChanges() {
+    // Close modal and refresh page to show updated data
+    document.querySelector('#editManagerRegionsModal .btn-close').click();
+    window.location.reload();
+}
+
+// Confirm remove regional manager role entirely
+function confirmRemoveRegionalManagerRole(managerId, managerName) {
+    console.log('Remove regional manager role button clicked for manager:', managerId);
+    
+    try {
+        document.getElementById('managerNameToRemoveRole').textContent = managerName;
+        document.getElementById('removeRegionalManagerRoleForm').action = 
+            `/admin/regional-managers/${managerId}/remove-role`;
+        
+        console.log('Remove role form action set to:', document.getElementById('removeRegionalManagerRoleForm').action);
+        
+        showModal('removeRegionalManagerRoleModal');
+    } catch (error) {
+        console.error('Error in confirmRemoveRegionalManagerRole:', error);
+        alert('Error opening remove role confirmation modal. Please check the console for details.');
+    }
 }
 
 // Update bulk assign form when modal opens
-document.getElementById('bulkAssignModal').addEventListener('show.bs.modal', function() {
-    updateSelectedManagers();
-});
-
-// Edit regional manager function
-function editRegionalManager(userId, firstName, lastName, email) {
-    document.getElementById('edit_user_id').value = userId;
-    document.getElementById('edit_first_name').value = firstName;
-    document.getElementById('edit_last_name').value = lastName;
-    document.getElementById('edit_email').value = email;
+const bulkAssignModalElement = document.getElementById('bulkAssignModal');
+if (bulkAssignModalElement) {
+    bulkAssignModalElement.addEventListener('show.bs.modal', function() {
+        updateSelectedManagers();
+    });
     
-    const modal = new bootstrap.Modal(document.getElementById('editRegionalManagerModal'));
-    modal.show();
+    // Alternative event listener for older Bootstrap
+    if (typeof $ !== 'undefined') {
+        $('#bulkAssignModal').on('show.bs.modal', function() {
+            updateSelectedManagers();
+        });
+    }
+} else {
+    console.warn('bulkAssignModal element not found');
 }
+
+
 </script>
 @endpush

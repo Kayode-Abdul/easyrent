@@ -25,7 +25,7 @@ class UserApiController extends Controller
             ->orderByDesc('created_at')
             ->limit(50)
             ->get([
-                'prop_id','title','address','state','lga','status','created_at','updated_at'
+                'property_id','title','address','state','lga','status','created_at','updated_at'
             ]);
         return response()->json($properties);
     }

@@ -150,7 +150,7 @@ class DashboardController extends Controller
     private function getLandlordStats($userId)
     {
         return Cache::remember('landlord_stats_' . $userId, now()->addMinutes(10), function () use ($userId) {
-            $properties = Property::where('user_id', $userId)->pluck('prop_id');
+            $properties = Property::where('user_id', $userId)->pluck('property_id');
             $apartments = Apartment::whereIn('property_id', $properties);
             
             return [
@@ -377,7 +377,7 @@ class DashboardController extends Controller
                 'data' => $data,
             ];
         
-            $properties = Property::where('user_id', $userId)->pluck('prop_id');
+            $properties = Property::where('user_id', $userId)->pluck('property_id');
             $apartments = Apartment::whereIn('property_id', $properties);
             
             $propertyDistribution = [
@@ -475,7 +475,7 @@ class DashboardController extends Controller
                 'title' => 'New Property Added',
                 'description' => 'Property at ' . $property->address . ', ' . $property->state,
                 'time' => $property->created_at->diffForHumans(),
-                'link' => '/properties/' . $property->prop_id,
+                'link' => '/properties/' . $property->property_id,
             ]);
         });
 
@@ -526,7 +526,7 @@ class DashboardController extends Controller
         }
 
         // Recent bookings
-        $properties = Property::where('user_id', $userId)->pluck('prop_id');
+        $properties = Property::where('user_id', $userId)->pluck('property_id');
         $recentBookings = Booking::whereIn('property_id', $properties)
             ->latest()
             ->take(2)
@@ -630,7 +630,7 @@ class DashboardController extends Controller
     private function getLandlordDashboardData($user)
     {
         $properties = Property::where('user_id', $user->user_id)->get();
-        $propertyIds = $properties->pluck('prop_id');
+        $propertyIds = $properties->pluck('property_id');
         
         $totalProperties = $properties->count();
         $totalApartments = Apartment::whereIn('property_id', $propertyIds)->count();

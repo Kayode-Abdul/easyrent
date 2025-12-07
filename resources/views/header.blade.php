@@ -73,7 +73,8 @@
     })();
     </script>
     
-    @php $currentSegment = request()->segment(1); $isDashboard = in_array($currentSegment, ['dashboard','admin', 'proforma', 'property-manager']); @endphp
+    @php $currentSegment = request()->segment(1); 
+    $isDashboard = in_array($currentSegment, ['dashboard','admin', 'proforma', 'property-manager']); @endphp
     @if(!$isDashboard)
     <!-- Add CSRF Token meta tag -->
     <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:200,300,400,600,700,800,900&display=swap" rel="stylesheet">
@@ -735,7 +736,7 @@ $.ajaxSetup({
                                     </div>
                                 @else
                                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                                        <a class="dropdown-item" href="#">Link to the Inbox</a>
+                                        <a class="dropdown-item" href="/dashboard/messages/inbox">view new message</a>
                                     </div>
                                 @endif  
                             </li>

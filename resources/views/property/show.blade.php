@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Add jQuery, Bootstrap JS, and SweetAlert2 -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('assets/js/apartment-functions.js') }}"></script>
@@ -28,7 +28,12 @@
         1 => 'Mansion',
         2 => 'Duplex',
         3 => 'Flat',
-        4 => 'Terrace'
+        4 => 'Terrace',
+        5 => 'Warehouse',
+        6 => 'Land',
+        7 => 'Farm',
+        8 => 'Store',
+        9 => 'Shop'
     ];
 @endphp
 
@@ -85,10 +90,10 @@
                                 <i class="fa fa-arrow-left"></i> Back to My Properties
                             </a>
                             @if(auth()->user()->user_id == $property->user_id)
-                                <button type="button" class="btn btn-warning btn-sm" onclick="editProperty('{{ $property->prop_id }}')">
+                                <button type="button" class="btn btn-warning btn-sm" onclick="editProperty('{{ $property->property_id }}')">
                                     <i class="fa fa-edit"></i> Edit Property
                                 </button>
-                                <form action="{{ url('/dashboard/property/' . $property->prop_id) }}" method="POST" style="display:inline;">
+                                <form action="{{ url('/dashboard/property/' . $property->property_id) }}" method="POST" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this property?')">
@@ -96,10 +101,10 @@
                                     </button>
                                 </form>
                             @elseif(auth()->user()->admin)
-                                <button type="button" class="btn btn-warning btn-sm" onclick="editProperty('{{ $property->prop_id }}')">
+                                <button type="button" class="btn btn-warning btn-sm" onclick="editProperty('{{ $property->property_id }}')">
                                     <i class="fa fa-edit"></i> Admin Edit
                                 </button>
-                                <form action="{{ url('/dashboard/property/' . $property->prop_id) }}" method="POST" style="display:inline;">
+                                <form action="{{ url('/dashboard/property/' . $property->property_id) }}" method="POST" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this property? This action cannot be undone.')">
@@ -126,7 +131,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Property ID</label>
-                                <p class="form-control-static">{{ $property->prop_id }}</p>
+                                <p class="form-control-static">{{ $property->property_id }}</p>
                             </div>
                             <div class="form-group">
                                 <label>Property Type</label>
@@ -155,6 +160,113 @@
                             </div>
                         </div>
                     </div>
+
+                    @if($property->size_value)
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="alert alert-light border">
+                                <h6 class="mb-2"><i class="fa fa-ruler-combined"></i> Property Size</h6>
+                                <p class="mb-0"><strong>{{ $property->getFormattedSize() }}</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if($property->isCommercial())
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="alert alert-info border">
+                                <h6 class="mb-3"><i class="fa fa-building"></i> Commercial Property Details</h6>
+                                <div class="row">
+                                    @if($property->getPropertyAttribute('frontage_width'))
+                                    <div class="col-md-4">
+                                        <strong>Frontage Width:</strong><br>
+                                        {{ $property->getPropertyAttribute('frontage_width') }} meters
+                                    </div>
+                                    @endif
+                                    @if($property->getPropertyAttribute('store_type'))
+                                    <div class="col-md-4">
+                                        <strong>Store Type:</strong><br>
+                                        {{ ucfirst($property->getPropertyAttribute('store_type')) }}
+                                    </div>
+                                    @endif
+                                    @if($property->getPropertyAttribute('foot_traffic'))
+                                    <div class="col-md-4">
+                                        <strong>Foot Traffic:</strong><br>
+                                        {{ ucfirst($property->getPropertyAttribute('foot_traffic')) }}
+                                    </div>
+                                    @endif
+                                    @if($property->getPropertyAttribute('parking_spaces'))
+                                    <div class="col-md-4 mt-2">
+                                        <strong>Parking Spaces:</strong><br>
+                                        {{ $property->getPropertyAttribute('parking_spaces') }}
+                                    </div>
+                                    @endif
+                                    @if($property->getPropertyAttribute('height_clearance'))
+                                    <div class="col-md-4 mt-2">
+                                        <strong>Height Clearance:</strong><br>
+                                        {{ $property->getPropertyAttribute('height_clearance') }}
+                                    </div>
+                                    @endif
+                                    @if($property->getPropertyAttribute('loading_docks'))
+                                    <div class="col-md-4 mt-2">
+                                        <strong>Loading Docks:</strong><br>
+                                        {{ $property->getPropertyAttribute('loading_docks') }}
+                                    </div>
+                                    @endif
+                                    @if($property->getPropertyAttribute('storage_type'))
+                                    <div class="col-md-4 mt-2">
+                                        <strong>Storage Type:</strong><br>
+                                        {{ ucfirst(str_replace('_', ' ', $property->getPropertyAttribute('storage_type'))) }}
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if($property->isLand())
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="alert alert-success border">
+                                <h6 class="mb-3"><i class="fa fa-tree"></i> Land/Farm Details</h6>
+                                <div class="row">
+                                    @if($property->getPropertyAttribute('land_type'))
+                                    <div class="col-md-4">
+                                        <strong>Land Type:</strong><br>
+                                        {{ ucfirst($property->getPropertyAttribute('land_type')) }}
+                                    </div>
+                                    @endif
+                                    @if($property->getPropertyAttribute('soil_type'))
+                                    <div class="col-md-4">
+                                        <strong>Soil Type:</strong><br>
+                                        {{ ucfirst($property->getPropertyAttribute('soil_type')) }}
+                                    </div>
+                                    @endif
+                                    @if($property->getPropertyAttribute('water_access'))
+                                    <div class="col-md-4">
+                                        <strong>Water Access:</strong><br>
+                                        {{ $property->getPropertyAttribute('water_access') ? 'Yes' : 'No' }}
+                                    </div>
+                                    @endif
+                                    @if($property->getPropertyAttribute('water_source'))
+                                    <div class="col-md-4 mt-2">
+                                        <strong>Water Source:</strong><br>
+                                        {{ ucfirst($property->getPropertyAttribute('water_source')) }}
+                                    </div>
+                                    @endif
+                                    @if($property->getPropertyAttribute('topography'))
+                                    <div class="col-md-4 mt-2">
+                                        <strong>Topography:</strong><br>
+                                        {{ ucfirst($property->getPropertyAttribute('topography')) }}
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -201,6 +313,7 @@
                                     <th>End Date</th>
                                     <th>Amount</th>
                                     <th>Status</th>
+                                    <th>Share</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -242,6 +355,30 @@
                                         <span class="badge badge-{{ $statusClass }}">
                                             {{ ucfirst($status) }}
                                         </span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if(!$apartment->tenant_id && (auth()->user()->user_id == $property->user_id || auth()->user()->admin))
+                                            <!-- Vacant apartment - show active share button -->
+                                            <button type="button" 
+                                                    class="btn btn-success btn-sm" 
+                                                    onclick="generateEasyRentLink('{{ $apartment->apartment_id }}')"
+                                                    title="Generate EasyRent Link">
+                                                <i class="fa fa-share-alt"></i> ER Link
+                                            </button>
+                                        @elseif($apartment->tenant_id)
+                                            <!-- Occupied apartment - show greyed out button -->
+                                            <button type="button" 
+                                                    class="btn btn-secondary btn-sm" 
+                                                    disabled
+                                                    title="Apartment is occupied">
+                                                <i class="fa fa-share-alt"></i> ER Link
+                                            </button>
+                                        @else
+                                            <!-- No permission to share -->
+                                            <span class="text-muted">
+                                                <i class="fa fa-share-alt"></i> N/A
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group">
@@ -290,26 +427,55 @@
                 <div id="apartmentMessage"></div>
                 <form id="apartmentForm" class="p-3" action="/apartment" method="post">
                     @csrf
-                    <input type="hidden" name="propertyId" value="{{ $property->prop_id }}">
+                    <input type="hidden" name="propertyId" value="{{ $property->property_id }}">
                     <div id="apartmentFormFields" class="form-vertical">
                         <div class="form-group">
-                            <label>Apartment Type</label>
-                            <select class="form-control" name="apartmentType" required>
-                                <option value="" disabled selected>Select Type</option>
-                                <option value="Studio">Studio</option>
-                                <option value="1-Bedroom">1-Bedroom</option>
-                                <option value="2-Bedroom">2-Bedroom</option>
-                                <option value="3-Bedroom">3-Bedroom</option>
-                                <option value="Penthouse">Penthouse</option>
-                                <option value="Duplex">Duplex</option>
-                                <option value="Other">Other</option>
+                            <label>Apartment/Unit Type</label>
+                            <select class="form-control" name="apartmentType" id="apartmentType" required>
+                                <option value="" disabled selected>-- Select Type --</option>
+                                <optgroup label="Residential Units">
+                                    <option value="Studio">Studio</option>
+                                    <option value="1-Bedroom">1-Bedroom</option>
+                                    <option value="2-Bedroom">2-Bedroom</option>
+                                    <option value="3-Bedroom">3-Bedroom</option>
+                                    <option value="4-Bedroom">4-Bedroom</option>
+                                    <option value="Penthouse">Penthouse</option>
+                                    <option value="Duplex Unit">Duplex Unit</option>
+                                </optgroup>
+                                <optgroup label="Commercial Units">
+                                    <option value="Shop Unit">Shop Unit</option>
+                                    <option value="Store Unit">Store Unit</option>
+                                    <option value="Office Unit">Office Unit</option>
+                                    <option value="Restaurant Unit">Restaurant Unit</option>
+                                    <option value="Warehouse Unit">Warehouse Unit</option>
+                                    <option value="Showroom">Showroom</option>
+                                </optgroup>
+                                <optgroup label="Other">
+                                    <option value="Storage Unit">Storage Unit</option>
+                                    <option value="Parking Space">Parking Space</option>
+                                    <option value="Other">Other</option>
+                                </optgroup>
                             </select>
                         </div>
 
                         <div class="form-group">
                             <label>Tenant ID (Optional)</label>
-                            <input type="text" class="form-control" name="tenantId" 
+                            <input type="text" class="form-control" name="tenantId" id="tenantIdInput"
                                 placeholder="Enter tenant ID if occupied">
+                            <small class="form-text text-muted">
+                                <span id="tenantNameDisplay" style="display: none;">
+                                    <i class="fa fa-user text-success"></i> 
+                                    <strong id="tenantNameText"></strong>
+                                </span>
+                                <span id="tenantNotFound" style="display: none; color: #dc3545;">
+                                    <i class="fa fa-exclamation-circle"></i> 
+                                    User not found
+                                </span>
+                                <span id="tenantLoading" style="display: none; color: #6c757d;">
+                                    <i class="fa fa-spinner fa-spin"></i> 
+                                    Looking up user...
+                                </span>
+                            </small>
                         </div>
 
                         <div class="form-group">
@@ -366,9 +532,9 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form id="agentForm" action="/dashboard/property/{{ $property->prop_id }}/assign-agent" method="POST">
+                <form id="agentForm" action="/dashboard/property/{{ $property->property_id }}/assign-agent" method="POST">
                     @csrf
-                    <input type="hidden" name="property_id" value="{{ $property->prop_id }}">
+                    <input type="hidden" name="property_id" value="{{ $property->property_id }}">
                     
                     <!-- Previously Used Property Managers -->
                     @if($previousAgents->isNotEmpty())
@@ -561,7 +727,7 @@
         // Select agent (assign directly)
         $(document).on('click', '.select-agent-btn', function() {
             var agentId = $(this).data('agent-id');
-            var propId = "{{ $property->prop_id }}";
+            var propId = "{{ $property->property_id }}";
             var btn = $(this);
             btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Assigning...');
             $.ajax({
@@ -861,32 +1027,32 @@
 </script>
 <script>
 
-function getCities() {
-    const locations = <?=json_encode($locations)?>;
-    const stateSelect = document.getElementById("states");
-    const citySelect = document.getElementById("agentCity");
-    const selectedState = stateSelect.value;
+    function getCities() {
+        const locations = <?=json_encode($locations)?>;
+        const stateSelect = document.getElementById("states");
+        const citySelect = document.getElementById("agentCity");
+        const selectedState = stateSelect.value;
 
-    // Clear existing options
-    citySelect.innerHTML = '<option value="" disabled="disabled" selected>Select City</option>';
+        // Clear existing options
+        citySelect.innerHTML = '<option value="" disabled="disabled" selected>Select City</option>';
 
-    // Find the selected state in locations
-    const state = locations.find(loc => loc.name === selectedState);
-    if (state && state.cities) {
-        state.cities.forEach(city => {
-            const option = document.createElement("option");
-            option.value = city;
-            option.textContent = city;
-            citySelect.appendChild(option);
-        });
+        // Find the selected state in locations
+        const state = locations.find(loc => loc.name === selectedState);
+        if (state && state.cities) {
+            state.cities.forEach(city => {
+                const option = document.createElement("option");
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+        }
     }
-}
     function viewAgent(agentId) {
-        var propId = "{{ $property->prop_id }}";
+        var propId = "{{ $property->property_id }}";
         // Show modal
         $('#agentDetailsModal').modal('show');
         // Show loading spinner
-    $('#agentDetailsBody').html('<div class="text-center"><span class="spinner-border spinner-border-sm"></span> Loading property manager details...</div>');
+        $('#agentDetailsBody').html('<div class="text-center"><span class="spinner-border spinner-border-sm"></span> Loading property manager details...</div>');
         // Fetch agent details via AJAX (use the correct JSON route)
         $.ajax({
             url: '/dashboard/agent/' + agentId + '/json',
@@ -937,7 +1103,7 @@ function getCities() {
         let html = '';
         rating = Math.round(rating);
         for (let i = 1; i <= max; i++) {
-            html += `<i class=\"fa fa-star${i <= rating ? ' text-warning' : ' text-secondary'}\"></i>`;
+            html += `<i class=\"fa fa-star ${i <= rating ? ' text-warning' : ' text-secondary'}\"></i>`;
         }
         return html;
     }
@@ -1073,4 +1239,277 @@ function getCities() {
         });
     }
 </script>
+
+<script>
+// Tenant ID lookup - Display tenant name when ID is entered
+$(document).ready(function() {
+    let tenantLookupTimeout;
+    
+    $('#tenantIdInput').on('input', function() {
+        const tenantId = $(this).val().trim();
+        
+        // Clear previous timeout
+        clearTimeout(tenantLookupTimeout);
+        
+        // Hide all status messages
+        $('#tenantNameDisplay').hide();
+        $('#tenantNotFound').hide();
+        $('#tenantLoading').hide();
+        
+        // If empty, don't lookup
+        if (!tenantId) {
+            return;
+        }
+        
+        // Show loading indicator
+        $('#tenantLoading').show();
+        
+        // Debounce the lookup (wait 500ms after user stops typing)
+        tenantLookupTimeout = setTimeout(function() {
+            // Make AJAX request to lookup user
+            $.ajax({
+                url: '/api/user/lookup/' + tenantId,
+                method: 'GET',
+                success: function(response) {
+                    $('#tenantLoading').hide();
+                    
+                    if (response.success && response.user) {
+                        // Display user name
+                        const fullName = response.user.first_name + ' ' + response.user.last_name;
+                        const email = response.user.email;
+                        $('#tenantNameText').html(fullName + ' <small class="text-muted">(' + email + ')</small>');
+                        $('#tenantNameDisplay').show();
+                    } else {
+                        // User not found
+                        $('#tenantNotFound').show();
+                    }
+                },
+                error: function() {
+                    $('#tenantLoading').hide();
+                    $('#tenantNotFound').show();
+                }
+            });
+        }, 500);
+    });
+    
+    // Clear tenant name when modal is closed
+    $('#addApartmentModal').on('hidden.bs.modal', function() {
+        $('#tenantIdInput').val('');
+        $('#tenantNameDisplay').hide();
+        $('#tenantNotFound').hide();
+        $('#tenantLoading').hide();
+    });
+});
+</script>
+<script>
+// EasyRent Link Generation Function
+function generateEasyRentLink(apartmentId) {
+    // Show loading state
+    const button = event.target.closest('button');
+    const originalContent = button.innerHTML;
+    button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Generating...';
+    button.disabled = true;
+    
+    // Make AJAX request to generate link
+    $.ajax({
+        url: `/apartment/${apartmentId}/generate-link`,
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+            'Accept': 'application/json'
+        },
+        data: {
+            expires_at: null // Use default expiration (30 days)
+        },
+        success: function(response) {
+            if (response.success) {
+                // Show success modal with sharing options
+                showEasyRentLinkModal(response);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'Failed to generate EasyRent Link'
+                });
+            }
+        },
+        error: function(xhr) {
+            let errorMessage = 'Failed to generate EasyRent Link. Please try again.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            }
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMessage
+            });
+        },
+        complete: function() {
+            // Restore button state
+            button.innerHTML = originalContent;
+            button.disabled = false;
+        }
+    });
+}
+
+// Show EasyRent Link Modal with sharing options
+function showEasyRentLinkModal(response) {
+    const modalContent = `
+        <div class="text-left">
+            <h6 class="mb-3"><i class="fa fa-link text-success"></i> EasyRent Link Generated Successfully!</h6>
+            
+            <div class="form-group">
+                <label class="font-weight-bold">Share Link:</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="easyrentLinkInput" value="${response.link}" readonly>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyEasyRentLink()">
+                            <i class="fa fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="font-weight-bold">Quick Share Options:</label>
+                <div class="btn-group-vertical w-100">
+                    <a href="${response.whatsapp_url}" target="_blank" class="btn btn-success btn-sm mb-2">
+                        <i class="fab fa-whatsapp"></i> Share via WhatsApp
+                    </a>
+                    <a href="${response.email_url}" target="_blank" class="btn btn-primary btn-sm mb-2">
+                        <i class="fa fa-envelope"></i> Share via Email
+                    </a>
+                    <a href="${response.sms_url}" target="_blank" class="btn btn-info btn-sm mb-2">
+                        <i class="fa fa-sms"></i> Share via SMS
+                    </a>
+                </div>
+            </div>
+            
+            <div class="alert alert-info">
+                <small>
+                    <i class="fa fa-info-circle"></i> 
+                    Link expires on <strong>${response.expires_at}</strong>
+                </small>
+            </div>
+        </div>
+    `;
+    
+    Swal.fire({
+        title: 'EasyRent Link Ready',
+        html: modalContent,
+        width: '500px',
+        showConfirmButton: false,
+        showCloseButton: true,
+        customClass: {
+            popup: 'text-left'
+        }
+    });
+}
+
+// Copy EasyRent Link to clipboard
+function copyEasyRentLink() {
+    const linkInput = document.getElementById('easyrentLinkInput');
+    const linkText = linkInput.value;
+    const copyBtn = event.target.closest('button');
+    const originalContent = copyBtn.innerHTML;
+    
+    // Show loading state
+    copyBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Copying...';
+    copyBtn.disabled = true;
+    
+    // Try modern Clipboard API first
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(linkText).then(() => {
+            // Success feedback
+            copyBtn.innerHTML = '<i class="fa fa-check text-success"></i> Copied!';
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalContent;
+                copyBtn.disabled = false;
+            }, 2000);
+            
+            // Show toast notification
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Link copied to clipboard!',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        }).catch(err => {
+            console.error('Clipboard API failed: ', err);
+            fallbackCopyTextToClipboard(linkText, copyBtn, originalContent);
+        });
+    } else {
+        // Fallback for older browsers or non-secure contexts
+        fallbackCopyTextToClipboard(linkText, copyBtn, originalContent);
+    }
+}
+
+// Fallback copy method for older browsers
+function fallbackCopyTextToClipboard(text, copyBtn, originalContent) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    
+    // Avoid scrolling to bottom
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            // Success feedback
+            copyBtn.innerHTML = '<i class="fa fa-check text-success"></i> Copied!';
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalContent;
+                copyBtn.disabled = false;
+            }, 2000);
+            
+            // Show toast notification
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Link copied to clipboard!',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        } else {
+            throw new Error('Copy command failed');
+        }
+    } catch (err) {
+        console.error('Fallback copy failed: ', err);
+        
+        // Restore button and show error
+        copyBtn.innerHTML = originalContent;
+        copyBtn.disabled = false;
+        
+        // Show manual copy option
+        Swal.fire({
+            title: 'Copy Link Manually',
+            html: `
+                <p>Please copy the link manually:</p>
+                <div class="input-group">
+                    <input type="text" class="form-control" value="${text}" readonly onclick="this.select()">
+                </div>
+                <small class="text-muted">Click the link above to select it, then press Ctrl+C (or Cmd+C on Mac)</small>
+            `,
+            icon: 'info',
+            confirmButtonText: 'OK'
+        });
+    }
+    
+    document.body.removeChild(textArea);
+
+
+}
+</script>
+
 @endsection

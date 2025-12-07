@@ -58,10 +58,10 @@ try {
     echo "Properties with agent_id: {$propertiesWithAgents['count']}\n";
     
     if ($propertiesWithAgents['count'] > 0) {
-        $stmt = $pdo->query("SELECT prop_id, address, agent_id FROM properties WHERE agent_id IS NOT NULL LIMIT 5");
+        $stmt = $pdo->query("SELECT property_id, address, agent_id FROM properties WHERE agent_id IS NOT NULL LIMIT 5");
         $assignedProperties = $stmt->fetchAll(PDO::FETCH_ASSOC);
         foreach ($assignedProperties as $prop) {
-            echo "  - Property {$prop['prop_id']}: {$prop['address']} (Agent: {$prop['agent_id']})\n";
+            echo "  - Property {$prop['property_id']}: {$prop['address']} (Agent: {$prop['agent_id']})\n";
         }
     }
     

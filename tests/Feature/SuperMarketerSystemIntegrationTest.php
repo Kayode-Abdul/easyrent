@@ -36,10 +36,10 @@ class SuperMarketerSystemIntegrationTest extends TestCase
     private function setupTestData()
     {
         // Create roles
-        Role::create(['id' => 9, 'name' => 'Super Marketer', 'description' => 'Super Marketer Role']);
-        Role::create(['id' => 7, 'name' => 'Marketer', 'description' => 'Marketer Role']);
-        Role::create(['id' => 3, 'name' => 'Landlord', 'description' => 'Landlord Role']);
-        Role::create(['id' => 8, 'name' => 'Regional Manager', 'description' => 'Regional Manager Role']);
+        Role::firstOrCreate(['id' => 9], ['name' => 'Super Marketer', 'description' => 'Super Marketer Role']);
+        Role::firstOrCreate(['id' => 7], ['name' => 'Marketer', 'description' => 'Marketer Role']);
+        Role::firstOrCreate(['id' => 3], ['name' => 'Landlord', 'description' => 'Landlord Role']);
+        Role::firstOrCreate(['id' => 8], ['name' => 'Regional Manager', 'description' => 'Regional Manager Role']);
 
         // Create users
         $this->superMarketer = User::factory()->create([

@@ -136,6 +136,37 @@ class BenefactorPayment extends Model
             $this->setNextPaymentDate();
         }
 
+        // Create a regular payment record so it shows in landlord/tenant dashboards
+        $landlordId = null;
+        if ($this->proforma_id) {
+            $proforma = \App\Models\ProfomaReceipt::find($this->proforma_id);
+            if ($proforma) {
+                $landlordId = $proforma->user_id;
+            }
+        }
+
+        // Create payment record
+        \App\Models\Payment::create([
+            'transaction_id' => $transactionId ?? $this->payment_reference,
+            'tenant_id' => $this->tenant_id,
+            'landlord_id' => $landlordId,
+            'apartment_id' => $this->apartment_id,
+            'property_id' => $this->property_id,
+            'amount' => $this->amount,
+            'status' => 'completed',
+            'payment_method' => 'benefactor',
+            'payment_reference' => $this->payment_reference,
+            'payment_meta' => [
+                'benefactor_payment_id' => $this->id,
+                'benefactor_name' => $this->benefactor->full_name,
+                'benefactor_email' => $this->benefactor->email,
+                'payment_type' => $this->payment_type,
+                'frequency' => $this->frequency,
+            ],
+            'paid_at' => $this->paid_at,
+            'payment_date' => $this->paid_at,
+        ]);
+
         // Update proforma status if linked
         if ($this->proforma_id) {
             $proforma = \App\Models\ProfomaReceipt::find($this->proforma_id);
@@ -147,10 +178,13 @@ class BenefactorPayment extends Model
                 \App\Models\Message::create([
                     'sender_id' => $this->tenant_id,
                     'receiver_id' => $proforma->user_id,
-                    'subject' => 'Proforma Paid by Benefactor',
-                    'body' => "Your proforma has been paid by a benefactor.\n\n"
+                    'subject' => 'Rent Paid by Benefactor',
+                    'body' => "Great news! Your tenant's rent has been paid by a benefactor.\n\n"
+                        . "Tenant: " . $this->tenant->first_name . " " . $this->tenant->last_name . "\n"
                         . "Amount: ₦" . number_format($this->amount, 2) . "\n"
+                        . "Paid by: " . $this->benefactor->full_name . "\n"
                         . "Payment Reference: " . $this->payment_reference . "\n"
+                        . "Payment Type: " . ucfirst(str_replace('_', ' ', $this->payment_type)) . "\n"
                         . "Paid at: " . $this->paid_at->format('M d, Y H:i')
                 ]);
             }

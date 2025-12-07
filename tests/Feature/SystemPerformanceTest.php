@@ -31,20 +31,23 @@ class SystemPerformanceTest extends TestCase
 
     private function setupRoles()
     {
-        Role::create(['id' => 9, 'name' => 'Super Marketer', 'description' => 'Super Marketer Role']);
-        Role::create(['id' => 7, 'name' => 'Marketer', 'description' => 'Marketer Role']);
-        Role::create(['id' => 3, 'name' => 'Landlord', 'description' => 'Landlord Role']);
-        Role::create(['id' => 8, 'name' => 'Regional Manager', 'description' => 'Regional Manager Role']);
+        Role::firstOrCreate(['id' => 9], ['name' => 'Super Marketer', 'description' => 'Super Marketer Role']);
+        Role::firstOrCreate(['id' => 7], ['name' => 'Marketer', 'description' => 'Marketer Role']);
+        Role::firstOrCreate(['id' => 3], ['name' => 'Landlord', 'description' => 'Landlord Role']);
+        Role::firstOrCreate(['id' => 8], ['name' => 'Regional Manager', 'description' => 'Regional Manager Role']);
     }
 
     private function setupCommissionRates()
     {
+        // Create admin user for commission rates
+        $adminUser = User::factory()->create(['user_id' => 1]);
+        
         CommissionRate::create([
             'region' => 'Lagos',
             'role_id' => 9,
             'commission_percentage' => 0.008,
             'effective_from' => now(),
-            'created_by' => 1,
+            'created_by' => $adminUser->user_id,
             'is_active' => true
         ]);
 

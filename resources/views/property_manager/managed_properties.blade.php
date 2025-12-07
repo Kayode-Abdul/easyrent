@@ -148,7 +148,7 @@
                                         <tr>
                                             <td>
                                                 <div>
-                                                    <strong>{{ $property->prop_id }}</strong><br>
+                                                    <strong>{{ $property->property_id }}</strong><br>
                                                     <span class="text-primary">{{ $property->address }}</span><br>
                                                     <small class="text-muted">{{ $property->lga }}, {{ $property->state }}</small>
                                                 </div>
@@ -199,11 +199,11 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group-vertical">
-                                                    <a href="{{ route('property-manager.property-details', $property->prop_id) }}" 
+                                                    <a href="{{ route('property-manager.property-details', $property->property_id) }}" 
                                                        class="btn btn-info btn-sm mb-1" title="View Details">
                                                         <i class="fa fa-eye"></i> Details
                                                     </a>
-                                                    <a href="{{ route('property-manager.property-apartments', $property->prop_id) }}" 
+                                                    <a href="{{ route('property-manager.property-apartments', $property->property_id) }}" 
                                                        class="btn btn-success btn-sm mb-1" title="View Apartments">
                                                         <i class="fa fa-home"></i> Apartments
                                                     </a>
@@ -239,7 +239,7 @@
                                     <div class="card">
                                         <div class="card-header">
                                             <div class="d-flex justify-content-between">
-                                                <h6 class="card-title mb-0">{{ $property->prop_id }}</h6>
+                                                <h6 class="card-title mb-0">{{ $property->property_id }}</h6>
                                                 <span class="badge badge-primary">{{ $propertyTypes[$property->prop_type] ?? 'Other' }}</span>
                                             </div>
                                         </div>
@@ -273,11 +273,11 @@
                                             </div>
                                             
                                             <div class="btn-group btn-group-sm w-100">
-                                                <a href="{{ route('property-manager.property-details', $property->prop_id) }}" 
+                                                <a href="{{ route('property-manager.property-details', $property->property_id) }}" 
                                                    class="btn btn-info">
                                                     <i class="fa fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('property-manager.property-apartments', $property->prop_id) }}" 
+                                                <a href="{{ route('property-manager.property-apartments', $property->property_id) }}" 
                                                    class="btn btn-success">
                                                     <i class="fa fa-home"></i>
                                                 </a>

@@ -1,6 +1,7 @@
 /**
  * Global Logout Handler
  * Handles secure logout functionality across all pages
+ * Includes CSRF token expiration handling
  */
 
 // Global logout handler function
@@ -29,8 +30,31 @@ function handleLogout(formId) {
                 }, 5000);
             }
             
-            // Submit the form
-            form.submit();
+            // Use fetch to handle CSRF token expiration gracefully
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                // If 419 (CSRF token mismatch) or any error, just redirect to login
+                if (response.status === 419 || !response.ok) {
+                    window.location.href = '/login';
+                    return;
+                }
+                // Success - redirect to home or login
+                window.location.href = response.redirected ? response.url : '/login';
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // On any error, just redirect to login page
+                window.location.href = '/login';
+            });
+            
         } else {
             console.error('Logout form not found:', formId);
             

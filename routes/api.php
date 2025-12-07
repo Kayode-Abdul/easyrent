@@ -7,6 +7,10 @@ use App\Http\Controllers\Api\ApartmentApiController;
 use App\Http\Controllers\Api\UserApiController;
 use App\Http\Controllers\Api\BookingApiController;
 use App\Http\Controllers\Api\PaymentApiController;
+use App\Http\Controllers\Api\MobileAuthController;
+use App\Http\Controllers\Api\MobileInvitationController;
+use App\Http\Controllers\Api\MobilePaymentController;
+use App\Http\Controllers\Api\MobileSessionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,6 +66,56 @@ Route::prefix('v1')->middleware(['api.auth'])->group(function () {
     Route::post('/payments', [PaymentApiController::class, 'store']);
 });
 
+// Mobile API Routes for EasyRent Link Authentication System
+Route::prefix('v1/mobile')->group(function () {
+    
+    // Public mobile authentication routes (no API key required)
+    Route::post('/auth/login', [MobileAuthController::class, 'login']);
+    Route::post('/auth/register', [MobileAuthController::class, 'register']);
+    
+    // Public invitation routes (no authentication required for viewing)
+    Route::get('/invitations/{token}', [MobileInvitationController::class, 'show']);
+    Route::get('/invitations/{token}/session', [MobileInvitationController::class, 'getSession']);
+    Route::post('/invitations/session/store', [MobileInvitationController::class, 'storeSession']);
+    
+    // Public payment callback (no authentication required)
+    Route::post('/payments/callback', [MobilePaymentController::class, 'paymentCallback']);
+    Route::get('/payments/callback', [MobilePaymentController::class, 'paymentCallback']);
+    
+    // Protected mobile routes (require Bearer token authentication)
+    Route::middleware(['auth:sanctum'])->group(function () {
+        
+        // Authentication management
+        Route::post('/auth/logout', [MobileAuthController::class, 'logout']);
+        Route::get('/auth/profile', [MobileAuthController::class, 'profile']);
+        Route::post('/auth/refresh-token', [MobileAuthController::class, 'refreshToken']);
+        
+        // Invitation management (authenticated users)
+        Route::post('/invitations/{token}/apply', [MobileInvitationController::class, 'apply']);
+        Route::post('/invitations/generate', [MobileInvitationController::class, 'generateLink']);
+        Route::delete('/invitations/{token}/session', [MobileInvitationController::class, 'clearSession']);
+        
+        // Payment management
+        Route::get('/payments/{paymentId}', [MobilePaymentController::class, 'show']);
+        Route::post('/payments/initialize', [MobilePaymentController::class, 'initializePayment']);
+        Route::get('/payments/user/history', [MobilePaymentController::class, 'getUserPayments']);
+        Route::post('/payments/{paymentId}/cancel', [MobilePaymentController::class, 'cancelPayment']);
+        
+        // Session management (authenticated)
+        Route::post('/sessions', [MobileSessionController::class, 'store']);
+        Route::get('/sessions/{sessionKey}', [MobileSessionController::class, 'show']);
+        Route::put('/sessions/{sessionKey}', [MobileSessionController::class, 'update']);
+        Route::delete('/sessions/{sessionKey}', [MobileSessionController::class, 'destroy']);
+        Route::get('/sessions/{sessionKey}/exists', [MobileSessionController::class, 'exists']);
+    });
+    
+    // Admin mobile routes (require API key authentication)
+    Route::middleware(['api.auth'])->group(function () {
+        Route::post('/sessions/cleanup', [MobileSessionController::class, 'cleanup']);
+        Route::get('/sessions/stats', [MobileSessionController::class, 'stats']);
+    });
+});
+
 // API status endpoint
 Route::get('/status', function () {
     return response()->json([
@@ -73,7 +127,14 @@ Route::get('/status', function () {
             'apartments' => '/api/v1/apartments',
             'users' => '/api/v1/users',
             'bookings' => '/api/v1/bookings',
-            'payments' => '/api/v1/payments'
+            'payments' => '/api/v1/payments',
+            'mobile' => '/api/v1/mobile'
+        ],
+        'mobile_endpoints' => [
+            'auth' => '/api/v1/mobile/auth',
+            'invitations' => '/api/v1/mobile/invitations',
+            'payments' => '/api/v1/mobile/payments',
+            'sessions' => '/api/v1/mobile/sessions'
         ]
     ]);
 });

@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -16,6 +17,14 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $primaryKey = 'user_id';
     public $incrementing = false; // user_id is custom generated
     protected $keyType = 'int';
+    
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'user_id';
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -44,7 +53,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'bank_name',
         'bvn',
         'referral_code',
-        'photo'
+        'photo',
+        'registration_source',
+        'referred_by'
     ];
 
     /**
@@ -204,6 +215,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function referredUsers()
     {
         return $this->hasMany(Referral::class, 'referred_id', 'user_id');
+    }
+
+    public function referredBy()
+    {
+        return $this->belongsTo(User::class, 'referred_by', 'user_id');
     }
 
     // Role checking methods
@@ -486,6 +502,319 @@ class User extends Authenticatable implements MustVerifyEmail
     // Referral relationship methods (Task 3.2)
     
     /**
+     * Check if user qualifies for marketer status
+     * User must have shared referral link that resulted in landlord registration
+     * AND that landlord must have at least one property with successful tenant payment
+     */
+    public function qualifiesForMarketerStatus(): bool
+    {
+        return $this->referrals()
+            ->whereHas('referred', function($query) {
+                $query->whereHas('roles', function($roleQuery) {
+                    $roleQuery->where('name', 'landlord');
+                })->orWhere('role', self::getRoleId('landlord'));
+            })
+            ->whereHas('referred', function($query) {
+                $query->whereHas('apartments', function($apartmentQuery) {
+                    $apartmentQuery->whereHas('payments', function($paymentQuery) {
+                        $paymentQuery->where('status', 'completed');
+                    });
+                });
+            })
+            ->exists();
+    }
+    
+    /**
+     * Automatically promote to marketer if qualified
+     */
+    public function evaluateMarketerPromotion(): void
+    {
+        if ($this->qualifiesForMarketerStatus() && !$this->isMarketer()) {
+            $this->promoteToMarketer();
+        }
+    }
+    
+    /**
+     * Promote user to marketer role
+     */
+    public function promoteToMarketer(): void
+    {
+        try {
+            $marketerRole = Role::where('name', 'marketer')->first();
+            
+            if ($marketerRole && !$this->hasRole('marketer')) {
+                // Add marketer role
+                $this->roles()->attach($marketerRole->id);
+                
+                // Update marketer status
+                $this->update([
+                    'marketer_status' => 'active',
+                    'commission_rate' => 5.0 // Default commission rate
+                ]);
+                
+                // Generate referral code
+                $this->generateReferralCode();
+                
+                // Create marketer profile if it doesn't exist
+                if (!$this->marketerProfile) {
+                    MarketerProfile::create([
+                        'user_id' => $this->user_id,
+                        'status' => 'active',
+                        'commission_rate' => 5.0,
+                        'total_referrals' => $this->referrals()->count(),
+                        'successful_referrals' => $this->referrals()->whereHas('referred', function($q) {
+                            $q->whereHas('roles', function($roleQuery) {
+                                $roleQuery->where('name', 'landlord');
+                            });
+                        })->count()
+                    ]);
+                }
+                
+                Log::info('User promoted to marketer', [
+                    'user_id' => $this->user_id,
+                    'email' => $this->email,
+                    'referral_count' => $this->referrals()->count()
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to promote user to marketer', [
+                'user_id' => $this->user_id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get detailed marketer qualification status
+     */
+    public function getMarketerQualificationStatus(): array
+    {
+        $referrals = $this->referrals()->with(['referred.roles', 'referred.apartments.payments'])->get();
+        
+        $qualifyingReferrals = $referrals->filter(function($referral) {
+            $referred = $referral->referred;
+            
+            // Check if referred user is a landlord
+            $isLandlord = $referred->hasRole('landlord') || 
+                         $referred->role == self::getRoleId('landlord');
+            
+            if (!$isLandlord) {
+                return false;
+            }
+            
+            // Check if landlord has properties with successful payments
+            $hasSuccessfulPayments = $referred->apartments()
+                ->whereHas('payments', function($query) {
+                    $query->where('status', 'completed');
+                })
+                ->exists();
+            
+            return $hasSuccessfulPayments;
+        });
+        
+        return [
+            'is_qualified' => $this->qualifiesForMarketerStatus(),
+            'is_marketer' => $this->isMarketer(),
+            'total_referrals' => $referrals->count(),
+            'landlord_referrals' => $referrals->filter(function($referral) {
+                $referred = $referral->referred;
+                return $referred->hasRole('landlord') || 
+                       $referred->role == self::getRoleId('landlord');
+            })->count(),
+            'qualifying_referrals' => $qualifyingReferrals->count(),
+            'qualifying_referral_details' => $qualifyingReferrals->map(function($referral) {
+                $referred = $referral->referred;
+                $paymentCount = $referred->apartments()
+                    ->join('payments', 'apartments.apartment_id', '=', 'payments.apartment_id')
+                    ->where('payments.status', 'completed')
+                    ->count();
+                
+                return [
+                    'referral_id' => $referral->id,
+                    'referred_user_id' => $referred->user_id,
+                    'referred_user_name' => $referred->first_name . ' ' . $referred->last_name,
+                    'referred_user_email' => $referred->email,
+                    'successful_payments' => $paymentCount,
+                    'referral_date' => $referral->created_at
+                ];
+            })->values()->toArray(),
+            'next_steps' => $this->getMarketerQualificationNextSteps()
+        ];
+    }
+    
+    /**
+     * Get next steps for marketer qualification
+     */
+    protected function getMarketerQualificationNextSteps(): array
+    {
+        if ($this->isMarketer()) {
+            return ['status' => 'Already a marketer'];
+        }
+        
+        if ($this->qualifiesForMarketerStatus()) {
+            return ['status' => 'Qualified for promotion', 'action' => 'Automatic promotion will occur'];
+        }
+        
+        $referrals = $this->referrals()->with(['referred.roles', 'referred.apartments.payments'])->get();
+        $landlordReferrals = $referrals->filter(function($referral) {
+            $referred = $referral->referred;
+            return $referred->hasRole('landlord') || 
+                   $referred->role == self::getRoleId('landlord');
+        });
+        
+        if ($landlordReferrals->isEmpty()) {
+            return [
+                'status' => 'Need landlord referrals',
+                'action' => 'Share your referral link to attract landlords to the platform'
+            ];
+        }
+        
+        $landlordsWithoutPayments = $landlordReferrals->filter(function($referral) {
+            return !$referral->referred->apartments()
+                ->whereHas('payments', function($query) {
+                    $query->where('status', 'completed');
+                })
+                ->exists();
+        });
+        
+        if ($landlordsWithoutPayments->isNotEmpty()) {
+            return [
+                'status' => 'Waiting for tenant payments',
+                'action' => 'Your referred landlords need to receive successful tenant payments',
+                'landlords_pending' => $landlordsWithoutPayments->count()
+            ];
+        }
+        
+        return ['status' => 'Unknown qualification status'];
+    }
+
+    /**
+     * Track referral for marketer qualification
+     */
+    public function trackReferralForMarketerQualification(User $referredUser, array $context = []): void
+    {
+        try {
+            // Create or update referral record
+            $referral = Referral::updateOrCreate([
+                'referrer_id' => $this->user_id,
+                'referred_id' => $referredUser->user_id
+            ], [
+                'referral_code' => $this->referral_code,
+                'referral_status' => 'active',
+                'conversion_date' => now(),
+                'referral_source' => $context['source'] ?? 'direct',
+                'tracking_data' => json_encode($context)
+            ]);
+            
+            Log::info('Referral tracked for marketer qualification', [
+                'referrer_id' => $this->user_id,
+                'referred_id' => $referredUser->user_id,
+                'referral_id' => $referral->id,
+                'context' => $context
+            ]);
+            
+            // If referred user is a landlord, check qualification immediately
+            if ($referredUser->hasRole('landlord') || $referredUser->role == self::getRoleId('landlord')) {
+                $this->evaluateMarketerPromotion();
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to track referral for marketer qualification', [
+                'referrer_id' => $this->user_id,
+                'referred_id' => $referredUser->user_id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Check marketer qualification after payment completion
+     */
+    public function checkMarketerQualificationAfterPayment(Payment $payment): void
+    {
+        try {
+            // Check if this user referred the landlord who received the payment
+            $landlord = User::where('user_id', $payment->landlord_id)->first();
+            
+            if (!$landlord) {
+                return;
+            }
+            
+            // Check if this user referred the landlord
+            $referral = Referral::where('referrer_id', $this->user_id)
+                ->where('referred_id', $landlord->user_id)
+                ->first();
+            
+            if ($referral && $payment->status === 'completed') {
+                Log::info('Checking marketer qualification after payment', [
+                    'referrer_id' => $this->user_id,
+                    'landlord_id' => $landlord->user_id,
+                    'payment_id' => $payment->id,
+                    'payment_amount' => $payment->amount
+                ]);
+                
+                // Update referral with payment information
+                $referral->update([
+                    'commission_amount' => $payment->amount * 0.05, // 5% commission
+                    'commission_status' => 'pending',
+                    'property_id' => $payment->property_id
+                ]);
+                
+                // Evaluate marketer promotion
+                $this->evaluateMarketerPromotion();
+                
+                // If promoted, create commission reward
+                if ($this->isMarketer()) {
+                    $this->createCommissionReward($referral, $payment);
+                }
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to check marketer qualification after payment', [
+                'user_id' => $this->user_id,
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Create commission reward for qualified marketer
+     */
+    protected function createCommissionReward(Referral $referral, Payment $payment): void
+    {
+        try {
+            $commissionAmount = $payment->amount * 0.05; // 5% commission
+            
+            ReferralReward::create([
+                'marketer_id' => $this->user_id,
+                'referral_id' => $referral->id,
+                'amount' => $commissionAmount,
+                'status' => 'approved',
+                'reward_type' => 'referral_commission',
+                'payment_id' => $payment->id,
+                'earned_at' => now()
+            ]);
+            
+            Log::info('Commission reward created for marketer', [
+                'marketer_id' => $this->user_id,
+                'referral_id' => $referral->id,
+                'payment_id' => $payment->id,
+                'commission_amount' => $commissionAmount
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to create commission reward', [
+                'marketer_id' => $this->user_id,
+                'referral_id' => $referral->id,
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Get referrals made by this Super Marketer (marketers they referred)
      */
     public function superMarketerReferrals()
@@ -729,5 +1058,13 @@ class User extends Authenticatable implements MustVerifyEmail
             'flagged_at' => null,
             'fraud_risk_score' => 0
         ]);
+    }
+
+    /**
+     * Check if user is EasyRent registration (from invitation)
+     */
+    public function isEasyRentRegistration(): bool
+    {
+        return $this->registration_source === 'easyrent_invitation';
     }
 }

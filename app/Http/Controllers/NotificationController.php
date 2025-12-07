@@ -175,7 +175,7 @@ class NotificationController extends Controller
         $notifications = [];
 
         // New bookings
-        $properties = Property::where('user_id', $user->user_id)->pluck('prop_id');
+        $properties = Property::where('user_id', $user->user_id)->pluck('property_id');
         $newBookings = DB::table('bookings')
             ->whereIn('property_id', $properties)
             ->where('created_at', '>=', now()->subHours(24))

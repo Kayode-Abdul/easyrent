@@ -35,7 +35,7 @@
                             <tbody>
                                 @forelse($properties as $property)
                                 <tr>
-                                    <td>{{ $property->prop_id }}</td>
+                                    <td>{{ $property->property_id }}</td>
                                     <td>{{ $property->title }}</td>
                                     <td>{{ ucfirst($property->property_type) }}</td>
                                     <td>{{ $property->location }}</td>
@@ -58,17 +58,17 @@
                                                 Actions
                                             </button>
                                             <div class="dropdown-menu">
-                                                <a class="dropdown-item" href="{{ url('/dashboard/property/' . $property->prop_id) }}">View Details</a>
+                                                <a class="dropdown-item" href="{{ url('/dashboard/property/' . $property->property_id) }}">View Details</a>
                                                 
                                                 @if($property->status != 'suspended')
-                                                <form action="{{ route('regional.property.suspend', $property->prop_id) }}" method="POST">
+                                                <form action="{{ route('regional.property.suspend', $property->property_id) }}" method="POST">
                                                     @csrf
                                                     <button type="submit" class="dropdown-item text-danger">
                                                         Suspend
                                                     </button>
                                                 </form>
                                                 @else
-                                                <form action="{{ route('regional.property.activate', $property->prop_id) }}" method="POST">
+                                                <form action="{{ route('regional.property.activate', $property->property_id) }}" method="POST">
                                                     @csrf
                                                     <button type="submit" class="dropdown-item text-success">
                                                         Activate

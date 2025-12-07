@@ -261,36 +261,6 @@
         console.log('Dark Mode toggle created - automatic switching with manual override');
     }
 
-    /**
-     * Chrome's image analysis (simplified version)
-     */
-    function analyzeImages() {
-        const images = document.querySelectorAll('img');
-        
-        images.forEach(img => {
-            // Chrome's heuristics for image preservation
-            const src = img.src.toLowerCase();
-            const alt = (img.alt || '').toLowerCase();
-            const className = (img.className || '').toLowerCase();
-            
-            // Check if it's likely a photo vs graphic
-            const isLikelyPhoto = src.includes('photo') || 
-                                 src.includes('image') || 
-                                 alt.includes('photo') ||
-                                 className.includes('photo');
-            
-            const isLikelyGraphic = src.includes('icon') || 
-                                   src.includes('logo') || 
-                                   src.includes('svg') ||
-                                   className.includes('icon') ||
-                                   className.includes('logo');
-            
-            // Chrome preserves photos but may invert graphics
-            if (isLikelyPhoto && !isLikelyGraphic) {
-                img.style.filter = 'invert(1) hue-rotate(180deg)';
-            }
-        });
-    }
 
     /**
      * Chrome's system preference listener
@@ -378,18 +348,6 @@
         
         // Setup automatic switching
         setupAutomaticSwitching();
-        
-        // Analyze images (Chrome does this continuously)
-        analyzeImages();
-        
-        // Re-analyze images when new ones load
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.addedNodes.length > 0) {
-                    analyzeImages();
-                }
-            });
-        });
         
         observer.observe(document.body, {
             childList: true,

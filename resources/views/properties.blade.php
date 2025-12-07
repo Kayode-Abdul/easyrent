@@ -64,18 +64,18 @@
                       @foreach($all_properties as $property)
                         <tr>
                           <td>{{ $property->user_id }}</td>
-                          <td>{{ $property->prop_id }}</td>
+                          <td>{{ $property->property_id }}</td>
                           <td>{{ $property->address }}</td>
                           <td>{{ $property->lga }}, {{ $property->state }}</td>
                           <td>
                             <div class="btn-group">
-                              <a href="/dashboard/property/{{ $property->prop_id }}" class="btn btn-info btn-sm" data-toggle="tooltip" title="View Details">
+                              <a href="/dashboard/property/{{ $property->property_id }}" class="btn btn-info btn-sm" data-toggle="tooltip" title="View Details">
                                 <i class="fa fa-eye"></i>
                               </a>
-                              <a href="/dashboard/property/{{ $property->prop_id }}/edit" class="btn btn-warning btn-sm" data-toggle="tooltip" title="Edit Property">
+                              <a href="/dashboard/property/{{ $property->property_id }}/edit" class="btn btn-warning btn-sm" data-toggle="tooltip" title="Edit Property">
                                 <i class="fa fa-edit"></i>
                               </a>
-                              <button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Delete Property" onclick="confirmDelete('{{ $property->prop_id }}')">
+                              <button type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" title="Delete Property" onclick="confirmDelete('{{ $property->property_id }}')">
                                 <i class="fa fa-trash"></i>
                               </button>
                             </div>

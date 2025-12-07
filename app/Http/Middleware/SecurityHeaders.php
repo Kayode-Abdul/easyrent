@@ -1,4 +1,4 @@
-&lt;?php
+<?php
 
 namespace App\Http\Middleware;
 
@@ -11,11 +11,11 @@ class SecurityHeaders
     {
         $response = $next($request);
 
-        $response-&gt;headers-&gt;set(&#39;X-Content-Type-Options&#39;, &#39;nosniff&#39;);
-        $response-&gt;headers-&gt;set(&#39;X-Frame-Options&#39;, &#39;SAMEORIGIN&#39;);
-        $response-&gt;headers-&gt;set(&#39;X-XSS-Protection&#39;, &#39;1; mode=block&#39;);
-        $response-&gt;headers-&gt;set(&#39;Referrer-Policy&#39;, &#39;strict-origin-when-cross-origin&#39;);
-        $response-&gt;headers-&gt;set(&#39;Strict-Transport-Security&#39;, &#39;max-age=31536000; includeSubDomains&#39;);
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+        $response->headers->set('X-XSS-Protection', '1; mode=block');
+        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
         return $response;
     }

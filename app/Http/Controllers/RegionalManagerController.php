@@ -81,7 +81,7 @@ class RegionalManagerController extends Controller
         // Optional filters
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
-                $q->orWhere('prop_id', $search)
+                $q->orWhere('property_id', $search)
                   ->orWhere('address', 'like', "%$search%")
                   ->orWhere('lga', 'like', "%$search%")
                   ->orWhere('state', 'like', "%$search%");
@@ -108,26 +108,96 @@ class RegionalManagerController extends Controller
     {
         $manager = $request->user();
         $scopes = $manager->regionalScopes()->get();
-        $users = User::query()->whereHas('roles', function($q){ $q->where('name','marketer'); });
+        
+        // Get marketers who have referred landlords in the regional manager's regions
+        // A marketer is someone who has made referrals (has entries in referrals table as referrer)
+        $users = User::query()
+            ->whereHas('roles', function($q){ 
+                $q->where('name','marketer'); 
+            })
+            ->withCount(['referrals' => function($q) {
+                // Count successful referrals (landlords who registered)
+                $q->whereHas('referredUser', function($subq) {
+                    $subq->whereHas('roles', function($roleq) {
+                        $roleq->where('name', 'landlord');
+                    });
+                });
+            }]);
+        
         if ($scopes->count()) {
             $stateScopes = $scopes->where('scope_type', 'state')->pluck('scope_value')->filter();
             $lgaScopes = $scopes->where('scope_type', 'lga')->pluck('scope_value')->filter();
+            
+            // Filter marketers based on:
+            // 1. Their own location (state/lga in users table)
+            // 2. OR the location of landlords they've referred
             $users->where(function ($q) use ($stateScopes, $lgaScopes) {
-                foreach ($stateScopes as $state) {
-                    $q->orWhere('state', $state);
-                }
-                foreach ($lgaScopes as $pair) {
-                    [$state, $lga] = array_pad(explode('::', $pair, 2), 2, null);
-                    if ($state && $lga) {
-                        $q->orWhere(function ($inner) use ($state, $lga) {
-                            $inner->where('state', $state)->where('lga', $lga);
-                        });
+                // Match marketer's own location
+                $q->where(function($locQuery) use ($stateScopes, $lgaScopes) {
+                    $hasCondition = false;
+                    
+                    foreach ($stateScopes as $state) {
+                        if ($hasCondition) {
+                            $locQuery->orWhere('state', $state);
+                        } else {
+                            $locQuery->where('state', $state);
+                            $hasCondition = true;
+                        }
                     }
-                }
+                    
+                    foreach ($lgaScopes as $scopeValue) {
+                        if (strpos($scopeValue, '::') !== false) {
+                            [$state, $lga] = explode('::', $scopeValue, 2);
+                            if ($hasCondition) {
+                                $locQuery->orWhere(function ($inner) use ($state, $lga) {
+                                    $inner->where('state', $state)->where('lga', $lga);
+                                });
+                            } else {
+                                $locQuery->where('state', $state)->where('lga', $lga);
+                                $hasCondition = true;
+                            }
+                        } else {
+                            if ($hasCondition) {
+                                $locQuery->orWhere('state', $scopeValue);
+                            } else {
+                                $locQuery->where('state', $scopeValue);
+                                $hasCondition = true;
+                            }
+                        }
+                    }
+                    
+                    if (!$hasCondition) {
+                        $locQuery->whereRaw('1=0');
+                    }
+                });
+                
+                // OR match location of referred landlords
+                $q->orWhereHas('referrals', function($refQuery) use ($stateScopes, $lgaScopes) {
+                    $refQuery->whereHas('referredUser', function($landlordQuery) use ($stateScopes, $lgaScopes) {
+                        $landlordQuery->where(function($locQuery) use ($stateScopes, $lgaScopes) {
+                            foreach ($stateScopes as $state) {
+                                $locQuery->orWhere('state', $state);
+                            }
+                            
+                            foreach ($lgaScopes as $scopeValue) {
+                                if (strpos($scopeValue, '::') !== false) {
+                                    [$state, $lga] = explode('::', $scopeValue, 2);
+                                    $locQuery->orWhere(function ($inner) use ($state, $lga) {
+                                        $inner->where('state', $state)->where('lga', $lga);
+                                    });
+                                } else {
+                                    $locQuery->orWhere('state', $scopeValue);
+                                }
+                            }
+                        });
+                    });
+                });
             });
         } else {
+            // No scopes assigned, show no marketers
             $users->whereRaw('1=0');
         }
+        
         $marketers = $users->orderBy('first_name')->paginate(25);
         return view('regional_manager.marketers', compact('marketers','scopes'));
     }
@@ -264,7 +334,7 @@ class RegionalManagerController extends Controller
 
     public function approveProperty($propId)
     {
-        $property = Property::where('prop_id', $propId)->first();
+        $property = Property::where('property_id', $propId)->first();
         if(!$property) return back()->with('error','Property not found.');
         $property->status = 'approved';
         $property->approved_at = now();
@@ -275,7 +345,7 @@ class RegionalManagerController extends Controller
 
     public function rejectProperty($propId)
     {
-        $property = Property::where('prop_id', $propId)->first();
+        $property = Property::where('property_id', $propId)->first();
         if(!$property) return back()->with('error','Property not found.');
         $property->status = 'rejected';
         $property->rejected_at = now();
@@ -285,7 +355,7 @@ class RegionalManagerController extends Controller
 
     public function activateProperty($propId)
     {
-        $property = Property::where('prop_id', $propId)->first();
+        $property = Property::where('property_id', $propId)->first();
         if(!$property) return back()->with('error','Property not found.');
         $property->status = 'approved';
         $property->save();
@@ -294,7 +364,7 @@ class RegionalManagerController extends Controller
 
     public function suspendProperty($propId)
     {
-        $property = Property::where('prop_id', $propId)->first();
+        $property = Property::where('property_id', $propId)->first();
         if(!$property) return back()->with('error','Property not found.');
         $property->status = 'suspended';
         $property->save();

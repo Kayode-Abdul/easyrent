@@ -21,7 +21,7 @@ class RegionalManagerManagementController extends Controller
         $region = $request->get('region');
         
         // Get Regional Manager role
-        $regionalManagerRole = Role::where('name', 'Regional Manager')->orWhere('id', 8)->first();
+        $regionalManagerRole = Role::where('name', 'regional_manager')->orWhere('id', 9)->first();
         
         if (!$regionalManagerRole) {
             return redirect()->back()->with('error', 'Regional Manager role not found');
@@ -67,10 +67,13 @@ class RegionalManagerManagementController extends Controller
     /**
      * Show detailed view of a regional manager and their scopes
      */
-    public function show(User $regionalManager)
+    public function show(Request $request, User $regionalManager)
     {
         // Verify user is a regional manager
-        if (!$regionalManager->hasRole('Regional Manager')) {
+        if (!$regionalManager->hasRole('regional_manager')) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'User is not a Regional Manager'], 404);
+            }
             return redirect()->back()->with('error', 'User is not a Regional Manager');
         }
         
@@ -83,6 +86,27 @@ class RegionalManagerManagementController extends Controller
             'state_scopes' => $rawScopes->where('scope_type', 'state')->count(),
             'lga_scopes' => $rawScopes->where('scope_type', 'lga')->count(),
         ];
+        
+        // Return JSON for AJAX requests
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'manager' => [
+                    'id' => $regionalManager->user_id,
+                    'name' => $regionalManager->first_name . ' ' . $regionalManager->last_name,
+                    'email' => $regionalManager->email,
+                ],
+                'regions' => $rawScopes->map(function($scope) {
+                    return [
+                        'id' => $scope->id,
+                        'state' => $scope->scope_value,
+                        'lga' => $scope->scope_type === 'lga' ? $scope->scope_value : null,
+                        'type' => $scope->scope_type
+                    ];
+                }),
+                'stats' => $stats
+            ]);
+        }
         
         return view('admin.regional-managers.show', compact(
             'regionalManager', 
@@ -98,7 +122,7 @@ class RegionalManagerManagementController extends Controller
     public function assignRegions(User $regionalManager)
     {
         // Verify user is a regional manager
-        if (!$regionalManager->hasRole('Regional Manager')) {
+        if (!$regionalManager->hasRole('regional_manager')) {
             return redirect()->back()->with('error', 'User is not a Regional Manager');
         }
         
@@ -198,6 +222,14 @@ class RegionalManagerManagementController extends Controller
                 'removed_by' => auth()->id()
             ]);
             
+            // Return JSON for AJAX requests
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Regional scope '{$scopeDescription}' removed successfully"
+                ]);
+            }
+            
             return redirect()
                 ->back()
                 ->with('success', "Regional scope '{$scopeDescription}' removed successfully");
@@ -208,6 +240,14 @@ class RegionalManagerManagementController extends Controller
                 'regional_manager_id' => $regionalManager->user_id,
                 'scope_id' => $request->scope_id
             ]);
+            
+            // Return JSON error for AJAX requests
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to remove regional scope: ' . $e->getMessage()
+                ], 500);
+            }
             
             return redirect()
                 ->back()
@@ -319,7 +359,7 @@ class RegionalManagerManagementController extends Controller
      */
     public function getRegionalManagersData(Request $request)
     {
-        $regionalManagerRole = Role::where('name', 'Regional Manager')->orWhere('id', 8)->first();
+        $regionalManagerRole = Role::where('name', 'regional_manager')->orWhere('id', 9)->first();
         
         if (!$regionalManagerRole) {
             return response()->json(['error' => 'Regional Manager role not found'], 404);
@@ -380,6 +420,56 @@ class RegionalManagerManagementController extends Controller
                 ->back()
                 ->withInput()
                 ->with('error', 'Failed to update regional manager: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Remove regional manager role entirely from a user
+     */
+    public function removeRegionalManagerRole(User $regionalManager)
+    {
+        try {
+            DB::beginTransaction();
+            
+            // Remove all regional scopes first
+            $scopeCount = $regionalManager->regionalScopes()->count();
+            $regionalManager->regionalScopes()->delete();
+            
+            // Remove Regional Manager role
+            $regionalManagerRole = Role::where('name', 'regional_manager')->orWhere('id', 9)->first();
+            if ($regionalManagerRole) {
+                $regionalManager->roles()->detach($regionalManagerRole->id);
+            }
+            
+            // If user has legacy role system, update role field
+            if (property_exists($regionalManager, 'role') && $regionalManager->role == 8) {
+                $regionalManager->role = 1; // Set to basic user role
+                $regionalManager->save();
+            }
+            
+            DB::commit();
+            
+            Log::info('Regional Manager role removed', [
+                'user_id' => $regionalManager->user_id,
+                'user_name' => $regionalManager->first_name . ' ' . $regionalManager->last_name,
+                'scopes_removed' => $scopeCount,
+                'removed_by' => auth()->id()
+            ]);
+            
+            return redirect()
+                ->route('admin.regional-managers.index')
+                ->with('success', "Regional Manager role removed from {$regionalManager->first_name} {$regionalManager->last_name}. {$scopeCount} regional assignments were also removed.");
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to remove Regional Manager role', [
+                'error' => $e->getMessage(),
+                'user_id' => $regionalManager->user_id
+            ]);
+            
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to remove Regional Manager role: ' . $e->getMessage());
         }
     }
 }

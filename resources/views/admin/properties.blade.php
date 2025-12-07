@@ -273,13 +273,13 @@
                                 @foreach($properties as $property)
                                     <tr>
                                         <td>
-                                            <input type="checkbox" class="property-checkbox" value="{{ $property->prop_id }}">
+                                            <input type="checkbox" class="property-checkbox" value="{{ $property->property_id }}">
                                         </td>
                                         <td>
                                             <div class="property-info">
-                                                <strong>{{ $property->title ?? 'Property #' . $property->prop_id }}</strong>
+                                                <strong>{{ $property->title ?? 'Property #' . $property->property_id }}</strong>
                                                 <br>
-                                                <small class="text-muted">ID: {{ $property->prop_id }}</small>
+                                                <small class="text-muted">ID: {{ $property->property_id }}</small>
                                                 @if($property->price)
                                                     <br><small class="text-success">₦{{ number_format($property->price) }}</small>
                                                 @endif
@@ -324,13 +324,13 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a href="/dashboard/property/{{ $property->prop_id }}" class="btn btn-sm btn-info" title="View">
+                                                <a href="/dashboard/property/{{ $property->property_id }}" class="btn btn-sm btn-info" title="View">
                                                     <i class="fa fa-eye"></i>
                                                 </a>
-                                                <a href="/dashboard/property/{{ $property->prop_id }}/edit" class="btn btn-sm btn-warning" title="Edit">
+                                                <a href="/dashboard/property/{{ $property->property_id }}/edit" class="btn btn-sm btn-warning" title="Edit">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
-                                                <button class="btn btn-sm btn-danger" onclick="deleteProperty({{ $property->prop_id }})" title="Delete">
+                                                <button class="btn btn-sm btn-danger" onclick="deleteProperty({{ $property->property_id }})" title="Delete">
                                                     <i class="fa fa-trash"></i>
                                                 </button>
                                             </div>

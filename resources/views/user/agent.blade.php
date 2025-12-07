@@ -83,13 +83,13 @@
                             <tbody>
                                 @foreach($properties as $property)
                                     <tr>
-                                        <td>{{ $property->prop_id }}</td>
+                                        <td>{{ $property->property_id }}</td>
                                         <td>{{ $property->getPropertyTypeName() }}</td>
                                         <td>{{ $property->getFullAddress() }}</td>
                                         <td>{{ $property->apartments->count() }}</td>
                                         <td>{{ $property->apartments->where('tenant_id', '!=', null)->count() }}</td>
                                         <td>
-                                            <a href="/dashboard/property/{{ $property->prop_id }}" class="btn btn-info btn-sm">
+                                            <a href="/dashboard/property/{{ $property->property_id }}" class="btn btn-info btn-sm">
                                                 <i class="fa fa-eye"></i> View
                                             </a>
                                         </td>

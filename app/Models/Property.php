@@ -9,9 +9,25 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Property extends Model
 {
-    public $timestamps = false;
+    protected $primaryKey = 'id'; // Use auto-increment id as primary key
+    public $incrementing = true;
+    public $timestamps = true; // Enable timestamps since migration has them
 
-    protected $fillable = ['user_id', 'prop_id', 'prop_type', 'address', 'state', 'lga', 'created_at', 'no_of_apartment', 'agent_id', 'status', 'approved_at'];
+    protected $fillable = [
+        'user_id',
+        'property_id',
+        'prop_type',
+        'address',
+        'state',
+        'lga',
+        'no_of_apartment',
+        'agent_id',
+        'status',
+        'approved_at',
+        'rejected_at',
+        'size_value',
+        'size_unit',
+    ];
 
     public function agent(): BelongsTo
     {
@@ -28,6 +44,11 @@ class Property extends Model
     const TYPE_DUPLEX = 2;
     const TYPE_FLAT = 3;
     const TYPE_TERRACE = 4;
+    const TYPE_WAREHOUSE = 5;
+    const TYPE_LAND = 6;
+    const TYPE_FARM = 7;
+    const TYPE_STORE = 8;
+    const TYPE_SHOP = 9;
 
     public function owner(): BelongsTo
     {
@@ -57,7 +78,15 @@ class Property extends Model
 
     public function apartments(): HasMany
     {
-        return $this->hasMany(Apartment::class, 'property_id', 'prop_id');
+        return $this->hasMany(Apartment::class, 'property_id', 'property_id');
+    }
+
+    /**
+     * Relationship to PropertyType lookup table
+     */
+    public function propertyType(): BelongsTo
+    {
+        return $this->belongsTo(PropertyType::class, 'prop_type', 'id');
     }
 
     // Helper methods
@@ -68,8 +97,106 @@ class Property extends Model
             self::TYPE_DUPLEX => 'Duplex',
             self::TYPE_FLAT => 'Flat',
             self::TYPE_TERRACE => 'Terrace',
+            self::TYPE_WAREHOUSE => 'Warehouse',
+            self::TYPE_LAND => 'Land',
+            self::TYPE_FARM => 'Farm',
+            self::TYPE_STORE => 'Store',
+            self::TYPE_SHOP => 'Shop',
             default => 'Unknown'
         };
+    }
+
+    /**
+     * Get all property types
+     */
+    public static function getPropertyTypes(): array
+    {
+        return [
+            self::TYPE_MANSION => 'Mansion',
+            self::TYPE_DUPLEX => 'Duplex',
+            self::TYPE_FLAT => 'Flat',
+            self::TYPE_TERRACE => 'Terrace',
+            self::TYPE_WAREHOUSE => 'Warehouse',
+            self::TYPE_LAND => 'Land',
+            self::TYPE_FARM => 'Farm',
+            self::TYPE_STORE => 'Store',
+            self::TYPE_SHOP => 'Shop',
+        ];
+    }
+
+    /**
+     * Check if property is commercial type
+     */
+    public function isCommercial(): bool
+    {
+        return in_array($this->prop_type, [
+            self::TYPE_WAREHOUSE,
+            self::TYPE_STORE,
+            self::TYPE_SHOP,
+        ]);
+    }
+
+    /**
+     * Check if property is land/agricultural type
+     */
+    public function isLand(): bool
+    {
+        return in_array($this->prop_type, [
+            self::TYPE_LAND,
+            self::TYPE_FARM,
+        ]);
+    }
+
+    /**
+     * Check if property is residential type
+     */
+    public function isResidential(): bool
+    {
+        return in_array($this->prop_type, [
+            self::TYPE_MANSION,
+            self::TYPE_DUPLEX,
+            self::TYPE_FLAT,
+            self::TYPE_TERRACE,
+        ]);
+    }
+
+    /**
+     * Get property attributes
+     */
+    public function attributes(): HasMany
+    {
+        return $this->hasMany(PropertyAttribute::class, 'property_id', 'property_id');
+    }
+
+    /**
+     * Get a specific property attribute value
+     */
+    public function getPropertyAttribute(string $key, $default = null)
+    {
+        $attribute = $this->attributes()->where('attribute_key', $key)->first();
+        return $attribute ? $attribute->attribute_value : $default;
+    }
+
+    /**
+     * Set a property attribute
+     */
+    public function setPropertyAttribute(string $key, $value): void
+    {
+        $this->attributes()->updateOrCreate(
+            ['attribute_key' => $key],
+            ['attribute_value' => $value]
+        );
+    }
+
+    /**
+     * Get formatted size
+     */
+    public function getFormattedSize(): ?string
+    {
+        if (!$this->size_value) {
+            return null;
+        }
+        return number_format($this->size_value, 2) . ' ' . ($this->size_unit ?? 'sqm');
     }
 
     public function getFullAddress(): string

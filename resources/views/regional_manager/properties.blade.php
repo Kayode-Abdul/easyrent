@@ -56,7 +56,7 @@
 							<tbody>
 								@foreach($properties as $property)
 								<tr>
-									<td>{{ $property->prop_id }}</td>
+									<td>{{ $property->property_id }}</td>
 									<td>
 										@if($property->owner)
 											{{ $property->owner->first_name }} {{ $property->owner->last_name }}
@@ -71,7 +71,7 @@
 									<td>{{ ucfirst($property->status ?? 'n/a') }}</td>
 									<td>{{ optional($property->created_at)->format('Y-m-d') }}</td>
 									<td>
-										<a class="btn btn-sm btn-outline-info" href="{{ route('property.show', $property->prop_id) }}" target="_blank">View</a>
+										<a class="btn btn-sm btn-outline-info" href="{{ route('property.show', $property->property_id) }}" target="_blank">View</a>
 									</td>
 								</tr>
 								@endforeach

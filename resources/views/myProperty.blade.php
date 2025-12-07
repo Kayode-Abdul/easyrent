@@ -21,10 +21,12 @@
                         </li>
                     </ul>
                 </div>
+                <!-- Landlord/Tenant Toggle (for everyone) -->
+                <div class="col-md-6 d-flex justify-content-end align-items-end">
+            @else
+                <div class="col-md-12 d-flex justify-content-end align-items-end">
             @endif
             
-            <!-- Landlord/Tenant Toggle (for everyone) -->
-            <div class="col-md-6 d-flex justify-content-end align-items-center">
                 <div>
                     <span class="switch-label-left">Landlord</span>
                     <label class="switch mb-0">
@@ -294,7 +296,7 @@
                                                     @endphp
                                                     <tr>
                                                         <td>
-                                                            <span class="font-weight-bold text-primary">{{ $property->prop_id }}</span>
+                                                            <span class="font-weight-bold text-primary">{{ $property->property_id }}</span>
                                                         </td>
                                                         <td>
                                                             <div>
@@ -332,11 +334,11 @@
                                                         </td>
                                                         <td>
                                                             <div class="btn-group">
-                                                                <a href="{{ route('property-manager.property-details', $property->prop_id) }}" 
+                                                                <a href="{{ route('property-manager.property-details', $property->property_id) }}" 
                                                                    class="btn btn-info btn-sm" title="View Details">
                                                                     <i class="fa fa-eye"></i>
                                                                 </a>
-                                                                <a href="{{ route('property-manager.property-apartments', $property->prop_id) }}" 
+                                                                <a href="{{ route('property-manager.property-apartments', $property->property_id) }}" 
                                                                    class="btn btn-success btn-sm" title="View Apartments">
                                                                     <i class="fa fa-home"></i>
                                                                 </a>
@@ -496,16 +498,8 @@
                                                 <tr>
                                                     <td>{{ $property->address }}</td>
                                                     <td>
-                                                        @php
-                                                            $types = [
-                                                                1 => 'Mansion',
-                                                                2 => 'Duplex',
-                                                                3 => 'Flat',
-                                                                4 => 'Terrace'
-                                                            ];
-                                                        @endphp
                                                         <span class="badge badge-primary">
-                                                            {{ $types[$property->prop_type] ?? 'Other' }}
+                                                            {{ $property->getPropertyTypeName() }}
                                                         </span>
                                                     </td>
                                                     <td>{{ $property->lga }}, {{ $property->state }}</td>
@@ -528,23 +522,23 @@
                                                     </td>
                                                     <td>
                                                         <div class="btn-group">
-                                                            <a href="{{ url('/dashboard/property/'.$property->prop_id) }}" class="btn btn-info btn-sm" title="View Details">
+                                                            <a href="{{ url('/dashboard/property/'.$property->property_id) }}" class="btn btn-info btn-sm" title="View Details">
                                                                 <i class="fa fa-eye"></i>
                                                             </a>
                                                             @if(auth()->user()->user_id == $property->user_id)
-                                                                <a href="{{ url('/dashboard/property/'.$property->prop_id.'/edit') }}" class="btn btn-warning btn-sm" title="Edit Property">
+                                                                <a href="{{ url('/dashboard/property/'.$property->property_id.'/edit') }}" class="btn btn-warning btn-sm" title="Edit Property">
                                                                     <i class="fa fa-edit"></i>
                                                                 </a>
                                                                 <button type="button" class="btn btn-danger btn-sm" title="Delete Property" 
-                                                                        onclick="confirmDelete('{{ $property->prop_id }}')">
+                                                                        onclick="confirmDelete('{{ $property->property_id }}')">
                                                                     <i class="fa fa-trash"></i>
                                                                 </button>
                                                             @elseif(auth()->user()->admin)
-                                                                <a href="{{ url('/dashboard/property/'.$property->prop_id.'/edit') }}" class="btn btn-warning btn-sm" title="Admin Edit Property">
+                                                                <a href="{{ url('/dashboard/property/'.$property->property_id.'/edit') }}" class="btn btn-warning btn-sm" title="Admin Edit Property">
                                                                     <i class="fa fa-edit"></i> Admin
                                                                 </a>
                                                                 <button type="button" class="btn btn-danger btn-sm" title="Admin Delete Property" 
-                                                                        onclick="confirmDelete('{{ $property->prop_id }}')">
+                                                                        onclick="confirmDelete('{{ $property->property_id }}')">
                                                                     <i class="fa fa-trash"></i> Admin
                                                                 </button>
                                                             @endif
@@ -932,12 +926,23 @@ $(function() {
                     @csrf
                     <div class="form-group">
                         <label for="property-type">Property Type</label>
-                        <select name="propertyType" id="property-type" class="form-control">
-                            <option value="" disabled="disabled" selected>Select Property Type</option>
-                            <option value="1">Mansion</option>
-                            <option value="2">Duplex</option>
-                            <option value="3">Flat</option>
-                            <option value="4">Terrace</option>
+                        <select name="propertyType" id="property-type" class="form-control" required>
+                            <option value="" disabled="disabled" selected>-- Select Property Type --</option>
+                            <optgroup label="Residential">
+                                <option value="1">Mansion</option>
+                                <option value="2">Duplex</option>
+                                <option value="3">Flat</option>
+                                <option value="4">Terrace</option>
+                            </optgroup>
+                            <optgroup label="Commercial">
+                                <option value="5">Warehouse</option>
+                                <option value="8">Store</option>
+                                <option value="9">Shop</option>
+                            </optgroup>
+                            <optgroup label="Land/Agricultural">
+                                <option value="6">Land</option>
+                                <option value="7">Farm</option>
+                            </optgroup>
                         </select>
                     </div>
                     <div class="form-group">
@@ -960,10 +965,137 @@ $(function() {
                         <textarea class="form-control" name="address" id="propertyAdd" rows="3" 
                             placeholder="Enter full property address"></textarea>
                     </div>
-                    <div class="form-group">
-                        <label for="noOfApartment">Number of Apartments</label>
-                        <input type="number" class="form-control" name="noOfApartment" id="noOfApartment" 
-                            min="1" placeholder="Enter number of apartments">
+
+                    <!-- Number of Apartments (for residential properties only) -->
+                    <div class="form-group" id="apartments-field-modal" style="display: none;">
+                        <label for="noOfApartment_modal">Number of Units/Apartments *</label>
+                        <input type="number" class="form-control" name="noOfApartment" id="noOfApartment_modal" 
+                               min="1" placeholder="Enter number of units/apartments">
+                        <small class="form-text text-muted">Number of rentable units in this property</small>
+                    </div>
+
+                    <!-- Size Fields (for commercial and land properties only) -->
+                    <div class="form-group" id="size-fields-modal" style="display: none;">
+                        <label for="size_value_modal">Property Size *</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="number" name="size_value" id="size_value_modal" class="form-control" 
+                                       placeholder="Enter size" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <select name="size_unit" id="size_unit_modal" class="form-control">
+                                    <option value="sqm">Square Meters (sqm)</option>
+                                    <option value="sqft">Square Feet (sqft)</option>
+                                    <option value="acres">Acres</option>
+                                    <option value="hectares">Hectares</option>
+                                </select>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Required for commercial and land properties</small>
+                    </div>
+
+                    <!-- Warehouse-specific fields -->
+                    <div id="warehouse-fields-modal" style="display: none;">
+                        <h6 class="mt-3 mb-2">Warehouse Details</h6>
+                        <div class="form-group">
+                            <label for="height_clearance_modal">Height Clearance (meters)</label>
+                            <input type="number" name="height_clearance" id="height_clearance_modal" 
+                                   class="form-control" placeholder="e.g., 8" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label for="loading_docks_modal">Number of Loading Docks</label>
+                            <input type="number" name="loading_docks" id="loading_docks_modal" 
+                                   class="form-control" placeholder="e.g., 3" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="storage_type_modal">Storage Type</label>
+                            <select name="storage_type" id="storage_type_modal" class="form-control">
+                                <option value="">-- Select Storage Type --</option>
+                                <option value="dry_storage">Dry Storage</option>
+                                <option value="cold_storage">Cold Storage</option>
+                                <option value="hazmat">Hazardous Materials</option>
+                                <option value="general">General Storage</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Land/Farm-specific fields -->
+                    <div id="land-fields-modal" style="display: none;">
+                        <h6 class="mt-3 mb-2">Land/Farm Details</h6>
+                        <div class="form-group">
+                            <label for="land_type_modal">Land Type</label>
+                            <select name="land_type" id="land_type_modal" class="form-control">
+                                <option value="">-- Select Land Type --</option>
+                                <option value="agricultural">Agricultural</option>
+                                <option value="residential">Residential</option>
+                                <option value="commercial">Commercial</option>
+                                <option value="mixed">Mixed Use</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="soil_type_modal">Soil Type</label>
+                            <input type="text" name="soil_type" id="soil_type_modal" 
+                                   class="form-control" placeholder="e.g., loamy, sandy, clay">
+                        </div>
+                        <div class="form-group">
+                            <label for="water_access_modal">Water Access</label>
+                            <select name="water_access" id="water_access_modal" class="form-control">
+                                <option value="">-- Select --</option>
+                                <option value="1">Yes</option>
+                                <option value="0">No</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="water_source_modal">Water Source (if applicable)</label>
+                            <input type="text" name="water_source" id="water_source_modal" 
+                                   class="form-control" placeholder="e.g., borehole, river, well">
+                        </div>
+                        <div class="form-group">
+                            <label for="topography_modal">Topography</label>
+                            <select name="topography" id="topography_modal" class="form-control">
+                                <option value="">-- Select --</option>
+                                <option value="flat">Flat</option>
+                                <option value="hilly">Hilly</option>
+                                <option value="sloped">Sloped</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Store/Shop-specific fields -->
+                    <div id="store-fields-modal" style="display: none;">
+                        <h6 class="mt-3 mb-2">Store/Shop Details</h6>
+                        <div class="form-group">
+                            <label for="frontage_width_modal">Frontage Width (meters)</label>
+                            <input type="number" name="frontage_width" id="frontage_width_modal" 
+                                   class="form-control" placeholder="e.g., 6" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label for="store_type_modal">Store Type</label>
+                            <select name="store_type" id="store_type_modal" class="form-control">
+                                <option value="">-- Select Store Type --</option>
+                                <option value="retail">Retail</option>
+                                <option value="restaurant">Restaurant</option>
+                                <option value="office">Office</option>
+                                <option value="salon">Salon/Spa</option>
+                                <option value="pharmacy">Pharmacy</option>
+                                <option value="supermarket">Supermarket</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="foot_traffic_modal">Foot Traffic Level</label>
+                            <select name="foot_traffic" id="foot_traffic_modal" class="form-control">
+                                <option value="">-- Select --</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="parking_spaces_modal">Parking Spaces</label>
+                            <input type="number" name="parking_spaces" id="parking_spaces_modal" 
+                                   class="form-control" placeholder="Number of parking spaces" min="0">
+                        </div>
                     </div>
                 </form>
 
@@ -977,11 +1109,31 @@ $(function() {
                         <input type="hidden" id="property-id" name="propertyId">
                         <div class="form-group row">
                             <div class="col-md-4">
-                                <label>Apartment Type</label>
-                                <select class="form-control" name="apartmentType">
-                                    <option value="Studio">Studio</option>
-                                    <option value="1 Bedroom">1 Bedroom</option>
-                                    <option value="2 Bedroom">2 Bedroom</option>
+                                <label>Apartment/Unit Type</label>
+                                <select class="form-control" name="apartmentType" required>
+                                    <option value="" disabled selected>-- Select Type --</option>
+                                    <optgroup label="Residential Units">
+                                        <option value="Studio">Studio</option>
+                                        <option value="1 Bedroom">1 Bedroom</option>
+                                        <option value="2 Bedroom">2 Bedroom</option>
+                                        <option value="3 Bedroom">3 Bedroom</option>
+                                        <option value="4 Bedroom">4 Bedroom</option>
+                                        <option value="Penthouse">Penthouse</option>
+                                        <option value="Duplex Unit">Duplex Unit</option>
+                                    </optgroup>
+                                    <optgroup label="Commercial Units">
+                                        <option value="Shop Unit">Shop Unit</option>
+                                        <option value="Store Unit">Store Unit</option>
+                                        <option value="Office Unit">Office Unit</option>
+                                        <option value="Restaurant Unit">Restaurant Unit</option>
+                                        <option value="Warehouse Unit">Warehouse Unit</option>
+                                        <option value="Showroom">Showroom</option>
+                                    </optgroup>
+                                    <optgroup label="Other">
+                                        <option value="Storage Unit">Storage Unit</option>
+                                        <option value="Parking Space">Parking Space</option>
+                                        <option value="Other">Other</option>
+                                    </optgroup>
                                 </select>
                             </div>
                         </div>
@@ -1335,6 +1487,43 @@ function toggleOccupied(button) {
         hiddenInput.value = '1';
     }
 }
+
+// Handle property type change to show/hide conditional fields in modal
+document.getElementById('property-type').addEventListener('change', function() {
+    const propType = parseInt(this.value);
+    
+    // Hide all conditional fields
+    document.getElementById('size-fields-modal').style.display = 'none';
+    document.getElementById('apartments-field-modal').style.display = 'none';
+    document.getElementById('warehouse-fields-modal').style.display = 'none';
+    document.getElementById('land-fields-modal').style.display = 'none';
+    document.getElementById('store-fields-modal').style.display = 'none';
+    
+    // Remove required attributes
+    document.getElementById('size_value_modal').removeAttribute('required');
+    document.getElementById('noOfApartment_modal').removeAttribute('required');
+    
+    // Show relevant fields based on property type
+    if (propType >= 1 && propType <= 4) { // Residential (Mansion, Duplex, Flat, Terrace)
+        document.getElementById('apartments-field-modal').style.display = 'block';
+        document.getElementById('noOfApartment_modal').setAttribute('required', 'required');
+    } else if (propType === 5) { // Warehouse
+        document.getElementById('size-fields-modal').style.display = 'block';
+        document.getElementById('warehouse-fields-modal').style.display = 'block';
+        document.getElementById('size_value_modal').setAttribute('required', 'required');
+        // Warehouse doesn't need apartments field
+    } else if (propType === 6 || propType === 7) { // Land or Farm
+        document.getElementById('size-fields-modal').style.display = 'block';
+        document.getElementById('land-fields-modal').style.display = 'block';
+        document.getElementById('size_value_modal').setAttribute('required', 'required');
+        // No apartments field for land/farm
+    } else if (propType === 8 || propType === 9) { // Store or Shop
+        document.getElementById('size-fields-modal').style.display = 'block';
+        document.getElementById('store-fields-modal').style.display = 'block';
+        document.getElementById('size_value_modal').setAttribute('required', 'required');
+        // Store/Shop doesn't need apartments field
+    }
+});
 
 // Handle property form submission
 document.getElementById('saveProperty').addEventListener('click', function() {

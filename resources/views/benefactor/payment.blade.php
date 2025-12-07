@@ -42,6 +42,31 @@
 
                         <hr>
 
+                        <!-- Display Validation Errors -->
+                        @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <strong>Please fix the following errors:</strong>
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        @endif
+
+                        <!-- Display Success/Error Messages -->
+                        @if (session('error'))
+                        <div class="alert alert-danger">
+                            {{ session('error') }}
+                        </div>
+                        @endif
+
+                        @if (session('success'))
+                        <div class="alert alert-success">
+                            {{ session('success') }}
+                        </div>
+                        @endif
+
                         <!-- Payment Form -->
                         <form action="{{ route('benefactor.payment.process', $invitation->token) }}" method="POST" id="paymentForm">
                             @csrf

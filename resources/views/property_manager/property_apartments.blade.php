@@ -8,10 +8,10 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="card-title">Apartments - {{ $property->address }}</h4>
-                            <p class="card-category">Property ID: {{ $property->prop_id }} | Owner: {{ $property->owner->first_name ?? 'N/A' }} {{ $property->owner->last_name ?? '' }}</p>
+                            <p class="card-category">Property ID: {{ $property->property_id }} | Owner: {{ $property->owner->first_name ?? 'N/A' }} {{ $property->owner->last_name ?? '' }}</p>
                         </div>
                         <div>
-                            <a href="{{ route('property-manager.property-details', $property->prop_id) }}" class="btn btn-outline-secondary btn-sm">
+                            <a href="{{ route('property-manager.property-details', $property->property_id) }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fa fa-arrow-left"></i> Back to Property
                             </a>
                             <a href="{{ route('property-manager.dashboard') }}" class="btn btn-outline-primary btn-sm">
@@ -262,7 +262,7 @@
                             </button>
                         </div>
                         <div class="col-md-3">
-                            <a href="{{ route('property-manager.payments') }}?property_id={{ $property->prop_id }}" class="btn btn-outline-info btn-block">
+                            <a href="{{ route('property-manager.payments') }}?property_id={{ $property->property_id }}" class="btn btn-outline-info btn-block">
                                 <i class="nc-icon nc-money-coins"></i><br>
                                 View Payments
                             </a>

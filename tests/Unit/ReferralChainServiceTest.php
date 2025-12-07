@@ -30,9 +30,9 @@ class ReferralChainServiceTest extends TestCase
         $this->chainService = new ReferralChainService($this->mockFraudService);
         
         // Create roles
-        Role::create(['id' => 9, 'name' => 'super_marketer']);
-        Role::create(['id' => 3, 'name' => 'marketer']);
-        Role::create(['id' => 2, 'name' => 'landlord']);
+        Role::firstOrCreate(['id' => 9], ['name' => 'super_marketer']);
+        Role::firstOrCreate(['id' => 3], ['name' => 'marketer']);
+        Role::firstOrCreate(['id' => 2], ['name' => 'landlord']);
         
         // Create users
         $this->superMarketer = User::factory()->create(['user_id' => 1001]);

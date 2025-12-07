@@ -1,4 +1,5 @@
-@php $isDashboard = request()->segment(1) === 'dashboard'; @endphp
+   @php $currentSegment = request()->segment(1); 
+    $isDashboard = in_array($currentSegment, ['dashboard','admin', 'proforma', 'property-manager']); @endphp
 @if($isDashboard)
 <footer class="footer footer-black  footer-white ">
     <div class="container-fluid">
@@ -56,16 +57,16 @@
         </p>
           <div class="social-links" style="margin-top: 20px;">
             <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; margin-right: 10px; transition: all 0.3s ease;">
-              <i class="bx bxl-facebook" style="color: #ff5e15; font-size: 18px;"></i>
+              <i class="bi bi-facebook" style="color: #ff5e15; font-size: 18px;"></i>
             </a>
             <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; margin-right: 10px; transition: all 0.3s ease;">
-              <i class="bx bxl-twitter" style="color: #ff5e15; font-size: 18px;"></i>
+              <i class="bi bi-twitter-x" style="color: #ff5e15; font-size: 18px;"></i>
             </a>
             <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; margin-right: 10px; transition: all 0.3s ease;">
-              <i class="bx bxl-instagram" style="color: #ff5e15; font-size: 18px;"></i>
+              <i class="bi bi-instagram" style="color: #ff5e15; font-size: 18px;"></i>
             </a>
             <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; transition: all 0.3s ease;">
-              <i class="bx bxl-linkedin" style="color: #ff5e15; font-size: 18px;"></i>
+              <i class="bi bi-linkedin" style="color: #ff5e15; font-size: 18px;"></i>
             </a>
           </div>
         </div>
