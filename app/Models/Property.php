@@ -15,7 +15,7 @@ class Property extends Model
 
     protected $fillable = [
         'user_id',
-        'property_id',
+        'property_id', // Business identifier (renamed from prop_id)
         'prop_type',
         'address',
         'state',
@@ -38,6 +38,54 @@ class Property extends Model
         'created_at' => 'datetime',
         'prop_type' => 'integer'
     ];
+
+    // Backward compatibility accessors for old column names
+    protected $appends = [];
+
+    /**
+     * Accessor for prop_name (backward compatibility)
+     * Maps to address since there's no separate name field
+     */
+    public function getPropNameAttribute(): ?string
+    {
+        return $this->address;
+    }
+
+    /**
+     * Accessor for prop_description (backward compatibility)
+     * Returns null since this field doesn't exist in current schema
+     */
+    public function getPropDescriptionAttribute(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Accessor for prop_address (backward compatibility)
+     * Maps to address field
+     */
+    public function getPropAddressAttribute(): ?string
+    {
+        return $this->address;
+    }
+
+    /**
+     * Accessor for prop_state (backward compatibility)
+     * Maps to state field
+     */
+    public function getPropStateAttribute(): ?string
+    {
+        return $this->state;
+    }
+
+    /**
+     * Accessor for prop_lga (backward compatibility)
+     * Maps to lga field
+     */
+    public function getPropLgaAttribute(): ?string
+    {
+        return $this->lga;
+    }
 
     // Property type constants
     const TYPE_MANSION = 1;
@@ -64,11 +112,6 @@ class Property extends Model
     public function amenities(): BelongsToMany
     {
         return $this->belongsToMany(Amenity::class, 'property_amenity');
-    }
-
-    public function bookings(): HasMany
-    {
-        return $this->hasMany(Booking::class);
     }
 
     public function reviews(): HasMany

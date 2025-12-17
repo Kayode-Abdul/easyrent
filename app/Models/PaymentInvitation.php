@@ -175,4 +175,12 @@ class PaymentInvitation extends Model
     {
         return route('benefactor.payment.show', ['token' => $this->token]);
     }
+
+    /**
+     * Get invitation token (alias for token field)
+     */
+    public function getInvitationTokenAttribute()
+    {
+        return $this->token;
+    }
 }

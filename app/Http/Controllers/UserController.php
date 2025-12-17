@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
  
 class UserController extends Controller
 {
@@ -463,11 +464,21 @@ class UserController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
-            \Log::error('User lookup failed: ' . $e->getMessage());
+           Log::error('User lookup failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred while looking up the user'
             ], 500);
         }
+    }
+
+    /**
+     * Users method
+     * TODO: Implement this method
+     */
+    public function users()
+    {
+        // TODO: Implement users functionality
+        return view('users.index');
     }
 }

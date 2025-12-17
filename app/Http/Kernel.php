@@ -74,5 +74,8 @@ class Kernel extends HttpKernel
         'enhanced.csrf' => \App\Http\Middleware\EnhancedCsrfProtection::class,
         'easyrent.error.handler' => \App\Http\Middleware\EasyRentErrorHandler::class,
         'api.auth' => \App\Http\Middleware\ApiAuthMiddleware::class,
+        'payment.calculation.rate.limit' => \App\Http\Middleware\PaymentCalculationRateLimitMiddleware::class,
+        'payment.calculation.input.validation' => \App\Http\Middleware\PaymentCalculationInputValidationMiddleware::class,
+        'pricing.configuration.access.control' => \App\Http\Middleware\PricingConfigurationAccessControlMiddleware::class,
     ];
 }

@@ -7,7 +7,7 @@ interface EasyRentCacheInterface
     /**
      * Cache apartment data with related information
      */
-    public function cacheApartmentData(int $apartmentId): array;
+    public function cacheApartmentData(int $apartmentId): ?array;
 
     /**
      * Get cached apartment data
@@ -17,7 +17,7 @@ interface EasyRentCacheInterface
     /**
      * Cache invitation data with session context
      */
-    public function cacheInvitationData(string $token): array;
+    public function cacheInvitationData(string $token): ?array;
 
     /**
      * Get cached invitation data
@@ -42,7 +42,7 @@ interface EasyRentCacheInterface
     /**
      * Cache user data for quick access
      */
-    public function cacheUserData(int $userId): array;
+    public function cacheUserData(int $userId): ?array;
 
     /**
      * Get cached user data
@@ -92,7 +92,7 @@ interface EasyRentCacheInterface
     /**
      * Cache frequently accessed property data
      */
-    public function cachePropertyData(int $propertyId): array;
+    public function cachePropertyData(int $propertyId): ?array;
 
     /**
      * Cache active invitations for quick lookup
@@ -102,7 +102,7 @@ interface EasyRentCacheInterface
     /**
      * Cache database query results for complex operations
      */
-    public function cacheQueryResult(string $queryKey, callable $queryCallback, int $ttl = null): array;
+    public function cacheQueryResult(string $queryKey, callable $queryCallback, ?int $ttl = null): ?array;
 
     /**
      * Batch cache multiple apartments for performance

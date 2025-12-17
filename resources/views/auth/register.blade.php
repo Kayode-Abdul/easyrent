@@ -266,7 +266,7 @@
                                 <div class="form-floating">
                                     <input id="name" type="text" class="form-control @error('name') is-invalid @enderror" 
                                            name="name" value="{{ old('name') }}" required autocomplete="name" 
-                                           autofocus placeholder="Full Name">
+                                           autofocus placeholder="john doe">
                                     <label for="name"><i class="fas fa-user me-2"></i>Full Name</label>
                                     @error('name')
                                         <div class="invalid-feedback">
@@ -278,7 +278,7 @@
                                 <div class="form-floating">
                                     <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" 
                                            name="email" value="{{ old('email') }}" required autocomplete="email" 
-                                           placeholder="Email Address">
+                                           placeholder="johndoe@email.com">
                                     <label for="email"><i class="fas fa-envelope me-2"></i>Email Address</label>
                                     @error('email')
                                         <div class="invalid-feedback">
@@ -321,7 +321,7 @@
                             <div id="step2" class="d-none">
                                 <div class="form-floating">
                                     <input id="first_name" type="text" class="form-control @error('first_name') is-invalid @enderror" 
-                                           name="first_name" value="{{ old('first_name') }}" required placeholder="First Name">
+                                           name="first_name" value="{{ old('first_name') }}" required placeholder="john">
                                     <label for="first_name"><i class="fas fa-user me-2"></i>First Name</label>
                                     @error('first_name')
                                         <div class="invalid-feedback">
@@ -332,7 +332,7 @@
 
                                 <div class="form-floating">
                                     <input id="last_name" type="text" class="form-control @error('last_name') is-invalid @enderror" 
-                                           name="last_name" value="{{ old('last_name') }}" required placeholder="Last Name">
+                                           name="last_name" value="{{ old('last_name') }}" required placeholder="doe">
                                     <label for="last_name"><i class="fas fa-user me-2"></i>Last Name</label>
                                     @error('last_name')
                                         <div class="invalid-feedback">
@@ -343,7 +343,7 @@
 
                                 <div class="form-floating">
                                     <input id="username" type="text" class="form-control @error('username') is-invalid @enderror" 
-                                           name="username" value="{{ old('username') }}" required placeholder="Username">
+                                           name="username" value="{{ old('username') }}" required placeholder="johnny">
                                     <label for="username"><i class="fas fa-at me-2"></i>Username</label>
                                     @error('username')
                                         <div class="invalid-feedback">
@@ -371,7 +371,7 @@
 
                                 <div class="form-floating">
                                     <input id="occupation" type="text" class="form-control @error('occupation') is-invalid @enderror" 
-                                           name="occupation" value="{{ old('occupation') }}" placeholder="Occupation">
+                                           name="occupation" value="{{ old('occupation') }}" placeholder="Software engineer">
                                     <label for="occupation"><i class="fas fa-briefcase me-2"></i>Occupation (Optional)</label>
                                     @error('occupation')
                                         <div class="invalid-feedback">
@@ -382,7 +382,7 @@
 
                                 <div class="form-floating">
                                     <input id="phone" type="tel" class="form-control @error('phone') is-invalid @enderror" 
-                                           name="phone" value="{{ old('phone') }}" placeholder="Phone Number">
+                                           name="phone" value="{{ old('phone') }}" placeholder="08123456789">
                                     <label for="phone"><i class="fas fa-phone me-2"></i>Phone Number (Optional)</label>
                                     @error('phone')
                                         <div class="invalid-feedback">
@@ -393,7 +393,7 @@
 
                                 <div class="form-floating">
                                     <input id="address" type="text" class="form-control @error('address') is-invalid @enderror" 
-                                           name="address" value="{{ old('address') }}" placeholder="Address">
+                                           name="address" value="{{ old('address') }}" placeholder="north earth, vertical street">
                                     <label for="address"><i class="fas fa-map-marker-alt me-2"></i>Address (Optional)</label>
                                     @error('address')
                                         <div class="invalid-feedback">

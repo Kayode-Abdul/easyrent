@@ -2,6 +2,14 @@
 
 @section('title', 'Complete Payment - ' . $invitation->apartment->property->prop_name)
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('public/assets/css/payment-calculation-mobile.css') }}">
+@endpush
+
+@push('scripts')
+<script src="{{ asset('public/assets/js/payment-calculation-enhanced.js') }}"></script>
+@endpush
+
 @section('content')
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -62,7 +70,9 @@
                     @endif
 
                     <!-- Payment Summary -->
-                    <div class="card bg-light mb-4">
+                    <div class="card bg-light mb-4 payment-summary-card" 
+                         data-apartment-amount="{{ $invitation->apartment->amount }}" 
+                         data-pricing-type="{{ $invitation->apartment->getPricingType() }}">
                         <div class="card-body">
                             <h6 class="card-title">
                                 <i class="fas fa-receipt me-2"></i>Payment Summary
@@ -70,13 +80,44 @@
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="d-flex justify-content-between mb-2">
-                                        <span>Monthly Rent:</span>
+                                        <span>
+                                            @if($invitation->apartment->getPricingType() === 'total')
+                                                Total Rent:
+                                            @else
+                                                Monthly Rent:
+                                            @endif
+                                        </span>
                                         <span>₦{{ number_format($invitation->apartment->amount) }}</span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>Duration:</span>
                                         <span>{{ $invitation->lease_duration }} months</span>
                                     </div>
+                                    
+                                    <!-- Pricing structure information -->
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Pricing Type:</span>
+                                        <span class="text-info">
+                                            {{ ucfirst($invitation->apartment->getPricingType()) }}
+                                            @if($invitation->apartment->getPricingType() === 'total')
+                                                <small class="text-muted">(Fixed amount)</small>
+                                            @else
+                                                <small class="text-muted">(Per month)</small>
+                                            @endif
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Calculation breakdown for monthly pricing -->
+                                    @if($invitation->apartment->getPricingType() === 'monthly')
+                                    <div class="calculation-breakdown mb-2 p-2" style="background: rgba(0,123,255,0.05); border-radius: 6px; border-left: 3px solid #007bff;">
+                                        <small class="text-muted d-block mb-1">Calculation:</small>
+                                        <small class="d-flex justify-content-between">
+                                            <span>₦{{ number_format($invitation->apartment->amount) }} × {{ $invitation->lease_duration }} months</span>
+                                            <span>= ₦{{ number_format($invitation->total_amount) }}</span>
+                                        </small>
+                                    </div>
+                                    @endif
+                                    
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>Subtotal:</span>
                                         <span>₦{{ number_format($invitation->total_amount) }}</span>
@@ -165,7 +206,7 @@
 
                     <!-- Payment Button -->
                     <div class="d-grid mb-3">
-                        <button type="button" class="btn btn-success btn-lg py-3" id="proceedPaymentBtn" onclick="processPayment()" 
+                        <button type="button" class="btn btn-success btn-lg py-3" id="proceedPaymentBtn" onclick="payWithPaystack()" 
                                 style="border-radius: 12px; font-weight: 600; font-size: 18px;">
                             <i class="fas fa-lock me-2"></i>Pay ₦{{ number_format($invitation->total_amount) }} Securely
                         </button>
@@ -398,14 +439,23 @@
 }
 </style>
 
+<!-- Paystack Integration -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
-function processPayment() {
+// Generate a new reference each time to avoid duplicate transaction errors
+function generateReference() {
+    const timestamp = new Date().getTime();
+    const random = Math.floor(Math.random() * 1000000);
+    return 'easyrent_' + timestamp + '_' + random;
+}
+
+function payWithPaystack() {
     const termsChecked = document.getElementById('terms_agreement').checked;
     const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
     const paymentBtn = document.getElementById('proceedPaymentBtn');
     
     if (!termsChecked) {
-        alert('Please agree to the terms and conditions to proceed.');
+        showPaymentError('Please agree to the terms and conditions to proceed.');
         return;
     }
     
@@ -413,43 +463,192 @@ function processPayment() {
     paymentBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Payment...';
     paymentBtn.disabled = true;
     
-    // Create form and submit to payment gateway
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '{{ route("pay") }}';
+    // Hide any previous errors
+    hidePaymentError();
     
-    // Add CSRF token
-    const csrfToken = document.createElement('input');
-    csrfToken.type = 'hidden';
-    csrfToken.name = '_token';
-    csrfToken.value = '{{ csrf_token() }}';
-    form.appendChild(csrfToken);
-    
-    // Add payment data
-    const paymentData = {
-        'payment_id': '{{ $payment->id }}',
-        'amount': '{{ $invitation->total_amount }}',
-        'email': '{{ auth()->user()->email }}',
-        'payment_method': paymentMethod,
-        'callback_url': '{{ route("apartment.invite.payment.callback", $invitation->invitation_token) }}',
-        'metadata': JSON.stringify({
-            'invitation_token': '{{ $invitation->invitation_token }}',
-            'apartment_id': '{{ $invitation->apartment_id }}',
-            'tenant_id': '{{ auth()->user()->user_id }}',
-            'landlord_id': '{{ $invitation->landlord_id }}'
-        })
-    };
-    
-    for (const [key, value] of Object.entries(paymentData)) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = value;
-        form.appendChild(input);
+    try {
+        // Generate a fresh reference for this payment attempt
+        const newReference = generateReference();
+        
+        // Get payment data
+        let email = @json(auth()->check() ? auth()->user()->email : ($invitation->prospect_email ?? null));
+        const amount = @json($invitation->total_amount * 100); // Convert to kobo
+        
+        // Debug logging
+        console.log('Payment validation:', {
+            email: email,
+            amount: amount,
+            isAuthenticated: @json(auth()->check()),
+            prospectEmail: @json($invitation->prospect_email ?? null)
+        });
+        
+        // Validate required fields
+        if (!amount || amount <= 0) {
+            showPaymentError('Invalid payment amount. Please refresh the page and try again.');
+            resetPaymentButton(paymentBtn);
+            return;
+        }
+        
+        // For guest users, prompt for email if not available
+        if (!email) {
+            const guestEmail = prompt('Please enter your email address to proceed with payment:');
+            if (!guestEmail || !guestEmail.includes('@')) {
+                showPaymentError('A valid email address is required to proceed with payment.');
+                resetPaymentButton(paymentBtn);
+                return;
+            }
+            email = guestEmail;
+        }
+        
+        const currency = 'NGN';
+        const metadata = {
+            invitation_token: @json($invitation->invitation_token),
+            apartment_id: @json($invitation->apartment_id),
+            tenant_id: @json(auth()->check() ? auth()->user()->user_id : ''),
+            landlord_id: @json($invitation->landlord_id),
+            payment_method: paymentMethod,
+            transaction_type: 'apartment_invitation_payment'
+        };
+        
+        // Validate Paystack is loaded
+        if (typeof PaystackPop === 'undefined') {
+            throw new Error('Payment system not loaded. Please refresh the page and try again.');
+        }
+        
+        // Validate Paystack public key
+        const paystackKey = "{{ env('PAYSTACK_PUBLIC_KEY') }}";
+        if (!paystackKey || paystackKey === '') {
+            throw new Error('Payment system not configured. Please contact support.');
+        }
+        
+        console.log('Initializing Paystack with:', {
+            key: paystackKey.substring(0, 10) + '...',
+            email: email,
+            amount: amount,
+            currency: currency,
+            ref: newReference
+        });
+        
+        // Initialize Paystack
+        const handler = PaystackPop.setup({
+            key: paystackKey,
+            email: email,
+            amount: amount,
+            currency: currency,
+            ref: newReference,
+            metadata: metadata,
+            callback: function(response) {
+                console.log('Payment successful:', response);
+                showPaymentSuccess('Payment successful! Verifying transaction...');
+                
+                // Redirect to callback URL for verification
+                window.location.href = "{{ route('payment.callback') }}?reference=" + response.reference;
+            },
+            onClose: function() {
+                console.log('Payment modal closed by user');
+                showPaymentInfo('Payment cancelled. You can try again when ready.');
+                
+                // Re-enable the button
+                resetPaymentButton(paymentBtn);
+            }
+        });
+        
+        console.log('Opening Paystack payment modal...');
+        // Open the payment modal
+        handler.openIframe();
+        
+    } catch (error) {
+        console.error('Payment initialization error:', error);
+        showPaymentError('Error initializing payment: ' + error.message);
+        
+        // Re-enable the button
+        resetPaymentButton(paymentBtn);
+    }
+}
+
+// Payment feedback functions
+function showPaymentError(message) {
+    // Create or update error alert
+    let errorAlert = document.getElementById('payment-error-alert');
+    if (!errorAlert) {
+        errorAlert = document.createElement('div');
+        errorAlert.id = 'payment-error-alert';
+        errorAlert.className = 'alert alert-danger mt-3';
+        errorAlert.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><span id="payment-error-message"></span>';
+        
+        const paymentCard = document.querySelector('.card.shadow .card-body');
+        if (paymentCard) {
+            paymentCard.appendChild(errorAlert);
+        }
     }
     
-    document.body.appendChild(form);
-    form.submit();
+    const messageSpan = document.getElementById('payment-error-message');
+    if (messageSpan) {
+        messageSpan.textContent = message;
+    }
+    
+    errorAlert.style.display = 'block';
+    errorAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showPaymentSuccess(message) {
+    // Create or update success alert
+    let successAlert = document.getElementById('payment-success-alert');
+    if (!successAlert) {
+        successAlert = document.createElement('div');
+        successAlert.id = 'payment-success-alert';
+        successAlert.className = 'alert alert-success mt-3';
+        successAlert.innerHTML = '<i class="fas fa-check-circle me-2"></i><span id="payment-success-message"></span>';
+        
+        const paymentCard = document.querySelector('.card.shadow .card-body');
+        if (paymentCard) {
+            paymentCard.appendChild(successAlert);
+        }
+    }
+    
+    const messageSpan = document.getElementById('payment-success-message');
+    if (messageSpan) {
+        messageSpan.textContent = message;
+    }
+    
+    successAlert.style.display = 'block';
+    hidePaymentError();
+}
+
+function showPaymentInfo(message) {
+    // Create or update info alert
+    let infoAlert = document.getElementById('payment-info-alert');
+    if (!infoAlert) {
+        infoAlert = document.createElement('div');
+        infoAlert.id = 'payment-info-alert';
+        infoAlert.className = 'alert alert-info mt-3';
+        infoAlert.innerHTML = '<i class="fas fa-info-circle me-2"></i><span id="payment-info-message"></span>';
+        
+        const paymentCard = document.querySelector('.card.shadow .card-body');
+        if (paymentCard) {
+            paymentCard.appendChild(infoAlert);
+        }
+    }
+    
+    const messageSpan = document.getElementById('payment-info-message');
+    if (messageSpan) {
+        messageSpan.textContent = message;
+    }
+    
+    infoAlert.style.display = 'block';
+    hidePaymentError();
+}
+
+function hidePaymentError() {
+    const errorAlert = document.getElementById('payment-error-alert');
+    if (errorAlert) {
+        errorAlert.style.display = 'none';
+    }
+}
+
+function resetPaymentButton(paymentBtn) {
+    paymentBtn.disabled = false;
+    paymentBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Pay ₦{{ number_format($invitation->total_amount) }} Securely';
 }
 
 // Enhanced payment method selection

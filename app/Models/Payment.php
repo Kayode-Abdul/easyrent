@@ -12,7 +12,6 @@ class Payment extends Model
         'tenant_id',
         'landlord_id',
         'apartment_id',
-        'property_id',
         'amount',
         'duration',
         'status',
@@ -20,8 +19,7 @@ class Payment extends Model
         'payment_reference',
         'payment_meta',
         'paid_at',
-        'due_date',
-        'payment_date'
+        'due_date'
     ];
 
     protected $casts = [
@@ -71,8 +69,5 @@ class Payment extends Model
         };
     }
     
-    public function property()
-    {
-        return $this->belongsTo(Property::class, 'property_id', 'property_id');
-    }
+
 }

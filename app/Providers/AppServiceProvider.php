@@ -25,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
         // Register Payment Integration Service
         $this->app->singleton(\App\Services\Payment\PaymentIntegrationService::class);
         
+        // Payment Calculation Service is now registered via PaymentCalculationServiceProvider
+        
         // Register Email Delivery Tracker
         $this->app->singleton(\App\Services\Email\EmailDeliveryTracker::class);
         
@@ -105,6 +107,8 @@ class AppServiceProvider extends ServiceProvider
         // Register Performance Monitoring Service
         $this->app->singleton(\App\Services\Monitoring\PerformanceMonitoringService::class);
     }
+
+
 
     /**
      * Bootstrap any application services.

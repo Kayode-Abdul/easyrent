@@ -219,6 +219,39 @@ return [
             'level' => 'info',
             'days' => 60,
         ],
+
+        // Payment Calculation Service Logging Channels
+        'payment_calculations' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payment_calculations.log'),
+            'level' => 'info',
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
+        'payment_errors' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payment_errors.log'),
+            'level' => 'error',
+            'days' => 90,
+            'replace_placeholders' => true,
+        ],
+
+        'payment_audit' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payment_audit.log'),
+            'level' => 'info',
+            'days' => 60,
+            'replace_placeholders' => true,
+        ],
+
+        'payment_performance' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payment_performance.log'),
+            'level' => 'info',
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
     ],
 
 ];

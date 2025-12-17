@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class BenefactorPaymentController extends Controller
 {
@@ -233,7 +234,7 @@ class BenefactorPaymentController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Benefactor payment processing error: ' . $e->getMessage(), [
+           Log::error('Benefactor payment processing error: ' . $e->getMessage(), [
                 'token' => $token,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -280,7 +281,7 @@ class BenefactorPaymentController extends Controller
             curl_close($curl);
             
             if ($err) {
-                \Log::error('Paystack verification error: ' . $err);
+               Log::error('Paystack verification error: ' . $err);
                 return redirect()->route('dashboard')->with('error', 'Payment verification failed.');
             }
             
@@ -311,13 +312,13 @@ class BenefactorPaymentController extends Controller
             try {
                 Mail::to($payment->tenant->email)->send(new \App\Mail\BenefactorPaymentSuccessMail($payment));
             } catch (\Exception $e) {
-                \Log::error('Failed to send payment success email: ' . $e->getMessage());
+               Log::error('Failed to send payment success email: ' . $e->getMessage());
             }
             
             return redirect()->route('benefactor.payment.success', ['payment' => $payment->id]);
             
         } catch (\Exception $e) {
-            \Log::error('Payment callback error: ' . $e->getMessage());
+           Log::error('Payment callback error: ' . $e->getMessage());
             return redirect()->route('dashboard')->with('error', 'An error occurred processing your payment.');
         }
     }

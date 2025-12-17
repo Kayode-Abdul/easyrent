@@ -74,7 +74,7 @@ class ApartmentApiController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'property_id' => 'required|exists:properties,property_id',
+            'property_id' => 'required|exists:properties,id',
             'apartment_type' => 'required|string|max:100',
             'user_id' => 'required|exists:users,user_id',
             'tenant_id' => 'nullable|exists:users,user_id',

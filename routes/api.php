@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PropertyApiController;
 use App\Http\Controllers\Api\ApartmentApiController;
 use App\Http\Controllers\Api\UserApiController;
-use App\Http\Controllers\Api\BookingApiController;
 use App\Http\Controllers\Api\PaymentApiController;
 use App\Http\Controllers\Api\MobileAuthController;
 use App\Http\Controllers\Api\MobileInvitationController;
@@ -54,16 +53,31 @@ Route::prefix('v1')->middleware(['api.auth'])->group(function () {
     Route::get('/users/{id}/properties', [UserApiController::class, 'properties']);
     Route::put('/users/{id}', [UserApiController::class, 'update']);
     
-    // Bookings
-    Route::get('/bookings', [BookingApiController::class, 'index']);
-    Route::post('/bookings', [BookingApiController::class, 'store']);
-    Route::get('/bookings/{id}', [BookingApiController::class, 'show']);
-    Route::put('/bookings/{id}', [BookingApiController::class, 'update']);
-    
     // Payments
     Route::get('/payments', [PaymentApiController::class, 'index']);
     Route::get('/payments/{id}', [PaymentApiController::class, 'show']);
     Route::post('/payments', [PaymentApiController::class, 'store']);
+    
+    // Payment calculation endpoints with security middleware
+    Route::middleware([
+        'payment.calculation.rate.limit',
+        'payment.calculation.input.validation'
+    ])->group(function () {
+        Route::post('/payments/calculate', [PaymentApiController::class, 'calculate'])->name('api.payment.calculate');
+        Route::post('/proforma/calculate', [PaymentApiController::class, 'calculateProforma'])->name('api.proforma.calculate');
+        
+        // Enhanced mobile calculation endpoints
+        Route::post('/payments/calculate/mobile', [PaymentApiController::class, 'calculateMobile'])->name('api.payment.calculate.mobile');
+        Route::post('/proforma/calculate/mobile', [PaymentApiController::class, 'calculateProformaMobile'])->name('api.proforma.calculate.mobile');
+    });
+    
+    // Pricing configuration endpoints with access control
+    Route::middleware([
+        'pricing.configuration.access.control'
+    ])->group(function () {
+        Route::put('/apartments/{id}/pricing', [ApartmentApiController::class, 'updatePricing'])->name('api.apartments.update-pricing');
+        Route::put('/properties/{id}/pricing', [PropertyApiController::class, 'updatePricing'])->name('api.properties.update-pricing');
+    });
 });
 
 // Mobile API Routes for EasyRent Link Authentication System
@@ -77,6 +91,7 @@ Route::prefix('v1/mobile')->group(function () {
     Route::get('/invitations/{token}', [MobileInvitationController::class, 'show']);
     Route::get('/invitations/{token}/session', [MobileInvitationController::class, 'getSession']);
     Route::post('/invitations/session/store', [MobileInvitationController::class, 'storeSession']);
+    Route::post('/invitations/{token}/calculate', [MobileInvitationController::class, 'getPaymentCalculation']);
     
     // Public payment callback (no authentication required)
     Route::post('/payments/callback', [MobilePaymentController::class, 'paymentCallback']);
@@ -101,6 +116,10 @@ Route::prefix('v1/mobile')->group(function () {
         Route::get('/payments/user/history', [MobilePaymentController::class, 'getUserPayments']);
         Route::post('/payments/{paymentId}/cancel', [MobilePaymentController::class, 'cancelPayment']);
         
+        // Payment calculation endpoints
+        Route::post('/payments/calculate/preview', [MobilePaymentController::class, 'calculatePaymentPreview']);
+        Route::post('/payments/validate/calculation', [MobilePaymentController::class, 'validatePaymentCalculation']);
+        
         // Session management (authenticated)
         Route::post('/sessions', [MobileSessionController::class, 'store']);
         Route::get('/sessions/{sessionKey}', [MobileSessionController::class, 'show']);
@@ -116,6 +135,14 @@ Route::prefix('v1/mobile')->group(function () {
     });
 });
 
+// CSRF Token refresh endpoint (no authentication required)
+Route::get('/csrf-token', function () {
+    return response()->json([
+        'token' => csrf_token(),
+        'timestamp' => now()->toISOString()
+    ]);
+});
+
 // API status endpoint
 Route::get('/status', function () {
     return response()->json([
@@ -126,7 +153,6 @@ Route::get('/status', function () {
             'properties' => '/api/v1/properties',
             'apartments' => '/api/v1/apartments',
             'users' => '/api/v1/users',
-            'bookings' => '/api/v1/bookings',
             'payments' => '/api/v1/payments',
             'mobile' => '/api/v1/mobile'
         ],
@@ -135,6 +161,28 @@ Route::get('/status', function () {
             'invitations' => '/api/v1/mobile/invitations',
             'payments' => '/api/v1/mobile/payments',
             'sessions' => '/api/v1/mobile/sessions'
+        ],
+        'calculation_endpoints' => [
+            'general_calculation' => '/api/v1/payments/calculate',
+            'proforma_calculation' => '/api/v1/proforma/calculate',
+            'mobile_calculation' => '/api/v1/payments/calculate/mobile',
+            'mobile_proforma' => '/api/v1/proforma/calculate/mobile',
+            'mobile_payment_preview' => '/api/v1/mobile/payments/calculate/preview',
+            'invitation_calculation' => '/api/v1/mobile/invitations/{token}/calculate'
+        ],
+        'features' => [
+            'centralized_calculation_service' => true,
+            'mobile_optimized_responses' => true,
+            'detailed_calculation_breakdown' => true,
+            'pricing_structure_transparency' => true,
+            'comprehensive_error_handling' => true,
+            'audit_trail_logging' => true,
+            'input_validation_security' => true,
+            'calculation_consistency_validation' => true
+        ],
+        'supported_pricing_types' => [
+            'total' => 'Complete rental amount (no duration multiplication)',
+            'monthly' => 'Monthly rent (multiplied by rental duration)'
         ]
     ]);
 });

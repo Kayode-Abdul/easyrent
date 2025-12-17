@@ -34,20 +34,20 @@ class EasyRentCacheService implements EasyRentCacheInterface
     /**
      * Cache apartment data with related information using optimized queries
      */
-    public function cacheApartmentData(int $apartmentId): array
+    public function cacheApartmentData(int $apartmentId): ?array
     {
         $cacheKey = self::APARTMENT_PREFIX . $apartmentId;
         
-        return Cache::remember($cacheKey, self::APARTMENT_TTL, function () use ($apartmentId) {
+        return Cache::remember($cacheKey, self::APARTMENT_TTL, function () use ($apartmentId, $cacheKey) {
             // Optimized query with eager loading to reduce N+1 queries
             $apartment = Apartment::with([
                 'property' => function($query) {
                     $query->select([
-                        'property_id', 'prop_name', 'prop_description', 'prop_address',
-                        'prop_state', 'prop_lga', 'prop_type', 'user_id', 'created_at'
+                        'id', 'property_id', 'address',
+                        'state', 'lga', 'prop_type', 'user_id'
                     ]);
                 },
-                'property.amenities:amenity_id,name',
+                'property.amenities:id,name',
                 'property.user:user_id,first_name,last_name,email,phone',
                 'property.reviews' => function($query) {
                     $query->select(['review_id', 'property_id', 'rating', 'comment', 'created_at'])
@@ -55,7 +55,7 @@ class EasyRentCacheService implements EasyRentCacheInterface
                           ->limit(5);
                 },
                 'property.attributes' => function($query) {
-                    $query->select(['id', 'property_id', 'attribute_name', 'attribute_value']);
+                    $query->select(['id', 'property_id', 'attribute_key', 'attribute_value']);
                 }
             ])
             ->select([
@@ -82,11 +82,11 @@ class EasyRentCacheService implements EasyRentCacheInterface
                 ],
                 'property' => [
                     'id' => $apartment->property->property_id,
-                    'name' => $apartment->property->prop_name,
-                    'description' => $apartment->property->prop_description,
-                    'address' => $apartment->property->prop_address,
-                    'state' => $apartment->property->prop_state,
-                    'lga' => $apartment->property->prop_lga,
+                    'name' => $apartment->property->address,
+                    'description' => null,
+                    'address' => $apartment->property->address,
+                    'state' => $apartment->property->state,
+                    'lga' => $apartment->property->lga,
                     'type' => $apartment->property->prop_type,
                 ],
                 'landlord' => [
@@ -97,7 +97,7 @@ class EasyRentCacheService implements EasyRentCacheInterface
                 ],
                 'amenities' => $apartment->property->amenities->pluck('name')->toArray(),
                 'attributes' => $apartment->property->attributes->mapWithKeys(function($attr) {
-                    return [$attr->attribute_name => $attr->attribute_value];
+                    return [$attr->attribute_key => $attr->attribute_value];
                 })->toArray(),
                 'recent_reviews' => $apartment->property->reviews->map(function($review) {
                     return [
@@ -133,11 +133,11 @@ class EasyRentCacheService implements EasyRentCacheInterface
     /**
      * Cache invitation data with session context using optimized queries
      */
-    public function cacheInvitationData(string $token): array
+    public function cacheInvitationData(string $token): ?array
     {
         $cacheKey = self::INVITATION_PREFIX . $token;
         
-        return Cache::remember($cacheKey, self::INVITATION_TTL, function () use ($token) {
+        return Cache::remember($cacheKey, self::INVITATION_TTL, function () use ($token, $cacheKey) {
             // Optimized query with selective field loading
             $invitation = ApartmentInvitation::with([
                 'apartment' => function($query) {
@@ -148,11 +148,11 @@ class EasyRentCacheService implements EasyRentCacheInterface
                 },
                 'apartment.property' => function($query) {
                     $query->select([
-                        'property_id', 'prop_name', 'prop_description', 'prop_address',
-                        'prop_state', 'prop_lga', 'prop_type', 'user_id'
+                        'id', 'property_id', 'address',
+                        'state', 'lga', 'prop_type', 'user_id'
                     ]);
                 },
-                'apartment.property.amenities:amenity_id,name',
+                'apartment.property.amenities:id,name',
                 'apartment.property.user:user_id,first_name,last_name,email,phone',
                 'landlord:user_id,first_name,last_name,email,phone',
                 'tenant:user_id,first_name,last_name,email,phone'
@@ -300,11 +300,11 @@ class EasyRentCacheService implements EasyRentCacheInterface
     /**
      * Cache user data for quick access
      */
-    public function cacheUserData(int $userId): array
+    public function cacheUserData(int $userId): ?array
     {
         $cacheKey = self::USER_PREFIX . $userId;
         
-        return Cache::remember($cacheKey, self::DEFAULT_TTL, function () use ($userId) {
+        return Cache::remember($cacheKey, self::DEFAULT_TTL, function () use ($userId, $cacheKey) {
             $user = User::with(['roles'])->find($userId);
             
             if (!$user) {
@@ -506,13 +506,13 @@ class EasyRentCacheService implements EasyRentCacheInterface
     /**
      * Cache frequently accessed property data
      */
-    public function cachePropertyData(int $propertyId): array
+    public function cachePropertyData(int $propertyId): ?array
     {
         $cacheKey = self::PROPERTY_PREFIX . $propertyId;
         
-        return Cache::remember($cacheKey, self::DEFAULT_TTL, function () use ($propertyId) {
+        return Cache::remember($cacheKey, self::DEFAULT_TTL, function () use ($propertyId, $cacheKey) {
             $property = Property::with([
-                'amenities:amenity_id,name',
+                'amenities:id,name',
                 'user:user_id,first_name,last_name,email,phone',
                 'apartments' => function($query) {
                     $query->select([
@@ -520,11 +520,11 @@ class EasyRentCacheService implements EasyRentCacheInterface
                         'amount', 'range_start', 'range_end', 'tenant_id', 'user_id', 'occupied'
                     ])->where('range_end', '>', now());
                 },
-                'attributes:id,property_id,attribute_name,attribute_value'
+                'attributes:id,property_id,attribute_key,attribute_value'
             ])
             ->select([
-                'property_id', 'prop_name', 'prop_description', 'prop_address',
-                'prop_state', 'prop_lga', 'prop_type', 'user_id', 'created_at'
+                'id', 'property_id', 'address', 'state', 'lga',
+                'prop_type', 'user_id', 'created_at'
             ])
             ->find($propertyId);
             
@@ -555,11 +555,11 @@ class EasyRentCacheService implements EasyRentCacheInterface
     {
         $cacheKey = 'active_invitations_list';
         
-        return Cache::remember($cacheKey, 30, function () use ($limit) { // 30 minutes TTL
+        return Cache::remember($cacheKey, 30, function () use ($limit, $cacheKey) { // 30 minutes TTL
             $invitations = ApartmentInvitation::active()
                 ->with([
                     'apartment:apartment_id,property_id,apartment_type,apartment_type_id,amount',
-                    'apartment.property:property_id,property_id,prop_name,address',
+                    'apartment.property:id,property_id,address,state,lga,prop_type',
                     'landlord:user_id,first_name,last_name'
                 ])
                 ->select([
@@ -598,12 +598,12 @@ class EasyRentCacheService implements EasyRentCacheInterface
     /**
      * Cache database query results for complex operations
      */
-    public function cacheQueryResult(string $queryKey, callable $queryCallback, int $ttl = null): array
+    public function cacheQueryResult(string $queryKey, callable $queryCallback, ?int $ttl = null): ?array
     {
         $cacheKey = 'query_' . $queryKey;
         $ttl = $ttl ?? self::DEFAULT_TTL;
         
-        return Cache::remember($cacheKey, $ttl, function () use ($queryCallback, $queryKey) {
+        return Cache::remember($cacheKey, $ttl, function () use ($queryCallback, $queryKey, $cacheKey) {
             $startTime = microtime(true);
             $result = $queryCallback();
             $executionTime = microtime(true) - $startTime;
@@ -645,13 +645,13 @@ class EasyRentCacheService implements EasyRentCacheInterface
             $apartments = Apartment::with([
                 'property' => function($query) {
                     $query->select([
-                        'property_id', 'prop_name', 'prop_description', 'prop_address',
-                        'prop_state', 'prop_lga', 'prop_type', 'user_id'
+                        'id', 'property_id', 'address',
+                        'state', 'lga', 'prop_type', 'user_id'
                     ]);
                 },
-                'property.amenities:amenity_id,name',
+                'property.amenities:id,name',
                 'property.user:user_id,first_name,last_name,email,phone',
-                'property.attributes:id,property_id,attribute_name,attribute_value'
+                'property.attributes:id,property_id,attribute_key,attribute_value'
             ])
             ->select([
                 'apartment_id', 'property_id', 'apartment_type', 'apartment_type_id',
@@ -673,11 +673,11 @@ class EasyRentCacheService implements EasyRentCacheInterface
                     ],
                     'property' => [
                         'id' => $apartment->property->property_id,
-                        'name' => $apartment->property->prop_name,
-                        'description' => $apartment->property->prop_description,
-                        'address' => $apartment->property->prop_address,
-                        'state' => $apartment->property->prop_state,
-                        'lga' => $apartment->property->prop_lga,
+                        'name' => $apartment->property->address,
+                        'description' => null,
+                        'address' => $apartment->property->address,
+                        'state' => $apartment->property->state,
+                        'lga' => $apartment->property->lga,
                         'type' => $apartment->property->prop_type,
                     ],
                     'landlord' => [
@@ -688,7 +688,7 @@ class EasyRentCacheService implements EasyRentCacheInterface
                     ],
                     'amenities' => $apartment->property->amenities->pluck('name')->toArray(),
                     'attributes' => $apartment->property->attributes->mapWithKeys(function($attr) {
-                        return [$attr->attribute_name => $attr->attribute_value];
+                        return [$attr->attribute_key => $attr->attribute_value];
                     })->toArray(),
                     'cached_at' => now()->toISOString(),
                     'cache_version' => '2.0'

@@ -1,0 +1,287 @@
+/* Payment Calculation Mobile Enhancements */
+
+/* Calculation breakdown styling */
+.calculation-breakdown {
+    background: rgba(0, 123, 255, 0.05);
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+    padding: 12px;
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+.calculation-breakdown small {
+    line-height: 1.4;
+}
+
+/* Error handling styles */
+.alert.calculation-error {
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 10px;
+    font-size: 14px;
+    border-left: 4px solid #dc3545;
+}
+
+.alert.calculation-error i {
+    margin-right: 6px;
+}
+
+/* Payment summary enhancements */
+.payment-summary-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.payment-summary-card .card-body {
+    padding: 20px;
+}
+
+/* Pricing type badges */
+.pricing-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.pricing-type-badge.total {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.pricing-type-badge.monthly {
+    background: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+    border: 1px solid rgba(0, 123, 255, 0.2);
+}
+
+/* Calculation method display */
+.calculation-method {
+    font-size: 12px;
+    color: #6c757d;
+    font-style: italic;
+    margin-top: 2px;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+    .calculation-breakdown {
+        padding: 10px;
+        margin: 8px 0;
+        font-size: 13px;
+    }
+    
+    .payment-summary-card .card-body {
+        padding: 16px;
+    }
+    
+    .pricing-type-badge {
+        font-size: 11px;
+        padding: 3px 6px;
+    }
+    
+    .calculation-method {
+        font-size: 11px;
+    }
+    
+    /* Improved touch targets */
+    .form-control, .form-select {
+        min-height: 44px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    /* Better spacing for mobile */
+    .d-flex.justify-content-between {
+        margin-bottom: 8px;
+    }
+    
+    /* Enhanced alert styling for mobile */
+    .alert {
+        border-radius: 10px;
+        padding: 14px;
+        margin: 12px 0;
+        font-size: 14px;
+    }
+    
+    .alert i {
+        margin-right: 8px;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 576px) {
+    .calculation-breakdown {
+        padding: 8px;
+        font-size: 12px;
+    }
+    
+    .payment-summary-card .card-body {
+        padding: 14px;
+    }
+    
+    .pricing-type-badge {
+        font-size: 10px;
+        padding: 2px 5px;
+    }
+    
+    /* Stack calculation elements vertically on very small screens */
+    .calculation-breakdown .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .calculation-breakdown .d-flex span:last-child {
+        font-weight: bold;
+        color: #007bff;
+    }
+}
+
+/* Loading states */
+.btn.loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    top: 50%;
+    left: 50%;
+    margin-left: -9px;
+    margin-top: -9px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced form validation styles */
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-control.is-valid,
+.form-select.is-valid {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Calculation step details */
+.calculation-steps {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 10px;
+    border-left: 4px solid #6c757d;
+}
+
+.calculation-step {
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 13px;
+}
+
+.calculation-step:last-child {
+    border-bottom: none;
+}
+
+.calculation-step strong {
+    color: #495057;
+}
+
+.calculation-step small {
+    color: #6c757d;
+    display: block;
+    margin-top: 2px;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    .btn.loading::after {
+        animation: none;
+    }
+    
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .calculation-breakdown {
+        border-left-width: 6px;
+        border-left-color: #000;
+    }
+    
+    .pricing-type-badge {
+        border-width: 2px;
+    }
+    
+    .alert {
+        border-width: 2px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .calculation-breakdown {
+        background: rgba(0, 123, 255, 0.15);
+        color: #e9ecef;
+    }
+    
+    .calculation-steps {
+        background: #343a40;
+        color: #e9ecef;
+    }
+    
+    .calculation-step {
+        border-bottom-color: #495057;
+    }
+    
+    .pricing-type-badge.total {
+        background: rgba(40, 167, 69, 0.2);
+        color: #5cb85c;
+    }
+    
+    .pricing-type-badge.monthly {
+        background: rgba(0, 123, 255, 0.2);
+        color: #5bc0de;
+    }
+}
+
+/* Print styles */
+@media print {
+    .calculation-breakdown,
+    .calculation-steps {
+        background: transparent !important;
+        border: 1px solid #000 !important;
+        color: #000 !important;
+    }
+    
+    .alert {
+        background: transparent !important;
+        border: 1px solid #000 !important;
+        color: #000 !important;
+    }
+    
+    .btn {
+        display: none !important;
+    }
+}

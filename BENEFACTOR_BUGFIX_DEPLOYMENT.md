@@ -208,3 +208,4 @@ This deployment fixes the benefactor payment flow by:
 4. Adding proper error display in the UI
 
 The changes are backward compatible and won't affect existing benefactor records.
+ 

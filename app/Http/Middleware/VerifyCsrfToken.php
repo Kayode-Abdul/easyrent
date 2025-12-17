@@ -15,5 +15,6 @@ class VerifyCsrfToken extends Middleware
         'payment/callback',
         'payment/callback*',
         'apartment/invite/*/payment/callback',
+        'webhooks/*',
     ];
 }

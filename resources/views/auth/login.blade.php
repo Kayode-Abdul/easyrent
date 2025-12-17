@@ -165,7 +165,7 @@
                             <div class="form-floating">
                                 <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" 
                                        name="email" value="{{ old('email') }}" required autocomplete="email" 
-                                       autofocus placeholder="Email Address">
+                                       autofocus placeholder="johndoe@email.com">
                                 <label for="email"><i class="fas fa-envelope me-2"></i>Email Address</label>
                                 @error('email')
                                     <div class="invalid-feedback">

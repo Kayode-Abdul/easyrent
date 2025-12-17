@@ -33,7 +33,7 @@
     <!-- Role-based greeting -->
     <div class="row mb-3">
         <div class="col-md-12">
-            <div class="alert alert-info">
+            <div class="page-header-custom">
                 <h4>Welcome back, {{ auth()->user()->first_name }}!</h4>
                 <p>{{ $greeting ?? 'Here\'s your dashboard overview for today.' }}</p>
             </div>
@@ -235,32 +235,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6 col-sm-6">
-                <div class="card card-stats">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-5 col-md-4">
-                                <div class="icon-big text-center icon-warning">
-                                    <i class="nc-icon nc-bell-55 text-danger"></i>
-                                </div>
-                            </div>
-                            <div class="col-7 col-md-8">
-                                <div class="numbers">
-                                    <p class="card-category">New Bookings</p>
-                                    <p class="card-title">{{ $stats['new_bookings'] ?? 0 }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <hr>
-                        <div class="stats">
-                            <i class="fa fa-refresh"></i>
-                            This week
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
         @else
             <!-- Tenant Dashboard Stats -->
@@ -373,6 +348,94 @@
             </div>
         @endif
     </div>
+
+    <!-- Complaint System Widgets -->
+    @if(auth()->user()->isTenant() || auth()->user()->isLandlord() || auth()->user()->isAgent())
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="nc-icon nc-support-17"></i>
+                                @if(auth()->user()->isTenant())
+                                    My Complaints
+                                @elseif(auth()->user()->isLandlord())
+                                    Tenant Complaints
+                                @else
+                                    Assigned Complaints
+                                @endif
+                            </h5>
+                            <div>
+                                @if(auth()->user()->isTenant())
+                                    <a href="{{ route('complaints.create') }}" class="btn btn-primary btn-sm">
+                                        <i class="nc-icon nc-simple-add"></i> Submit Complaint
+                                    </a>
+                                @endif
+                                <a href="{{ route('complaints.index') }}" class="btn btn-info btn-sm">
+                                    <i class="nc-icon nc-zoom-split"></i> View All
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @php
+                            $complaintStats = auth()->user()->getComplaintStats();
+                        @endphp
+                        
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h3 class="text-primary">{{ $complaintStats['total'] }}</h3>
+                                    <p class="text-muted">Total Complaints</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h3 class="text-danger">{{ $complaintStats['open'] }}</h3>
+                                    <p class="text-muted">Open</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h3 class="text-success">{{ $complaintStats['resolved'] }}</h3>
+                                    <p class="text-muted">Resolved</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h3 class="text-warning">{{ $complaintStats['overdue'] }}</h3>
+                                    <p class="text-muted">Overdue</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($complaintStats['overdue'] > 0)
+                            <div class="alert alert-warning mt-3">
+                                <i class="nc-icon nc-time-alarm"></i>
+                                <strong>Attention:</strong> You have {{ $complaintStats['overdue'] }} overdue complaint{{ $complaintStats['overdue'] > 1 ? 's' : '' }} that need immediate attention.
+                                <a href="{{ route('complaints.index', ['status' => 'open']) }}" class="alert-link">View overdue complaints</a>
+                            </div>
+                        @endif
+
+                        @if($complaintStats['total'] === 0)
+                            <div class="text-center py-3">
+                                <i class="nc-icon nc-support-17" style="font-size: 3rem; color: #ccc;"></i>
+                                <p class="text-muted mt-2">
+                                    @if(auth()->user()->isTenant())
+                                        No complaints submitted yet. If you experience any issues with your rental, don't hesitate to submit a complaint.
+                                    @else
+                                        No complaints to manage at this time.
+                                    @endif
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Charts Section -->
     <div class="row">
         <div class="col-md-8">
@@ -536,11 +599,7 @@
                                     <i class="nc-icon nc-zoom-split"></i> Browse Properties
                                 </a>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <a href="/dashboard/bookings" class="btn btn-info btn-block">
-                                    <i class="nc-icon nc-bookmark-2"></i> My Bookings
-                                </a>
-                            </div>
+
                             <div class="col-md-6 mb-3">
                                 <a href="/dashboard/payments" class="btn btn-warning btn-block">
                                     <i class="nc-icon nc-money-coins"></i> Payment History

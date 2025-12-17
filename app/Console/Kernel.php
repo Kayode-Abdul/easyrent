@@ -32,6 +32,12 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\CalculateInvitationMetrics::class,
         \App\Console\Commands\OptimizeEasyRentCache::class,
         \App\Console\Commands\MonitorEasyRentPerformance::class,
+        \App\Console\Commands\AuditBrokenFeatures::class,
+        \App\Console\Commands\PaymentCalculationHealthCheck::class,
+        \App\Console\Commands\AnalyzePaymentCalculationData::class,
+        \App\Console\Commands\ValidatePaymentCalculationMigration::class,
+        \App\Console\Commands\MonitorPaymentCalculations::class,
+        \App\Console\Commands\OptimizePaymentCalculationPerformance::class,
     ];
 
     /**
@@ -141,6 +147,36 @@ class Kernel extends ConsoleKernel
         // Monitor performance every 4 hours
         $schedule->command('easyrent:monitor-performance --hours=4 --summary')
                 ->everyFourHours()
+                ->timezone('Africa/Lagos');
+        
+        // Run payment calculation health check every 30 minutes
+        $schedule->command('payment:health-check --log')
+                ->everyThirtyMinutes()
+                ->timezone('Africa/Lagos');
+        
+        // Monitor payment calculations every hour
+        $schedule->command('payment:monitor --hours=1 --alerts')
+                ->hourly()
+                ->timezone('Africa/Lagos');
+        
+        // Generate payment calculation monitoring reports daily at 8 AM
+        $schedule->command('payment:monitor --hours=24 --dashboard')
+                ->dailyAt('08:00')
+                ->timezone('Africa/Lagos');
+        
+        // Optimize payment calculation performance daily at 2:30 AM
+        $schedule->command('payment-calc:optimize --cache-warmup --cleanup-cache')
+                ->dailyAt('02:30')
+                ->timezone('Africa/Lagos');
+        
+        // Full payment calculation optimization weekly on Sundays at 1:30 AM
+        $schedule->command('payment-calc:optimize --all')
+                ->weeklyOn(0, '01:30')
+                ->timezone('Africa/Lagos');
+        
+        // Pre-calculate common scenarios every 6 hours
+        $schedule->command('payment-calc:optimize --pre-calculate')
+                ->everySixHours()
                 ->timezone('Africa/Lagos');
     }
 

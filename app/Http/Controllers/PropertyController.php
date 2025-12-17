@@ -149,7 +149,7 @@ class PropertyController extends Controller
             $transactionId = (int)mt_rand(1000000, 9999999);
             $apartment = Apartment::create([
                 'apartment_id' => $transactionId, // Generate a unique ID for the apartment  
-                'property_id' => $property->property_id, // Use property_id instead of id
+                'property_id' => $property->property_id, // Use property_id for foreign key
                 'apartment_type' => $request->apartmentType,
                 'tenant_id' => $request->tenantId ?: null,
                 'user_id' => auth()->user()->user_id,
@@ -720,7 +720,7 @@ class PropertyController extends Controller
         ]);
         
         } catch (\Exception $e) {
-            \Log::error('Commission Rate History Error: ' . $e->getMessage());
+           Log::error('Commission Rate History Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to load commission rate history',
@@ -737,7 +737,7 @@ class PropertyController extends Controller
             return view('auth.login');
         }
         $property = Property::where('property_id', $propId)
-            ->with(['apartments.tenant', 'owner', 'agent'])
+            ->with(['apartments.tenant', 'apartments.apartmentType', 'owner', 'agent'])
             ->firstOrFail();
         $userId = auth()->check() ? auth()->user()->user_id : null;
         // Get all properties for this user that have an agent assigned
@@ -892,13 +892,42 @@ class PropertyController extends Controller
     {
         try {
             $apartment = Apartment::where('apartment_id', $apartmentId)->firstOrFail();
-            $apartment->update([
+            
+            // Basic apartment fields
+            $updateData = [
                 'tenant_id' => $request->tenantId,
                 'range_start' => Carbon::parse($request->fromRange),
                 'range_end' => Carbon::parse($request->toRange),
                 'amount' => $request->amount,
                 'occupied' => $request->occupied ? 1 : 0
-            ]);
+            ];
+            
+            // Handle rental duration types if provided
+            if ($request->has('rental_types') && is_array($request->rental_types)) {
+                $supportedTypes = $request->rental_types;
+                $updateData['supported_rental_types'] = $supportedTypes;
+                
+                // Update individual rates
+                foreach (['hourly', 'daily', 'weekly', 'monthly', 'yearly'] as $type) {
+                    $rateField = $type . '_rate';
+                    if (in_array($type, $supportedTypes) && $request->has($rateField)) {
+                        $updateData[$rateField] = $request->$rateField;
+                    } else {
+                        $updateData[$rateField] = null; // Clear rate if type not supported
+                    }
+                }
+                
+                // Set default rental type
+                if ($request->has('default_rental_type') && in_array($request->default_rental_type, $supportedTypes)) {
+                    $updateData['default_rental_type'] = $request->default_rental_type;
+                } else {
+                    // Set first supported type as default
+                    $updateData['default_rental_type'] = $supportedTypes[0] ?? 'monthly';
+                }
+            }
+            
+            $apartment->update($updateData);
+            
             return response()->json([
                 'success' => true,
                 'messages' => 'Apartment updated successfully!'
@@ -1036,7 +1065,19 @@ class PropertyController extends Controller
     public function sendProfomaForApartment(Request $request, $apartmentId): JsonResponse
     {
         try {
-            $profoma = \App\Models\ProfomaReceipt::where('apartment_id', $apartmentId)->first();
+            // Resolve apartment by either numeric PK id or public apartment_id
+            $apartment = Apartment::find($apartmentId);
+            if (!$apartment) {
+                $apartment = Apartment::where('apartment_id', $apartmentId)->first();
+            }
+            if (!$apartment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Apartment not found.'
+                ], 404);
+            }
+            
+            $profoma = \App\Models\ProfomaReceipt::where('apartment_id', $apartment->id)->first();
             if (!$profoma) {
                 return response()->json([
                     'success' => false,
@@ -1099,5 +1140,18 @@ class PropertyController extends Controller
           ->update(['status' => 1]);
         // You can add similar logic for messages in the future
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * AJAXDestroy method
+     * TODO: Implement this method
+     */
+    public function ajaxDestroy(Request $request)
+    {
+        // TODO: Implement ajaxDestroy functionality
+        return response()->json([
+            'success' => false,
+            'message' => 'Method not implemented yet'
+        ]);
     }
 }

@@ -4,14 +4,6 @@
 
 @push('styles')
 <style>
-    .page-header-custom {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 32px;
-        border-radius: 16px;
-        margin-bottom: 32px;
-        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-    }
     
     .stats-mini-card {
         background: white;
@@ -99,7 +91,7 @@
     <div class="page-header-custom">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h1 class="mb-2"><i class="fa fa-users-cog me-3"></i>Regional Manager Management</h1>
+                <h3 class="mb-2">Regional Manager Management</h3>
                 <p class="mb-0 opacity-90">Manage regional managers and their assigned territories</p>
             </div>
             <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#bulkAssignModal">

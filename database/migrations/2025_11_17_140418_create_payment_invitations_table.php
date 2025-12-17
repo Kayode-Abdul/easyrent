@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('payment_invitations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained('users')->onDelete('cascade');
-            $table->string('benefactor_email')->index();
+            $table->string('benefactor_email')->nullable()->index();
             $table->foreignId('benefactor_id')->nullable()->constrained()->onDelete('set null');
             $table->decimal('amount', 15, 2);
             $table->string('token')->unique();

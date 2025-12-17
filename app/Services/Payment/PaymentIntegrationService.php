@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class PaymentIntegrationService
 {
@@ -59,6 +60,36 @@ class PaymentIntegrationService
                     'payment_details' => $paymentDetails
                 ])
             ]);
+
+            // If guest payment (no tenant yet), do not assign apartment now
+            if (!$payment->tenant_id) {
+                $this->sessionManager->storeApplicationData($invitation->invitation_token, [
+                    'payment_completed' => true,
+                    'payment_id' => $payment->id,
+                    'amount' => $payment->amount,
+                    'duration' => $payment->duration,
+                    'move_in_date' => $payment->payment_meta['move_in_date'] ?? null,
+                    'completed_at' => now()->toISOString(),
+                    'next_step' => 'registration'
+                ]);
+                $this->sessionManager->extendSessionExpiration($invitation->invitation_token, 48);
+
+                Log::info('Guest payment completed; awaiting registration to finalize', [
+                    'payment_id' => $payment->id,
+                    'invitation_id' => $invitation->id
+                ]);
+
+                DB::commit();
+
+                return [
+                    'success' => true,
+                    'payment' => $payment,
+                    'invitation' => $invitation,
+                    'apartment_assigned' => false,
+                    'message' => 'Payment completed. Please register to finalize your apartment assignment.',
+                    'next_step' => 'registration'
+                ];
+            }
 
             // Assign apartment to tenant
             $this->assignApartmentToTenant($invitation, $payment);
@@ -119,7 +150,7 @@ class PaymentIntegrationService
     protected function findRelatedInvitation(Payment $payment): ?ApartmentInvitation
     {
         // Try to find by payment reference first
-        if (str_contains($payment->payment_reference, 'easyrent_')) {
+        if (!empty($payment->payment_reference) && Str::contains($payment->payment_reference, 'easyrent_')) {
             $token = str_replace('easyrent_', '', $payment->payment_reference);
             $invitation = ApartmentInvitation::where('invitation_token', $token)->first();
             if ($invitation) {
@@ -138,9 +169,18 @@ class PaymentIntegrationService
             return $invitation;
         }
 
-        // Try to find by payment metadata
-        if ($payment->payment_meta && isset($payment->payment_meta['invitation_token'])) {
-            return ApartmentInvitation::where('invitation_token', $payment->payment_meta['invitation_token'])->first();
+        // Try to find by payment metadata (support string or array)
+        $meta = $payment->payment_meta;
+        if (is_string($meta)) {
+            $decoded = json_decode($meta, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $meta = $decoded;
+            } else {
+                $meta = null;
+            }
+        }
+        if (is_array($meta) && isset($meta['invitation_token'])) {
+            return ApartmentInvitation::where('invitation_token', $meta['invitation_token'])->first();
         }
 
         return null;
@@ -381,14 +421,110 @@ class PaymentIntegrationService
     }
 
     /**
-     * Generate unique transaction ID for invitation payments
+     * Create payment record for guest (unauthenticated) invitation-based application
+     */
+    public function createGuestInvitationPayment(ApartmentInvitation $invitation, array $applicationData): Payment
+    {
+        $apartment = $invitation->apartment;
+        $duration = $applicationData['duration'] ?? 12;
+        $totalAmount = $apartment->amount * $duration;
+
+        $payment = Payment::create([
+            'transaction_id' => $this->generateTransactionIdForGuest($invitation),
+            'tenant_id' => null,
+            'landlord_id' => $invitation->landlord_id,
+            'apartment_id' => $apartment->apartment_id,
+            'amount' => $totalAmount,
+            'duration' => $duration,
+            'status' => Payment::STATUS_PENDING,
+            'payment_method' => 'card',
+            'payment_reference' => 'easyrent_' . $invitation->invitation_token,
+            'payment_meta' => [
+                'invitation_token' => $invitation->invitation_token,
+                'application_data' => $applicationData,
+                'created_via' => 'invitation_guest_flow',
+                'move_in_date' => $applicationData['move_in_date'] ?? null
+            ]
+        ]);
+
+        Log::info('Guest invitation payment record created', [
+            'payment_id' => $payment->id,
+            'invitation_id' => $invitation->id,
+            'amount' => $totalAmount
+        ]);
+
+        return $payment;
+    }
+
+    /**
+     * Finalize guest payment and assignment after registration
+     */
+    public function finalizeAfterRegistration(ApartmentInvitation $invitation, Payment $payment, User $user): array
+    {
+        try {
+            DB::beginTransaction();
+
+            // Link payment to the newly registered tenant
+            $payment->update(['tenant_id' => $user->user_id]);
+
+            // Assign apartment now that tenant exists
+            $this->assignApartmentToTenant($invitation, $payment);
+
+            // Mark invitation as completed/used
+            $invitation->markPaymentCompleted();
+
+            // Clean session state
+            $this->cleanupSessionData($invitation);
+
+            // Send emails and evaluate marketer qualification
+            $this->sendPaymentCompletionEmails($invitation, $payment);
+            $this->evaluateMarketerQualification($payment);
+
+            DB::commit();
+
+            Log::info('Finalized apartment assignment post-registration', [
+                'invitation_id' => $invitation->id,
+                'payment_id' => $payment->id,
+                'tenant_id' => $user->user_id
+            ]);
+
+            return [
+                'success' => true,
+                'apartment_assigned' => true
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to finalize after registration', [
+                'invitation_id' => $invitation->id,
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Generate transaction ID for guest payments
+     */
+    protected function generateTransactionIdForGuest(ApartmentInvitation $invitation): string
+    {
+        $prefix = 'ER-INV-GUEST-';
+        $timestamp = now()->format('YmdHis');
+        $hash = substr(md5($invitation->invitation_token . $timestamp), 0, 8);
+        return strtoupper($prefix . $timestamp . '-' . $hash);
+    }
+
+    /**
+     * Generate unique transaction ID for authenticated invitation payments
      */
     protected function generateTransactionId(ApartmentInvitation $invitation, User $tenant): string
     {
         $prefix = 'ER-INV-';
         $timestamp = now()->format('YmdHis');
         $hash = substr(md5($invitation->invitation_token . $tenant->user_id . $timestamp), 0, 8);
-        
         return strtoupper($prefix . $timestamp . '-' . $hash);
     }
 

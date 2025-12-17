@@ -495,32 +495,32 @@ class RegisterController extends Controller
                 'prospect_email' => $user->email,
                 'prospect_phone' => $user->phone
             ]);
-            
-            // Send welcome email for invitation-based registration
-            try {
-                Mail::to($user->email)->send(new WelcomeToEasyRentMail($user, $invitation));
-            } catch (\Exception $e) {
-                Log::error('Failed to send welcome email for invitation registration', [
-                    'user_id' => $user->user_id,
-                    'invitation_token' => substr($invitationToken, 0, 8) . '...',
-                    'error' => $e->getMessage()
-                ]);
+
+            // If a completed guest payment exists, finalize assignment now
+            $guestPayment = \App\Models\Payment::where('status', \App\Models\Payment::STATUS_COMPLETED)
+                ->whereNull('tenant_id')
+                ->where('payment_meta->invitation_token', $invitationToken)
+                ->orderBy('paid_at', 'desc')
+                ->first();
+
+            if ($guestPayment) {
+                /** @var \App\Services\Payment\PaymentIntegrationService $paymentIntegration */
+                $paymentIntegration = app(\App\Services\Payment\PaymentIntegrationService::class);
+                $finalize = $paymentIntegration->finalizeAfterRegistration($invitation, $guestPayment, $user);
+
+                if ($finalize['success']) {
+                    Log::info('Post-registration finalization completed', [
+                        'user_id' => $user->user_id,
+                        'invitation_token' => substr($invitationToken, 0, 8) . '...'
+                    ]);
+                } else {
+                    Log::warning('Post-registration finalization failed', [
+                        'user_id' => $user->user_id,
+                        'error' => $finalize['error'] ?? 'unknown'
+                    ]);
+                }
             }
-            
-            // Evaluate marketer qualification for referrer if applicable
-            $this->evaluateMarketerQualification($user, $invitation);
-            
-            // Store application context for seamless flow continuation
-            $applicationData = [
-                'user_id' => $user->user_id,
-                'apartment_id' => $invitation->apartment_id,
-                'landlord_id' => $invitation->landlord_id,
-                'registration_completed_at' => now()->toISOString(),
-                'ready_for_application' => true
-            ];
-            
-            $this->sessionManager->storeApplicationData($invitationToken, $applicationData);
-            
+
             // Get redirect URL - check both possible session keys
             $redirectUrl = session()->pull('invitation_redirect_url') ?? session()->pull('easyrent_redirect_url');
             
@@ -542,9 +542,9 @@ class RegisterController extends Controller
                     'redirect_url' => $redirectUrl
                 ]);
                 
-                return redirect($redirectUrl)->with('success', 'Welcome to EasyRent! Your account has been created. You can now complete your apartment application.');
+                return redirect($redirectUrl)->with('success', 'Welcome to EasyRent! Your payment is confirmed and your apartment is being finalized.');
             }
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to handle invitation-based registration', [
                 'user_id' => $user->user_id ?? null,

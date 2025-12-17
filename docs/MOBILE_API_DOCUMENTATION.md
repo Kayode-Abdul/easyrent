@@ -1,339 +1,257 @@
-# EasyRent Mobile API Documentation
+# Mobile API Documentation
 
-## Overview
-
-The EasyRent Mobile API provides comprehensive endpoints for mobile applications to integrate with the EasyRent Link Authentication System. This API supports apartment invitations, user authentication, payment processing, and session management specifically designed for mobile apps.
+This document provides comprehensive information about the EasyRent Mobile API endpoints, including authentication, apartment invitations, payments, and session management with enhanced pricing structure transparency and centralized calculation service integration.
 
 ## Base URL
-
 ```
 https://your-domain.com/api/v1/mobile
 ```
 
 ## Authentication
 
-The API supports two authentication methods:
+The mobile API uses Laravel Sanctum for authentication. Most endpoints require a Bearer token in the Authorization header.
 
-### 1. Bearer Token Authentication (Recommended for mobile apps)
+### Headers
 ```
-Authorization: Bearer {token}
-```
-
-### 2. API Key Authentication (For admin operations)
-```
-X-API-Key: {api_key}
+Authorization: Bearer {your-token}
+Content-Type: application/json
+Accept: application/json
 ```
 
-## Response Format
+## Pricing Structure Overview
 
-All API responses follow this standard format:
+The EasyRent system supports two pricing models with full transparency:
 
-```json
-{
-  "success": true|false,
-  "message": "Response message",
-  "data": {}, // Response data (when applicable)
-  "errors": {}, // Validation errors (when applicable)
-  "error_code": "ERROR_CODE" // Error code for programmatic handling
-}
-```
+### Pricing Types
+1. **Total Pricing (`total`)**: The apartment price represents the complete rental amount for the entire period (no multiplication by duration)
+2. **Monthly Pricing (`monthly`)**: The apartment price represents the monthly rent that will be multiplied by the rental duration
 
-## Endpoints
+### Centralized Calculation Service
+All payment calculations use the centralized `PaymentCalculationService` which ensures:
+- Consistent calculation logic across all endpoints
+- Comprehensive input validation and security
+- Detailed audit logging for transparency
+- Proper error handling with fallback mechanisms
+- Support for additional charges and complex pricing configurations
+
+## Endpoints Overview
 
 ### Authentication Endpoints
-
-#### POST /auth/login
-Authenticate user and get access token.
-
-**Request:**
-```json
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "invitation_token": "optional_invitation_token"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "user": {
-      "id": 1234567,
-      "first_name": "John",
-      "last_name": "Doe",
-      "email": "user@example.com",
-      "phone": "+1234567890",
-      "roles": ["tenant"]
-    },
-    "token": "1|abc123...",
-    "invitation_context": {
-      "invitation_token": "token123",
-      "apartment_id": 456
-    }
-  }
-}
-```
-
-#### POST /auth/register
-Register new user account.
-
-**Request:**
-```json
-{
-  "first_name": "John",
-  "last_name": "Doe",
-  "email": "user@example.com",
-  "phone": "+1234567890",
-  "password": "password123",
-  "password_confirmation": "password123",
-  "invitation_token": "optional_invitation_token"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Registration successful",
-  "data": {
-    "user": {
-      "id": 1234567,
-      "first_name": "John",
-      "last_name": "Doe",
-      "email": "user@example.com",
-      "phone": "+1234567890",
-      "roles": ["tenant"]
-    },
-    "token": "1|abc123...",
-    "invitation_context": null
-  }
-}
-```
-
-#### POST /auth/logout
-**Requires:** Bearer Token
-
-Logout and revoke current access token.
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Logout successful"
-}
-```
-
-#### GET /auth/profile
-**Requires:** Bearer Token
-
-Get current user profile information.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": 1234567,
-      "first_name": "John",
-      "last_name": "Doe",
-      "email": "user@example.com",
-      "phone": "+1234567890",
-      "roles": ["tenant"],
-      "registration_source": "mobile_app",
-      "created_at": "2024-01-01T00:00:00Z",
-      "email_verified_at": "2024-01-01T00:00:00Z"
-    }
-  }
-}
-```
-
-#### POST /auth/refresh-token
-**Requires:** Bearer Token
-
-Refresh the current access token.
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Token refreshed successfully",
-  "data": {
-    "token": "2|def456..."
-  }
-}
-```
+- `POST /auth/login` - User login
+- `POST /auth/register` - User registration  
+- `POST /auth/logout` - User logout
+- `GET /auth/profile` - Get user profile
+- `POST /auth/refresh-token` - Refresh authentication token
 
 ### Invitation Endpoints
+- `GET /invitations/{token}` - Get invitation details
+- `POST /invitations/{token}/apply` - Apply for apartment
+- `POST /invitations/{token}/calculate` - **Enhanced** - Get payment calculation for invitation
+- `GET /invitations/{token}/session` - Get session data
+- `POST /invitations/session/store` - Store session data
+- `DELETE /invitations/{token}/session` - Clear session data
+- `POST /invitations/generate` - Generate invitation link (landlords)
 
-#### GET /invitations/{token}
-Get apartment invitation details by token (public endpoint).
+### Payment Endpoints
+- `GET /payments/{paymentId}` - Get payment details
+- `POST /payments/initialize` - Initialize payment
+- `POST /payments/callback` - Payment callback handler
+- `GET /payments/user/history` - Get user payment history
+- `POST /payments/{paymentId}/cancel` - Cancel payment
+- `POST /payments/calculate/preview` - **Enhanced** - Calculate payment preview with pricing transparency
+- `POST /payments/validate/calculation` - **New** - Validate payment calculation before processing
 
-**Response:**
+### Session Management
+- `POST /sessions` - Create session
+- `GET /sessions/{sessionKey}` - Get session
+- `PUT /sessions/{sessionKey}` - Update session
+- `DELETE /sessions/{sessionKey}` - Delete session
+
+## Enhanced Endpoint Documentation
+
+### Payment Calculation (Enhanced)
+
+#### Calculate Payment Preview
+```http
+POST /api/v1/mobile/payments/calculate/preview
+```
+
+**Request Body:**
+```json
+{
+  "apartment_id": 1,
+  "rental_duration": 12,
+  "additional_charges": [5000, 10000],
+  "include_pricing_details": true,
+  "include_calculation_audit": false
+}
+```
+
+**Enhanced Response with Pricing Structure Transparency:**
 ```json
 {
   "success": true,
   "data": {
-    "invitation": {
-      "token": "abc123...",
-      "expires_at": "2024-12-31T23:59:59Z",
-      "access_count": 5,
-      "created_at": "2024-01-01T00:00:00Z"
+    "payment_preview": {
+      "total_amount": 1815000,
+      "formatted_total": "1,815,000.00",
+      "calculation_method": "monthly_price_with_duration_multiplication_with_additional_charges",
+      "pricing_breakdown": {
+        "base_rent": 150000,
+        "rental_duration": 12,
+        "pricing_type": "monthly",
+        "additional_charges": [5000, 10000],
+        "additional_charges_total": 15000,
+        "calculation_steps": []
+      },
+      "calculation_summary": {
+        "total_amount": 1815000,
+        "calculation_method": "monthly_price_with_duration_multiplication_with_additional_charges",
+        "steps_count": 3,
+        "is_valid": true,
+        "error_message": null
+      }
     },
     "apartment": {
-      "id": 456,
-      "rent": 50000,
-      "duration": 12,
+      "id": 1,
+      "rent": 150000,
       "apartment_type": "2 Bedroom",
       "bedrooms": 2,
       "bathrooms": 2,
-      "size": "120 sqm",
-      "description": "Beautiful apartment...",
-      "photos": ["photo1.jpg", "photo2.jpg"],
-      "amenities": "WiFi, AC, Parking",
+      "size": "85 sqm",
+      "address": "123 Main Street, Lagos",
+      "pricing_type": "monthly",
       "available": true
     },
-    "property": {
-      "id": 789,
-      "address": "123 Main Street",
-      "state": "Lagos",
-      "lga": "Ikeja",
-      "prop_type": 1
+    "mobile_features": {
+      "formatted_display_amounts": {
+        "total_amount": "₦1,815,000.00",
+        "base_rent": "₦150,000.00",
+        "monthly_equivalent": null,
+        "additional_charges_total": "₦15,000.00"
+      },
+      "calculation_explanation": {
+        "method_description": "Monthly rent multiplied by rental duration plus additional charges",
+        "pricing_explanation": "The apartment price represents the monthly rent that will be multiplied by the rental duration",
+        "steps_count": 3,
+        "has_additional_charges": true,
+        "calculation_transparency": {
+          "base_calculation": "₦150000 × 12 months = ₦1,800,000.00",
+          "additional_charges_breakdown": [
+            {
+              "index": 0,
+              "amount": 5000,
+              "formatted_amount": "₦5,000.00",
+              "description": "Additional charge 1"
+            },
+            {
+              "index": 1,
+              "amount": 10000,
+              "formatted_amount": "₦10,000.00",
+              "description": "Additional charge 2"
+            }
+          ]
+        }
+      },
+      "user_experience": {
+        "payment_affordability": {
+          "monthly_cost": 150000,
+          "affordability_rating": {
+            "rating": "moderate",
+            "description": "Reasonably priced",
+            "monthly_equivalent": 150000,
+            "formatted_monthly": "₦150,000.00/month"
+          },
+          "cost_comparison": {
+            "per_month": 151250,
+            "per_week": 34913.79,
+            "per_day": 5041.67
+          }
+        },
+        "rental_recommendations": {
+          "optimal_duration": {
+            "recommendation": "Consider 6-12 months for the best balance",
+            "options": {
+              "short_term": {
+                "range": "1-6 months",
+                "description": "Good for temporary stays or trial periods"
+              },
+              "medium_term": {
+                "range": "6-12 months",
+                "description": "Balanced option for most renters"
+              },
+              "long_term": {
+                "range": "12+ months",
+                "description": "Best value for extended stays"
+              }
+            },
+            "reasoning": "Longer rentals often provide better value and stability"
+          },
+          "cost_savings_tips": [
+            {
+              "tip": "Review additional charges",
+              "description": "Some additional charges might be negotiable",
+              "potential_savings": "₦1,500.00 or more"
+            },
+            {
+              "tip": "Ask about annual payment discounts",
+              "description": "Many landlords offer discounts for upfront annual payments",
+              "potential_savings": "5-10% discount possible"
+            },
+            {
+              "tip": "Compare similar properties",
+              "description": "Check other apartments in the same area for better deals",
+              "potential_savings": "Market rate comparison"
+            }
+          ]
+        }
+      }
     },
-    "landlord": {
-      "name": "Jane Smith",
-      "email": "landlord@example.com",
-      "phone": "+1234567890"
+    "pricing_structure_details": {
+      "supported_pricing_types": {
+        "total": "Complete rental amount (no duration multiplication)",
+        "monthly": "Monthly rent (multiplied by rental duration)"
+      },
+      "validation_limits": {
+        "max_rental_duration": 120,
+        "max_apartment_price": 999999999.99,
+        "min_apartment_price": 0.01,
+        "max_calculation_result": 9999999999.99
+      },
+      "current_apartment_configuration": {
+        "pricing_type": "monthly",
+        "base_price": 150000,
+        "price_configuration": null
+      },
+      "calculation_methodology": {
+        "total_pricing": "The apartment price represents the complete rental amount for the entire period (no multiplication by duration)",
+        "monthly_pricing": "The apartment price represents the monthly rent that will be multiplied by the rental duration",
+        "additional_charges": "Any additional charges are added to the base calculation regardless of pricing type"
+      }
     }
+  },
+  "meta": {
+    "calculation_timestamp": "2024-01-01T00:00:00Z",
+    "service_version": "1.0.0",
+    "mobile_optimized": true,
+    "api_version": "v1",
+    "calculation_service_used": "PaymentCalculationService",
+    "pricing_structure_transparency": true,
+    "mobile_error_handling_enabled": true
   }
 }
 ```
 
-#### POST /invitations/{token}/apply
-**Requires:** Bearer Token
-
-Apply for apartment via invitation.
-
-**Request:**
-```json
-{
-  "duration": 12,
-  "move_in_date": "2024-02-01",
-  "additional_notes": "Looking forward to moving in"
-}
+#### Validate Payment Calculation (New)
+```http
+POST /api/v1/mobile/payments/validate/calculation
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Application submitted successfully",
-  "data": {
-    "payment": {
-      "id": 123,
-      "reference": "mobile_abc123",
-      "amount": 600000,
-      "duration": 12,
-      "status": "pending"
-    },
-    "next_step": "payment",
-    "payment_url": "https://domain.com/apartment/invite/token123/payment/123"
-  }
-}
-```
-
-#### POST /invitations/generate
-**Requires:** Bearer Token
-
-Generate new invitation link (for landlords).
-
-**Request:**
-```json
-{
-  "apartment_id": 456,
-  "expires_in_hours": 72
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Invitation link generated successfully",
-  "data": {
-    "invitation": {
-      "id": 789,
-      "token": "def456...",
-      "url": "https://domain.com/apartment/invite/def456",
-      "expires_at": "2024-12-31T23:59:59Z",
-      "created_at": "2024-01-01T00:00:00Z"
-    },
-    "apartment": {
-      "id": 456,
-      "rent": 50000,
-      "apartment_type": "2 Bedroom"
-    }
-  }
-}
-```
-
-### Payment Endpoints
-
-#### GET /payments/{paymentId}
-**Requires:** Bearer Token
-
-Get payment details.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "payment": {
-      "id": 123,
-      "reference": "mobile_abc123",
-      "transaction_id": "inv_token123_1234567890",
-      "amount": 600000,
-      "status": "pending",
-      "payment_method": "mobile_app",
-      "duration": 12,
-      "move_in_date": "2024-02-01",
-      "additional_notes": "Looking forward to moving in",
-      "paid_at": null,
-      "created_at": "2024-01-01T00:00:00Z"
-    },
-    "apartment": {
-      "id": 456,
-      "rent": 50000,
-      "apartment_type": "2 Bedroom",
-      "address": "123 Main Street"
-    },
-    "tenant": {
-      "name": "John Doe",
-      "email": "user@example.com"
-    },
-    "landlord": {
-      "name": "Jane Smith",
-      "email": "landlord@example.com"
-    }
-  }
-}
-```
-
-#### POST /payments/initialize
-**Requires:** Bearer Token
-
-Initialize payment with gateway.
-
-**Request:**
+**Request Body:**
 ```json
 {
   "payment_id": 123,
-  "payment_method": "paystack",
-  "callback_url": "https://mobile-app.com/payment-callback"
+  "expected_amount": 1815000
 }
 ```
 
@@ -341,297 +259,510 @@ Initialize payment with gateway.
 ```json
 {
   "success": true,
-  "message": "Payment initialized successfully",
   "data": {
-    "payment_id": 123,
-    "gateway_url": "https://checkout.paystack.com/abc123",
-    "reference": "mobile_abc123",
-    "amount": 600000,
-    "payment_method": "paystack"
-  }
-}
-```
-
-#### POST /payments/callback
-Handle payment callback from gateway (public endpoint).
-
-**Request:**
-```json
-{
-  "reference": "mobile_abc123",
-  "status": "success"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Payment processed successfully",
-  "data": {
-    "payment": {
-      "id": 123,
-      "reference": "mobile_abc123",
-      "amount": 600000,
-      "status": "completed",
-      "paid_at": "2024-01-01T12:00:00Z"
+    "validation": {
+      "payment_id": 123,
+      "expected_amount": 1815000,
+      "calculated_amount": 1815000,
+      "stored_amount": 1815000,
+      "amount_matches_expected": true,
+      "stored_matches_expected": true,
+      "calculation_matches_stored": true,
+      "validation_passed": true,
+      "calculation_method": "monthly_price_with_duration_multiplication_with_additional_charges"
     },
-    "apartment_assigned": true,
-    "emails_sent": true
-  }
-}
-```
-
-#### GET /payments/user/history
-**Requires:** Bearer Token
-
-Get user's payment history.
-
-**Query Parameters:**
-- `per_page` (optional): Number of items per page (max 100)
-- `status` (optional): Filter by payment status
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 123,
-      "reference": "mobile_abc123",
-      "amount": 600000,
-      "status": "completed",
-      "created_at": "2024-01-01T00:00:00Z",
-      "apartment": {
-        "id": 456,
-        "address": "123 Main Street"
-      }
-    }
-  ],
-  "pagination": {
-    "current_page": 1,
-    "per_page": 15,
-    "total": 25,
-    "last_page": 2,
-    "has_more": true
-  }
-}
-```
-
-#### POST /payments/{paymentId}/cancel
-**Requires:** Bearer Token
-
-Cancel pending payment.
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Payment cancelled successfully",
-  "data": {
-    "payment_id": 123,
-    "status": "cancelled"
-  }
-}
-```
-
-### Session Management Endpoints
-
-#### POST /sessions
-**Requires:** Bearer Token
-
-Store session data.
-
-**Request:**
-```json
-{
-  "session_key": "invitation_token_123",
-  "session_data": {
-    "invitation_token": "abc123",
-    "application_data": {
-      "duration": 12,
-      "move_in_date": "2024-02-01"
+    "discrepancies": {
+      "expected_vs_calculated": 0,
+      "expected_vs_stored": 0,
+      "calculated_vs_stored": 0
     }
   },
-  "expires_in_minutes": 1440
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Session data stored successfully",
-  "data": {
-    "session_key": "invitation_token_123",
-    "expires_at": "2024-01-02T00:00:00Z"
+  "meta": {
+    "validation_timestamp": "2024-01-01T00:00:00Z",
+    "service_version": "1.0.0"
   }
 }
 ```
 
-#### GET /sessions/{sessionKey}
-**Requires:** Bearer Token
+### Invitation Payment Calculation (Enhanced)
 
-Retrieve session data.
+#### Get Payment Calculation for Invitation
+```http
+POST /api/v1/mobile/invitations/{token}/calculate
+```
 
-**Response:**
+**Request Body:**
+```json
+{
+  "rental_duration": 12,
+  "additional_charges": [5000, 10000],
+  "include_pricing_details": true,
+  "include_calculation_audit": false
+}
+```
+
+**Enhanced Response:**
 ```json
 {
   "success": true,
   "data": {
-    "session_key": "invitation_token_123",
-    "session_data": {
-      "invitation_token": "abc123",
-      "application_data": {
-        "duration": 12,
-        "move_in_date": "2024-02-01"
+    "invitation_token": "abc123...",
+    "payment_calculation": {
+      "total_amount": 1815000,
+      "formatted_total": "1,815,000.00",
+      "calculation_method": "monthly_price_with_duration_multiplication_with_additional_charges",
+      "pricing_breakdown": {
+        "base_rent": 150000,
+        "rental_duration": 12,
+        "pricing_type": "monthly",
+        "additional_charges": [5000, 10000],
+        "additional_charges_total": 15000,
+        "calculation_steps": []
       },
-      "_metadata": {
-        "created_at": "2024-01-01T00:00:00Z",
-        "user_id": 1234567,
-        "expires_at": "2024-01-02T00:00:00Z"
+      "calculation_summary": {
+        "total_amount": 1815000,
+        "calculation_method": "monthly_price_with_duration_multiplication_with_additional_charges",
+        "steps_count": 3,
+        "is_valid": true,
+        "error_message": null
       }
     },
-    "metadata": {
-      "created_at": "2024-01-01T00:00:00Z",
-      "user_id": 1234567,
-      "expires_at": "2024-01-02T00:00:00Z"
+    "apartment": {
+      "id": 1,
+      "rent": 150000,
+      "apartment_type": "2 Bedroom",
+      "address": "123 Main Street, Lagos",
+      "pricing_type": "monthly",
+      "available": true
+    },
+    "invitation_details": {
+      "expires_at": "2024-01-03T00:00:00Z",
+      "time_remaining": {
+        "expired": false,
+        "hours_remaining": 48,
+        "minutes_remaining": 30,
+        "formatted_time": "2 days remaining",
+        "urgency_level": "low"
+      },
+      "access_count": 3,
+      "landlord_info": {
+        "name": "Jane Smith",
+        "contact_available": true
+      }
+    },
+    "mobile_features": {
+      "formatted_display_amounts": {
+        "total_amount": "₦1,815,000.00",
+        "base_rent": "₦150,000.00",
+        "monthly_equivalent": null,
+        "additional_charges_total": "₦15,000.00"
+      },
+      "calculation_explanation": {
+        "method_description": "Monthly rent multiplied by rental duration plus additional charges",
+        "pricing_explanation": "The apartment price represents the monthly rent that will be multiplied by the rental duration",
+        "steps_count": 3,
+        "has_additional_charges": true,
+        "calculation_transparency": {
+          "base_calculation": "₦150000 × 12 months = ₦1,800,000.00",
+          "additional_charges_breakdown": [
+            {
+              "index": 0,
+              "amount": 5000,
+              "formatted_amount": "₦5,000.00",
+              "description": "Additional charge 1"
+            },
+            {
+              "index": 1,
+              "amount": 10000,
+              "formatted_amount": "₦10,000.00",
+              "description": "Additional charge 2"
+            }
+          ]
+        }
+      },
+      "invitation_guidance": {
+        "next_steps": [
+          "Review the calculation details",
+          "Proceed with the application if satisfied",
+          "Contact landlord for any questions"
+        ],
+        "urgency_indicator": {
+          "level": "low",
+          "message": "You have plenty of time to review.",
+          "color": "green",
+          "action_required": "Review details and apply when ready"
+        },
+        "application_tips": [
+          "Have your identification ready",
+          "Prepare payment method information",
+          "Review all terms before proceeding"
+        ]
+      }
+    },
+    "pricing_structure_details": {
+      "supported_pricing_types": {
+        "total": "Complete rental amount (no duration multiplication)",
+        "monthly": "Monthly rent (multiplied by rental duration)"
+      },
+      "validation_limits": {
+        "max_rental_duration": 120,
+        "max_apartment_price": 999999999.99,
+        "min_apartment_price": 0.01,
+        "max_calculation_result": 9999999999.99
+      },
+      "current_apartment_configuration": {
+        "pricing_type": "monthly",
+        "base_price": 150000,
+        "price_configuration": null
+      },
+      "calculation_methodology": {
+        "total_pricing": "The apartment price represents the complete rental amount for the entire period (no multiplication by duration)",
+        "monthly_pricing": "The apartment price represents the monthly rent that will be multiplied by the rental duration",
+        "additional_charges": "Any additional charges are added to the base calculation regardless of pricing type"
+      }
     }
-  }
-}
-```
-
-#### PUT /sessions/{sessionKey}
-**Requires:** Bearer Token
-
-Update session data.
-
-**Request:**
-```json
-{
-  "session_data": {
-    "new_field": "new_value"
   },
-  "merge": true
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Session data updated successfully",
-  "data": {
-    "session_key": "invitation_token_123",
-    "updated_at": "2024-01-01T12:00:00Z"
+  "meta": {
+    "calculation_timestamp": "2024-01-01T00:00:00Z",
+    "service_version": "1.0.0",
+    "mobile_optimized": true,
+    "api_version": "v1",
+    "calculation_service_used": "PaymentCalculationService",
+    "invitation_based_calculation": true,
+    "pricing_structure_transparency": true
   }
 }
 ```
 
-#### DELETE /sessions/{sessionKey}
-**Requires:** Bearer Token
+## Enhanced Error Handling for Mobile Clients
 
-Delete session data.
+All endpoints now include mobile-optimized error handling with user-friendly messages and suggested actions:
 
-**Response:**
+### Validation Error Example
 ```json
 {
-  "success": true,
-  "message": "Session data deleted successfully"
+  "success": false,
+  "message": "Validation failed",
+  "errors": {
+    "rental_duration": ["The rental duration must be between 1 and 120."]
+  },
+  "error_code": "VALIDATION_FAILED",
+  "mobile_error_handling": {
+    "user_friendly_message": "Please check your input values and try again",
+    "field_errors": {
+      "rental_duration": {
+        "messages": ["The rental duration must be between 1 and 120."],
+        "user_friendly_message": "Rental duration must be between 1 and 120 months"
+      }
+    },
+    "retry_suggestions": [
+      "Ensure rental duration is between 1 and 120 months",
+      "Verify additional charges are positive numbers",
+      "Check that all required fields are provided"
+    ]
+  }
 }
 ```
 
-## Error Codes
+### Calculation Error Example
+```json
+{
+  "success": false,
+  "message": "Payment calculation failed",
+  "error": "Invalid pricing type provided",
+  "error_code": "CALCULATION_FAILED",
+  "apartment_context": {
+    "apartment_id": 1,
+    "pricing_type": "invalid",
+    "base_price": 150000
+  },
+  "mobile_error_handling": {
+    "user_friendly_message": "Unable to calculate payment for this apartment",
+    "technical_details": "Invalid pricing type provided",
+    "suggested_actions": [
+      "Try a different rental duration",
+      "Remove additional charges and try again",
+      "Contact support for assistance"
+    ]
+  }
+}
+```
 
-| Code | Description |
-|------|-------------|
-| `INVALID_API_KEY` | API key is missing or invalid |
-| `INVALID_CREDENTIALS` | Login credentials are incorrect |
-| `REGISTRATION_FAILED` | User registration failed |
-| `INVITATION_NOT_FOUND` | Invitation token not found or expired |
-| `APARTMENT_UNAVAILABLE` | Apartment is no longer available |
-| `AUTHENTICATION_REQUIRED` | User must be authenticated |
-| `UNAUTHORIZED` | User lacks permission for this action |
-| `PAYMENT_NOT_FOUND` | Payment record not found |
-| `PAYMENT_INIT_FAILED` | Payment initialization failed |
-| `VERIFICATION_FAILED` | Payment verification failed |
-| `PAYMENT_FAILED` | Payment was not successful |
-| `SESSION_NOT_FOUND` | Session data not found |
-| `SESSION_EXPIRED` | Session has expired |
+### Service Error Example
+```json
+{
+  "success": false,
+  "message": "Payment calculation service error",
+  "error": "Service temporarily unavailable",
+  "error_code": "CALCULATION_SERVICE_ERROR",
+  "mobile_error_handling": {
+    "user_friendly_message": "Unable to calculate payment at this time",
+    "suggested_actions": [
+      "Try again in a few moments",
+      "Check your internet connection",
+      "Contact support if the problem persists"
+    ]
+  }
+}
+```
+
+## Pricing Structure Transparency Features
+
+### Calculation Method Descriptions
+The API provides human-readable descriptions for all calculation methods:
+
+- `total_price_no_multiplication`: "Total rental amount (no duration multiplication)"
+- `monthly_price_with_duration_multiplication`: "Monthly rent multiplied by rental duration"
+- `total_price_no_multiplication_with_additional_charges`: "Total rental amount plus additional charges"
+- `monthly_price_with_duration_multiplication_with_additional_charges`: "Monthly rent multiplied by duration plus additional charges"
+
+### Pricing Type Explanations
+Clear explanations for each pricing model:
+
+- **Total Pricing**: "The apartment price represents the complete rental amount for the entire period"
+- **Monthly Pricing**: "The apartment price represents the monthly rent that will be multiplied by the rental duration"
+
+### Calculation Transparency
+Detailed breakdown of how calculations are performed:
+
+```json
+{
+  "calculation_transparency": {
+    "base_calculation": "₦150000 × 12 months = ₦1,800,000.00",
+    "additional_charges_breakdown": [
+      {
+        "index": 0,
+        "amount": 5000,
+        "formatted_amount": "₦5,000.00",
+        "description": "Additional charge 1"
+      }
+    ]
+  }
+}
+```
+
+## Mobile-Specific Features
+
+### Enhanced User Experience
+- **Affordability Ratings**: Automatic categorization of rental costs (budget_friendly, moderate, premium, luxury, ultra_luxury)
+- **Cost Comparisons**: Per-month, per-week, and per-day cost breakdowns
+- **Rental Recommendations**: Optimal duration suggestions based on pricing type
+- **Cost Savings Tips**: Personalized suggestions for reducing rental costs
+
+### Invitation Management
+- **Time Remaining Indicators**: Real-time countdown with urgency levels
+- **Urgency Indicators**: Color-coded alerts based on expiration time
+- **Application Guidance**: Step-by-step instructions for completing applications
+
+### Formatted Display Values
+All monetary amounts include mobile-friendly formatted versions:
+```json
+{
+  "formatted_display_amounts": {
+    "total_amount": "₦1,815,000.00",
+    "base_rent": "₦150,000.00",
+    "monthly_equivalent": "₦151,250.00/month",
+    "additional_charges_total": "₦15,000.00"
+  }
+}
+```
 
 ## Rate Limiting
 
-API endpoints are rate limited to prevent abuse:
+Enhanced rate limiting with mobile-specific considerations:
 - Authentication endpoints: 5 requests per minute
-- Other endpoints: 60 requests per minute
-- Admin endpoints: 100 requests per minute
+- Payment calculation endpoints: 10 requests per minute (with security middleware)
+- Invitation endpoints: 15 requests per minute
+- General endpoints: 60 requests per minute
 
-## Mobile App Integration Examples
+## Security Features
 
-### Complete Invitation Flow
+### Input Validation
+- Comprehensive sanitization of all calculation inputs
+- Range validation for rental durations and pricing amounts
+- JSON structure validation for complex pricing configurations
 
-1. **User clicks invitation link in mobile app**
+### Rate Limiting
+- Endpoint-specific rate limits to prevent abuse
+- IP-based and user-based rate limiting
+
+### Access Control
+- Role-based access for pricing configuration changes
+- Secure API endpoints with proper authentication
+- Audit logging for all calculation requests
+
+## SDK Integration Examples
+
+### JavaScript/React Native
 ```javascript
-const response = await fetch('/api/v1/mobile/invitations/abc123');
-const invitation = await response.json();
-```
-
-2. **User applies for apartment (requires authentication)**
-```javascript
-// If not authenticated, redirect to login
-const applyResponse = await fetch('/api/v1/mobile/invitations/abc123/apply', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+const EasyRentAPI = {
+  baseURL: 'https://your-domain.com/api/v1/mobile',
+  
+  async calculatePaymentPreview(apartmentId, duration, additionalCharges = [], options = {}) {
+    const response = await fetch(`${this.baseURL}/payments/calculate/preview`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.token}`
+      },
+      body: JSON.stringify({
+        apartment_id: apartmentId,
+        rental_duration: duration,
+        additional_charges: additionalCharges,
+        include_pricing_details: options.includePricingDetails || true,
+        include_calculation_audit: options.includeCalculationAudit || false
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.mobile_error_handling?.user_friendly_message || result.message);
+    }
+    
+    return result.data;
   },
-  body: JSON.stringify({
-    duration: 12,
-    move_in_date: '2024-02-01',
-    additional_notes: 'Looking forward to moving in'
-  })
-});
-```
 
-3. **Initialize payment**
-```javascript
-const paymentResponse = await fetch('/api/v1/mobile/payments/initialize', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+  async calculateInvitationPayment(token, duration, additionalCharges = []) {
+    const response = await fetch(`${this.baseURL}/invitations/${token}/calculate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        rental_duration: duration,
+        additional_charges: additionalCharges,
+        include_pricing_details: true
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.mobile_error_handling?.user_friendly_message || result.message);
+    }
+    
+    return result.data;
   },
-  body: JSON.stringify({
-    payment_id: 123,
-    payment_method: 'paystack',
-    callback_url: 'myapp://payment-callback'
-  })
-});
+
+  async validatePaymentCalculation(paymentId, expectedAmount) {
+    const response = await fetch(`${this.baseURL}/payments/validate/calculation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.token}`
+      },
+      body: JSON.stringify({
+        payment_id: paymentId,
+        expected_amount: expectedAmount
+      })
+    });
+    
+    return response.json();
+  }
+};
 ```
 
-4. **Handle payment callback**
-```javascript
-// In your mobile app's deep link handler
-const callbackResponse = await fetch('/api/v1/mobile/payments/callback', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    reference: 'mobile_abc123'
-  })
-});
+### Swift/iOS
+```swift
+class EasyRentAPI {
+    private let baseURL = "https://your-domain.com/api/v1/mobile"
+    private var token: String?
+    
+    func calculatePaymentPreview(
+        apartmentId: Int,
+        duration: Int,
+        additionalCharges: [Double] = [],
+        includePricingDetails: Bool = true
+    ) async throws -> PaymentPreviewResponse {
+        
+        let url = URL(string: "\(baseURL)/payments/calculate/preview")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        if let token = token {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        let body = [
+            "apartment_id": apartmentId,
+            "rental_duration": duration,
+            "additional_charges": additionalCharges,
+            "include_pricing_details": includePricingDetails
+        ] as [String: Any]
+        
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let (data, _) = try await URLSession.shared.data(for: request)
+        let response = try JSONDecoder().decode(APIResponse<PaymentPreviewData>.self, from: data)
+        
+        if !response.success {
+            throw APIError.calculationFailed(response.mobileErrorHandling?.userFriendlyMessage ?? response.message)
+        }
+        
+        return response.data
+    }
+}
 ```
 
-## Security Considerations
+## Testing
 
-1. **Always use HTTPS** in production
-2. **Store API keys securely** in your mobile app
-3. **Implement token refresh** to maintain user sessions
-4. **Validate all user inputs** before sending to API
-5. **Handle errors gracefully** and provide user-friendly messages
-6. **Implement proper session management** for invitation flows
+### Sample cURL Commands
+
+**Calculate Payment Preview:**
+```bash
+curl -X POST https://your-domain.com/api/v1/mobile/payments/calculate/preview \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "apartment_id": 1,
+    "rental_duration": 12,
+    "additional_charges": [5000, 10000],
+    "include_pricing_details": true,
+    "include_calculation_audit": false
+  }'
+```
+
+**Calculate Invitation Payment:**
+```bash
+curl -X POST https://your-domain.com/api/v1/mobile/invitations/abc123/calculate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rental_duration": 12,
+    "additional_charges": [5000, 10000],
+    "include_pricing_details": true
+  }'
+```
+
+**Validate Payment Calculation:**
+```bash
+curl -X POST https://your-domain.com/api/v1/mobile/payments/validate/calculation \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "payment_id": 123,
+    "expected_amount": 1815000
+  }'
+```
+
+## Changelog
+
+### Version 1.0.0 (Current)
+- Enhanced payment calculation endpoints with pricing structure transparency
+- Added comprehensive mobile error handling with user-friendly messages
+- Implemented centralized PaymentCalculationService integration
+- Added detailed calculation audit trails and transparency features
+- Enhanced invitation payment calculations with time-based urgency indicators
+- Added payment calculation validation endpoint
+- Improved mobile user experience with affordability ratings and cost comparisons
+- Added comprehensive pricing structure documentation and explanations
 
 ## Support
 
-For API support and questions, contact the development team or refer to the main EasyRent documentation.
+For API support and questions:
+- Email: api-support@easyrent.com
+- Documentation: https://docs.easyrent.com/mobile-api
+- Status Page: https://status.easyrent.com
+- Pricing Structure Guide: https://docs.easyrent.com/pricing-structure
+- Calculation Service Documentation: https://docs.easyrent.com/calculation-service

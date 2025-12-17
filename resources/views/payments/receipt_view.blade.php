@@ -26,7 +26,7 @@
                         </div>
                         <div class="row mb-2">
                             <div class="col-md-6"><strong>Payment Date:</strong></div>
-                            <div class="col-md-6">{{ $payment->paid_at->format('d M, Y H:i') }}</div>
+                            <div class="col-md-6">{{ $payment->paid_at ? $payment->paid_at->format('d M, Y H:i') : 'N/A' }}</div>
                         </div>
                         <div class="row mb-2">
                             <div class="col-md-6"><strong>Property:</strong></div>

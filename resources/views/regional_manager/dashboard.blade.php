@@ -4,39 +4,7 @@
 
 @push('styles')
 <style>
-    .welcome-banner {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 40px;
-        border-radius: 20px;
-        margin-bottom: 32px;
-        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .welcome-banner::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -10%;
-        width: 400px;
-        height: 400px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-    }
-    
-    .welcome-banner::after {
-        content: '';
-        position: absolute;
-        bottom: -30%;
-        left: -5%;
-        width: 300px;
-        height: 300px;
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 50%;
-    }
-    
+  
     .welcome-content {
         position: relative;
         z-index: 1;
@@ -255,7 +223,7 @@
 @section('content')
 <div class="content">
     <!-- Welcome Banner -->
-    <div class="welcome-banner">
+    <div class="welcome-banner page-header-custom">
         <div class="welcome-content">
             <div class="d-flex justify-content-between align-items-center">
                 <div>

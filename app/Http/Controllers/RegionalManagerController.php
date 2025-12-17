@@ -370,4 +370,14 @@ class RegionalManagerController extends Controller
         $property->save();
         return back()->with('success','Property suspended.');
     }
+
+    /**
+     * ExportMultiTierAnalytics method
+     * TODO: Implement this method
+     */
+    public function exportMultiTierAnalytics(Request $request)
+    {
+        // TODO: Implement exportMultiTierAnalytics functionality
+        return response()->download('path/to/file.csv');
+    }
 }

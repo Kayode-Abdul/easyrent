@@ -49,7 +49,7 @@
             </div>
             
             <div style="text-align: center;">
-                <a href="{{ route('apartment.invite.payment', ['token' => $invitation->invitation_token, 'payment_id' => $payment->id]) }}" class="payment-btn">
+                <a href="{{ route('apartment.invite.payment', ['token' => $invitation->invitation_token, 'payment' => $payment->id]) }}" class="payment-btn">
                     Complete Payment - ₦{{ number_format($invitation->total_amount) }}
                 </a>
             </div>

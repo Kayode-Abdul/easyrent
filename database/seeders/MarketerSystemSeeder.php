@@ -200,7 +200,7 @@ class MarketerSystemSeeder extends Seeder
                 'referrer_id' => $marketer->user_id,
                 'referred_id' => $landlord->user_id,
                 'referral_code' => $marketer->referral_code,
-                'status' => 'completed',
+                'referral_status' => 'completed',
                 'commission_amount' => rand(5000, 15000),
                 'commission_status' => $index === 0 ? 'paid' : ($index === 1 ? 'approved' : 'pending'),
                 'campaign_id' => $campaign->id,

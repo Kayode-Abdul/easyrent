@@ -3,6 +3,7 @@
   <head>
     <title>Easyrent- The Smart Place to Manage your Tenants and Properties</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="session-lifetime" content="{{ config('session.lifetime') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Property and Tenant Management, Automated Rent Invoicing and Payment">
     <meta charset="utf-8"> 
@@ -10,6 +11,15 @@
     
     <!-- CRITICAL DARK MODE CSS - Prevents Flash of Unstyled Content -->
     <style>
+
+    .page-header-custom {
+        background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%);
+        color: white;
+        padding: 32px;
+        border-radius: 16px;
+        margin-bottom: 32px;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    }
     /* Immediate dark mode application - prevents FOUC */
     html[data-chrome-dark="true"] {
       filter: invert(1) hue-rotate(180deg) !important;
@@ -110,6 +120,7 @@
     <script src="/assets/js/password-toggle.js"></script>
     <script src="/assets/js/chrome-dark-mode.js"></script>
     <script src="/assets/js/dark-mode-debug.js"></script>
+    <script src="/assets/js/csrf-token-refresh.js"></script>
     @else
     <meta charset="utf-8" />
     <link rel="apple-touch-icon" sizes="76x76" href="/assets/img/apple-icon.png">
@@ -168,6 +179,7 @@
     </script>
     <!-- Add CSRF Token meta tag -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<meta name="session-lifetime" content="{{ config('session.lifetime') }}">
 <!-- Add jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -200,6 +212,7 @@ $.ajaxSetup({
 
     <script src="/assets/js/logout-handler.js"></script>
     <script src="/assets/js/chrome-dark-mode.js"></script>
+    <script src="/assets/js/csrf-token-refresh.js"></script>
     @yield('styles')
    @stack('styles')
   </head>
@@ -514,6 +527,63 @@ $.ajaxSetup({
                             </ul>
                         </div>
                     </li>
+                    
+                    <!-- Complaints Menu -->
+                    @if(auth()->user()->isTenant() || auth()->user()->isLandlord() || auth()->user()->isAgent())
+                    <li class="nav-item dropdown {{ request()->is('complaints*') ? 'active' : '' }}">
+                        <a href="#" class="nav-link dropdown-toggle" id="complaintsDropdown" data-toggle="collapse" data-target="#complaintsMenu" aria-expanded="{{ request()->is('complaints*') ? 'true' : 'false' }}" aria-controls="complaintsMenu">
+                            <i class="nc-icon nc-support-17"></i>
+                            <p>
+                                @if(auth()->user()->isTenant())
+                                    Complaints
+                                @elseif(auth()->user()->isLandlord())
+                                    Tenant Complaints
+                                @else
+                                    Assigned Complaints
+                                @endif
+                                @php
+                                    $complaintStats = auth()->user()->getComplaintStats();
+                                    $openComplaints = $complaintStats['open'] ?? 0;
+                                @endphp
+                                @if($openComplaints > 0)
+                                    <span class="badge badge-danger ml-1">{{ $openComplaints }}</span>
+                                @endif
+                            </p>
+                        </a>
+                        <div class="collapse {{ request()->is('complaints*') ? 'show' : '' }}" id="complaintsMenu">
+                            <ul class="nav flex-column ml-3">
+                                @if(auth()->user()->isTenant())
+                                    <li class="nav-item {{ request()->is('complaints/create') ? 'active' : '' }}">
+                                        <a class="nav-link" href="{{ route('complaints.create') }}">
+                                            <i class="nc-icon nc-simple-add"></i> Submit Complaint
+                                        </a>
+                                    </li>
+                                @endif
+                                <li class="nav-item {{ request()->is('complaints') && !request()->is('complaints/create') ? 'active' : '' }}">
+                                    <a class="nav-link" href="{{ route('complaints.index') }}">
+                                        <i class="nc-icon nc-bullet-list-67"></i> 
+                                        @if(auth()->user()->isTenant())
+                                            My Complaints
+                                        @else
+                                            All Complaints
+                                        @endif
+                                        @if($openComplaints > 0)
+                                            <span class="badge badge-danger ml-1">{{ $openComplaints }}</span>
+                                        @endif
+                                    </a>
+                                </li>
+                                @if(auth()->user()->isLandlord())
+                                    <li class="nav-item {{ request()->is('complaints/landlord/dashboard') ? 'active' : '' }}">
+                                        <a class="nav-link" href="{{ route('complaints.landlord.dashboard') }}">
+                                            <i class="nc-icon nc-chart-bar-32"></i> Dashboard
+                                        </a>
+                                    </li>
+                                @endif
+                            </ul>
+                        </div>
+                    </li>
+                    @endif
+                    
                     @if(auth()->check() && Auth::user()->admin)
                     <li class="{{ request()->is('dashboard/payments') ? 'active' : '' }}">
                         <a href="{{ route('payments.index') }}">
@@ -561,6 +631,12 @@ $.ajaxSetup({
                         <a href="{{ route('admin.commission-management.index') }}">
                             <i class="nc-icon nc-settings-gear-65"></i>
                             <p>Commission Management</p>
+                        </a>
+                    </li>
+                    <li class="{{ request()->is('admin/pricing-configuration*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.pricing-configuration.index') }}">
+                            <i class="nc-icon nc-money-coins"></i>
+                            <p>Pricing Configuration</p>
                         </a>
                     </li>
                     <li class="{{ request()->is('admin/blog*') ? 'active' : '' }}">

@@ -483,17 +483,6 @@
                                             </td>
                                         </tr>
                                         @endforeach
-                                    @elseif($user->role == 1 && isset($recentBookings))
-                                        @foreach($recentBookings as $booking)
-                                        <tr>
-                                            <td>New booking for apartment {{ $booking->apartment_id }}</td>
-                                            <td>{{ $booking->created_at->diffForHumans() }}</td>
-                                            <td><span class="badge badge-info">Booking</span></td>
-                                            <td>
-                                                <a href="/dashboard/bookings" class="btn btn-sm btn-primary">View</a>
-                                            </td>
-                                        </tr>
-                                        @endforeach
                                     @elseif($user->role == 2 && isset($recentMessages))
                                         @foreach($recentMessages as $message)
                                         <tr>

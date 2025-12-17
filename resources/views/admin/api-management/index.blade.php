@@ -189,13 +189,7 @@
                                     <td>✅ API Key</td>
                                     <td>200/hour</td>
                                 </tr>
-                                <tr>
-                                    <td><span class="badge badge-primary">POST</span></td>
-                                    <td><code>/api/bookings</code></td>
-                                    <td>Create booking</td>
-                                    <td>✅ API Key</td>
-                                    <td>30/hour</td>
-                                </tr>
+
                                 <tr>
                                     <td><span class="badge badge-success">GET</span></td>
                                     <td><code>/api/payments</code></td>
@@ -465,10 +459,6 @@
                         <div class="form-check">
                             <input type="checkbox" name="permissions[]" value="read_users" class="form-check-input" id="readUsers">
                             <label class="form-check-label" for="readUsers">Read Users</label>
-                        </div>
-                        <div class="form-check">
-                            <input type="checkbox" name="permissions[]" value="manage_bookings" class="form-check-input" id="manageBookings">
-                            <label class="form-check-label" for="manageBookings">Manage Bookings</label>
                         </div>
                     </div>
 

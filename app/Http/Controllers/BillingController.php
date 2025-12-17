@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Payment;
-use App\Models\Booking;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class BillingController extends Controller
 {
@@ -21,7 +21,7 @@ class BillingController extends Controller
         // Billing page is accessible to all authenticated users
         
         // Debug: Log user information
-        \Log::info('Billing page accessed', [
+        Log::info('Billing page accessed', [
             'user_id' => $user->user_id,
             'email' => $user->email
         ]);
@@ -36,7 +36,7 @@ class BillingController extends Controller
                         ->get();
         
         // Debug: Log payment query results
-        \Log::info('Payments found for user', [
+        Log::info('Payments found for user', [
             'user_id' => $user->user_id,
             'payment_count' => $payments->count(),
             'payments' => $payments->toArray()
@@ -44,24 +44,15 @@ class BillingController extends Controller
         
         // Also check all payments for this user regardless of status
         $allUserPayments = Payment::where('tenant_id', $user->user_id)->get();
-        \Log::info('All payments for user (any status)', [
+        Log::info('All payments for user (any status)', [
             'user_id' => $user->user_id,
             'all_payment_count' => $allUserPayments->count(),
             'all_payments' => $allUserPayments->toArray()
         ]);
         
-        // Get all bookings with pending payments
-        $pendingBookings = Booking::where('user_id', $user->user_id)
-                            ->where('status', 'pending')
-                            ->orderBy('created_at', 'desc')
-                            ->get();
-        
         // Calculate total amount paid
-        $totalPaid = $payments->sum('amount');
+        $totalPaid = $payments->sum('amount');        $totalPending = 0;
         
-        // Calculate total pending amount
-        $totalPending = $pendingBookings->sum('amount');
-        
-        return view('billing.index', compact('payments', 'pendingBookings', 'totalPaid', 'totalPending'));
+        return view('billing.index', compact('payments', 'totalPaid', 'totalPending'));
     }
 }

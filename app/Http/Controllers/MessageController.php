@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\MessageNotification;
+use Illuminate\Support\Facades\Log;
 
 class MessageController extends Controller
 {
@@ -52,7 +53,7 @@ class MessageController extends Controller
             }
         } catch (\Exception $e) {
             // Log error but don't fail the request
-            \Log::error('Failed to send message email notification: ' . $e->getMessage());
+           Log::error('Failed to send message email notification: ' . $e->getMessage());
         }
 
         return redirect()->route('messages.sent')->with('success', 'Message sent!');

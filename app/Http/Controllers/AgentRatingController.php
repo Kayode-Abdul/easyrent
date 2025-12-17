@@ -14,7 +14,7 @@ class AgentRatingController extends Controller
     {
         $request->validate([
             'agent_id' => 'required|exists:users,user_id',
-            'property_id' => 'required|exists:properties,property_id',
+            'property_id' => 'required|exists:properties,id',
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:1000',
         ]);

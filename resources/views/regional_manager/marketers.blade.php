@@ -57,9 +57,9 @@
     <div class="page-header-custom mb-4">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h1 class="mb-2">
+                <h2 class="mb-2">
                     <i class="fa fa-users me-3"></i>Marketers in Your Region
-                </h1>
+                </h2>
                 <p class="mb-0 opacity-90">View and manage marketers operating in your assigned territories</p>
             </div>
             <a href="{{ route('regional.dashboard') }}" class="btn btn-light btn-lg">
@@ -71,8 +71,8 @@
     <!-- Stats -->
     <div class="row mb-4">
         <div class="col-md-4">
-            <div class="stats-mini-card">
-                <div class="d-flex align-items-center">
+            <div class="card-stats">
+                <div class="d-flex card-body">
                     <div class="icon me-3">
                         <i class="fa fa-users"></i>
                     </div>

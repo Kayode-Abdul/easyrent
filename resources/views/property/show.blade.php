@@ -344,7 +344,7 @@
                                     <td>{{ $apartment->tenant ? $apartment->tenant->first_name . ' ' . $apartment->tenant->last_name : 'Vacant' }}</td>  <!-- Tenant name -->
                                     <td>
                                         @php
-                                            $profoma = \App\Models\ProfomaReceipt::where('apartment_id', $apartment->apartment_id)->first();
+                                            $profoma = \App\Models\ProfomaReceipt::where('apartment_id', $apartment->id)->first();
                                         @endphp
                                         {{ $profoma ? ($profoma->duration ? $profoma->duration.' months' : 'N/A') : ($apartment->duration ?? 'N/A') }}
                                     </td>  <!-- Duration (profoma if exists) -->
@@ -363,7 +363,7 @@
                                                     class="btn btn-success btn-sm" 
                                                     onclick="generateEasyRentLink('{{ $apartment->apartment_id }}')"
                                                     title="Generate EasyRent Link">
-                                                <i class="fa fa-share-alt"></i> ER Link
+                                                <i class="fa fa-share"></i> 
                                             </button>
                                         @elseif($apartment->tenant_id)
                                             <!-- Occupied apartment - show greyed out button -->
@@ -371,12 +371,12 @@
                                                     class="btn btn-secondary btn-sm" 
                                                     disabled
                                                     title="Apartment is occupied">
-                                                <i class="fa fa-share-alt"></i> ER Link
+                                                <i class="fa fa-share"></i> 
                                             </button>
                                         @else
                                             <!-- No permission to share -->
                                             <span class="text-muted">
-                                                <i class="fa fa-share-alt"></i> N/A
+                                                <i class="fa fa-share"></i> N/A
                                             </span>
                                         @endif
                                     </td>
@@ -1356,31 +1356,32 @@ function generateEasyRentLink(apartmentId) {
 function showEasyRentLinkModal(response) {
     const modalContent = `
         <div class="text-left">
-            <h6 class="mb-3"><i class="fa fa-link text-success"></i> EasyRent Link Generated Successfully!</h6>
+            <!-- h6 class="mb-3"><i class="fa fa-link text-success"></i> EasyRent Link Generated Successfully!</h6 -->
             
             <div class="form-group">
                 <label class="font-weight-bold">Share Link:</label>
                 <div class="input-group">
-                    <input type="text" class="form-control" id="easyrentLinkInput" value="${response.link}" readonly>
+                    <input type="text" class="form-control" id="easyrentLinkInput" value="${response.link}" readonly >
                     <div class="input-group-append">
                         <button class="btn btn-outline-secondary" type="button" onclick="copyEasyRentLink()">
-                            <i class="fa fa-copy"></i> Copy
-                        </button>
+                            <i class="fa fa-link"></i> 
+                        </button><br/>
+                        <small class="text-muted">Copy Link</small>
                     </div>
                 </div>
             </div>
             
             <div class="form-group">
                 <label class="font-weight-bold">Quick Share Options:</label>
-                <div class="btn-group-vertical w-100">
-                    <a href="${response.whatsapp_url}" target="_blank" class="btn btn-success btn-sm mb-2">
-                        <i class="fab fa-whatsapp"></i> Share via WhatsApp
+                <div class="btn-group-horizontal w-10">
+                    <a href="${response.whatsapp_url}" target="_blank" class="btn btn-success btn-round btn-md mb-2"  data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Share via whatsapp">
+                        <i class="fa fa-whatsapp"></i>
                     </a>
-                    <a href="${response.email_url}" target="_blank" class="btn btn-primary btn-sm mb-2">
-                        <i class="fa fa-envelope"></i> Share via Email
+                    <a href="${response.email_url}" target="_blank" class="btn btn-primary btn-round btn-md mb-2">
+                        <i class="fa fa-envelope"></i>
                     </a>
-                    <a href="${response.sms_url}" target="_blank" class="btn btn-info btn-sm mb-2">
-                        <i class="fa fa-sms"></i> Share via SMS
+                    <a href="${response.sms_url}" target="_blank" class="btn btn-info btn-round btn-md mb-2">
+                        <i class="fa fa-sms"></i> SMS
                     </a>
                 </div>
             </div>
@@ -1395,7 +1396,7 @@ function showEasyRentLinkModal(response) {
     `;
     
     Swal.fire({
-        title: 'EasyRent Link Ready',
+        title: 'Apartment Link ',
         html: modalContent,
         width: '500px',
         showConfirmButton: false,

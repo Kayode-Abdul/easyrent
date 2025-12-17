@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\ReferralChain;
 use App\Models\CommissionPayment;
 use App\Models\Referral;
+use Illuminate\Support\Facades\Log;
 use App\Models\ReferralReward;
 use App\Models\Property;
 use App\Services\Commission\MultiTierCommissionCalculator;
@@ -524,7 +525,7 @@ class SuperMarketerController extends Controller
     private function logReferralLinkGeneration($superMarketer, $referralCode, $data): void
     {
         // Log the referral link generation for tracking
-        \Log::info('Super Marketer referral link generated', [
+       Log::info('Super Marketer referral link generated', [
             'super_marketer_id' => $superMarketer->user_id,
             'referral_code' => $referralCode,
             'campaign_name' => $data['campaign_name'] ?? null,

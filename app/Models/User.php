@@ -1067,4 +1067,74 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->registration_source === 'easyrent_invitation';
     }
+
+    // Complaint System Relationships
+    
+    /**
+     * Complaints submitted by this user (as tenant)
+     */
+    public function tenantComplaints()
+    {
+        return $this->hasMany(\App\Models\Complaint::class, 'tenant_id', 'user_id');
+    }
+
+    /**
+     * Complaints for properties owned by this user (as landlord)
+     */
+    public function landlordComplaints()
+    {
+        return $this->hasMany(\App\Models\Complaint::class, 'landlord_id', 'user_id');
+    }
+
+    /**
+     * Complaints assigned to this user (as agent/property manager)
+     */
+    public function assignedComplaints()
+    {
+        return $this->hasMany(\App\Models\Complaint::class, 'assigned_to', 'user_id');
+    }
+
+    /**
+     * Complaints resolved by this user
+     */
+    public function resolvedComplaints()
+    {
+        return $this->hasMany(\App\Models\Complaint::class, 'resolved_by', 'user_id');
+    }
+
+    /**
+     * Get complaint statistics for this user
+     */
+    public function getComplaintStats(): array
+    {
+        if ($this->isTenant()) {
+            return [
+                'total' => $this->tenantComplaints()->count(),
+                'open' => $this->tenantComplaints()->open()->count(),
+                'resolved' => $this->tenantComplaints()->resolved()->count(),
+                'overdue' => $this->tenantComplaints()->overdue()->count(),
+            ];
+        } elseif ($this->isLandlord()) {
+            return [
+                'total' => $this->landlordComplaints()->count(),
+                'open' => $this->landlordComplaints()->open()->count(),
+                'resolved' => $this->landlordComplaints()->resolved()->count(),
+                'overdue' => $this->landlordComplaints()->overdue()->count(),
+            ];
+        } elseif ($this->isAgent()) {
+            return [
+                'total' => $this->assignedComplaints()->count(),
+                'open' => $this->assignedComplaints()->open()->count(),
+                'resolved' => $this->assignedComplaints()->resolved()->count(),
+                'overdue' => $this->assignedComplaints()->overdue()->count(),
+            ];
+        }
+
+        return [
+            'total' => 0,
+            'open' => 0,
+            'resolved' => 0,
+            'overdue' => 0,
+        ];
+    }
 }

@@ -140,30 +140,11 @@
                     </h6>
                 </div>
                 <div class="card-body p-0">
-                    @if($pendingBookings->count() > 0)
-                        <div class="list-group list-group-flush">
-                            @foreach($pendingBookings as $booking)
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1">Booking #{{ $booking->id }}</h6>
-                                            <small class="text-muted">Due: {{ $booking->created_at->format('M d, Y') }}</small>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-warning">₦{{ number_format($booking->amount, 2) }}</div>
-                                            <button class="btn btn-sm btn-outline-primary mt-1">Pay Now</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="p-4 text-center text-muted">
-                            <i class="fas fa-check-circle fa-3x mb-3 d-block opacity-25"></i>
-                            <h6>No Pending Bills</h6>
-                            <p class="small">You're all caught up!</p>
-                        </div>
-                    @endif
+                    <div class="p-4 text-center text-muted">
+                        <i class="fas fa-check-circle fa-3x mb-3 d-block opacity-25"></i>
+                        <h6>No Pending Bills</h6>
+                        <p class="small">You're all caught up!</p>
+                    </div>
                 </div>
             </div>
         </div>

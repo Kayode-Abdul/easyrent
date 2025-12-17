@@ -10,9 +10,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\JsonResponse;
 use App\Mail\MessageNotification;
+use Illuminate\Support\Facades\Log;
+use App\Services\Payment\PaymentCalculationServiceInterface;
 
 class ProfomaController extends Controller
 {
+    protected PaymentCalculationServiceInterface $paymentCalculationService;
+
+    public function __construct(PaymentCalculationServiceInterface $paymentCalculationService)
+    {
+        $this->paymentCalculationService = $paymentCalculationService;
+    }
     /**
      * Send a proforma receipt and create a notification message.
      */
@@ -36,18 +44,41 @@ class ProfomaController extends Controller
             $generator = $request->input('generator');
             $other_charges_desc = $request->input('other_charges_desc');
             $other_charges_amount = $request->input('other_charges_amount');
-            // Calculate total
-            $total = $amount 
-                + (float)($security_deposit ?: 0)
-                + (float)($water ?: 0)
-                + (float)($internet ?: 0)
-                + (float)($generator ?: 0)
-                + (float)($other_charges_amount ?: 0);
+            
+            // Use centralized payment calculation service
+            $additionalCharges = [
+                'security_deposit' => $security_deposit ?: 0,
+                'water' => $water ?: 0,
+                'internet' => $internet ?: 0,
+                'generator' => $generator ?: 0,
+                'other_charges' => $other_charges_amount ?: 0
+            ];
+            
+            $calculationResult = $this->paymentCalculationService->calculatePaymentTotalWithCharges(
+                $amount,
+                $duration,
+                $apartment->getPricingType(),
+                $additionalCharges
+            );
+            
+            if (!$calculationResult->isValid) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment calculation failed: ' . $calculationResult->errorMessage
+                ], 400);
+            }
+            
+            $total = $calculationResult->totalAmount;
+            
+            // Log calculation for audit purposes
+            $this->paymentCalculationService->logCalculationSteps($calculationResult);
 
             // Avoid creating duplicate proformas for same apartment
             $existing = ProfomaReceipt::where('apartment_id', $apartment->id)->first();
             if ($existing) {
                 $existing->status = ProfomaReceipt::STATUS_NEW; // sent and not viewed
+                // Ensure base amount is updated alongside breakdown fields
+                $existing->amount = $amount;
                 $existing->duration = $duration;
                 $existing->security_deposit = $security_deposit;
                 $existing->water = $water;
@@ -56,7 +87,17 @@ class ProfomaController extends Controller
                 $existing->other_charges_desc = $other_charges_desc;
                 $existing->other_charges_amount = $other_charges_amount;
                 $existing->total = $total;
+                // Add calculation tracking for audit purposes
+                $existing->calculation_method = $calculationResult->calculationMethod;
+                $existing->calculation_log = $calculationResult->calculationSteps;
                 $existing->save();
+                Log::info('Proforma updated', [
+                    'proforma_id' => $existing->id,
+                    'apartment_pk' => $apartment->id,
+                    'amount' => $amount,
+                    'total' => $total,
+                    'tenant_id' => $existing->tenant_id,
+                ]);
                 // Always send notification message to tenant on update
                 if ($existing->tenant_id) {
                     $message = Message::create([
@@ -77,7 +118,7 @@ class ProfomaController extends Controller
                             Mail::to($tenant->email)->send(new MessageNotification($message));
                         }
                     } catch (\Exception $e) {
-                        \Log::error('Failed to send proforma email: ' . $e->getMessage());
+                       Log::error('Failed to send proforma email: ' . $e->getMessage());
                     }
                 }
                 return response()->json([
@@ -93,7 +134,7 @@ class ProfomaController extends Controller
                 'tenant_id' => $request->tenant_id ?? $apartment->tenant_id,
                 'status' => ProfomaReceipt::STATUS_NEW,
                 'transaction_id' => $transactionId,
-                'apartment_id' => $apartment->apartment_id,
+                'apartment_id' => $apartment->id, // Use internal PK, not public apartment_id
                 'amount' => $amount,
                 'duration' => $duration,
                 'security_deposit' => $security_deposit,
@@ -103,6 +144,15 @@ class ProfomaController extends Controller
                 'other_charges_desc' => $other_charges_desc,
                 'other_charges_amount' => $other_charges_amount,
                 'total' => $total,
+                'calculation_method' => $calculationResult->calculationMethod,
+                'calculation_log' => $calculationResult->calculationSteps,
+            ]);
+            Log::info('Proforma created', [
+                'proforma_id' => $proforma->id,
+                'apartment_pk' => $apartment->id,
+                'amount' => $amount,
+                'total' => $total,
+                'tenant_id' => $proforma->tenant_id,
             ]);
             // Always send notification message to tenant on create
             if ($proforma->tenant_id) {
@@ -124,7 +174,7 @@ class ProfomaController extends Controller
                         Mail::to($tenant->email)->send(new MessageNotification($message));
                     }
                 } catch (\Exception $e) {
-                    \Log::error('Failed to send proforma email: ' . $e->getMessage());
+                   Log::error('Failed to send proforma email: ' . $e->getMessage());
                 }
             }
             return response()->json([

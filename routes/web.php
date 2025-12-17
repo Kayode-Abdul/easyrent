@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\PropertyController;
-use App\Http\Controllers\BookingController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
@@ -15,6 +14,9 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\ConfirmPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\BlogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,8 +40,8 @@ Route::get('/services', function () {
     return view('services');
 })->name('services'); 
 
-Route::get('/contact', [App\Http\Controllers\ContactController::class, 'index'])->name('contact');
-Route::post('/contact', [App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
 Route::get('/benefits', function () {
     return view('benefits');
@@ -94,16 +96,16 @@ Route::get('/dashboard/tenant/{id}', [UserController::class, 'getTenantDetails']
 Route::get('/dashboard/billing', [BillingController::class, 'index'])->middleware('auth')->name('billing.index');
 //User Route
 Route::get('/blog', [UserController::class, 'blog']);
-Route::get('/readmore/{topic_url}', [App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+Route::get('/readmore/{topic_url}', [BlogController::class, 'show'])->name('blog.show');
 
 // Admin Blog Management Routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
-    Route::get('/blog', [App\Http\Controllers\BlogController::class, 'adminIndex'])->name('admin.blog.index');
-    Route::get('/blog/create', [App\Http\Controllers\BlogController::class, 'create'])->name('admin.blog.create');
-    Route::post('/blog', [App\Http\Controllers\BlogController::class, 'store'])->name('admin.blog.store');
-    Route::get('/blog/{id}/edit', [App\Http\Controllers\BlogController::class, 'edit'])->name('admin.blog.edit');
-    Route::put('/blog/{id}', [App\Http\Controllers\BlogController::class, 'update'])->name('admin.blog.update');
-    Route::delete('/blog/{id}', [App\Http\Controllers\BlogController::class, 'destroy'])->name('admin.blog.destroy');
+    Route::get('/blog', [BlogController::class, 'adminIndex'])->name('admin.blog.index');
+    Route::get('/blog/create', [BlogController::class, 'create'])->name('admin.blog.create');
+    Route::post('/blog', [BlogController::class, 'store'])->name('admin.blog.store');
+    Route::get('/blog/{id}/edit', [BlogController::class, 'edit'])->name('admin.blog.edit');
+    Route::put('/blog/{id}', [BlogController::class, 'update'])->name('admin.blog.update');
+    Route::delete('/blog/{id}', [BlogController::class, 'destroy'])->name('admin.blog.destroy');
 });
 
 // Auth routes
@@ -155,12 +157,7 @@ Route::put('/user/{id}', [UserController::class, 'update']);
 Route::post('/user/{id}', [UserController::class, 'update']);
 Route::post('/dashboard/users/profile/{id}', [UserController::class, 'show'])->name('users.profile.update');
 Route::get('/dashboard/users/profile/{id}', [UserController::class, 'show'])->name('users.profile');
- 
-// Booking routes
-Route::post('/bookings', [BookingController::class, 'store']);
-Route::put('/bookings/{booking}', [BookingController::class, 'update']);
-Route::get('/bookings', [BookingController::class, 'index']);
-Route::get('/dashboard/bookings', [BookingController::class, 'index']);
+
 Route::get('/dashboard/property/{propId}/assign-agent', [PropertyController::class, 'assignAgent']);
 Route::post('/dashboard/property/{propId}/assign-agent', [PropertyController::class, 'assignAgent']);
 Route::get('/dashboard/agent/{id}', [UserController::class, 'showAgent']);
@@ -170,9 +167,11 @@ Route::post('/dashboard/property/{propId}/remove-agent', [PropertyController::cl
 // Resend profoma receipt (POST for security)
 Route::post('/dashboard/profoma/{id}/resend', [PropertyController::class, 'resendProfoma'])->name('profoma.resend');
 Route::post('/dashboard/switch-mode', [App\Http\Controllers\PropertyController::class, 'switchDashboardMode'])->name('dashboard.switchMode');
-// Send profoma for an apartment (AJAX)
-Route::post('/dashboard/apartment/{apartmentId}/send-profoma', [ProfomaController::class, 'send'])->middleware('auth');
-Route::get('/dashboard/apartment/{apartmentId}/send-profoma', [ProfomaController::class, 'send'])->middleware('auth');
+// Send profoma for an apartment (AJAX) - with security middleware for payment calculations
+Route::post('/dashboard/apartment/{apartmentId}/send-profoma', [ProfomaController::class, 'send'])
+    ->middleware(['auth', 'payment.calculation.rate.limit', 'payment.calculation.input.validation']);
+Route::get('/dashboard/apartment/{apartmentId}/send-profoma', [ProfomaController::class, 'send'])
+    ->middleware(['auth', 'payment.calculation.rate.limit', 'payment.calculation.input.validation']);
 // Notification counts for navbar badge (AJAX)
 Route::get('/dashboard/notifications/counts', [PropertyController::class, 'getNotificationCounts'])->middleware('auth');
 // Mark notifications as seen (profoma receipts and future types)
@@ -191,6 +190,18 @@ Route::middleware(['auth'])->group(function () {
     // Payment routes
     Route::get('/dashboard/payments', [PaymentController::class, 'index'])->name('payments.index');
     Route::get('/dashboard/payments/analytics', [PaymentController::class, 'analytics'])->name('payments.analytics');
+    
+    // Complaint System Routes
+    Route::prefix('complaints')->name('complaints.')->group(function () {
+        Route::get('/', [ComplaintController::class, 'index'])->name('index');
+        Route::get('/create', [ComplaintController::class, 'create'])->name('create');
+        Route::post('/', [ComplaintController::class, 'store'])->name('store');
+        Route::get('/{complaint}', [ComplaintController::class, 'show'])->name('show');
+        Route::post('/{complaint}/comment', [ComplaintController::class, 'addComment'])->name('comment');
+        Route::post('/{complaint}/status', [ComplaintController::class, 'updateStatus'])->name('status');
+        Route::post('/{complaint}/assign', [ComplaintController::class, 'assign'])->name('assign');
+        Route::get('/landlord/dashboard', [ComplaintController::class, 'landlordDashboard'])->name('landlord.dashboard');
+    });
 });
 // AJAX: Find verified agents for property assignment
 Route::get('/dashboard/agents/search', [UserController::class, 'searchAgents'])->middleware('auth');
@@ -200,6 +211,9 @@ Route::post('/pay', [PaymentController::class, 'redirectToGateway'])->name('pay'
 Route::post('/payment/pay', [PaymentController::class, 'redirectToGateway'])->name('payment.pay'); // Alias for compatibility
 Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
 Route::post('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback.post');
+
+// Webhook routes (no CSRF protection needed)
+Route::post('/webhooks/paystack', [App\Http\Controllers\PaymentWebhookController::class, 'handlePaystackWebhook'])->name('webhooks.paystack');
 
 // Test route for payment callback (remove in production)
 Route::get('/test-payment-callback', function() {
@@ -322,6 +336,20 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/email-center/settings', [App\Http\Controllers\Admin\EmailCenterController::class, 'settings'])->name('email-center.settings');
     Route::post('/email-center/test', [App\Http\Controllers\Admin\EmailCenterController::class, 'sendTest'])->name('email-center.test');
     
+    // Payment Calculation Monitoring Routes
+    Route::prefix('payment-monitoring')->name('payment-monitoring.')->group(function () {
+        Route::get('/dashboard', [App\Http\Controllers\Admin\PaymentCalculationMonitoringController::class, 'dashboard'])->name('dashboard');
+        Route::get('/performance-metrics', [App\Http\Controllers\Admin\PaymentCalculationMonitoringController::class, 'performanceMetrics'])->name('performance-metrics');
+        Route::get('/accuracy-metrics', [App\Http\Controllers\Admin\PaymentCalculationMonitoringController::class, 'accuracyMetrics'])->name('accuracy-metrics');
+        Route::get('/error-metrics', [App\Http\Controllers\Admin\PaymentCalculationMonitoringController::class, 'errorMetrics'])->name('error-metrics');
+        Route::get('/alerts', [App\Http\Controllers\Admin\PaymentCalculationMonitoringController::class, 'alerts'])->name('alerts');
+        Route::get('/pricing-usage', [App\Http\Controllers\Admin\PaymentCalculationMonitoringController::class, 'pricingUsage'])->name('pricing-usage');
+        Route::get('/dashboard-data', [App\Http\Controllers\Admin\PaymentCalculationMonitoringController::class, 'dashboardData'])->name('dashboard-data');
+        Route::get('/export', [App\Http\Controllers\Admin\PaymentCalculationMonitoringController::class, 'export'])->name('export');
+        Route::get('/real-time', [App\Http\Controllers\Admin\PaymentCalculationMonitoringController::class, 'realTimeData'])->name('real-time');
+        Route::get('/health-check', [App\Http\Controllers\Admin\PaymentCalculationMonitoringController::class, 'healthCheck'])->name('health-check');
+    });
+    
     Route::post('/maintenance/toggle', [App\Http\Controllers\Admin\AdminController::class, 'toggleMaintenance'])->name('maintenance.toggle');
     Route::get('/api-management', [App\Http\Controllers\Admin\AdminController::class, 'apiManagement'])->name('api-management');
     
@@ -399,6 +427,17 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::put('/{regionalManager}/update', [App\Http\Controllers\Admin\RegionalManagerManagementController::class, 'updateRegionalManager'])->name('update');
         // Optional AJAX data endpoint
         Route::get('/data', [App\Http\Controllers\Admin\RegionalManagerManagementController::class, 'getRegionalManagersData'])->name('data');
+    });
+
+    // Pricing Configuration Management Routes
+    Route::prefix('pricing-configuration')->name('pricing-configuration.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\PricingConfigurationController::class, 'index'])->name('index');
+        Route::get('/{apartment}/edit', [App\Http\Controllers\Admin\PricingConfigurationController::class, 'edit'])->name('edit');
+        Route::put('/{apartment}', [App\Http\Controllers\Admin\PricingConfigurationController::class, 'update'])->name('update');
+        Route::post('/preview', [App\Http\Controllers\Admin\PricingConfigurationController::class, 'preview'])->name('preview');
+        Route::post('/bulk-update', [App\Http\Controllers\Admin\PricingConfigurationController::class, 'bulkUpdate'])->name('bulk-update');
+        Route::get('/audit-trail', [App\Http\Controllers\Admin\PricingConfigurationController::class, 'auditTrail'])->name('audit-trail');
+        Route::get('/apartment-data', [App\Http\Controllers\Admin\PricingConfigurationController::class, 'getApartmentData'])->name('apartment-data');
     });
 });
 
@@ -518,6 +557,8 @@ Route::prefix('benefactor')->name('benefactor.')->group(function () {
 // Tenant routes for creating payment invitations
 Route::middleware(['auth'])->prefix('tenant')->name('tenant.')->group(function () {
     Route::post('/invite-benefactor', [App\Http\Controllers\TenantBenefactorController::class, 'inviteBenefactor'])->name('invite.benefactor');
+    Route::post('/generate-benefactor-link', [App\Http\Controllers\TenantBenefactorController::class, 'generateBenefactorLink'])->name('generate.benefactor.link');
+    Route::post('/send-benefactor-invitation', [App\Http\Controllers\TenantBenefactorController::class, 'sendBenefactorInvitation'])->name('send.benefactor.invitation');
     Route::get('/benefactor-invitations', [App\Http\Controllers\TenantBenefactorController::class, 'invitations'])->name('benefactor.invitations');
     Route::post('/benefactor-invitation/{invitation}/cancel', [App\Http\Controllers\TenantBenefactorController::class, 'cancelInvitation'])->name('benefactor.cancel');
 });
@@ -526,7 +567,13 @@ Route::middleware(['auth'])->prefix('tenant')->name('tenant.')->group(function (
 Route::prefix('apartment/invite')->name('apartment.invite.')->group(function () {
     // Public routes for unauthenticated users
     Route::get('/{token}', [App\Http\Controllers\ApartmentInvitationController::class, 'show'])->name('show');
-    Route::post('/{token}/apply', [App\Http\Controllers\ApartmentInvitationController::class, 'apply'])->name('apply');
+    Route::post('/{token}/apply', [App\Http\Controllers\ApartmentInvitationController::class, 'apply'])
+        ->middleware(['payment.calculation.rate.limit', 'payment.calculation.input.validation'])
+        ->name('apply');
+    // Handle GET requests to apply route (redirect to show page)
+    Route::get('/{token}/apply', function($token) {
+        return redirect()->route('apartment.invite.show', $token)->with('info', 'Please use the application form below to apply for this apartment.');
+    })->name('apply.redirect');
     Route::post('/store-session', [App\Http\Controllers\ApartmentInvitationController::class, 'storeSession'])->name('store-session');
     Route::get('/{token}/payment/{payment}', [App\Http\Controllers\ApartmentInvitationController::class, 'payment'])->name('payment');
     Route::post('/{token}/payment/callback', [App\Http\Controllers\ApartmentInvitationController::class, 'paymentCallback'])->name('payment.callback');
@@ -543,6 +590,8 @@ Route::prefix('apartment/invite')->name('apartment.invite.')->group(function () 
 
 // Landlord routes for generating invitation links (requires authentication)
 Route::middleware(['auth'])->group(function () {
-    Route::post('/apartment/{apartment}/generate-link', [App\Http\Controllers\ApartmentInvitationController::class, 'generateLink'])->name('apartment.generate-link');
+    Route::post('/apartment/{apartment}/generate-link', [App\Http\Controllers\ApartmentInvitationController::class, 'generateLink'])
+        ->middleware(['pricing.configuration.access.control'])
+        ->name('apartment.generate-link');
     Route::get('/apartment/{apartment}/invitation-stats', [App\Http\Controllers\ApartmentInvitationController::class, 'invitationStats'])->name('apartment.invitation-stats');
 });
