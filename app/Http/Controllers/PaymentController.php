@@ -519,37 +519,37 @@ class PaymentController extends Controller
                         throw new \Exception('Missing required proforma data: tenant_id=' . $proforma->tenant_id . ', landlord_id=' . $proforma->user_id . ', apartment_id=' . $proforma->apartment_id);
                     }
                     
-                    // Validate payment amount against calculation service
-                    $paymentAmount = $paymentDetails['data']['amount'] / 100; // Convert from kobo to naira
-                    $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
-                        $apartment->amount,
-                        $proforma->duration ?? 12,
-                        $apartment->getPricingType()
-                    );
+                    // Use the actual amount paid to Paystack (no recalculation after payment)
+                    $actualPaidAmount = $paymentDetails['data']['amount'] / 100; // Convert from kobo to naira
                     
-                    if (!$calculationResult->isValid) {
-                        throw new \Exception('Payment calculation validation failed: ' . $calculationResult->errorMessage);
-                    }
-                    
-                    // Validate that the payment amount matches the calculated amount
-                    $expectedAmount = $calculationResult->totalAmount;
-                    $tolerance = 0.01; // Allow for minor rounding differences
-                    
-                    if (abs($expectedAmount - $paymentAmount) > $tolerance) {
-                        Log::error('Payment amount discrepancy detected', [
-                            'transaction_id' => $reference,
-                            'expected_amount' => $expectedAmount,
-                            'received_amount' => $paymentAmount,
-                            'difference' => abs($expectedAmount - $paymentAmount),
-                            'calculation_method' => $calculationResult->calculationMethod
-                        ]);
+                    // For audit purposes only, calculate what the current system would expect
+                    // This is NOT used for validation, only for logging/audit trail
+                    $auditCalculationResult = null;
+                    try {
+                        $auditCalculationResult = $this->paymentCalculationService->calculatePaymentTotal(
+                            $apartment->amount,
+                            $proforma->duration ?? 12,
+                            $apartment->getPricingType()
+                        );
                         
-                        // For now, log the discrepancy but continue processing
-                        // In production, you might want to halt processing or flag for review
+                        // Log for audit purposes (but don't validate against it)
+                        if ($auditCalculationResult->isValid) {
+                            $currentExpectedAmount = $auditCalculationResult->totalAmount;
+                            Log::info('Payment audit calculation', [
+                                'transaction_id' => $reference,
+                                'actual_paid_amount' => $actualPaidAmount,
+                                'current_expected_amount' => $currentExpectedAmount,
+                                'difference' => abs($currentExpectedAmount - $actualPaidAmount),
+                                'calculation_method' => $auditCalculationResult->calculationMethod,
+                                'note' => 'This is for audit only - actual paid amount takes precedence'
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Audit calculation failed (not critical)', [
+                            'transaction_id' => $reference,
+                            'error' => $e->getMessage()
+                        ]);
                     }
-                    
-                    // Log calculation for audit purposes
-                    $this->paymentCalculationService->logCalculationSteps($calculationResult);
                     
                     // Use DB transaction to ensure data consistency
                     DB::beginTransaction();
@@ -557,7 +557,7 @@ class PaymentController extends Controller
                     $payment = new Payment();
                     $payment->transaction_id = $reference;
                     $payment->payment_reference = $reference;
-                    $payment->amount = $paymentAmount;
+                    $payment->amount = $actualPaidAmount; // Use actual paid amount, not recalculated
                     $payment->tenant_id = $proforma->tenant_id;
                     $payment->landlord_id = $proforma->user_id;
                     $payment->apartment_id = $proforma->apartment_id;
@@ -566,17 +566,30 @@ class PaymentController extends Controller
                     $payment->duration = $proforma->duration ?? 12;
                     $payment->paid_at = now();
                     
-                    // Store calculation details in payment metadata
-                    $payment->payment_meta = json_encode([
-                        'calculation_method' => $calculationResult->calculationMethod,
-                        'calculation_steps' => $calculationResult->calculationSteps,
-                        'expected_amount' => $expectedAmount,
-                        'amount_validated' => abs($expectedAmount - $paymentAmount) <= $tolerance,
+                    // Store payment metadata with actual paid amount and audit info
+                    $paymentMeta = [
+                        'actual_paid_amount' => $actualPaidAmount,
+                        'paystack_amount_kobo' => $paymentDetails['data']['amount'],
                         'paystack_data' => [
                             'channel' => $paymentDetails['data']['channel'] ?? null,
-                            'gateway_response' => $paymentDetails['data']['gateway_response'] ?? null
-                        ]
-                    ]);
+                            'gateway_response' => $paymentDetails['data']['gateway_response'] ?? null,
+                            'paid_at' => $paymentDetails['data']['paid_at'] ?? null
+                        ],
+                        'payment_source' => 'paystack_callback',
+                        'amount_source' => 'actual_payment' // Indicates this is the real paid amount
+                    ];
+                    
+                    // Add audit calculation details if available (for reference only)
+                    if ($auditCalculationResult && $auditCalculationResult->isValid) {
+                        $paymentMeta['audit_calculation'] = [
+                            'method' => $auditCalculationResult->calculationMethod,
+                            'steps' => $auditCalculationResult->calculationSteps,
+                            'current_expected_amount' => $auditCalculationResult->totalAmount,
+                            'note' => 'For audit purposes only - not used for payment amount'
+                        ];
+                    }
+                    
+                    $payment->payment_meta = json_encode($paymentMeta);
                     
                     Log::info('About to save payment', ['payment_data' => $payment->toArray()]);
                     
@@ -1316,21 +1329,30 @@ class PaymentController extends Controller
     }
 
     /**
-     * Validate existing payment amount against current calculation
+     * Audit existing payment amount against current calculation (for reporting only)
+     * NOTE: This should NOT be used to change displayed amounts - only for audit purposes
      */
     private function validateExistingPaymentAmount(Payment $payment): array
     {
         try {
-            // Get the apartment for this payment
+            // IMPORTANT: For existing payments, we always consider the stored amount as valid
+            // This method is only for audit/reporting purposes, not for changing displayed amounts
+            
+            $actualAmount = $payment->amount; // This is the amount that was actually paid
+            
+            // Get the apartment for audit calculation
             $apartment = Apartment::where('apartment_id', $payment->apartment_id)->first();
             if (!$apartment) {
                 return [
-                    'valid' => false,
-                    'error' => 'Apartment not found for existing payment validation'
+                    'valid' => true, // Payment amount is always valid (it was actually paid)
+                    'error' => null,
+                    'audit_note' => 'Apartment not found for audit calculation',
+                    'actual_amount' => $actualAmount,
+                    'audit_possible' => false
                 ];
             }
             
-            // Calculate expected amount using current pricing
+            // Calculate what the current system would expect (for audit only)
             $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
                 $apartment->amount,
                 $payment->duration ?? 12,
@@ -1339,116 +1361,165 @@ class PaymentController extends Controller
             
             if (!$calculationResult->isValid) {
                 return [
-                    'valid' => false,
-                    'error' => 'Current calculation failed: ' . $calculationResult->errorMessage
+                    'valid' => true, // Payment amount is always valid (it was actually paid)
+                    'error' => null,
+                    'audit_note' => 'Current calculation failed: ' . $calculationResult->errorMessage,
+                    'actual_amount' => $actualAmount,
+                    'audit_possible' => false
                 ];
             }
             
-            $expectedAmount = $calculationResult->totalAmount;
-            $actualAmount = $payment->amount;
-            $tolerance = 0.01; // Allow for minor rounding differences
+            $currentExpectedAmount = $calculationResult->totalAmount;
+            $difference = abs($currentExpectedAmount - $actualAmount);
+            $tolerance = 0.01;
             
-            $isValid = abs($expectedAmount - $actualAmount) <= $tolerance;
+            $auditMatches = $difference <= $tolerance;
             
-            if (!$isValid) {
-                Log::info('Payment amount validation discrepancy', [
+            // Log audit information (but don't treat as validation failure)
+            if (!$auditMatches) {
+                Log::info('Payment audit discrepancy (informational only)', [
                     'payment_id' => $payment->id,
                     'transaction_id' => $payment->transaction_id,
-                    'expected_amount' => $expectedAmount,
-                    'actual_amount' => $actualAmount,
-                    'difference' => abs($expectedAmount - $actualAmount),
+                    'actual_paid_amount' => $actualAmount,
+                    'current_expected_amount' => $currentExpectedAmount,
+                    'difference' => $difference,
                     'calculation_method' => $calculationResult->calculationMethod,
                     'apartment_pricing_type' => $apartment->getPricingType(),
                     'apartment_amount' => $apartment->amount,
-                    'payment_duration' => $payment->duration
+                    'payment_duration' => $payment->duration,
+                    'note' => 'This is audit information only - actual paid amount is always correct'
                 ]);
             }
             
             return [
-                'valid' => $isValid,
-                'error' => $isValid ? null : sprintf(
-                    'Payment amount mismatch. Expected: ₦%s, Actual: ₦%s (Difference: ₦%s)',
-                    number_format($expectedAmount, 2),
+                'valid' => true, // Payment amount is ALWAYS valid (it was actually paid)
+                'error' => null,
+                'audit_matches' => $auditMatches,
+                'audit_note' => $auditMatches ? 'Payment matches current calculation' : sprintf(
+                    'Payment differs from current calculation. Paid: ₦%s, Current calc: ₦%s (Diff: ₦%s)',
                     number_format($actualAmount, 2),
-                    number_format(abs($expectedAmount - $actualAmount), 2)
+                    number_format($currentExpectedAmount, 2),
+                    number_format($difference, 2)
                 ),
                 'calculation_result' => $calculationResult,
-                'expected_amount' => $expectedAmount,
                 'actual_amount' => $actualAmount,
-                'difference' => abs($expectedAmount - $actualAmount)
+                'current_expected_amount' => $currentExpectedAmount,
+                'difference' => $difference,
+                'audit_possible' => true
             ];
             
         } catch (\Exception $e) {
-            Log::error('Existing payment validation error', [
+            Log::error('Payment audit calculation error', [
                 'payment_id' => $payment->id,
                 'error' => $e->getMessage()
             ]);
             
             return [
-                'valid' => false,
-                'error' => 'Payment validation failed due to system error'
+                'valid' => true, // Payment amount is always valid (it was actually paid)
+                'error' => null,
+                'audit_note' => 'Audit calculation failed due to system error: ' . $e->getMessage(),
+                'actual_amount' => $payment->amount,
+                'audit_possible' => false
             ];
         }
     }
 
     /**
      * Get payment calculation details for display
+     * IMPORTANT: Always shows actual paid amount, not recalculated amounts
      */
     private function getPaymentCalculationDetails(Payment $payment): array
     {
         try {
-            // Try to get calculation details from payment metadata first
+            $actualPaidAmount = $payment->amount; // This is what was actually paid
+            
+            // Try to get details from payment metadata first
             if ($payment->payment_meta) {
                 $meta = is_string($payment->payment_meta) 
                     ? json_decode($payment->payment_meta, true) 
                     : $payment->payment_meta;
                 
-                if (is_array($meta) && isset($meta['calculation_method'])) {
-                    return [
-                        'method' => $meta['calculation_method'],
-                        'steps' => $meta['calculation_steps'] ?? [],
-                        'expected_amount' => $meta['expected_amount'] ?? $payment->amount,
-                        'amount_validated' => $meta['amount_validated'] ?? false,
-                        'source' => 'payment_metadata'
-                    ];
+                if (is_array($meta)) {
+                    // Check for new format metadata (post-fix)
+                    if (isset($meta['actual_paid_amount']) && isset($meta['amount_source'])) {
+                        return [
+                            'method' => $meta['audit_calculation']['method'] ?? 'actual_payment',
+                            'steps' => $meta['audit_calculation']['steps'] ?? [],
+                            'display_amount' => $actualPaidAmount, // Always show actual paid amount
+                            'amount_source' => $meta['amount_source'],
+                            'audit_calculation' => $meta['audit_calculation'] ?? null,
+                            'source' => 'payment_metadata_v2'
+                        ];
+                    }
+                    
+                    // Check for old format metadata (pre-fix) - still show actual paid amount
+                    if (isset($meta['calculation_method'])) {
+                        return [
+                            'method' => $meta['calculation_method'],
+                            'steps' => $meta['calculation_steps'] ?? [],
+                            'display_amount' => $actualPaidAmount, // Always show actual paid amount
+                            'amount_source' => 'legacy_payment',
+                            'legacy_expected' => $meta['expected_amount'] ?? null,
+                            'source' => 'payment_metadata_v1'
+                        ];
+                    }
                 }
             }
             
-            // If no metadata available, recalculate for display
+            // If no metadata available, show actual paid amount with audit info
             $apartment = Apartment::where('apartment_id', $payment->apartment_id)->first();
             if (!$apartment) {
                 return [
-                    'method' => 'unknown',
+                    'method' => 'actual_payment',
                     'steps' => [],
-                    'expected_amount' => $payment->amount,
-                    'amount_validated' => false,
+                    'display_amount' => $actualPaidAmount, // Always show actual paid amount
+                    'amount_source' => 'stored_payment',
+                    'audit_note' => 'Apartment not found for audit calculation',
                     'source' => 'apartment_not_found'
                 ];
             }
             
-            $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
-                $apartment->amount,
-                $payment->duration ?? 12,
-                $apartment->getPricingType()
-            );
-            
-            if (!$calculationResult->isValid) {
-                return [
-                    'method' => 'calculation_failed',
-                    'steps' => [],
-                    'expected_amount' => $payment->amount,
-                    'amount_validated' => false,
-                    'error' => $calculationResult->errorMessage,
-                    'source' => 'recalculation_failed'
-                ];
+            // Get audit calculation (for information only, not for display amount)
+            try {
+                $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
+                    $apartment->amount,
+                    $payment->duration ?? 12,
+                    $apartment->getPricingType()
+                );
+                
+                if ($calculationResult->isValid) {
+                    $currentExpected = $calculationResult->totalAmount;
+                    $difference = abs($currentExpected - $actualPaidAmount);
+                    
+                    return [
+                        'method' => 'actual_payment',
+                        'steps' => [],
+                        'display_amount' => $actualPaidAmount, // Always show actual paid amount
+                        'amount_source' => 'stored_payment',
+                        'audit_calculation' => [
+                            'method' => $calculationResult->calculationMethod,
+                            'current_expected' => $currentExpected,
+                            'difference' => $difference,
+                            'matches' => $difference <= 0.01
+                        ],
+                        'source' => 'with_audit_calculation'
+                    ];
+                }
+            } catch (\Exception $auditError) {
+                Log::warning('Audit calculation failed for payment display', [
+                    'payment_id' => $payment->id,
+                    'error' => $auditError->getMessage()
+                ]);
             }
             
+            // Fallback: just show actual paid amount
             return [
-                'method' => $calculationResult->calculationMethod,
-                'steps' => $calculationResult->calculationSteps,
-                'expected_amount' => $calculationResult->totalAmount,
-                'amount_validated' => abs($calculationResult->totalAmount - $payment->amount) <= 0.01,
-                'source' => 'recalculated'
+                'method' => 'actual_payment',
+                'steps' => [],
+                'display_amount' => $actualPaidAmount, // Always show actual paid amount
+                'amount_source' => 'stored_payment',
+                'audit_note' => 'Audit calculation not available',
+                'source' => 'fallback'
             ];
             
         } catch (\Exception $e) {
@@ -1457,13 +1528,14 @@ class PaymentController extends Controller
                 'error' => $e->getMessage()
             ]);
             
+            // Even on error, show the actual paid amount
             return [
-                'method' => 'error',
+                'method' => 'actual_payment',
                 'steps' => [],
-                'expected_amount' => $payment->amount,
-                'amount_validated' => false,
+                'display_amount' => $payment->amount, // Always show actual paid amount
+                'amount_source' => 'stored_payment',
                 'error' => $e->getMessage(),
-                'source' => 'error'
+                'source' => 'error_fallback'
             ];
         }
     }
