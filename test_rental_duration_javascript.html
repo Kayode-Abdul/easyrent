@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rental Duration JavaScript Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .test-section {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .test-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .test-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .rental-types-container {
+            border: 1px solid #e3e6f0;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: white;
+        }
+        .rental-types-container .form-check {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #e3e6f0;
+            border-radius: 6px;
+            background-color: #f8f9fc;
+        }
+        .rate-input-group {
+            margin-left: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <h1 class="mb-4">Rental Duration JavaScript Features Test</h1>
+        
+        <!-- Test 1: End Date Calculation -->
+        <div class="test-section">
+            <h3>Test 1: End Date Calculation</h3>
+            <p>Test the JavaScript function that calculates end dates based on start date and duration.</p>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="testStartDate" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="testStartDate" value="2025-01-01">
+                </div>
+                <div class="col-md-4">
+                    <label for="testDuration" class="form-label">Duration (months)</label>
+                    <select class="form-control" id="testDuration">
+                        <option value="1">1 Month</option>
+                        <option value="3">3 Months</option>
+                        <option value="6" selected>6 Months</option>
+                        <option value="12">12 Months</option>
+                        <option value="24">24 Months</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="testEndDate" class="form-label">Calculated End Date</label>
+                    <input type="date" class="form-control" id="testEndDate" readonly>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary mt-3" onclick="testEndDateCalculation()">Test Calculation</button>
+            <div id="endDateResult" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <!-- Test 2: Rental Type Checkbox Handling -->
+        <div class="test-section">
+            <h3>Test 2: Rental Type Checkbox Handling</h3>
+            <p>Test the dynamic showing/hiding of rate input fields based on checkbox selection.</p>
+            
+            <div class="rental-types-container">
+                <div class="form-check">
+                    <input class="form-check-input rental-type-checkbox" type="checkbox" 
+                           id="hourly_rental_test" name="rental_types[]" value="hourly">
+                    <label class="form-check-label" for="hourly_rental_test">
+                        Hourly Rental
+                    </label>
+                    <div class="rate-input-group mt-2" style="display: none;">
+                        <div class="input-group">
+                            <span class="input-group-text">₦</span>
+                            <input type="number" class="form-control" name="hourly_rate" 
+                                   placeholder="Hourly rate" step="0.01" min="0">
+                            <span class="input-group-text">per hour</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-check">
+                    <input class="form-check-input rental-type-checkbox" type="checkbox" 
+                           id="daily_rental_test" name="rental_types[]" value="daily">
+                    <label class="form-check-label" for="daily_rental_test">
+                        Daily Rental
+                    </label>
+                    <div class="rate-input-group mt-2" style="display: none;">
+                        <div class="input-group">
+                            <span class="input-group-text">₦</span>
+                            <input type="number" class="form-control" name="daily_rate" 
+                                   placeholder="Daily rate" step="0.01" min="0">
+                            <span class="input-group-text">per day</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-check">
+                    <input class="form-check-input rental-type-checkbox" type="checkbox" 
+                           id="monthly_rental_test" name="rental_types[]" value="monthly" checked>
+                    <label class="form-check-label" for="monthly_rental_test">
+                        Monthly Rental
+                    </label>
+                    <div class="rate-input-group mt-2">
+                        <div class="input-group">
+                            <span class="input-group-text">₦</span>
+                            <input type="number" class="form-control" name="monthly_rate" 
+                                   placeholder="Monthly rate" step="0.01" min="0" value="1800000">
+                            <span class="input-group-text">per month</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <label for="default_rental_type_test" class="form-label">Default Rental Type</label>
+                <select class="form-control" id="default_rental_type_test">
+                    <option value="monthly" selected>Monthly</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-primary mt-3" onclick="testRentalTypeHandling()">Test Checkbox Handling</button>
+            <div id="rentalTypeResult" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <!-- Test 3: Form Integration Test -->
+        <div class="test-section">
+            <h3>Test 3: Form Integration Test</h3>
+            <p>Test the complete form with automatic end date calculation and rental type management.</p>
+            
+            <form id="testApartmentForm">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="fromRange" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" name="fromRange" id="fromRange" value="2025-01-15">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="duration" class="form-label">Duration</label>
+                            <select class="form-control" name="duration" id="duration">
+                                <option value="1">Monthly</option>
+                                <option value="3">Quarterly</option>
+                                <option value="6" selected>Semi-Annual</option>
+                                <option value="12">Annual</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="toRange" class="form-label">End Date (Auto-calculated)</label>
+                            <input type="date" class="form-control" name="toRange" id="toRange" readonly>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="amount" class="form-label">Base Amount</label>
+                            <input type="number" class="form-control" name="amount" id="amount" value="1800000" step="0.01">
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn btn-success" onclick="testFormIntegration()">Test Form Integration</button>
+            </form>
+            
+            <div id="formIntegrationResult" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <!-- Test 4: Payment Calculation Test -->
+        <div class="test-section">
+            <h3>Test 4: Payment Calculation Test</h3>
+            <p>Test payment calculations for different rental types and durations.</p>
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="calcRentalType" class="form-label">Rental Type</label>
+                    <select class="form-control" id="calcRentalType">
+                        <option value="hourly">Hourly</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly" selected>Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="calcRate" class="form-label">Rate (₦)</label>
+                    <input type="number" class="form-control" id="calcRate" value="1800000" step="0.01">
+                </div>
+                <div class="col-md-3">
+                    <label for="calcQuantity" class="form-label">Quantity</label>
+                    <input type="number" class="form-control" id="calcQuantity" value="6" min="1">
+                </div>
+                <div class="col-md-3">
+                    <label for="calcTotal" class="form-label">Total Amount</label>
+                    <input type="text" class="form-control" id="calcTotal" readonly>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary mt-3" onclick="testPaymentCalculation()">Calculate Payment</button>
+            <div id="paymentCalcResult" class="test-result" style="display: none;"></div>
+        </div>
+        
+        <!-- Test Results Summary -->
+        <div class="test-section">
+            <h3>Test Results Summary</h3>
+            <div id="testSummary">
+                <p>Run the tests above to see the summary here.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test results tracking
+        let testResults = {
+            endDateCalculation: false,
+            rentalTypeHandling: false,
+            formIntegration: false,
+            paymentCalculation: false
+        };
+
+        // End Date Calculation Function (from apartment edit form)
+        function calculateEndDate(startDate, duration) {
+            if (!startDate || !duration) return '';
+            const date = new Date(startDate);
+            date.setMonth(date.getMonth() + parseInt(duration));
+            return date.toISOString().split('T')[0];
+        }
+
+        // Test 1: End Date Calculation
+        function testEndDateCalculation() {
+            const startDate = document.getElementById('testStartDate').value;
+            const duration = document.getElementById('testDuration').value;
+            const resultDiv = document.getElementById('endDateResult');
+            
+            try {
+                const endDate = calculateEndDate(startDate, duration);
+                document.getElementById('testEndDate').value = endDate;
+                
+                // Verify the calculation
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const monthsDiff = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+                
+                if (monthsDiff == duration) {
+                    resultDiv.className = 'test-result test-success';
+                    resultDiv.innerHTML = `✓ End date calculation successful! ${startDate} + ${duration} months = ${endDate}`;
+                    testResults.endDateCalculation = true;
+                } else {
+                    resultDiv.className = 'test-result test-error';
+                    resultDiv.innerHTML = `✗ End date calculation error! Expected ${duration} months difference, got ${monthsDiff}`;
+                    testResults.endDateCalculation = false;
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result test-error';
+                resultDiv.innerHTML = `✗ End date calculation failed: ${error.message}`;
+                testResults.endDateCalculation = false;
+            }
+            
+            resultDiv.style.display = 'block';
+            updateTestSummary();
+        }
+
+        // Test 2: Rental Type Checkbox Handling
+        function testRentalTypeHandling() {
+            const resultDiv = document.getElementById('rentalTypeResult');
+            let results = [];
+            
+            try {
+                // Test checkbox functionality
+                const checkboxes = document.querySelectorAll('.rental-type-checkbox');
+                
+                checkboxes.forEach(checkbox => {
+                    const rateInputGroup = checkbox.closest('.form-check').querySelector('.rate-input-group');
+                    const rateInput = rateInputGroup.querySelector('input[type="number"]');
+                    
+                    if (checkbox.checked) {
+                        if (rateInputGroup.style.display !== 'none') {
+                            results.push(`✓ ${checkbox.value} rate input is visible when checked`);
+                        } else {
+                            results.push(`✗ ${checkbox.value} rate input should be visible when checked`);
+                        }
+                    } else {
+                        if (rateInputGroup.style.display === 'none') {
+                            results.push(`✓ ${checkbox.value} rate input is hidden when unchecked`);
+                        } else {
+                            results.push(`✗ ${checkbox.value} rate input should be hidden when unchecked`);
+                        }
+                    }
+                });
+                
+                // Test default rental type options
+                const defaultSelect = document.getElementById('default_rental_type_test');
+                const selectedTypes = Array.from(document.querySelectorAll('.rental-type-checkbox:checked')).map(cb => cb.value);
+                
+                if (selectedTypes.length > 0) {
+                    results.push(`✓ Default rental type options should include: ${selectedTypes.join(', ')}`);
+                } else {
+                    results.push(`✗ No rental types selected`);
+                }
+                
+                resultDiv.className = 'test-result test-success';
+                resultDiv.innerHTML = results.join('<br>');
+                testResults.rentalTypeHandling = true;
+                
+            } catch (error) {
+                resultDiv.className = 'test-result test-error';
+                resultDiv.innerHTML = `✗ Rental type handling test failed: ${error.message}`;
+                testResults.rentalTypeHandling = false;
+            }
+            
+            resultDiv.style.display = 'block';
+            updateTestSummary();
+        }
+
+        // Test 3: Form Integration
+        function testFormIntegration() {
+            const resultDiv = document.getElementById('formIntegrationResult');
+            let results = [];
+            
+            try {
+                const startDate = document.getElementById('fromRange').value;
+                const duration = document.getElementById('duration').value;
+                const endDateField = document.getElementById('toRange');
+                
+                // Simulate the form's auto-calculation
+                const calculatedEndDate = calculateEndDate(startDate, duration);
+                endDateField.value = calculatedEndDate;
+                
+                results.push(`✓ Start Date: ${startDate}`);
+                results.push(`✓ Duration: ${duration} months`);
+                results.push(`✓ Calculated End Date: ${calculatedEndDate}`);
+                
+                // Test form validation
+                const amount = document.getElementById('amount').value;
+                if (amount && parseFloat(amount) > 0) {
+                    results.push(`✓ Base Amount: ₦${parseFloat(amount).toLocaleString()}`);
+                } else {
+                    results.push(`✗ Invalid base amount`);
+                }
+                
+                resultDiv.className = 'test-result test-success';
+                resultDiv.innerHTML = results.join('<br>');
+                testResults.formIntegration = true;
+                
+            } catch (error) {
+                resultDiv.className = 'test-result test-error';
+                resultDiv.innerHTML = `✗ Form integration test failed: ${error.message}`;
+                testResults.formIntegration = false;
+            }
+            
+            resultDiv.style.display = 'block';
+            updateTestSummary();
+        }
+
+        // Test 4: Payment Calculation
+        function testPaymentCalculation() {
+            const resultDiv = document.getElementById('paymentCalcResult');
+            
+            try {
+                const rentalType = document.getElementById('calcRentalType').value;
+                const rate = parseFloat(document.getElementById('calcRate').value);
+                const quantity = parseInt(document.getElementById('calcQuantity').value);
+                
+                const total = rate * quantity;
+                document.getElementById('calcTotal').value = `₦${total.toLocaleString()}`;
+                
+                let unitLabel = '';
+                switch (rentalType) {
+                    case 'hourly': unitLabel = 'hours'; break;
+                    case 'daily': unitLabel = 'days'; break;
+                    case 'weekly': unitLabel = 'weeks'; break;
+                    case 'monthly': unitLabel = 'months'; break;
+                    case 'yearly': unitLabel = 'years'; break;
+                }
+                
+                resultDiv.className = 'test-result test-success';
+                resultDiv.innerHTML = `✓ Payment Calculation: ₦${rate.toLocaleString()} × ${quantity} ${unitLabel} = ₦${total.toLocaleString()}`;
+                testResults.paymentCalculation = true;
+                
+            } catch (error) {
+                resultDiv.className = 'test-result test-error';
+                resultDiv.innerHTML = `✗ Payment calculation failed: ${error.message}`;
+                testResults.paymentCalculation = false;
+            }
+            
+            resultDiv.style.display = 'block';
+            updateTestSummary();
+        }
+
+        // Update test summary
+        function updateTestSummary() {
+            const summaryDiv = document.getElementById('testSummary');
+            const passedTests = Object.values(testResults).filter(result => result).length;
+            const totalTests = Object.keys(testResults).length;
+            
+            let summary = `<h5>Test Results: ${passedTests}/${totalTests} Passed</h5><ul>`;
+            
+            for (const [test, passed] of Object.entries(testResults)) {
+                const status = passed ? '✓' : '✗';
+                const className = passed ? 'text-success' : 'text-danger';
+                const testName = test.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                summary += `<li class="${className}">${status} ${testName}</li>`;
+            }
+            
+            summary += '</ul>';
+            
+            if (passedTests === totalTests) {
+                summary += '<div class="alert alert-success">🎉 All rental duration JavaScript features are working correctly!</div>';
+            } else {
+                summary += '<div class="alert alert-warning">⚠️ Some tests failed. Check the individual test results above.</div>';
+            }
+            
+            summaryDiv.innerHTML = summary;
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up rental type checkbox handlers (from apartment edit form)
+            document.querySelectorAll('.rental-type-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const rateInputGroup = this.closest('.form-check').querySelector('.rate-input-group');
+                    const rateInput = rateInputGroup.querySelector('input[type="number"]');
+                    
+                    if (this.checked) {
+                        rateInputGroup.style.display = 'block';
+                        rateInput.required = true;
+                    } else {
+                        rateInputGroup.style.display = 'none';
+                        rateInput.required = false;
+                        rateInput.value = '';
+                    }
+                    
+                    updateDefaultRentalTypeOptions();
+                });
+            });
+
+            // Set up form date handlers (from apartment edit form)
+            document.getElementById('fromRange').addEventListener('change', function() {
+                const startDate = this.value;
+                const duration = document.getElementById('duration').value;
+                if (startDate && duration) {
+                    document.getElementById('toRange').value = calculateEndDate(startDate, duration);
+                }
+            });
+
+            document.getElementById('duration').addEventListener('change', function() {
+                const duration = this.value;
+                const startDate = document.getElementById('fromRange').value;
+                if (startDate && duration) {
+                    document.getElementById('toRange').value = calculateEndDate(startDate, duration);
+                }
+            });
+
+            // Initialize default rental type options
+            updateDefaultRentalTypeOptions();
+            
+            // Run initial calculations
+            testEndDateCalculation();
+        });
+
+        // Update default rental type options (from apartment edit form)
+        function updateDefaultRentalTypeOptions() {
+            const selectedTypes = Array.from(document.querySelectorAll('.rental-type-checkbox:checked')).map(cb => cb.value);
+            const defaultSelect = document.getElementById('default_rental_type_test');
+            const currentValue = defaultSelect.value;
+            
+            // Clear and repopulate options
+            defaultSelect.innerHTML = '';
+            
+            selectedTypes.forEach(type => {
+                const label = type.charAt(0).toUpperCase() + type.slice(1);
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = label;
+                defaultSelect.appendChild(option);
+            });
+            
+            // Restore previous selection if still valid
+            if (selectedTypes.includes(currentValue)) {
+                defaultSelect.value = currentValue;
+            } else if (selectedTypes.length > 0) {
+                defaultSelect.value = selectedTypes[0];
+            }
+        }
+    </script>
+</body>
+</html>

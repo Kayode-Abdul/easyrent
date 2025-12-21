@@ -49,7 +49,14 @@
                                         <i class="fas fa-calendar-alt me-2"></i>Lease Information
                                     </h6>
                                     <ul class="list-unstyled mb-0">
-                                        <li><strong>Duration:</strong> {{ $invitation->lease_duration }} months</li>
+                                        <li><strong>Duration:</strong> 
+    @php
+        $duration = \App\Models\Duration::where('duration_months', $invitation->lease_duration)
+            ->where('is_active', true)
+            ->first();
+        echo $duration ? $duration->name : $invitation->lease_duration . ' months';
+    @endphp
+</li>
                                         <li><strong>Move-in Date:</strong> {{ \Carbon\Carbon::parse($invitation->move_in_date)->format('M d, Y') }}</li>
                                         <li><strong>Lease End:</strong> {{ \Carbon\Carbon::parse($invitation->move_in_date)->addMonths($invitation->lease_duration)->format('M d, Y') }}</li>
                                         <li><strong>Total Paid:</strong> <span class="text-success fw-bold">₦{{ number_format($invitation->total_amount) }}</span></li>

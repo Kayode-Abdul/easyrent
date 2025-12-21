@@ -7,6 +7,7 @@ use App\Models\Apartment;
 use App\Models\User;
 use App\Http\Requests\PropertyRequest;
 use App\Http\Requests\ApartmentRequest;
+use App\Http\Requests\SingleApartmentRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\File;
@@ -134,51 +135,89 @@ class PropertyController extends Controller
 
     public function addApartment(ApartmentRequest $request): JsonResponse
     {
-        // if (!auth()->check()) {
-        //     return redirect('/login');
-        // }
         try {
             Log::info('Apartment creation request data:', $request->all());
             $property = Property::where('property_id', $request->propertyId)->firstOrFail();
-            $startDate = $request->tenantId ? Carbon::parse($request->fromRange) : null;
-            $endDate = null;
-            if ($startDate && $request->duration) {
-                $endDate = $startDate->copy()->addMonths((int)$request->duration);
+            
+            $createdApartments = [];
+            $tenantIds = $request->tenantId ?? [];
+            $fromRanges = $request->fromRange ?? [];
+            $toRanges = $request->toRange ?? [];
+            $amounts = $request->amount ?? [];
+            $rentalTypes = $request->rentalType ?? [];
+            $durations = $request->duration ?? [];
+            
+            // Ensure we have at least one apartment to create
+            if (empty($amounts)) {
+                throw new \Exception('At least one apartment must be specified');
             }
-            $isOccupied = ($request->tenantId && $request->duration) ? 1 : 0;
-            $transactionId = (int)mt_rand(1000000, 9999999);
-            $apartment = Apartment::create([
-                'apartment_id' => $transactionId, // Generate a unique ID for the apartment  
-                'property_id' => $property->property_id, // Use property_id for foreign key
-                'apartment_type' => $request->apartmentType,
-                'tenant_id' => $request->tenantId ?: null,
-                'user_id' => auth()->user()->user_id,
-                'duration' => $request->duration ?: null,
-                'range_start' => $startDate,
-                'range_end' => $endDate,
-                'amount' => $request->price ?: null,
-                'occupied' => $isOccupied,
-                'created_at' => now()
-            ]);
-            // Create profoma receipt if tenant is assigned
-            if ($apartment->tenant_id) {
-                \App\Models\ProfomaReceipt::create([
-                    'user_id' => $property->user_id, // property owner
-                    'tenant_id' => $apartment->tenant_id,
-                    'status' => 3, // 3 = new and not sent by landlord| 2= sent and not viewed by tenant | 1 = viewed by tenant | 0 = rejected by tenant
-                    'transaction_id' => $transactionId,
-                    'apartment_id' => $transactionId, // Use the same transaction ID
-                    'duration' => $apartment->duration, // Set duration from apartment
+            
+            // Create apartments based on the arrays
+            for ($i = 0; $i < count($amounts); $i++) {
+                $tenantId = !empty($tenantIds[$i]) ? $tenantIds[$i] : null;
+                $fromRange = !empty($fromRanges[$i]) ? $fromRanges[$i] : null;
+                $toRange = !empty($toRanges[$i]) ? $toRanges[$i] : null;
+                $amount = $amounts[$i];
+                $rentalType = $rentalTypes[$i] ?? 'monthly';
+                $selectedDuration = !empty($durations[$i]) ? (float) $durations[$i] : null;
+                
+                $startDate = $fromRange ? Carbon::parse($fromRange) : null;
+                $endDate = $toRange ? Carbon::parse($toRange) : null;
+                $isOccupied = ($tenantId && $startDate && $endDate) ? 1 : 0;
+                $transactionId = (int)mt_rand(1000000, 9999999);
+                
+                // Store selected duration (decimal months) if provided.
+                // Do not derive via diffInMonths() because weekly/daily would become 0.
+                $duration = $selectedDuration;
+                
+                // Set up rental configuration based on rental type
+                $rentalConfig = $this->setupRentalConfiguration($rentalType, $amount);
+                
+                $apartment = Apartment::create([
+                    'apartment_id' => $transactionId,
+                    'property_id' => $property->property_id,
+                    'apartment_type' => $property->property_type ?? 'Standard',
+                    'tenant_id' => $tenantId,
+                    'user_id' => auth()->user()->user_id,
+                    'duration' => $duration,
+                    'range_start' => $startDate,
+                    'range_end' => $endDate,
+                    'amount' => $amount,
+                    'occupied' => $isOccupied,
+                    'created_at' => now(),
+                    // Rental duration fields
+                    'supported_rental_types' => $rentalConfig['supported_types'],
+                    'default_rental_type' => $rentalType,
+                    'hourly_rate' => $rentalConfig['hourly_rate'],
+                    'daily_rate' => $rentalConfig['daily_rate'],
+                    'weekly_rate' => $rentalConfig['weekly_rate'],
+                    'monthly_rate' => $rentalConfig['monthly_rate'],
+                    'yearly_rate' => $rentalConfig['yearly_rate'],
                 ]);
+                
+                // Create proforma receipt if tenant is assigned
+                if ($apartment->tenant_id) {
+                    \App\Models\ProfomaReceipt::create([
+                        'user_id' => $property->user_id,
+                        'tenant_id' => $apartment->tenant_id,
+                        'status' => 3,
+                        'transaction_id' => $transactionId,
+                        'apartment_id' => $transactionId,
+                        'duration' => $apartment->duration,
+                    ]);
+                }
+                
+                $createdApartments[] = $apartment;
             }
-            Log::info('Apartments created successfully:', ['apartments' => $apartment]);
+            
+            Log::info('Apartments created successfully:', ['count' => count($createdApartments)]);
             return response()->json([
                 'success' => true,
                 'messages' => [
-                    'message' => 'Apartment Listed Successfully!',
+                    'message' => count($createdApartments) . ' Apartment(s) Listed Successfully!',
                     'location' => 'listing'
                 ],
-                'data' => $apartment
+                'data' => $createdApartments
             ]);
         } catch (\Exception $e) {
             Log::error('Apartment creation failed: ' . $e->getMessage());
@@ -188,6 +227,167 @@ class PropertyController extends Controller
                 'messages' => 'Server Error! Cannot create Apartment. Error: ' . $e->getMessage()
             ], 500);
         }
+    }
+    
+    /**
+     * Add a single apartment to a property (for dashboard modal)
+     */
+    public function addSingleApartment(SingleApartmentRequest $request): JsonResponse
+    {
+        try {
+            Log::info('Single apartment creation request data:', $request->all());
+            $property = Property::where('property_id', $request->propertyId)->firstOrFail();
+            
+            // Generate unique apartment ID
+            do {
+                $apartmentId = mt_rand(1000000, 9999999);
+            } while (Apartment::where('apartment_id', $apartmentId)->exists());
+            
+            // Parse dates
+            $startDate = Carbon::parse($request->fromDate);
+            $endDate = Carbon::parse($request->toDate);
+            $isOccupied = ($request->tenantId && $startDate && $endDate) ? 1 : 0;
+            
+            // Store selected duration (decimal months) from the form.
+            // Using diffInMonths() would return 0 for weekly/daily leases.
+            $duration = (float) $request->duration;
+            
+            // Determine rental type based on duration
+            $rentalType = $this->determineRentalType($request->duration);
+            
+            // Set up rental configuration
+            $rentalConfig = $this->setupRentalConfiguration($rentalType, $request->price);
+            
+            $apartment = Apartment::create([
+                'apartment_id' => $apartmentId,
+                'property_id' => $property->property_id,
+                'apartment_type' => $request->apartmentType,
+                'tenant_id' => $request->tenantId,
+                'user_id' => auth()->user()->user_id,
+                'duration' => $duration,
+                'range_start' => $startDate,
+                'range_end' => $endDate,
+                'amount' => $request->price,
+                'occupied' => $isOccupied,
+                'created_at' => now(),
+                // Rental duration fields
+                'supported_rental_types' => $rentalConfig['supported_types'],
+                'default_rental_type' => $rentalType,
+                'hourly_rate' => $rentalConfig['hourly_rate'],
+                'daily_rate' => $rentalConfig['daily_rate'],
+                'weekly_rate' => $rentalConfig['weekly_rate'],
+                'monthly_rate' => $rentalConfig['monthly_rate'],
+                'yearly_rate' => $rentalConfig['yearly_rate'],
+            ]);
+            
+            // Create proforma receipt if tenant is assigned
+            if ($apartment->tenant_id) {
+                \App\Models\ProfomaReceipt::create([
+                    'user_id' => $property->user_id,
+                    'tenant_id' => $apartment->tenant_id,
+                    'status' => 3,
+                    'transaction_id' => $apartmentId,
+                    'apartment_id' => $apartmentId,
+                    'duration' => $apartment->duration,
+                ]);
+            }
+            
+            Log::info('Single apartment created successfully:', ['apartment_id' => $apartmentId]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Apartment created successfully!',
+                'data' => $apartment
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Single apartment creation failed: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Server Error! Cannot create Apartment. Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Determine rental type based on duration value
+     */
+    private function determineRentalType(float $duration): string
+    {
+        return match(true) {
+            $duration <= 0.03 => 'daily',
+            $duration <= 0.04 => 'hourly',
+            $duration <= 0.25 => 'weekly',
+            $duration <= 1 => 'monthly',
+            $duration <= 3 => 'quarterly',
+            $duration <= 6 => 'semi_annually',
+            $duration <= 12 => 'yearly',
+            $duration <= 24 => 'bi_annually',
+            default => 'monthly'
+        };
+    }
+    
+    /**
+     * Set up rental configuration based on rental type and amount
+     */
+    private function setupRentalConfiguration(string $rentalType, float $amount): array
+    {
+        $config = [
+            'supported_types' => [$rentalType],
+            'hourly_rate' => null,
+            'daily_rate' => null,
+            'weekly_rate' => null,
+            'monthly_rate' => null,
+            'yearly_rate' => null,
+        ];
+        
+        // Set the specific rate based on rental type
+        switch ($rentalType) {
+            case 'hourly':
+                $config['hourly_rate'] = $amount;
+                $config['supported_types'][] = 'daily'; // Also support daily (24 * hourly)
+                $config['daily_rate'] = $amount * 24;
+                break;
+                
+            case 'daily':
+                $config['daily_rate'] = $amount;
+                $config['supported_types'][] = 'weekly'; // Also support weekly (7 * daily)
+                $config['weekly_rate'] = $amount * 7;
+                break;
+                
+            case 'weekly':
+                $config['weekly_rate'] = $amount;
+                $config['supported_types'][] = 'monthly'; // Also support monthly (4.33 * weekly)
+                $config['monthly_rate'] = $amount * 4.33;
+                break;
+                
+            case 'monthly':
+                $config['monthly_rate'] = $amount;
+                // Add all converted types for monthly
+                $config['supported_types'] = ['monthly', 'quarterly', 'semi_annually', 'yearly', 'bi_annually'];
+                break;
+                
+            case 'yearly':
+                $config['yearly_rate'] = $amount;
+                $config['supported_types'][] = 'monthly'; // Also support monthly (yearly / 12)
+                $config['monthly_rate'] = $amount / 12;
+                break;
+                
+            case 'quarterly':
+            case 'semi_annually':
+            case 'bi_annually':
+                // These are calculated from monthly, so set monthly rate
+                $monthlyRate = match($rentalType) {
+                    'quarterly' => $amount / 3,
+                    'semi_annually' => $amount / 6,
+                    'bi_annually' => $amount / 24,
+                };
+                $config['monthly_rate'] = $monthlyRate;
+                $config['supported_types'] = ['monthly', 'quarterly', 'semi_annually', 'yearly', 'bi_annually'];
+                break;
+        }
+        
+        return $config;
     }
 
     public function switchDashboardMode(Request $request): \Illuminate\Http\JsonResponse
@@ -740,6 +940,11 @@ class PropertyController extends Controller
             ->with(['apartments.tenant', 'apartments.apartmentType', 'owner', 'agent'])
             ->firstOrFail();
         $userId = auth()->check() ? auth()->user()->user_id : null;
+        
+        // Load durations for the form
+        $durations = \App\Models\Duration::getActiveOrdered();
+        $durationOptions = \App\Models\Duration::getForDropdown();
+        
         // Get all properties for this user that have an agent assigned
         $previousAgentIds = Property::where('user_id', $userId)
             ->whereNotNull('agent_id')
@@ -753,7 +958,7 @@ class PropertyController extends Controller
         $apartments = $property->apartments;
 
         $locations = json_decode(File::get(resource_path('/states-and-cities.json')), true);
-        return view('property.show', compact('property', 'apartments', 'previousAgents', 'locations'));
+        return view('property.show', compact('property', 'apartments', 'durations', 'durationOptions', 'previousAgents', 'userId', 'locations'));
     }
 
     public function assignAgent(Request $request, string $propId): JsonResponse
@@ -816,26 +1021,6 @@ class PropertyController extends Controller
             ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to assign agent'
-            ], 500);
-        }
-    }
-
-    public function getPropertyDetails(string $propId): JsonResponse
-    {
-        try {
-            $property = Property::where('property_id', $propId)
-                ->with(['apartments.tenant', 'owner'])
-                ->firstOrFail();
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'property' => $property,
-                    'type_name' => $property->getPropertyTypeName(),
-                    'full_address' => $property->getFullAddress(),
-                    'active_apartments' => $property->hasActiveApartments()
-                ]
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -885,7 +1070,13 @@ class PropertyController extends Controller
         $apartment = Apartment::where('apartment_id', $apartmentId)
             ->with('property')
             ->firstOrFail();
-        return view('apartment.edit', compact('apartment'));
+            
+        // Load durations for the form
+        $durations = \App\Models\Duration::getActiveOrdered();
+        $durationOptions = \App\Models\Duration::getForDropdown();
+        $rentalTypes = \App\Models\Duration::getRentalTypes();
+        
+        return view('apartment.edit', compact('apartment', 'durations', 'durationOptions', 'rentalTypes'));
     }
 
     public function updateApartment(Request $request, int $apartmentId): JsonResponse
@@ -896,6 +1087,7 @@ class PropertyController extends Controller
             // Basic apartment fields
             $updateData = [
                 'tenant_id' => $request->tenantId,
+                'duration' => $request->has('duration') ? (float) $request->duration : $apartment->duration,
                 'range_start' => Carbon::parse($request->fromRange),
                 'range_end' => Carbon::parse($request->toRange),
                 'amount' => $request->amount,

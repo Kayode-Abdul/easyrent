@@ -1,5 +1,5 @@
    @php $currentSegment = request()->segment(1); 
-    $isDashboard = in_array($currentSegment, ['dashboard','admin', 'proforma', 'property-manager']); @endphp
+    $isDashboard = in_array($currentSegment, ['dashboard','admin', 'proforma', 'property-manager', 'complaints']); @endphp
 @if($isDashboard)
 <footer class="footer footer-black  footer-white ">
     <div class="container-fluid">

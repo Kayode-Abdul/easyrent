@@ -3,11 +3,10 @@
 @section('content')
 
 <div class="content">
-    <div class="container-fluid">
         <!-- Page Header -->
         <div class="row">
             <div class="col-md-12">
-                <div class="card">
+                <div class="card page-header-custom">
                     <div class="card-header">
                         <h4 class="card-title mb-0">
                             <i class="nc-icon nc-simple-add"></i> Submit New Complaint
@@ -199,7 +198,6 @@
                 </div>
             </div>
         </div>
-    </div>
 </div>
 
 <style>

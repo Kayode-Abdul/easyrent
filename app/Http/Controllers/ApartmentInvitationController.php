@@ -176,10 +176,25 @@ class ApartmentInvitationController extends Controller
      */
     public function show(string $token)
     {
+        // Add debugging for first visit issue
+        Log::info('EasyRent link accessed', [
+            'token' => substr($token, 0, 8) . '...',
+            'ip' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'session_id' => session()->getId(),
+            'has_session' => session()->isStarted(),
+            'timestamp' => now()->toISOString()
+        ]);
+
         // Validate token format first (only if service is available)
         if ($this->inputValidationService) {
             $tokenValidation = $this->inputValidationService->validateInvitationToken($token);
             if (!$tokenValidation['is_valid']) {
+                Log::warning('Token validation failed', [
+                    'token' => substr($token, 0, 8) . '...',
+                    'validation_errors' => $tokenValidation['errors'] ?? []
+                ]);
+                
                 if ($this->suspiciousActivityDetector) {
                     $this->suspiciousActivityDetector->recordFailedTokenAttempt(request()->ip());
                 }
@@ -259,12 +274,8 @@ class ApartmentInvitationController extends Controller
                     'invitation_token',
                     'status',
                     'expires_at',
-                    'tenant_user_id',
-                    'access_count',
-                    'last_accessed_at',
-                    'total_amount',
-                    'lease_duration',
-                    'move_in_date'
+                    'created_at',
+                    'updated_at'
                 ])
                 ->first();
 
@@ -275,50 +286,43 @@ class ApartmentInvitationController extends Controller
         }
 
         if (!$invitation) {
-            $this->suspiciousActivityDetector->recordFailedTokenAttempt(request()->ip());
-            $this->logSecurityEvent('invitation_not_found', [
-                'token' => substr($token, 0, 8) . '...',
-            ]);
-            return view('apartment.invite.not-found');
+            return view('apartment.invite.invalid-token');
         }
 
-        // Analyze request for suspicious activity (only if service is available)
-        if ($this->suspiciousActivityDetector && $this->securityBreachResponseService) {
-            $suspiciousAnalysis = $this->suspiciousActivityDetector->analyzeRequest(request(), $token);
+        // Check for suspicious activity patterns
+        if ($this->suspiciousActivityDetector && $this->suspiciousActivityDetector->isSuspiciousPattern(request(), $invitation)) {
+            $breachData = [
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'invitation_id' => $invitation->id,
+                'pattern_type' => 'repeated_access'
+            ];
 
-            if ($suspiciousAnalysis['is_suspicious']) {
-                $this->suspiciousActivityDetector->handleSuspiciousActivity(
-                    request(),
-                    $suspiciousAnalysis,
-                    $token
-                );
+            if ($this->securityBreachResponseService) {
+                $this->securityBreachResponseService->handleSecurityBreach($breachData);
 
-                // Handle security breach if action required
-                if ($suspiciousAnalysis['action_required']) {
-                    $breachData = [
-                        'ip_address' => request()->ip(),
-                        'user_agent' => request()->userAgent(),
-                        'patterns' => $suspiciousAnalysis['patterns'],
-                        'risk_score' => $suspiciousAnalysis['risk_score'],
-                        'tokens' => [$token],
-                        'detected_at' => now()->toISOString(),
-                        'request_data' => request()->all()
-                    ];
-
-                    $this->securityBreachResponseService->handleSecurityBreach($breachData);
-
-                    return view('apartment.invite.security-blocked', [
-                        'message' => 'Suspicious activity detected. Access has been temporarily blocked.'
-                    ]);
-                }
+                return view('apartment.invite.security-blocked', [
+                    'message' => 'Suspicious activity detected. Access has been temporarily blocked.'
+                ]);
             }
         }
 
         // Perform comprehensive security validation
+        Log::info('Performing security validation', [
+            'invitation_id' => $invitation->id,
+            'token' => substr($token, 0, 8) . '...'
+        ]);
+        
         $securityIssues = $invitation->performSecurityValidation(
             request()->ip(),
             request()->userAgent()
         );
+
+        Log::info('Security validation results', [
+            'invitation_id' => $invitation->id,
+            'security_issues' => $securityIssues,
+            'token' => substr($token, 0, 8) . '...'
+        ]);
 
         // Handle security issues
         if (!empty($securityIssues)) {
@@ -334,16 +338,29 @@ class ApartmentInvitationController extends Controller
             if (in_array('suspicious_activity_detected', $securityIssues)) {
                 $this->logger->logSuspiciousActivity(request(), 'Suspicious access pattern detected', [
                     'invitation_id' => $invitation->id,
-                    'token' => substr($token, 0, 8) . '...',
+                    'token' => substr($token, 0, 8) . '...'
                 ]);
-                $invitation->invalidateForSecurity('Suspicious access pattern detected');
-                return view('apartment.invite.security-blocked', compact('invitation'));
+
+                $breachData = [
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                    'invitation_id' => $invitation->id,
+                    'pattern_type' => 'security_validation_failed'
+                ];
+
+                if ($this->securityBreachResponseService) {
+                    $this->securityBreachResponseService->handleSecurityBreach($breachData);
+
+                    return view('apartment.invite.security-blocked', [
+                        'message' => 'Suspicious activity detected. Access has been temporarily blocked.'
+                    ]);
+                }
             }
 
             if (in_array('token_integrity_failed', $securityIssues)) {
                 $this->logSecurityEvent('token_integrity_failed', [
                     'invitation_id' => $invitation->id,
-                    'token' => substr($token, 0, 8) . '...',
+                    'token' => substr($token, 0, 8) . '...'
                 ]);
                 return view('apartment.invite.invalid-token', compact('invitation'));
             }
@@ -495,12 +512,17 @@ class ApartmentInvitationController extends Controller
             ]);
         }
 
+        $durations = \App\Models\Duration::getActiveOrdered();
+        $durationOptions = \App\Models\Duration::getForDropdown();
+
         return view('apartment.invite.show', compact(
             'invitation',
             'apartment',
             'property',
             'landlord',
-            'proformaData'
+            'proformaData',
+            'durations',
+            'durationOptions'
         ));
     }
 
@@ -621,17 +643,13 @@ class ApartmentInvitationController extends Controller
             // Store using session manager
             $this->sessionManager->storeApplicationData($token, $applicationData);
 
-            // Create a guest payment and redirect to payment page
-            $payment = $this->paymentIntegrationService->createGuestInvitationPayment($invitation, $applicationData);
-
-            Log::info('Guest flow: application stored and payment created', [
-                'invitation_id' => $invitation->id,
-                'payment_id' => $payment->id
+            // Skip backend payment creation - let frontend JavaScript handle payment
+            Log::info('Guest flow: application stored, redirecting to JavaScript payment page', [
+                'invitation_id' => $invitation->id
             ]);
 
             return redirect()->route('apartment.invite.payment', [
-                'token' => $token,
-                'payment' => $payment->id
+                'token' => $token
             ])->with('success', 'Please complete payment to secure your apartment.');
         }
 

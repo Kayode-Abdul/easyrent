@@ -187,10 +187,14 @@ class PaymentCalculationHandler {
     updateDisplay(duration, total, isUnauthenticated = false) {
         const prefix = isUnauthenticated ? 'unauth-' : '';
         
-        // Update duration display
+        // Update duration display with proper name
         const durationDisplay = document.getElementById(prefix + 'duration-display');
         if (durationDisplay) {
-            durationDisplay.textContent = duration + ' months';
+            // Try to get duration name from global durationNames if available
+            const durationName = (typeof window.durationNames !== 'undefined' && window.durationNames[duration]) 
+                ? window.durationNames[duration] 
+                : duration + ' months';
+            durationDisplay.textContent = durationName;
         }
         
         // Update total amount

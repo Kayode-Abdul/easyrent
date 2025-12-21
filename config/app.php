@@ -209,6 +209,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\SessionServiceProvider::class,
         App\Providers\PaymentCalculationServiceProvider::class,
+        App\Providers\EnhancedRentalCalculationServiceProvider::class,
 
     ],
 

@@ -265,8 +265,8 @@ class RegisterController extends Controller
             return $invitationRedirect;
         }
         
-        // Check if user came from EasyRent invitation (legacy support)
-        $hasEasyRentInvitation = session()->has('easyrent_invitation_token');
+        // Check if user came from EasyRent invitation (both session and URL parameter)
+        $hasEasyRentInvitation = session()->has('easyrent_invitation_token') || session()->has('invitation_token') || $request->has('invitation_token');
         
         if ($hasEasyRentInvitation) {
             // For EasyRent users, skip email verification and login directly
@@ -279,9 +279,14 @@ class RegisterController extends Controller
                 Log::error('Failed to send welcome email', ['user_id' => $user->user_id, 'error' => $e->getMessage()]);
             }
             
-            // Redirect to EasyRent invitation
-            if (session()->has('easyrent_redirect_url')) {
-                $redirectUrl = session()->pull('easyrent_redirect_url');
+            // Redirect to EasyRent invitation or registration completion
+            $redirectUrl = session()->pull('easyrent_redirect_url') ?? session()->pull('invitation_redirect_url');
+            
+            if (!$redirectUrl && $request->has('invitation_token')) {
+                $redirectUrl = route('apartment.invite.show', $request->get('invitation_token'));
+            }
+            
+            if ($redirectUrl) {
                 return redirect($redirectUrl)->with('success', 'Welcome to EasyRent! You can now complete your apartment application.');
             }
         }
@@ -465,7 +470,8 @@ class RegisterController extends Controller
     protected function handleInvitationBasedRegistration(Request $request, $user): ?\Illuminate\Http\RedirectResponse
     {
         try {
-            $invitationToken = session('invitation_token');
+            // Check for invitation token in session or URL parameter
+            $invitationToken = session('invitation_token') ?? $request->get('invitation_token');
             
             if (!$invitationToken) {
                 return null;
@@ -521,7 +527,7 @@ class RegisterController extends Controller
                 }
             }
 
-            // Get redirect URL - check both possible session keys
+            // Get redirect URL - check both possible session keys and URL parameter
             $redirectUrl = session()->pull('invitation_redirect_url') ?? session()->pull('easyrent_redirect_url');
             
             if (!$redirectUrl && $invitation) {

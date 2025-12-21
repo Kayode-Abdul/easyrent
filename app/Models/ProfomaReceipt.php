@@ -42,9 +42,9 @@ class ProfomaReceipt extends Model
 
     public function apartment()
     {
-        // The apartment_id field in proforma_receipt refers to apartments.id (primary key)
-        // not apartments.apartment_id field
-        return $this->belongsTo(Apartment::class, 'apartment_id', 'id');
+        // The apartment_id field in proforma_receipt refers to apartments.apartment_id field
+        // not apartments.id (primary key)
+        return $this->belongsTo(Apartment::class, 'apartment_id', 'apartment_id');
     }
 
     public function tenant()

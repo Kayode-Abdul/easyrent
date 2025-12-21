@@ -9,6 +9,7 @@ use App\Models\ApartmentInvitation;
 use App\Models\User;
 use App\Services\Payment\PaymentIntegrationService;
 use App\Services\Payment\PaymentCalculationServiceInterface;
+use App\Services\Payment\EnhancedRentalCalculationService;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -26,13 +27,16 @@ class PaymentController extends Controller
     use LogsEasyRentEvents;
     protected $paymentIntegrationService;
     protected $paymentCalculationService;
+    protected $enhancedRentalCalculationService;
 
     public function __construct(
         PaymentIntegrationService $paymentIntegrationService,
-        PaymentCalculationServiceInterface $paymentCalculationService
+        PaymentCalculationServiceInterface $paymentCalculationService,
+        EnhancedRentalCalculationService $enhancedRentalCalculationService
     ) {
         $this->paymentIntegrationService = $paymentIntegrationService;
         $this->paymentCalculationService = $paymentCalculationService;
+        $this->enhancedRentalCalculationService = $enhancedRentalCalculationService;
     }
     public function index(Request $request)
     {
@@ -221,7 +225,12 @@ class PaymentController extends Controller
         
         // Find the proforma receipt
         $proforma = ProfomaReceipt::findOrFail($proformaId);
-        $apartment = Apartment::with('apartmentType')->where('apartment_id', $proforma->apartment_id)->firstOrFail();
+        // Use the relationship to get the apartment (proforma.apartment_id refers to apartments.apartment_id)
+        $apartment = $proforma->apartment;
+        
+        if (!$apartment) {
+            throw new \Exception('Apartment not found for proforma ID: ' . $proformaId);
+        }
         
         // Validate payment amount against proforma calculation
         $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
@@ -378,6 +387,98 @@ class PaymentController extends Controller
                         'amount' => $paymentDetails['data']['amount'],
                         'metadata' => $metadata
                     ]);
+
+                    // Handle EasyRent invitation payments
+                    if (!empty($metadata['invitation_token'])) {
+                        try {
+                            $invitationToken = $metadata['invitation_token'];
+                            $invitation = ApartmentInvitation::where('invitation_token', $invitationToken)
+                                ->with(['apartment', 'landlord', 'tenant'])
+                                ->first();
+
+                            if (!$invitation) {
+                                Log::error('Invitation not found for invitation payment callback', [
+                                    'reference' => $reference,
+                                    'invitation_token' => $invitationToken,
+                                ]);
+                                return redirect('/dashboard')->with('error', 'Payment verification failed: Invitation not found');
+                            }
+
+                            // Check if payment already exists
+                            $existingPayment = Payment::where('transaction_id', $reference)->first();
+                            if ($existingPayment) {
+                                $result = $this->paymentIntegrationService->processInvitationPayment(
+                                    $existingPayment,
+                                    $paymentDetails['data']
+                                );
+
+                                if ($result['success']) {
+                                    return !empty($result['apartment_assigned'])
+                                        ? redirect()->route('invite.success', $result['invitation']->invitation_token)
+                                            ->with('success', 'Payment completed and apartment assigned successfully!')
+                                        : redirect()->route('register', ['invitation_token' => $result['invitation']->invitation_token])
+                                            ->with('success', 'Payment completed. Please register to finalize your apartment.');
+                                }
+
+                                return redirect('/dashboard')->with('error', 'Payment was received but processing failed: ' . ($result['error'] ?? 'Unknown error'));
+                            }
+
+                            // Create new payment record
+                            $tenantId = !empty($metadata['tenant_id']) && is_numeric($metadata['tenant_id']) 
+                                ? (int) $metadata['tenant_id'] 
+                                : null;
+
+                            $payment = new Payment();
+                            $payment->transaction_id = $reference;
+                            $payment->payment_reference = 'easyrent_' . $invitationToken;
+                            $payment->amount = $paymentDetails['data']['amount'] / 100;
+                            $payment->tenant_id = $tenantId;
+                            $payment->landlord_id = !empty($metadata['landlord_id']) && is_numeric($metadata['landlord_id'])
+                                ? (int) $metadata['landlord_id']
+                                : ($invitation->landlord_id ?? null);
+                            $payment->apartment_id = !empty($metadata['apartment_id']) && is_numeric($metadata['apartment_id'])
+                                ? (int) $metadata['apartment_id']
+                                : ($invitation->apartment_id ?? null);
+                            $payment->status = Payment::STATUS_COMPLETED;
+                            $payment->payment_method = $paymentDetails['data']['channel'] ?? ($metadata['payment_method'] ?? 'card');
+                            $payment->duration = (int) ($invitation->lease_duration ?? 12);
+                            $payment->paid_at = now();
+                            $payment->payment_meta = [
+                                'invitation_token' => $invitationToken,
+                                'transaction_type' => $metadata['transaction_type'] ?? 'apartment_invitation_payment',
+                                'payment_source' => 'paystack_callback',
+                                'paystack_amount_kobo' => $paymentDetails['data']['amount'] ?? null,
+                                'paystack_data' => [
+                                    'channel' => $paymentDetails['data']['channel'] ?? null,
+                                    'gateway_response' => $paymentDetails['data']['gateway_response'] ?? null,
+                                    'paid_at' => $paymentDetails['data']['paid_at'] ?? null,
+                                ],
+                            ];
+                            $payment->save();
+
+                            $result = $this->paymentIntegrationService->processInvitationPayment(
+                                $payment,
+                                $paymentDetails['data']
+                            );
+
+                            if ($result['success']) {
+                                return !empty($result['apartment_assigned'])
+                                    ? redirect()->route('invite.success', $result['invitation']->invitation_token)
+                                        ->with('success', 'Payment completed and apartment assigned successfully!')
+                                    : redirect()->route('register', ['invitation_token' => $result['invitation']->invitation_token])
+                                        ->with('success', 'Payment completed. Please register to finalize your apartment.');
+                            }
+
+                            return redirect('/dashboard')->with('error', 'Payment was received but apartment assignment failed: ' . ($result['error'] ?? 'Unknown error'));
+                        } catch (\Exception $e) {
+                            Log::error('Invitation payment callback processing failed', [
+                                'reference' => $reference,
+                                'error' => $e->getMessage(),
+                                'trace' => $e->getTraceAsString(),
+                            ]);
+                            return redirect('/dashboard')->with('error', 'Payment was received but could not be processed. Please contact support with reference: ' . $reference);
+                        }
+                    }
                     
                     // Handle test references
                     if (str_starts_with($reference, 'test_')) {
@@ -458,14 +559,16 @@ class PaymentController extends Controller
                 
                 Log::info('Proforma receipt found', ['proforma_id' => $proforma->id]);
                 
-                $apartment = Apartment::with('apartmentType')->where('apartment_id', $proforma->apartment_id)->first();
+                // Use the relationship to get the apartment (proforma.apartment_id refers to apartments.apartment_id)
+                $apartment = $proforma->apartment;
                 
                 if (!$apartment) {
                     Log::error('Apartment not found for proforma', [
                         'proforma_id' => $proforma->id, 
-                        'apartment_id' => $proforma->apartment_id
+                        'proforma_apartment_id' => $proforma->apartment_id,
+                        'note' => 'proforma.apartment_id should reference apartments.apartment_id'
                     ]);
-                    return redirect('/dashboard')->with('error', 'Payment verification failed: Apartment not found');
+                    return redirect('/dashboard')->with('error', 'Payment verification failed: Apartment not found for proforma');
                 }
                 
                 Log::info('Apartment found', ['apartment_id' => $apartment->apartment_id]);
@@ -477,7 +580,7 @@ class PaymentController extends Controller
                         'amount' => $paymentDetails['data']['amount'] / 100,
                         'tenant_id' => $proforma->tenant_id,
                         'landlord_id' => $proforma->user_id,
-                        'apartment_id' => $proforma->apartment_id,
+                        'apartment_id' => $apartment->apartment_id, // Use apartment's apartment_id field
                         'duration' => $proforma->duration
                     ]);
                     
@@ -515,8 +618,8 @@ class PaymentController extends Controller
                     }
                     
                     // Validate required data before creating payment
-                    if (!$proforma->tenant_id || !$proforma->user_id || !$proforma->apartment_id) {
-                        throw new \Exception('Missing required proforma data: tenant_id=' . $proforma->tenant_id . ', landlord_id=' . $proforma->user_id . ', apartment_id=' . $proforma->apartment_id);
+                    if (!$proforma->tenant_id || !$proforma->user_id || !$apartment->apartment_id) {
+                        throw new \Exception('Missing required proforma data: tenant_id=' . $proforma->tenant_id . ', landlord_id=' . $proforma->user_id . ', apartment_id=' . $apartment->apartment_id);
                     }
                     
                     // Use the actual amount paid to Paystack (no recalculation after payment)
@@ -560,7 +663,8 @@ class PaymentController extends Controller
                     $payment->amount = $actualPaidAmount; // Use actual paid amount, not recalculated
                     $payment->tenant_id = $proforma->tenant_id;
                     $payment->landlord_id = $proforma->user_id;
-                    $payment->apartment_id = $proforma->apartment_id;
+                    // Store the apartment's apartment_id field (the unique identifier)
+                    $payment->apartment_id = $apartment->apartment_id;
                     $payment->status = 'completed';
                     $payment->payment_method = $paymentDetails['data']['channel'] ?? 'card';
                     $payment->duration = $proforma->duration ?? 12;
@@ -669,7 +773,7 @@ class PaymentController extends Controller
                         $debugPayment->amount = $paymentDetails['data']['amount'] / 100;
                         $debugPayment->tenant_id = $proforma->tenant_id ?? 0;
                         $debugPayment->landlord_id = $proforma->user_id ?? 0;
-                        $debugPayment->apartment_id = $proforma->apartment_id ?? 0;
+                        $debugPayment->apartment_id = $apartment ? $apartment->apartment_id : 0;
                         $debugPayment->status = 'failed';
                         $debugPayment->payment_method = 'debug';
                         $debugPayment->duration = 1;
@@ -1157,6 +1261,12 @@ class PaymentController extends Controller
                 ];
             }
             
+            // Check if this is an enhanced calculation payment
+            if (isset($metadata['enhanced_calculation'])) {
+                return $this->validateEnhancedCalculationPayment($requestedAmount, $metadata, $apartment);
+            }
+            
+            // Fall back to standard calculation
             $duration = $invitation->lease_duration ?? 12;
             $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
                 $apartment->amount,
@@ -1208,6 +1318,78 @@ class PaymentController extends Controller
     }
 
     /**
+     * Validate enhanced calculation payment
+     */
+    private function validateEnhancedCalculationPayment(float $requestedAmount, array $metadata, Apartment $apartment): array
+    {
+        try {
+            $enhancedCalc = $metadata['enhanced_calculation'];
+            $durationType = $enhancedCalc['duration_type'];
+            $quantity = $enhancedCalc['quantity'];
+            $expectedAmount = $enhancedCalc['calculated_amount'];
+            
+            // Re-calculate using the enhanced service to verify
+            $result = $this->enhancedRentalCalculationService->calculateRentalCost(
+                $apartment,
+                $durationType,
+                $quantity
+            );
+            
+            if (!$result->isValid) {
+                return [
+                    'valid' => false,
+                    'error' => 'Enhanced calculation verification failed: ' . $result->errorMessage,
+                    'calculation_result' => $result
+                ];
+            }
+            
+            $tolerance = 0.01; // Allow for minor rounding differences
+            
+            // Validate against both the client-calculated amount and server re-calculation
+            if (abs($expectedAmount - $requestedAmount) > $tolerance || 
+                abs($result->totalAmount - $requestedAmount) > $tolerance) {
+                
+                Log::warning('Enhanced payment amount mismatch', [
+                    'requested_amount' => $requestedAmount,
+                    'client_calculated_amount' => $expectedAmount,
+                    'server_calculated_amount' => $result->totalAmount,
+                    'duration_type' => $durationType,
+                    'quantity' => $quantity,
+                    'calculation_method' => $result->calculationMethod
+                ]);
+                
+                return [
+                    'valid' => false,
+                    'error' => sprintf(
+                        'Enhanced payment amount mismatch. Expected: ₦%s, Requested: ₦%s',
+                        number_format($result->totalAmount, 2),
+                        number_format($requestedAmount, 2)
+                    ),
+                    'calculation_result' => $result
+                ];
+            }
+            
+            return [
+                'valid' => true,
+                'error' => null,
+                'calculation_result' => $result
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Enhanced calculation payment validation error', [
+                'metadata' => $metadata,
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'valid' => false,
+                'error' => 'Enhanced calculation validation failed',
+                'calculation_result' => null
+            ];
+        }
+    }
+
+    /**
      * Validate proforma payment amount
      */
     private function validateProformaPaymentAmount(float $requestedAmount, array $metadata): array
@@ -1224,7 +1406,8 @@ class PaymentController extends Controller
                 ];
             }
             
-            $apartment = Apartment::where('apartment_id', $proforma->apartment_id)->first();
+            // Use the relationship to get the apartment (proforma.apartment_id refers to apartments.apartment_id)
+            $apartment = $proforma->apartment;
             if (!$apartment) {
                 return [
                     'valid' => false,
@@ -1537,6 +1720,103 @@ class PaymentController extends Controller
                 'error' => $e->getMessage(),
                 'source' => 'error_fallback'
             ];
+        }
+    }
+
+    /**
+     * Calculate payment amount using enhanced rental calculation service
+     * Supports all rental duration types: daily, weekly, monthly, yearly, quarterly, semi-annually, bi-annually
+     */
+    public function calculateEnhancedRentalPayment(Request $request)
+    {
+        try {
+            $request->validate([
+                'apartment_id' => 'required|exists:apartments,apartment_id',
+                'duration_type' => 'required|string|in:hourly,daily,weekly,monthly,quarterly,semi_annually,yearly,annually,bi_annually',
+                'quantity' => 'required|integer|min:1|max:999'
+            ]);
+
+            $apartment = Apartment::where('apartment_id', $request->apartment_id)->firstOrFail();
+            
+            // Use enhanced rental calculation service
+            $result = $this->enhancedRentalCalculationService->calculateRentalCost(
+                $apartment,
+                $request->duration_type,
+                $request->quantity
+            );
+
+            if (!$result->isValid) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $result->errorMessage
+                ], 400);
+            }
+
+            // Get available rental options for this apartment
+            $availableOptions = $this->enhancedRentalCalculationService->getAvailableRentalOptions($apartment);
+
+            return response()->json([
+                'success' => true,
+                'calculation' => [
+                    'total_amount' => $result->totalAmount,
+                    'formatted_amount' => '₦' . number_format($result->totalAmount, 2),
+                    'calculation_method' => $result->calculationMethod,
+                    'calculation_steps' => $result->calculationSteps,
+                    'duration_type' => $request->duration_type,
+                    'quantity' => $request->quantity,
+                    'apartment_id' => $apartment->apartment_id
+                ],
+                'available_options' => $availableOptions,
+                'apartment' => [
+                    'apartment_id' => $apartment->apartment_id,
+                    'property_name' => $apartment->property->prop_name ?? 'N/A',
+                    'apartment_type' => $apartment->apartment_type,
+                    'supported_rental_types' => $apartment->getSupportedRentalTypes(),
+                    'default_rental_type' => $apartment->getDefaultRentalType()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Enhanced rental calculation failed', [
+                'error' => $e->getMessage(),
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Calculation failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available rental options for an apartment
+     */
+    public function getApartmentRentalOptions($apartmentId)
+    {
+        try {
+            $apartment = Apartment::where('apartment_id', $apartmentId)->firstOrFail();
+            
+            $availableOptions = $this->enhancedRentalCalculationService->getAvailableRentalOptions($apartment);
+
+            return response()->json([
+                'success' => true,
+                'apartment_id' => $apartment->apartment_id,
+                'available_options' => $availableOptions,
+                'supported_rental_types' => $apartment->getSupportedRentalTypes(),
+                'default_rental_type' => $apartment->getDefaultRentalType()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get apartment rental options', [
+                'apartment_id' => $apartmentId,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to get rental options: ' . $e->getMessage()
+            ], 500);
         }
     }
 

@@ -26,6 +26,7 @@ class Apartment extends Model
         'apartment_type_id',
         'tenant_id',
         'user_id',
+        'duration',
         'range_start',
         'range_end',
         'amount',
@@ -46,6 +47,7 @@ class Apartment extends Model
         'range_start' => 'datetime',
         'range_end' => 'datetime',
         'created_at' => 'datetime',
+        'duration' => 'decimal:4',
         'amount' => 'decimal:2',
         'price_configuration' => 'array',
         'supported_rental_types' => 'array',
@@ -349,15 +351,199 @@ class Apartment extends Model
     /**
      * Calculate total cost for a rental duration
      */
-    public function calculateRentalCost(string $durationType, int $quantity): float
+    public function calculateRentalCost(string $durationType, int $quantity = 1): float
     {
+        if ($quantity < 1) {
+            throw new \InvalidArgumentException('Quantity must be at least 1');
+        }
         $rate = $this->getRateForType($durationType);
-        
         if ($rate === null) {
             throw new \InvalidArgumentException("Rental type '{$durationType}' is not supported for this apartment");
         }
         
         return $rate * $quantity;
+    }
+
+    public function getDurationMonthsValue(): ?float
+    {
+        if (!empty($this->duration)) {
+            return (float) $this->duration;
+        }
+
+        if ($this->range_start && $this->range_end) {
+            $months = $this->range_start->diffInMonths($this->range_end);
+            return max(0.0, (float) $months);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get enhanced rent status with duration-specific due dates
+     */
+    public function getEnhancedRentStatus(): array
+    {
+        $now = now();
+        $result = [
+            'status' => 'vacant',
+            'status_class' => 'danger',
+            'message' => 'No tenant assigned',
+            'days_until' => null,
+            'is_overdue' => false,
+            'is_due_soon' => false
+        ];
+        
+        // If no tenant, return vacant status
+        if (!$this->tenant_id) {
+            return $result;
+        }
+        
+        // Get duration in months
+        $durationMonths = $this->getDurationMonthsValue() ?? 1;
+        
+        // Calculate overdue days if expired
+        if ($this->range_end && $now > $this->range_end) {
+            $overdueDays = $now->diffInDays($this->range_end);
+            $result['status'] = 'overdue';
+            $result['status_class'] = 'danger';
+            $result['message'] = $overdueDays == 1 ? '1 day overdue' : "{$overdueDays} days overdue";
+            $result['days_until'] = -$overdueDays;
+            $result['is_overdue'] = true;
+            return $result;
+        }
+        
+        // Calculate days until expiry
+        if ($this->range_end) {
+            $daysUntilExpiry = $now->diffInDays($this->range_end, false);
+            
+            // Check if rental hasn't started yet
+            if ($this->range_start && $now < $this->range_start) {
+                $result['status'] = 'upcoming';
+                $result['status_class'] = 'info';
+                $result['message'] = 'Rental starts ' . $this->range_start->format('M d, Y');
+                $result['days_until'] = $now->diffInDays($this->range_start);
+                return $result;
+            }
+            
+            // Duration-specific due warnings
+            $warningThreshold = $this->getDueWarningThreshold($durationMonths);
+            
+            if ($daysUntilExpiry <= $warningThreshold) {
+                $result['status'] = 'due-soon';
+                $result['status_class'] = 'warning';
+                $result['message'] = $this->formatDueMessage($daysUntilExpiry);
+                $result['days_until'] = $daysUntilExpiry;
+                $result['is_due_soon'] = true;
+                return $result;
+            }
+        }
+        
+        // Default to active
+        $result['status'] = 'active';
+        $result['status_class'] = 'success';
+        $result['message'] = 'Active rental';
+        $result['days_until'] = $this->range_end ? $now->diffInDays($this->range_end) : null;
+        
+        return $result;
+    }
+    
+    /**
+     * Get warning threshold based on rental duration
+     */
+    private function getDueWarningThreshold(float $durationMonths): int
+    {
+        return match(true) {
+            $durationMonths <= 0.25 => 3,      // Weekly: 3 days
+            $durationMonths <= 1 => 7,         // Monthly: 7 days (1 week)
+            $durationMonths <= 3 => 14,        // Quarterly: 14 days (2 weeks)
+            $durationMonths <= 6 => 30,        // Semi-annually: 30 days (1 month)
+            $durationMonths <= 12 => 90,       // Annually: 90 days (3 months)
+            $durationMonths <= 24 => 180,      // Bi-annually: 180 days (6 months)
+            default => 30                       // Default: 30 days
+        };
+    }
+    
+    /**
+     * Format due message based on days remaining
+     */
+    private function formatDueMessage(int $daysUntil): string
+    {
+        if ($daysUntil <= 0) {
+            return 'Due today';
+        } elseif ($daysUntil == 1) {
+            return '1 day due';
+        } elseif ($daysUntil < 7) {
+            return "{$daysUntil} days due";
+        } elseif ($daysUntil == 7) {
+            return '1 week due';
+        } elseif ($daysUntil < 30) {
+            $weeks = floor($daysUntil / 7);
+            $remainingDays = $daysUntil % 7;
+            if ($remainingDays == 0) {
+                return "{$weeks} week" . ($weeks > 1 ? 's' : '') . ' due';
+            } else {
+                return "{$weeks} week" . ($weeks > 1 ? 's' : '') . " {$remainingDays} day" . ($remainingDays > 1 ? 's' : '') . ' due';
+            }
+        } elseif ($daysUntil == 30) {
+            return '1 month due';
+        } elseif ($daysUntil < 90) {
+            $months = floor($daysUntil / 30);
+            $remainingDays = $daysUntil % 30;
+            if ($remainingDays == 0) {
+                return "{$months} month" . ($months > 1 ? 's' : '') . ' due';
+            } else {
+                return "{$months} month" . ($months > 1 ? 's' : '') . " {$remainingDays} day" . ($remainingDays > 1 ? 's' : '') . ' due';
+            }
+        } elseif ($daysUntil == 90) {
+            return '3 months due';
+        } elseif ($daysUntil < 180) {
+            $months = floor($daysUntil / 30);
+            return "{$months} months due";
+        } elseif ($daysUntil == 180) {
+            return '6 months due';
+        } else {
+            $months = floor($daysUntil / 30);
+            return "{$months} months due";
+        }
+    }
+
+    /**
+     * Get the duration name from the durations table
+     */
+    public function getDurationName(): string
+    {
+        $durationMonths = $this->getDurationMonthsValue();
+        if (!$durationMonths) {
+            return 'N/A';
+        }
+        
+        $duration = \App\Models\Duration::where('duration_months', $durationMonths)
+            ->where('is_active', true)
+            ->first();
+            
+        return $duration ? $duration->name : $durationMonths . ' months';
+    }
+
+    /**
+     * Get the duration display text with proper formatting
+     */
+    public function getDurationDisplay(): string
+    {
+        $durationMonths = $this->getDurationMonthsValue();
+        if (!$durationMonths) {
+            return 'N/A';
+        }
+        
+        $duration = \App\Models\Duration::where('duration_months', $durationMonths)
+            ->where('is_active', true)
+            ->first();
+            
+        if ($duration) {
+            return $duration->name;
+        }
+        
+        // Fallback to formatted duration
+        return $durationMonths == 1.0 ? '1 month' : $durationMonths . ' months';
     }
 
     /**

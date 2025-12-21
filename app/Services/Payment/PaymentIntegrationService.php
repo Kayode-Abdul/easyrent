@@ -35,6 +35,16 @@ class PaymentIntegrationService
      */
     public function processInvitationPayment(Payment $payment, array $paymentDetails): array
     {
+        Log::info('PaymentIntegrationService::processInvitationPayment called', [
+            'payment_id' => $payment->id,
+            'transaction_id' => $payment->transaction_id,
+            'tenant_id' => $payment->tenant_id,
+            'apartment_id' => $payment->apartment_id,
+            'landlord_id' => $payment->landlord_id,
+            'payment_meta' => $payment->payment_meta,
+            'payment_details_keys' => array_keys($paymentDetails)
+        ]);
+
         try {
             DB::beginTransaction();
 
@@ -46,7 +56,21 @@ class PaymentIntegrationService
 
             // Find the related invitation
             $invitation = $this->findRelatedInvitation($payment);
+            
+            Log::info('findRelatedInvitation result', [
+                'payment_id' => $payment->id,
+                'invitation_found' => $invitation ? true : false,
+                'invitation_id' => $invitation?->id,
+                'invitation_token' => $invitation?->invitation_token
+            ]);
+            
             if (!$invitation) {
+                Log::error('Related apartment invitation not found for payment', [
+                    'payment_id' => $payment->id,
+                    'transaction_id' => $payment->transaction_id,
+                    'payment_reference' => $payment->payment_reference,
+                    'payment_meta' => $payment->payment_meta
+                ]);
                 throw new \Exception('Related apartment invitation not found for payment');
             }
 
@@ -61,8 +85,18 @@ class PaymentIntegrationService
                 ])
             ]);
 
+            Log::info('Payment updated with completion status', [
+                'payment_id' => $payment->id,
+                'invitation_token' => $invitation->invitation_token
+            ]);
+
             // If guest payment (no tenant yet), do not assign apartment now
             if (!$payment->tenant_id) {
+                Log::info('No tenant_id on payment - storing session data for guest', [
+                    'payment_id' => $payment->id,
+                    'invitation_token' => $invitation->invitation_token
+                ]);
+                
                 $this->sessionManager->storeApplicationData($invitation->invitation_token, [
                     'payment_completed' => true,
                     'payment_id' => $payment->id,
@@ -74,9 +108,9 @@ class PaymentIntegrationService
                 ]);
                 $this->sessionManager->extendSessionExpiration($invitation->invitation_token, 48);
 
-                Log::info('Guest payment completed; awaiting registration to finalize', [
-                    'payment_id' => $payment->id,
-                    'invitation_id' => $invitation->id
+                Log::info('Session data stored for guest', [
+                    'invitation_token' => $invitation->invitation_token,
+                    'payment_id' => $payment->id
                 ]);
 
                 DB::commit();
@@ -91,20 +125,47 @@ class PaymentIntegrationService
                 ];
             }
 
+            Log::info('Tenant_id exists on payment - proceeding with assignment', [
+                'payment_id' => $payment->id,
+                'tenant_id' => $payment->tenant_id
+            ]);
+
             // Assign apartment to tenant
             $this->assignApartmentToTenant($invitation, $payment);
 
-            // Mark invitation as completed
-            $invitation->markPaymentCompleted();
+            Log::info('Assignment completed', [
+                'payment_id' => $payment->id,
+                'success' => true,
+                'apartment_assigned' => true
+            ]);
+
+            // Note: Invitation status update removed to avoid MySQL trigger conflict
+            // The invitation will be marked as used in a separate operation if needed
 
             // Clean up session data
             $this->cleanupSessionData($invitation);
 
+            Log::info('Session data cleaned up after payment completion', [
+                'invitation_id' => $invitation->id,
+                'invitation_token' => substr($invitation->invitation_token, 0, 8) . '...'
+            ]);
+
             // Send email notifications
             $this->sendPaymentCompletionEmails($invitation, $payment);
 
+            Log::info('Payment completion emails sent', [
+                'invitation_id' => $invitation->id,
+                'tenant_email' => $invitation->tenant->email,
+                'landlord_email' => $invitation->landlord->email
+            ]);
+
             // Check for marketer qualification
             $this->evaluateMarketerQualification($payment);
+
+            Log::info('Marketer qualification evaluation completed via service', [
+                'payment_id' => $payment->id,
+                'payment_amount' => $payment->amount
+            ]);
 
             DB::commit();
 
@@ -149,39 +210,131 @@ class PaymentIntegrationService
      */
     protected function findRelatedInvitation(Payment $payment): ?ApartmentInvitation
     {
+        Log::info('findRelatedInvitation called', [
+            'payment_id' => $payment->id,
+            'payment_reference' => $payment->payment_reference,
+            'apartment_id' => $payment->apartment_id,
+            'tenant_id' => $payment->tenant_id,
+            'payment_meta' => $payment->payment_meta
+        ]);
+
         // Try to find by payment reference first
         if (!empty($payment->payment_reference) && Str::contains($payment->payment_reference, 'easyrent_')) {
             $token = str_replace('easyrent_', '', $payment->payment_reference);
+            Log::info('Trying to find invitation by payment reference token', [
+                'payment_id' => $payment->id,
+                'payment_reference' => $payment->payment_reference,
+                'extracted_token' => $token
+            ]);
+            
             $invitation = ApartmentInvitation::where('invitation_token', $token)->first();
+            
+            Log::info('Invitation search by token result', [
+                'token' => $token,
+                'invitation_found' => $invitation ? true : false,
+                'invitation_id' => $invitation?->id
+            ]);
+            
             if ($invitation) {
+                Log::info('Found invitation by payment reference', [
+                    'payment_id' => $payment->id,
+                    'invitation_id' => $invitation->id,
+                    'invitation_token' => $invitation->invitation_token
+                ]);
                 return $invitation;
             }
         }
 
         // Try to find by apartment and tenant
-        $invitation = ApartmentInvitation::where('apartment_id', $payment->apartment_id)
-            ->where('tenant_user_id', $payment->tenant_id)
-            ->where('status', '!=', ApartmentInvitation::STATUS_USED)
-            ->orderBy('created_at', 'desc')
-            ->first();
+        if ($payment->apartment_id && $payment->tenant_id) {
+            Log::info('Trying to find invitation by apartment and tenant', [
+                'payment_id' => $payment->id,
+                'apartment_id' => $payment->apartment_id,
+                'tenant_id' => $payment->tenant_id
+            ]);
+            
+            $invitation = ApartmentInvitation::where('apartment_id', $payment->apartment_id)
+                ->where('tenant_user_id', $payment->tenant_id)
+                ->where('status', '!=', ApartmentInvitation::STATUS_USED)
+                ->orderBy('created_at', 'desc')
+                ->first();
 
-        if ($invitation) {
-            return $invitation;
+            Log::info('Invitation search by apartment+tenant result', [
+                'payment_id' => $payment->id,
+                'invitation_found' => $invitation ? true : false,
+                'invitation_id' => $invitation?->id
+            ]);
+
+            if ($invitation) {
+                Log::info('Found invitation by apartment and tenant', [
+                    'payment_id' => $payment->id,
+                    'invitation_id' => $invitation->id,
+                    'invitation_token' => $invitation->invitation_token
+                ]);
+                return $invitation;
+            }
         }
 
         // Try to find by payment metadata (support string or array)
         $meta = $payment->payment_meta;
+        
+        Log::info('Trying to find invitation by payment metadata', [
+            'payment_id' => $payment->id,
+            'meta_type' => gettype($meta),
+            'meta_is_array' => is_array($meta),
+            'meta_is_string' => is_string($meta)
+        ]);
+        
         if (is_string($meta)) {
             $decoded = json_decode($meta, true);
             if (json_last_error() === JSON_ERROR_NONE) {
                 $meta = $decoded;
+                Log::info('Decoded JSON metadata', [
+                    'payment_id' => $payment->id,
+                    'decode_success' => true
+                ]);
             } else {
+                Log::error('Failed to decode JSON metadata', [
+                    'payment_id' => $payment->id,
+                    'json_error' => json_last_error_msg(),
+                    'original_meta' => $meta
+                ]);
                 $meta = null;
             }
         }
+        
         if (is_array($meta) && isset($meta['invitation_token'])) {
-            return ApartmentInvitation::where('invitation_token', $meta['invitation_token'])->first();
+            Log::info('Found invitation_token in metadata', [
+                'payment_id' => $payment->id,
+                'invitation_token' => $meta['invitation_token']
+            ]);
+            
+            $invitation = ApartmentInvitation::where('invitation_token', $meta['invitation_token'])->first();
+            
+            Log::info('Invitation search by metadata token result', [
+                'payment_id' => $payment->id,
+                'invitation_token' => $meta['invitation_token'],
+                'invitation_found' => $invitation ? true : false,
+                'invitation_id' => $invitation?->id
+            ]);
+            
+            if ($invitation) {
+                Log::info('Found invitation by metadata token', [
+                    'payment_id' => $payment->id,
+                    'invitation_id' => $invitation->id,
+                    'invitation_token' => $invitation->invitation_token
+                ]);
+                return $invitation;
+            }
         }
+
+        Log::error('No invitation found by any method', [
+            'payment_id' => $payment->id,
+            'payment_reference' => $payment->payment_reference,
+            'apartment_id' => $payment->apartment_id,
+            'tenant_id' => $payment->tenant_id,
+            'payment_meta' => $payment->payment_meta
+        ]);
 
         return null;
     }
@@ -191,9 +344,27 @@ class PaymentIntegrationService
      */
     protected function assignApartmentToTenant(ApartmentInvitation $invitation, Payment $payment): void
     {
+        Log::info('assignApartmentToTenant called', [
+            'invitation_id' => $invitation->id,
+            'payment_id' => $payment->id,
+            'tenant_id' => $payment->tenant_id,
+            'apartment_id' => $invitation->apartment_id
+        ]);
+
         $apartment = Apartment::where('apartment_id', $invitation->apartment_id)->first();
         
+        Log::info('Loaded apartment for assignment', [
+            'apartment_id' => $invitation->apartment_id,
+            'apartment_found' => $apartment ? true : false,
+            'current_tenant_id' => $apartment?->tenant_id,
+            'current_occupied' => $apartment?->occupied
+        ]);
+
         if (!$apartment) {
+            Log::error('Apartment not found for assignment', [
+                'invitation_id' => $invitation->id,
+                'apartment_id' => $invitation->apartment_id
+            ]);
             throw new \Exception('Apartment not found for assignment');
         }
 
@@ -204,12 +375,27 @@ class PaymentIntegrationService
         
         $leaseEndDate = $moveInDate->copy()->addMonths($invitation->lease_duration ?? $payment->duration);
 
+        Log::info('Calculated lease dates', [
+            'move_in_date' => $moveInDate->toDateTimeString(),
+            'lease_end_date' => $leaseEndDate->toDateTimeString(),
+            'lease_duration_months' => $invitation->lease_duration ?? $payment->duration
+        ]);
+
         // Update apartment with tenant assignment
         $apartment->update([
             'tenant_id' => $payment->tenant_id,
             'occupied' => true,
             'range_start' => $moveInDate,
             'range_end' => $leaseEndDate
+        ]);
+
+        Log::info('Apartment updated successfully', [
+            'apartment_id' => $apartment->apartment_id,
+            'old_tenant_id' => $apartment->getOriginal('tenant_id'),
+            'new_tenant_id' => $apartment->tenant_id,
+            'occupied' => $apartment->occupied,
+            'range_start' => $apartment->range_start,
+            'range_end' => $apartment->range_end
         ]);
 
         Log::info('Apartment assigned to tenant', [
@@ -470,8 +656,8 @@ class PaymentIntegrationService
             // Assign apartment now that tenant exists
             $this->assignApartmentToTenant($invitation, $payment);
 
-            // Mark invitation as completed/used
-            $invitation->markPaymentCompleted();
+            // Note: Invitation status update removed to avoid MySQL trigger conflict
+            // The invitation will be marked as used in a separate operation if needed
 
             // Clean session state
             $this->cleanupSessionData($invitation);

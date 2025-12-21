@@ -40,7 +40,14 @@
                                 <i class="fas fa-calendar me-2"></i>Lease Details
                             </h6>
                             <ul class="list-unstyled">
-                                <li><strong>Duration:</strong> {{ $invitation->lease_duration }} months</li>
+                                <li><strong>Duration:</strong> 
+    @php
+        $duration = \App\Models\Duration::where('duration_months', $invitation->lease_duration)
+            ->where('is_active', true)
+            ->first();
+        echo $duration ? $duration->name : $invitation->lease_duration . ' months';
+    @endphp
+</li>
                                 <li><strong>Move-in Date:</strong> {{ \Carbon\Carbon::parse($invitation->move_in_date)->format('M d, Y') }}</li>
                                 <li><strong>Total Amount:</strong> <span class="text-success fw-bold">₦{{ number_format($invitation->total_amount) }}</span></li>
                             </ul>
@@ -72,32 +79,74 @@
                     <!-- Payment Summary -->
                     <div class="card bg-light mb-4 payment-summary-card" 
                          data-apartment-amount="{{ $invitation->apartment->amount }}" 
+                         data-apartment-id="{{ $invitation->apartment->apartment_id }}"
                          data-pricing-type="{{ $invitation->apartment->getPricingType() }}">
                         <div class="card-body">
                             <h6 class="card-title">
                                 <i class="fas fa-receipt me-2"></i>Payment Summary
                             </h6>
+                            
+                            <!-- Rental Duration Selection -->
+                            <div class="mb-4">
+                                <h6 class="mb-3 fw-semibold">
+                                    <i class="fas fa-calendar-alt me-2 text-primary"></i>Select Rental Duration
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="duration_type" class="form-label">Duration Type</label>
+                                        <select class="form-select" id="duration_type" name="duration_type" required>
+                                            <option value="">Choose duration type...</option>
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="monthly" selected>Monthly</option>
+                                            <option value="quarterly">Quarterly (3 months)</option>
+                                            <option value="semi_annually">Semi-Annually (6 months)</option>
+                                            <option value="yearly">Yearly (12 months)</option>
+                                            <option value="bi_annually">Bi-Annually (24 months)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="duration_quantity" class="form-label">Quantity</label>
+                                        <input type="number" class="form-control" id="duration_quantity" name="duration_quantity" 
+                                               value="{{ $invitation->lease_duration ?? 1 }}" min="1" max="999" required>
+                                        <div class="form-text">Number of periods to rent</div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="calculate_rental_btn">
+                                        <i class="fas fa-calculator me-2"></i>Calculate Total
+                                    </button>
+                                </div>
+                            </div>
+                            
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="d-flex justify-content-between mb-2">
-                                        <span>
+                                        <span id="rate_label">
                                             @if($invitation->apartment->getPricingType() === 'total')
                                                 Total Rent:
                                             @else
                                                 Monthly Rent:
                                             @endif
                                         </span>
-                                        <span>₦{{ number_format($invitation->apartment->amount) }}</span>
+                                        <span id="rate_amount">₦{{ number_format($invitation->apartment->amount) }}</span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>Duration:</span>
-                                        <span>{{ $invitation->lease_duration }} months</span>
+                                        <span id="duration_display">
+    @php
+        $duration = \App\Models\Duration::where('duration_months', $invitation->lease_duration)
+            ->where('is_active', true)
+            ->first();
+        echo $duration ? $duration->name : $invitation->lease_duration . ' months';
+    @endphp
+</span>
                                     </div>
                                     
                                     <!-- Pricing structure information -->
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>Pricing Type:</span>
-                                        <span class="text-info">
+                                        <span class="text-info" id="pricing_type_display">
                                             {{ ucfirst($invitation->apartment->getPricingType()) }}
                                             @if($invitation->apartment->getPricingType() === 'total')
                                                 <small class="text-muted">(Fixed amount)</small>
@@ -107,25 +156,24 @@
                                         </span>
                                     </div>
                                     
-                                    <!-- Calculation breakdown for monthly pricing -->
-                                    @if($invitation->apartment->getPricingType() === 'monthly')
-                                    <div class="calculation-breakdown mb-2 p-2" style="background: rgba(0,123,255,0.05); border-radius: 6px; border-left: 3px solid #007bff;">
+                                    <!-- Calculation breakdown -->
+                                    <div class="calculation-breakdown mb-2 p-2" id="calculation_breakdown" 
+                                         style="background: rgba(0,123,255,0.05); border-radius: 6px; border-left: 3px solid #007bff;">
                                         <small class="text-muted d-block mb-1">Calculation:</small>
-                                        <small class="d-flex justify-content-between">
+                                        <small class="d-flex justify-content-between" id="calculation_details">
                                             <span>₦{{ number_format($invitation->apartment->amount) }} × {{ $invitation->lease_duration }} months</span>
                                             <span>= ₦{{ number_format($invitation->total_amount) }}</span>
                                         </small>
                                     </div>
-                                    @endif
                                     
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>Subtotal:</span>
-                                        <span>₦{{ number_format($invitation->total_amount) }}</span>
+                                        <span id="subtotal_amount">₦{{ number_format($invitation->total_amount) }}</span>
                                     </div>
                                     <hr>
                                     <div class="d-flex justify-content-between">
                                         <span class="fw-bold text-success">Total Amount:</span>
-                                        <span class="fw-bold text-success fs-5">₦{{ number_format($invitation->total_amount) }}</span>
+                                        <span class="fw-bold text-success fs-5" id="total_amount">₦{{ number_format($invitation->total_amount) }}</span>
                                     </div>
                                 </div>
                                 <div class="col-md-4 text-center">
@@ -470,16 +518,32 @@ function payWithPaystack() {
         // Generate a fresh reference for this payment attempt
         const newReference = generateReference();
         
-        // Get payment data
+        // Get payment data - use calculated amount if available, otherwise fall back to invitation amount
         let email = @json(auth()->check() ? auth()->user()->email : ($invitation->prospect_email ?? null));
-        const amount = @json($invitation->total_amount * 100); // Convert to kobo
+        let amount;
+        
+        // Check if we have a calculated amount from the enhanced rental calculation
+        if (window.calculatedPaymentAmount && window.calculationDetails) {
+            amount = window.calculatedPaymentAmount * 100; // Convert to kobo
+            console.log('Using calculated amount:', {
+                calculatedAmount: window.calculatedPaymentAmount,
+                calculationMethod: window.calculationDetails.calculation_method,
+                durationType: window.calculationDetails.duration_type,
+                quantity: window.calculationDetails.quantity
+            });
+        } else {
+            // Fall back to original invitation amount
+            amount = @json($invitation->total_amount * 100); // Convert to kobo
+            console.log('Using original invitation amount:', amount / 100);
+        }
         
         // Debug logging
         console.log('Payment validation:', {
             email: email,
             amount: amount,
             isAuthenticated: @json(auth()->check()),
-            prospectEmail: @json($invitation->prospect_email ?? null)
+            prospectEmail: @json($invitation->prospect_email ?? null),
+            hasCalculatedAmount: !!window.calculatedPaymentAmount
         });
         
         // Validate required fields
@@ -510,6 +574,25 @@ function payWithPaystack() {
             transaction_type: 'apartment_invitation_payment'
         };
         
+        // Debug: Log auth state and metadata
+        console.log('Payment metadata debug:', {
+            isAuthenticated: @json(auth()->check()),
+            userId: @json(auth()->check() ? auth()->user()->user_id : null),
+            userEmail: @json(auth()->check() ? auth()->user()->email : null),
+            tenantIdInMetadata: metadata.tenant_id,
+            finalMetadata: metadata
+        });
+        
+        // Add enhanced calculation details to metadata if available
+        if (window.calculationDetails) {
+            metadata.enhanced_calculation = {
+                duration_type: window.calculationDetails.duration_type,
+                quantity: window.calculationDetails.quantity,
+                calculation_method: window.calculationDetails.calculation_method,
+                calculated_amount: window.calculatedPaymentAmount
+            };
+        }
+        
         // Validate Paystack is loaded
         if (typeof PaystackPop === 'undefined') {
             throw new Error('Payment system not loaded. Please refresh the page and try again.');
@@ -526,7 +609,8 @@ function payWithPaystack() {
             email: email,
             amount: amount,
             currency: currency,
-            ref: newReference
+            ref: newReference,
+            hasEnhancedCalculation: !!window.calculationDetails
         });
         
         // Initialize Paystack
@@ -709,6 +793,224 @@ document.addEventListener('DOMContentLoaded', function() {
     
     termsCheckbox.addEventListener('change', updateButtonState);
     updateButtonState(); // Initial state
+    
+    // Enhanced rental calculation functionality
+    const durationTypeSelect = document.getElementById('duration_type');
+    const durationQuantityInput = document.getElementById('duration_quantity');
+    const calculateBtn = document.getElementById('calculate_rental_btn');
+    const apartmentId = document.querySelector('.payment-summary-card').dataset.apartmentId;
+    
+    // Load available rental options on page load
+    loadApartmentRentalOptions();
+    
+    // Handle duration type changes
+    durationTypeSelect.addEventListener('change', function() {
+        updateDurationDisplay();
+        if (this.value) {
+            calculateBtn.disabled = false;
+        }
+    });
+    
+    // Handle quantity changes
+    durationQuantityInput.addEventListener('input', function() {
+        updateDurationDisplay();
+    });
+    
+    // Handle calculate button click
+    calculateBtn.addEventListener('click', function() {
+        calculateRentalPayment();
+    });
+    
+    // Auto-calculate when both fields are filled
+    function autoCalculateIfReady() {
+        if (durationTypeSelect.value && durationQuantityInput.value) {
+            calculateRentalPayment();
+        }
+    }
+    
+    durationTypeSelect.addEventListener('change', autoCalculateIfReady);
+    durationQuantityInput.addEventListener('input', debounce(autoCalculateIfReady, 500));
+    
+    function loadApartmentRentalOptions() {
+        if (!apartmentId) return;
+        
+        fetch(`/api/apartment/${apartmentId}/rental-options`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateRentalOptionsUI(data);
+                } else {
+                    console.error('Failed to load rental options:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading rental options:', error);
+            });
+    }
+    
+    function updateRentalOptionsUI(data) {
+        // Update duration type options based on available rates
+        const availableOptions = data.available_options;
+        const selectElement = durationTypeSelect;
+        
+        // Clear existing options except the first one
+        while (selectElement.children.length > 1) {
+            selectElement.removeChild(selectElement.lastChild);
+        }
+        
+        // Add available options
+        Object.keys(availableOptions).forEach(type => {
+            const option = availableOptions[type];
+            if (option.available) {
+                const optionElement = document.createElement('option');
+                optionElement.value = type;
+                optionElement.textContent = `${capitalizeFirst(type.replace('_', ' '))} - ${option.formatted_rate}`;
+                if (option.converted) {
+                    optionElement.textContent += ' (calculated)';
+                }
+                selectElement.appendChild(optionElement);
+            }
+        });
+        
+        // Set default selection
+        if (data.default_rental_type && availableOptions[data.default_rental_type]) {
+            selectElement.value = data.default_rental_type;
+            updateDurationDisplay();
+        }
+    }
+    
+    function calculateRentalPayment() {
+        const durationType = durationTypeSelect.value;
+        const quantity = parseInt(durationQuantityInput.value);
+        
+        if (!durationType || !quantity || quantity < 1) {
+            showCalculationError('Please select a duration type and enter a valid quantity.');
+            return;
+        }
+        
+        // Show loading state
+        calculateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Calculating...';
+        calculateBtn.disabled = true;
+        
+        const requestData = {
+            apartment_id: apartmentId,
+            duration_type: durationType,
+            quantity: quantity
+        };
+        
+        fetch('/api/payment/calculate-rental', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updatePaymentSummary(data.calculation);
+                hideCalculationError();
+            } else {
+                showCalculationError(data.error || 'Calculation failed');
+            }
+        })
+        .catch(error => {
+            console.error('Calculation error:', error);
+            showCalculationError('Network error occurred. Please try again.');
+        })
+        .finally(() => {
+            // Reset button state
+            calculateBtn.innerHTML = '<i class="fas fa-calculator me-2"></i>Calculate Total';
+            calculateBtn.disabled = false;
+        });
+    }
+    
+    function updatePaymentSummary(calculation) {
+        // Update all the display elements
+        document.getElementById('rate_label').textContent = `${capitalizeFirst(calculation.duration_type.replace('_', ' '))} Rate:`;
+        document.getElementById('rate_amount').textContent = `₦${formatNumber(calculation.total_amount / calculation.quantity)}`;
+        document.getElementById('duration_display').textContent = `${calculation.quantity} ${calculation.duration_type.replace('_', ' ')}`;
+        document.getElementById('pricing_type_display').innerHTML = `Enhanced Calculation <small class="text-muted">(${calculation.calculation_method})</small>`;
+        
+        // Update calculation breakdown
+        const breakdownElement = document.getElementById('calculation_details');
+        breakdownElement.innerHTML = `
+            <span>₦${formatNumber(calculation.total_amount / calculation.quantity)} × ${calculation.quantity} ${calculation.duration_type.replace('_', ' ')}</span>
+            <span>= ${calculation.formatted_amount}</span>
+        `;
+        
+        // Update totals
+        document.getElementById('subtotal_amount').textContent = calculation.formatted_amount;
+        document.getElementById('total_amount').textContent = calculation.formatted_amount;
+        
+        // Update the payment button
+        const paymentBtn = document.getElementById('proceedPaymentBtn');
+        paymentBtn.innerHTML = `<i class="fas fa-lock me-2"></i>Pay ${calculation.formatted_amount} Securely`;
+        
+        // Store the calculated amount for payment processing
+        window.calculatedPaymentAmount = calculation.total_amount;
+        window.calculationDetails = calculation;
+    }
+    
+    function updateDurationDisplay() {
+        const durationType = durationTypeSelect.value;
+        const quantity = durationQuantityInput.value;
+        
+        if (durationType && quantity) {
+            document.getElementById('duration_display').textContent = `${quantity} ${durationType.replace('_', ' ')}`;
+        }
+    }
+    
+    function showCalculationError(message) {
+        let errorAlert = document.getElementById('calculation-error-alert');
+        if (!errorAlert) {
+            errorAlert = document.createElement('div');
+            errorAlert.id = 'calculation-error-alert';
+            errorAlert.className = 'alert alert-danger mt-3';
+            errorAlert.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><span id="calculation-error-message"></span>';
+            
+            const summaryCard = document.querySelector('.payment-summary-card .card-body');
+            if (summaryCard) {
+                summaryCard.appendChild(errorAlert);
+            }
+        }
+        
+        const messageSpan = document.getElementById('calculation-error-message');
+        if (messageSpan) {
+            messageSpan.textContent = message;
+        }
+        
+        errorAlert.style.display = 'block';
+    }
+    
+    function hideCalculationError() {
+        const errorAlert = document.getElementById('calculation-error-alert');
+        if (errorAlert) {
+            errorAlert.style.display = 'none';
+        }
+    }
+    
+    // Utility functions
+    function capitalizeFirst(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    
+    function formatNumber(num) {
+        return new Intl.NumberFormat('en-NG').format(num);
+    }
+    
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
 });
 </script>
 @endsection

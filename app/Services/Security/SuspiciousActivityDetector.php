@@ -78,6 +78,30 @@ class SuspiciousActivityDetector
             'action_required' => $riskScore >= 70
         ];
     }
+
+    /**
+     * Backward-compatible API used by ApartmentInvitationController.
+     * Returns true only when the request should be blocked.
+     */
+    public function isSuspiciousPattern(Request $request, ApartmentInvitation $invitation = null): bool
+    {
+        $token = null;
+        if ($invitation) {
+            $token = $invitation->invitation_token ?? null;
+        }
+
+        $analysis = $this->analyzeRequest($request, $token);
+
+        Log::info('Suspicious activity analysis', [
+            'ip' => $request->ip(),
+            'invitation_id' => $invitation?->id,
+            'patterns' => $analysis['patterns'] ?? [],
+            'risk_score' => $analysis['risk_score'] ?? null,
+            'action_required' => $analysis['action_required'] ?? false,
+        ]);
+
+        return (bool) ($analysis['action_required'] ?? false);
+    }
     
     /**
      * Detect rapid access pattern

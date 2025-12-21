@@ -67,7 +67,7 @@ class TenantBenefactorController extends Controller
             'benefactor_email' => 'required|email',
             'amount' => 'required|numeric|min:0',
             'property_id' => 'nullable|exists:properties,id',
-            'apartment_id' => 'nullable|exists:apartments,id',
+            'apartment_id' => 'nullable|exists:apartments,apartment_id',
             'proforma_id' => 'nullable|exists:profoma_receipt,id',
             'message' => 'nullable|string|max:500',
         ]);

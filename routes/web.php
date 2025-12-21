@@ -62,6 +62,7 @@ Route::get('/listing', [PropertyController::class, 'add']);
 Route::post('/listing', [PropertyController::class, 'add']);
 Route::get('/apartment', [PropertyController::class, 'addApartment']);
 Route::post('/apartment', [PropertyController::class, 'addApartment']);
+Route::post('/apartment/single', [PropertyController::class, 'addSingleApartment']);
 
 // Property CRUD routes
 Route::get('/dashboard/property/{propId}', [PropertyController::class, 'show']);
@@ -190,6 +191,10 @@ Route::middleware(['auth'])->group(function () {
     // Payment routes
     Route::get('/dashboard/payments', [PaymentController::class, 'index'])->name('payments.index');
     Route::get('/dashboard/payments/analytics', [PaymentController::class, 'analytics'])->name('payments.analytics');
+    
+    // Enhanced rental calculation routes
+    Route::post('/api/payment/calculate-rental', [PaymentController::class, 'calculateEnhancedRentalPayment'])->name('payment.calculate.rental');
+    Route::get('/api/apartment/{apartmentId}/rental-options', [PaymentController::class, 'getApartmentRentalOptions'])->name('apartment.rental.options');
     
     // Complaint System Routes
     Route::prefix('complaints')->name('complaints.')->group(function () {
@@ -577,7 +582,7 @@ Route::prefix('apartment/invite')->name('apartment.invite.')->group(function () 
     Route::post('/store-session', [App\Http\Controllers\ApartmentInvitationController::class, 'storeSession'])->name('store-session');
     Route::get('/{token}/payment/{payment}', [App\Http\Controllers\ApartmentInvitationController::class, 'payment'])->name('payment');
     Route::post('/{token}/payment/callback', [App\Http\Controllers\ApartmentInvitationController::class, 'paymentCallback'])->name('payment.callback');
-    Route::get('/{token}/success', [App\Http\Controllers\ApartmentInvitationController::class, 'success'])->name('success');
+    Route::get('/{token}/success', [App\Http\Controllers\ApartmentInvitationController::class, 'success'])->name('invite.success');
     
     // Error pages
     Route::get('/{token}/expired', function($token) {

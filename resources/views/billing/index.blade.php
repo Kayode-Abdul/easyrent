@@ -7,24 +7,22 @@
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
+            <div class="page-header-custom shadow-sm">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="mb-1">
-                                <i class="fas fa-credit-card text-primary me-2"></i>
+                                <i class="fafa-credit-card text-primary me-2"></i>
                                 Billing & Payments
                             </h4>
-                            <p class="text-muted mb-0">View your payment history and pending bills</p>
+                            <p class=" mb-0">View your payment history and pending bills</p>
                         </div>
                         <div>
                             <span class="badge bg-success fs-6">
-                                <i class="fas fa-check-circle me-1"></i>
+                                <i class="fafa-check-circle me-1"></i>
                                 Account Active
                             </span>
                         </div>
-                    </div>
-                </div>
+                    </div> 
             </div>
         </div>
     </div>
@@ -41,7 +39,7 @@
                             <small class="opacity-75">All time payments</small>
                         </div>
                         <div class="align-self-center">
-                            <i class="fas fa-money-bill-wave fa-2x opacity-75"></i>
+                            <i class="fafa-money-bill-wave fa-2x opacity-75"></i>
                         </div>
                     </div>
                 </div>
@@ -57,7 +55,7 @@
                             <small class="opacity-75">Outstanding bills</small>
                         </div>
                         <div class="align-self-center">
-                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                            <i class="fafa-clock fa-2x opacity-75"></i>
                         </div>
                     </div>
                 </div>
@@ -71,7 +69,7 @@
             <div class="card">
                 <div class="card-header bg-light">
                     <h6 class="mb-0">
-                        <i class="fas fa-history text-success me-2"></i>
+                        <i class="fafa-history text-success me-2"></i>
                         Payment History
                     </h6>
                 </div>
@@ -121,7 +119,7 @@
                         </div>
                     @else
                         <div class="p-4 text-center text-muted">
-                            <i class="fas fa-receipt fa-3x mb-3 d-block opacity-25"></i>
+                            <i class="fafa-receipt fa-3x mb-3 d-block opacity-25"></i>
                             <h6>No Payment History</h6>
                             <p class="small">Your payment history will appear here once you make payments</p>
                         </div>
@@ -135,13 +133,13 @@
             <div class="card">
                 <div class="card-header bg-light">
                     <h6 class="mb-0">
-                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        <i class="fafa-exclamation-triangle text-warning me-2"></i>
                         Pending Bills
                     </h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="p-4 text-center text-muted">
-                        <i class="fas fa-check-circle fa-3x mb-3 d-block opacity-25"></i>
+                        <i class="fafa-check-circle fa-3x mb-3 d-block opacity-25"></i>
                         <h6>No Pending Bills</h6>
                         <p class="small">You're all caught up!</p>
                     </div>

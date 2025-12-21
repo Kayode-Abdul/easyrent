@@ -3,7 +3,6 @@
 @section('content')
 
 <div class="content">
-    <div class="container-fluid">
         <!-- Page Header -->
         <div class="row">
             <div class="col-md-12">
@@ -175,7 +174,6 @@
                 </div>
             </div>
         </div>
-    </div>
 </div>
 
 @endsection

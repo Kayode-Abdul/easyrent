@@ -244,9 +244,11 @@
                                         <tr>
                                             <td></td>
                                             <td>Tenant ID</td>
-                                            <td>To</td> 
                                             <td>From</td> 
+                                            <td>To</td> 
                                             <td>Price</td>
+                                            <td>Rental Type</td>
+                                            <td>Action</td>
                                         </tr>
                                     </tbody>    
                                 </table>

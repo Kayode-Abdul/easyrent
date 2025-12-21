@@ -1,23 +1,21 @@
 @extends('layout')
 
-@section('title', 'Complaint Management Dashboard')
-
 @section('content')
-<div class="container-fluid py-4">
+<div class="content pt-3">
     <div class="row">
         <div class="col-12">
-            <div class="card mb-4">
-                <div class="card-header pb-0">
+            <div class="mb-4">
+                <div class="pb-0">
                     <div class="d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">Complaint Management Dashboard</h4>
                         <div class="d-flex gap-2">
                             <a href="{{ route('complaints.index') }}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-list me-1"></i>All Complaints
+                                <i class="fafa-list me-1"></i>All Complaints
                             </a>
                         </div>
                     </div>
                 </div>
-                <div class="card-body px-0 pt-0 pb-2">
+                <div class="px-0 pt-0 pb-2">
                     
                     <!-- Statistics Cards -->
                     <div class="row mb-4 px-3">
@@ -26,7 +24,7 @@
                                 <div class="card-body p-3">
                                     <div class="row">
                                         <div class="col-8">
-                                            <div class="numbers">
+                                            <div class="number">
                                                 <p class="text-sm mb-0 text-capitalize font-weight-bold">Total Complaints</p>
                                                 <h5 class="font-weight-bolder mb-0">
                                                     {{ $stats['total'] }}
@@ -35,7 +33,7 @@
                                         </div>
                                         <div class="col-4 text-end">
                                             <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
-                                                <i class="fas fa-exclamation-triangle text-lg opacity-10"></i>
+                                                <i class="fafa-exclamation-triangle text-lg opacity-10"></i>
                                             </div>
                                         </div>
                                     </div>
@@ -48,7 +46,7 @@
                                 <div class="card-body p-3">
                                     <div class="row">
                                         <div class="col-8">
-                                            <div class="numbers">
+                                            <div class="number">
                                                 <p class="text-sm mb-0 text-capitalize font-weight-bold">Open Complaints</p>
                                                 <h5 class="font-weight-bolder mb-0 text-warning">
                                                     {{ $stats['open'] }}
@@ -57,7 +55,7 @@
                                         </div>
                                         <div class="col-4 text-end">
                                             <div class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md">
-                                                <i class="fas fa-clock text-lg opacity-10"></i>
+                                                <i class="fafa-clock text-lg opacity-10"></i>
                                             </div>
                                         </div>
                                     </div>
@@ -70,8 +68,8 @@
                                 <div class="card-body p-3">
                                     <div class="row">
                                         <div class="col-8">
-                                            <div class="numbers">
-                                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Resolved</p>
+                                            <div class="number">
+                                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Resolved</p><br/>
                                                 <h5 class="font-weight-bolder mb-0 text-success">
                                                     {{ $stats['resolved'] }}
                                                 </h5>
@@ -79,7 +77,7 @@
                                         </div>
                                         <div class="col-4 text-end">
                                             <div class="icon icon-shape bg-gradient-success shadow text-center border-radius-md">
-                                                <i class="fas fa-check-circle text-lg opacity-10"></i>
+                                                <i class="fafa-check-circle text-lg opacity-10"></i>
                                             </div>
                                         </div>
                                     </div>
@@ -92,8 +90,8 @@
                                 <div class="card-body p-3">
                                     <div class="row">
                                         <div class="col-8">
-                                            <div class="numbers">
-                                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Overdue</p>
+                                            <div class="number">
+                                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Overdue</p><br/>
                                                 <h5 class="font-weight-bolder mb-0 text-danger">
                                                     {{ $stats['overdue'] }}
                                                 </h5>
@@ -101,7 +99,7 @@
                                         </div>
                                         <div class="col-4 text-end">
                                             <div class="icon icon-shape bg-gradient-danger shadow text-center border-radius-md">
-                                                <i class="fas fa-exclamation-circle text-lg opacity-10"></i>
+                                                <i class="fafa-exclamation-circle text-lg opacity-10"></i>
                                             </div>
                                         </div>
                                     </div>
@@ -167,7 +165,7 @@
                                                 $priorityColor = $priorityColors[$complaint->priority] ?? 'secondary';
                                             @endphp
                                             <span class="text-secondary text-xs font-weight-bold">
-                                                <i class="fas fa-circle text-{{ $priorityColor }} me-1"></i>
+                                                <i class="fafa-circle text-{{ $priorityColor }} me-1"></i>
                                                 {{ ucfirst($complaint->priority) }}
                                             </span>
                                         </td>
@@ -179,13 +177,13 @@
                                         <td class="align-middle">
                                             <div class="d-flex gap-1">
                                                 <a href="{{ route('complaints.show', $complaint) }}" class="btn btn-link text-primary text-gradient px-2 mb-0">
-                                                    <i class="fas fa-eye text-primary me-1"></i>View
+                                                    <i class="fafa-eye text-primary me-1"></i>View
                                                 </a>
                                                 
                                                 @if($complaint->status !== 'resolved' && $complaint->status !== 'closed')
                                                 <div class="dropdown">
                                                     <button class="btn btn-link text-secondary px-2 mb-0" type="button" data-bs-toggle="dropdown">
-                                                        <i class="fas fa-ellipsis-v"></i>
+                                                        <i class="fafa-ellipsis-v"></i>
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li>
@@ -193,7 +191,7 @@
                                                                 @csrf
                                                                 <input type="hidden" name="status" value="in_progress">
                                                                 <button type="submit" class="dropdown-item">
-                                                                    <i class="fas fa-play me-2"></i>Mark In Progress
+                                                                    <i class="fafa-play me-2"></i>Mark In Progress
                                                                 </button>
                                                             </form>
                                                         </li>
@@ -202,7 +200,7 @@
                                                                 @csrf
                                                                 <input type="hidden" name="status" value="resolved">
                                                                 <button type="submit" class="dropdown-item">
-                                                                    <i class="fas fa-check me-2"></i>Mark Resolved
+                                                                    <i class="fafa-check me-2"></i>Mark Resolved
                                                                 </button>
                                                             </form>
                                                         </li>
@@ -216,7 +214,7 @@
                                     <tr>
                                         <td colspan="6" class="text-center py-4">
                                             <div class="d-flex flex-column align-items-center">
-                                                <i class="fas fa-inbox fa-3x text-secondary mb-3"></i>
+                                                <i class="fafa-inbox fa-3x text-secondary mb-3"></i>
                                                 <h6 class="text-secondary">No complaints found</h6>
                                                 <p class="text-xs text-secondary mb-0">All your properties are complaint-free!</p>
                                             </div>
@@ -242,7 +240,7 @@
 @if(session('success'))
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+        <i class="fafa-check-circle me-2"></i>{{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 </div>
@@ -251,7 +249,7 @@
 @if(session('error'))
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+        <i class="fafa-exclamation-circle me-2"></i>{{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 </div>

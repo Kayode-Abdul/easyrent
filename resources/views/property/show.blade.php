@@ -319,43 +319,29 @@
                             </thead>
                             <tbody>
                                 @foreach($apartments as $apartment)
-                                    @php 
-                                            $now = now();
-                                            $daysUntilExpiry = $apartment->range_end ? now()->diffInDays($apartment->range_end, false) : null;
-                                            
-                                            $status = match(true) {
-                                                !$apartment->tenant_id => 'vacant',
-                                                $now > $apartment->range_end => 'expired',
-                                                $now < $apartment->range_start => 'upcoming',
-                                                $daysUntilExpiry <= 30 => 'expiring-soon',
-                                                default => 'active'
-                                            };
-                                            
-                                            $statusClass = match($status) {
-                                                'vacant' => 'danger',
-                                                'expired' => 'dark',
-                                                'upcoming' => 'info',
-                                                'expiring-soon' => 'warning',
-                                                'active' => 'success'
-                                            }; 
+                                    @php
+                                        $enhancedStatus = $apartment->getEnhancedRentStatus();
+                                        $status = $enhancedStatus['status'];
+                                        $statusClass = $enhancedStatus['status_class'];
                                     @endphp
-                                <tr> 
-                                    <td>{{ $apartment->apartment_type }}</td>  <!-- Apartment type -->
-                                    <td>{{ $apartment->tenant ? $apartment->tenant->first_name . ' ' . $apartment->tenant->last_name : 'Vacant' }}</td>  <!-- Tenant name -->
-                                    <td>
-                                        @php
-                                            $profoma = \App\Models\ProfomaReceipt::where('apartment_id', $apartment->id)->first();
-                                        @endphp
-                                        {{ $profoma ? ($profoma->duration ? $profoma->duration.' months' : 'N/A') : ($apartment->duration ?? 'N/A') }}
-                                    </td>  <!-- Duration (profoma if exists) -->
-                                    <td>{{ $apartment->range_start ? date('M d, Y', strtotime($apartment->range_start)) : 'N/A' }}</td>
-                                    <td>{{ $apartment->range_end ? date('M d, Y', strtotime($apartment->range_end)) : 'N/A' }}</td>
-                                    <td>{{ $apartment->amount ? '₦'.number_format($apartment->amount, 2) : 'N/A' }}</td>
-                                    <td>
-                                        <span class="badge badge-{{ $statusClass }}">
-                                            {{ ucfirst($status) }}
-                                        </span>
-                                    </td>
+                                    <tr>
+                                        <td>{{ $apartment->apartmentType->apartment_type ?? $apartment->apartment_type ?? 'N/A' }}</td>
+                                        <td>
+                                            @if($apartment->tenant)
+                                                {{ trim(($apartment->tenant->first_name ?? '') . ' ' . ($apartment->tenant->last_name ?? '')) ?: ($apartment->tenant->username ?? $apartment->tenant->email ?? 'N/A') }}
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
+                                        <td>{{ $apartment->getDurationDisplay() }}</td>
+                                        <td>{{ $apartment->range_start ? $apartment->range_start->format('M d, Y') : 'N/A' }}</td>
+                                        <td>{{ $apartment->range_end ? $apartment->range_end->format('M d, Y') : 'N/A' }}</td>
+                                        <td>₦{{ number_format($apartment->amount ?? 0) }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ $statusClass }} text-white px-2 py-1">
+                                                {{ $enhancedStatus['message'] }}
+                                            </span>
+                                        </td>
                                     <td class="text-center">
                                         @if(!$apartment->tenant_id && (auth()->user()->user_id == $property->user_id || auth()->user()->admin))
                                             <!-- Vacant apartment - show active share button -->
@@ -402,7 +388,7 @@
                                             @endif
                                         </div>
                                     </td>
-                                </tr>
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -425,7 +411,7 @@
             </div>
             <div class="modal-body">
                 <div id="apartmentMessage"></div>
-                <form id="apartmentForm" class="p-3" action="/apartment" method="post">
+                <form id="apartmentForm" class="p-3" action="/apartment/single" method="post">
                     @csrf
                     <input type="hidden" name="propertyId" value="{{ $property->property_id }}">
                     <div id="apartmentFormFields" class="form-vertical">
@@ -479,26 +465,36 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Duration</label>
-                            <select class="form-control" name="duration" required>
+                            <label for="duration">Duration</label>
+                            <select class="form-control" name="duration" id="duration" required>
                                 <option value="">Select Duration</option>
-                                <option value="1">Monthly</option>
-                                <option value="3">Quarterly</option>
-                                <option value="6">Semi-Annual</option>
-                                <option value="12">Annual</option>
+                                @foreach($durationOptions as $durationValue => $durationName)
+                                    <option value="{{ $durationValue }}">{{ $durationName }}</option>
+                                @endforeach
                             </select>
                         </div>
+
                         <div class="form-group">
                             <label>Start Date</label>
-                            <input type="date" class="form-control" name="fromDate" 
-                                placeholder="Select start date" required>
+                            <div class="input-group">
+                                <input type="date" class="form-control" name="fromDate" 
+                                    placeholder="Select start date" required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text"><i class="fa fa-calendar"></i></span>
+                                </div>
+                            </div>
                         </div>
 
 
                         <div class="form-group">
                             <label>End Date</label>
-                            <input type="date" class="form-control" name="toDate" 
-                                placeholder="Select end date" required>
+                            <div class="input-group">
+                                <input type="date" class="form-control" name="toDate" 
+                                    placeholder="Select end date" required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text"><i class="fa fa-calendar"></i></span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -871,7 +867,32 @@
 
         function calculateEndDate(startDate, duration) {
             const date = new Date(startDate);
-            date.setMonth(date.getMonth() + parseInt(duration));
+            const durationMonths = parseFloat(duration);
+
+            if (Number.isNaN(durationMonths)) {
+                return '';
+            }
+
+            // Handle sub-month durations (weekly/daily/hourly) using days
+            if (durationMonths > 0 && durationMonths < 1) {
+                // Daily/hourly stored as ~0.03-0.04 month
+                if (durationMonths <= 0.04) {
+                    date.setDate(date.getDate() + 1);
+                }
+                // Weekly stored as 0.25 month
+                else if (durationMonths <= 0.25) {
+                    date.setDate(date.getDate() + 7);
+                }
+                // Fallback: convert month fraction to days (30-day month assumption)
+                else {
+                    date.setDate(date.getDate() + Math.round(durationMonths * 30));
+                }
+
+                return date.toISOString().split('T')[0];
+            }
+
+            // Month-based durations
+            date.setMonth(date.getMonth() + Math.round(durationMonths));
             return date.toISOString().split('T')[0];
         }
 

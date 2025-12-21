@@ -84,7 +84,7 @@
     </script>
     
     @php $currentSegment = request()->segment(1); 
-    $isDashboard = in_array($currentSegment, ['dashboard','admin', 'proforma', 'property-manager']); @endphp
+    $isDashboard = in_array($currentSegment, ['dashboard','admin', 'proforma', 'property-manager', 'complaints']); @endphp
     @if(!$isDashboard)
     <!-- Add CSRF Token meta tag -->
     <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:200,300,400,600,700,800,900&display=swap" rel="stylesheet">
@@ -95,7 +95,7 @@
     <link rel="stylesheet" href="/assets/css/magnific-popup.css">
     <link rel="stylesheet" href="/assets/css/aos.css">
     <link rel="stylesheet" href="/assets/css/ionicons.min.css">
-<!--     
+    <!--     
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
     <script src="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/js/bootstrap-datepicker.min.js"></script>
     <link id="bs-css" href="https://netdna.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">

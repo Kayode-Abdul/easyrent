@@ -24,7 +24,9 @@ window.onload = function(){ //alert();
 							//add property id to form
 							$("#property-id").val(response.messages.propId);
 							$('#apartment-panel').show(); 
-							$('#propertyForm').hide(); 
+							$('#propertyForm').hide();
+							// Auto-add one apartment row for convenience
+							addRow(); 
 							//alert("more flats added");#propertyForm
 						}
 				        //setTimeout(location.replace(response.messages), 5000);
@@ -48,6 +50,13 @@ window.onload = function(){ //alert();
 	
 	$("#ApartmentForm").unbind('submit').bind('submit', function(e) {
 		e.preventDefault();
+		
+		// Check if at least one apartment row exists
+		var apartmentRows = document.querySelectorAll('#apartmentTable tr');
+		if (apartmentRows.length <= 1) { // Only header row exists
+			alert('Please add at least one apartment by clicking the "+ Add Apartment" button.');
+			return false;
+		}
 
 		// $("[name=tenantId]").each(function(){
 		// 	$(this).rules("add", {
@@ -129,6 +138,43 @@ $('body').on('focus',".date_picker", function(e){
 	});
 });
 
+// Add CSS for input groups with calendar icons
+$('<style>')
+	.prop('type', 'text/css')
+	.html(`
+		.input-group {
+			display: flex;
+			width: 100%;
+		}
+		.input-group .form-control,
+		.input-group input {
+			flex: 1;
+			border-top-right-radius: 0;
+			border-bottom-right-radius: 0;
+		}
+		.input-group-text {
+			background-color: #f8f9fa;
+			border: 1px solid #ced4da;
+			border-left: none;
+			border-top-left-radius: 0;
+			border-bottom-left-radius: 0;
+			padding: 0.375rem 0.75rem;
+			display: flex;
+			align-items: center;
+			color: #6c757d;
+		}
+		.input-group-text i {
+			font-size: 14px;
+		}
+		#apartmentTable .input-group {
+			margin: 0;
+		}
+		#apartmentTable td {
+			padding: 5px;
+		}
+	`)
+	.appendTo('head');
+
 }; 
 
 function addRow(){
@@ -138,8 +184,24 @@ function addRow(){
 	//alert(rowNo+ "revamp");
 	var newRow =  "<tr><td> <label> "+ rowNo++ +" </label> </td>	<td> "+
 		'<input size=25 type="text" class="text-secondary" placeholder="Tenant ID" name="tenantId[]">	</td>'+		
-		'<td><input size=25 type="text" class="date_picker text-secondary" placeholder="From" name="fromRange[]"  value="" ></td>'+ 
-		'<td><input size=25 type="text" class="date_picker text-secondary" placeholder="To" name="toRange[]"  value="" ></td>'+ 
-		'<td><input size=25  type="number" class="text-secondary" min="1" step="any" placeholder="Price" name="amount[]"></td></tr>';
+		'<td><div class="input-group"><input size=25 type="text" class="date_picker text-secondary" placeholder="From" name="fromRange[]"  value="" ><span class="input-group-text"><i class="fa fa-calendar"></i></span></div></td>'+ 
+		'<td><div class="input-group"><input size=25 type="text" class="date_picker text-secondary" placeholder="To" name="toRange[]"  value="" ><span class="input-group-text"><i class="fa fa-calendar"></i></span></div></td>'+ 
+		'<td><input size=25  type="number" class="text-secondary" min="1" step="any" placeholder="Price" name="amount[]"></td>'+
+		'<td><select class="text-secondary" name="rentalType[]" style="width: 120px;">'+
+			'<option value="hourly">Hourly</option>'+
+			'<option value="daily">Daily</option>'+
+			'<option value="weekly">Weekly</option>'+
+			'<option value="monthly" selected>Monthly</option>'+
+			'<option value="quarterly">Quarterly</option>'+
+			'<option value="semi_annually">Semi-Annual</option>'+
+			'<option value="yearly">Yearly</option>'+
+			'<option value="bi_annually">Bi-Annual</option>'+
+		'</select></td>'+
+		'<td><button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">Remove</button></td>'+
+		'</tr>';
 	$(newRow).insertAfter("#apartmentTable tr:last");
 } 
+
+function removeRow(button) {
+	$(button).closest('tr').remove();
+}

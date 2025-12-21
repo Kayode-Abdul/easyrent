@@ -70,16 +70,13 @@
                                     <input type="text" class="form-control" name="apartmentType" id="apartmentType" value="{{ $apartment->apartment_type }}" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="tenantId">Tenant ID</label>
-                                    <input type="text" class="form-control" name="tenantId" id="tenantId" value="{{ $apartment->tenant_id }}">
-                                </div>
-                                <div class="form-group">
                                     <label for="duration">Duration</label>
                                     <select class="form-control" name="duration" id="duration" required>
-                                        <option value="1" {{ $apartment->duration == 1 ? 'selected' : '' }}>Monthly</option>
-                                        <option value="3" {{ $apartment->duration == 3 ? 'selected' : '' }}>Quarterly</option>
-                                        <option value="6" {{ $apartment->duration == 6 ? 'selected' : '' }}>Semi-Annual</option>
-                                        <option value="12" {{ $apartment->duration == 12 ? 'selected' : '' }}>Annual</option>
+                                        @foreach($durationOptions as $durationValue => $durationName)
+                                            <option value="{{ $durationValue }}" {{ $apartment->duration == $durationValue ? 'selected' : '' }}>
+                                                {{ $durationName }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -195,6 +192,64 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        
+                                        <!-- Additional Duration Types -->
+                                        <div class="form-check">
+                                            <input class="form-check-input rental-type-checkbox" type="checkbox" 
+                                                   id="quarterly_rental" name="rental_types[]" value="quarterly"
+                                                   {{ in_array('quarterly', $supportedTypes) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="quarterly_rental">
+                                                Quarterly Rental (3 months)
+                                            </label>
+                                            <div class="rate-input-group mt-2" style="{{ in_array('quarterly', $supportedTypes) ? '' : 'display: none;' }}">
+                                                <div class="input-group">
+                                                    <span class="input-group-text">₦</span>
+                                                    <input type="number" class="form-control" name="quarterly_rate" 
+                                                           placeholder="Quarterly rate (auto-calculated from monthly)" step="0.01" min="0" readonly
+                                                           value="{{ isset($allRates['quarterly']) ? $allRates['quarterly'] : (isset($allRates['monthly']) ? $allRates['monthly'] * 3 : '') }}">
+                                                    <span class="input-group-text">per quarter</span>
+                                                </div>
+                                                <small class="text-muted">Auto-calculated as 3 × monthly rate</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-check">
+                                            <input class="form-check-input rental-type-checkbox" type="checkbox" 
+                                                   id="semi_annually_rental" name="rental_types[]" value="semi_annually"
+                                                   {{ in_array('semi_annually', $supportedTypes) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="semi_annually_rental">
+                                                Semi-Annual Rental (6 months)
+                                            </label>
+                                            <div class="rate-input-group mt-2" style="{{ in_array('semi_annually', $supportedTypes) ? '' : 'display: none;' }}">
+                                                <div class="input-group">
+                                                    <span class="input-group-text">₦</span>
+                                                    <input type="number" class="form-control" name="semi_annually_rate" 
+                                                           placeholder="Semi-annual rate (auto-calculated from monthly)" step="0.01" min="0" readonly
+                                                           value="{{ isset($allRates['semi_annually']) ? $allRates['semi_annually'] : (isset($allRates['monthly']) ? $allRates['monthly'] * 6 : '') }}">
+                                                    <span class="input-group-text">per 6 months</span>
+                                                </div>
+                                                <small class="text-muted">Auto-calculated as 6 × monthly rate</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-check">
+                                            <input class="form-check-input rental-type-checkbox" type="checkbox" 
+                                                   id="bi_annually_rental" name="rental_types[]" value="bi_annually"
+                                                   {{ in_array('bi_annually', $supportedTypes) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="bi_annually_rental">
+                                                Bi-Annual Rental (24 months)
+                                            </label>
+                                            <div class="rate-input-group mt-2" style="{{ in_array('bi_annually', $supportedTypes) ? '' : 'display: none;' }}">
+                                                <div class="input-group">
+                                                    <span class="input-group-text">₦</span>
+                                                    <input type="number" class="form-control" name="bi_annually_rate" 
+                                                           placeholder="Bi-annual rate (auto-calculated from monthly)" step="0.01" min="0" readonly
+                                                           value="{{ isset($allRates['bi_annually']) ? $allRates['bi_annually'] : (isset($allRates['monthly']) ? $allRates['monthly'] * 24 : '') }}">
+                                                    <span class="input-group-text">per 24 months</span>
+                                                </div>
+                                                <small class="text-muted">Auto-calculated as 24 × monthly rate</small>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -205,7 +260,10 @@
                                         <option value="daily" {{ $apartment->getDefaultRentalType() == 'daily' ? 'selected' : '' }}>Daily</option>
                                         <option value="weekly" {{ $apartment->getDefaultRentalType() == 'weekly' ? 'selected' : '' }}>Weekly</option>
                                         <option value="monthly" {{ $apartment->getDefaultRentalType() == 'monthly' ? 'selected' : '' }}>Monthly</option>
+                                        <option value="quarterly" {{ $apartment->getDefaultRentalType() == 'quarterly' ? 'selected' : '' }}>Quarterly</option>
+                                        <option value="semi_annually" {{ $apartment->getDefaultRentalType() == 'semi_annually' ? 'selected' : '' }}>Semi-Annually</option>
                                         <option value="yearly" {{ $apartment->getDefaultRentalType() == 'yearly' ? 'selected' : '' }}>Yearly</option>
+                                        <option value="bi_annually" {{ $apartment->getDefaultRentalType() == 'bi_annually' ? 'selected' : '' }}>Bi-Annually</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -236,7 +294,32 @@
 function calculateEndDate(startDate, duration) {
     if (!startDate || !duration) return '';
     const date = new Date(startDate);
-    date.setMonth(date.getMonth() + parseInt(duration));
+    const durationMonths = parseFloat(duration);
+
+    if (Number.isNaN(durationMonths)) {
+        return '';
+    }
+
+    // Handle sub-month durations (daily/weekly/hourly) using days
+    if (durationMonths > 0 && durationMonths < 1) {
+        // Daily/hourly stored as ~0.03-0.04 month
+        if (durationMonths <= 0.04) {
+            date.setDate(date.getDate() + 1);
+        }
+        // Weekly stored as 0.25 month
+        else if (durationMonths <= 0.25) {
+            date.setDate(date.getDate() + 7);
+        }
+        // Fallback: convert month fraction to days (30-day month assumption)
+        else {
+            date.setDate(date.getDate() + Math.round(durationMonths * 30));
+        }
+
+        return date.toISOString().split('T')[0];
+    }
+
+    // Month-based durations
+    date.setMonth(date.getMonth() + Math.round(durationMonths));
     return date.toISOString().split('T')[0];
 }
 
@@ -265,15 +348,46 @@ $(document).ready(function() {
         
         if (checkbox.is(':checked')) {
             rateInputGroup.show();
-            rateInput.prop('required', true);
+            if (!rateInput.prop('readonly')) {
+                rateInput.prop('required', true);
+            }
         } else {
             rateInputGroup.hide();
             rateInput.prop('required', false);
-            rateInput.val('');
+            if (!rateInput.prop('readonly')) {
+                rateInput.val('');
+            }
         }
         
         updateDefaultRentalTypeOptions();
+        updateCalculatedRates();
     });
+
+    // Update calculated rates when monthly rate changes
+    $('input[name="monthly_rate"]').on('input', function() {
+        updateCalculatedRates();
+    });
+
+    // Function to update calculated rates
+    function updateCalculatedRates() {
+        const monthlyRate = parseFloat($('input[name="monthly_rate"]').val()) || 0;
+        
+        if (monthlyRate > 0) {
+            // Update quarterly rate (3 months)
+            $('input[name="quarterly_rate"]').val((monthlyRate * 3).toFixed(2));
+            
+            // Update semi-annual rate (6 months)
+            $('input[name="semi_annually_rate"]').val((monthlyRate * 6).toFixed(2));
+            
+            // Update bi-annual rate (24 months)
+            $('input[name="bi_annually_rate"]').val((monthlyRate * 24).toFixed(2));
+        } else {
+            // Clear calculated rates if no monthly rate
+            $('input[name="quarterly_rate"]').val('');
+            $('input[name="semi_annually_rate"]').val('');
+            $('input[name="bi_annually_rate"]').val('');
+        }
+    }
 
     // Update default rental type options based on selected rental types
     function updateDefaultRentalTypeOptions() {
@@ -288,8 +402,19 @@ $(document).ready(function() {
         // Clear and repopulate options
         defaultSelect.empty();
         
+        const typeLabels = {
+            'hourly': 'Hourly',
+            'daily': 'Daily',
+            'weekly': 'Weekly',
+            'monthly': 'Monthly',
+            'quarterly': 'Quarterly',
+            'semi_annually': 'Semi-Annually',
+            'yearly': 'Yearly',
+            'bi_annually': 'Bi-Annually'
+        };
+        
         selectedTypes.forEach(function(type) {
-            const label = type.charAt(0).toUpperCase() + type.slice(1);
+            const label = typeLabels[type] || type.charAt(0).toUpperCase() + type.slice(1);
             defaultSelect.append(`<option value="${type}">${label}</option>`);
         });
         
@@ -303,6 +428,9 @@ $(document).ready(function() {
 
     // Initialize default rental type options
     updateDefaultRentalTypeOptions();
+    
+    // Initialize calculated rates
+    updateCalculatedRates();
 
     // Existing AJAX form submit logic
     $('#editApartmentForm').off('submit').on('submit', function(e) {

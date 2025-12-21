@@ -1,4 +1,6 @@
-@extends('layout')
+<!-- Header area start -->
+@include('header')
+<!-- Header area end -->
 
 @section('title', 'Apartment Details - ' . $property->prop_name)
 
@@ -9,372 +11,234 @@
 @push('scripts')
 <script src="{{ asset('public/assets/js/payment-calculation-enhanced.js') }}"></script>
 @endpush
-
-@section('content')
-<div class="container py-5">
-    <div class="row">
-        <div class="col-lg-8">
-            <!-- Property Images -->
-            <div class="property-gallery mb-4">
-                @if($property->prop_photos && count(json_decode($property->prop_photos, true)) > 0)
-                    <div class="card">
-                        <div class="card-body p-0">
-                            <div id="propertyCarousel" class="carousel slide" data-bs-ride="carousel">
-                                <div class="carousel-inner">
-                                    @foreach(json_decode($property->prop_photos, true) as $index => $photo)
-                                        <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                                            <img src="{{ asset('storage/' . $photo) }}" 
-                                                 class="d-block w-100" 
-                                                 alt="Property Image {{ $index + 1 }}"
-                                                 style="height: 400px; object-fit: cover;">
-                                        </div>
-                                    @endforeach
-                                </div>
-                                @if(count(json_decode($property->prop_photos, true)) > 1)
-                                    <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
-                                        <span class="carousel-control-prev-icon"></span>
-                                    </button>
-                                    <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
-                                        <span class="carousel-control-next-icon"></span>
-                                    </button>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @else
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <i class="fas fa-home fa-5x text-primary mb-3"></i>
-                            <h5>Property Images</h5>
-                            <p class="text-muted">No images available for this property</p>
-                        </div>
-                    </div>
-                @endif
-            </div>
-            
-            <!-- Property Details -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">
-                        <i class="fas fa-home me-2"></i>{{ $property->prop_name }}
-                    </h3>
-                    <p class="mb-0 opacity-75">
-                        <i class="fas fa-map-marker-alt me-1"></i>{{ $property->prop_address }}
-                    </p>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5 class="text-primary">
-                                <i class="fas fa-info-circle me-2"></i>Apartment Details
-                            </h5>
-                            <ul class="list-unstyled">
-                                <li class="mb-2">
-                                    <strong>Type:</strong> 
-                                    <span class="badge bg-info">{{ $apartment->apartment_type }}</span>
-                                </li>
-                                <li class="mb-2">
-                                    <strong>{{ $apartment->getPricingType() === 'total' ? 'Total Price' : 'Monthly Rent' }}:</strong> 
-                                    <span class="text-success fw-bold">₦{{ number_format($apartment->amount) }}</span>
-                                    @if($apartment->getPricingType() === 'total')
-                                        <small class="text-muted">(Total for entire lease)</small>
+ <div class="content">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Property Images -->
+                <div class="property-gallery mb-4">
+                    @if($property->prop_photos && count(json_decode($property->prop_photos, true)) > 0)
+                        <div class="card">
+                            <div class="card-body p-0">
+                                <div id="propertyCarousel" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-inner">
+                                        @foreach(json_decode($property->prop_photos, true) as $index => $photo)
+                                            <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                                                <img src="{{ asset('storage/' . $photo) }}" 
+                                                    class="d-block w-100" 
+                                                    alt="Property Image {{ $index + 1 }}"
+                                                    style="height: 400px; object-fit: cover;">
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    @if(count(json_decode($property->prop_photos, true)) > 1)
+                                        <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon"></span>
+                                        </button>
+                                        <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon"></span>
+                                        </button>
                                     @endif
-                                </li>
-                                <li class="mb-2">
-                                    <strong>Property Type:</strong> {{ $property->getPropertyTypeName() }}
-                                </li>
-                                <li class="mb-2">
-                                    <strong>Location:</strong> {{ $property->prop_address }}
-                                </li>
-                                <li class="mb-2">
-                                    <strong>State:</strong> {{ $property->prop_state }}
-                                </li>
-                                <li class="mb-2">
-                                    <strong>LGA:</strong> {{ $property->prop_lga }}
-                                </li>
-                                @if($property->prop_size)
-                                <li class="mb-2">
-                                    <strong>Size:</strong> {{ $property->prop_size }}
-                                </li>
-                                @endif
-                                @if($property->bedrooms)
-                                <li class="mb-2">
-                                    <strong>Bedrooms:</strong> {{ $property->bedrooms }}
-                                </li>
-                                @endif
-                                @if($property->bathrooms)
-                                <li class="mb-2">
-                                    <strong>Bathrooms:</strong> {{ $property->bathrooms }}
-                                </li>
-                                @endif
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h5 class="text-primary">
-                                <i class="fas fa-user-tie me-2"></i>Landlord Information
-                            </h5>
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <ul class="list-unstyled mb-0">
-                                        <li class="mb-2">
-                                            <strong>Name:</strong> {{ $landlord->first_name }} {{ $landlord->last_name }}
-                                        </li>
-                                        <li class="mb-2">
-                                            <strong>Email:</strong> 
-                                            <a href="mailto:{{ $landlord->email }}">{{ $landlord->email }}</a>
-                                        </li>
-                                        <li class="mb-2">
-                                            <strong>Phone:</strong> 
-                                            <a href="tel:{{ $landlord->phone }}">{{ $landlord->phone }}</a>
-                                        </li>
-                                    </ul>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    @if($property->prop_description)
-                    <div class="mt-4">
-                        <h5 class="text-primary">
-                            <i class="fas fa-file-alt me-2"></i>Property Description
-                        </h5>
-                        <p class="text-muted">{{ $property->prop_description }}</p>
-                    </div>
-                    @endif
-                    
-                    <!-- Amenities Section -->
-                    @if($property->amenities && $property->amenities->count() > 0)
-                    <div class="mt-4">
-                        <h5 class="text-primary">
-                            <i class="fas fa-star me-2"></i>Amenities & Features
-                        </h5>
-                        <div class="row">
-                            @foreach($property->amenities as $amenity)
-                                <div class="col-md-6 mb-2">
-                                    <span class="badge bg-light text-dark border">
-                                        <i class="fas fa-check-circle text-success me-1"></i>{{ $amenity->name }}
-                                    </span>
-                                </div>
-                            @endforeach
+                    @else
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-home fa-5x text-primary mb-3"></i>
+                                <h5>Property Images</h5>
+                                <p class="text-muted">No images available for this property</p>
+                            </div>
                         </div>
-                    </div>
                     @endif
-                    
-                    <!-- Additional Property Information -->
-                    <div class="mt-4">
-                        <h5 class="text-primary">
-                            <i class="fas fa-map-marker-alt me-2"></i>Location Details
-                        </h5>
+                </div>
+                
+                <!-- Property Details -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">
+                            <i class="fas fa-home me-2"></i>{{ $property->prop_name }}
+                        </h3>
+                        <p class="mb-0 opacity-75">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ $property->prop_address }}
+                        </p>
+                    </div>
+                    <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
+                                <h5 class="text-primary">
+                                    <i class="fas fa-info-circle me-2"></i>Apartment Details
+                                </h5>
                                 <ul class="list-unstyled">
                                     <li class="mb-2">
-                                        <strong>Full Address:</strong><br>
-                                        <span class="text-muted">{{ $property->prop_address }}</span>
+                                        <strong>Type:</strong> 
+                                        <span class="badge bg-info">{{ $apartment->apartment_type }}</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>{{ $apartment->getPricingType() === 'total' ? 'Total Price' : 'Monthly Rent' }}:</strong> 
+                                        <span class="text-success fw-bold">₦{{ number_format($apartment->amount) }}</span>
+                                        @if($apartment->getPricingType() === 'total')
+                                            <small class="text-muted">(Total for entire lease)</small>
+                                        @endif
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Property Type:</strong> {{ $property->getPropertyTypeName() }}
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Location:</strong> {{ $property->prop_address }}
                                     </li>
                                     <li class="mb-2">
                                         <strong>State:</strong> {{ $property->prop_state }}
                                     </li>
                                     <li class="mb-2">
-                                        <strong>Local Government:</strong> {{ $property->prop_lga }}
+                                        <strong>LGA:</strong> {{ $property->prop_lga }}
                                     </li>
+                                    @if($property->prop_size)
+                                    <li class="mb-2">
+                                        <strong>Size:</strong> {{ $property->prop_size }}
+                                    </li>
+                                    @endif
+                                    @if($property->bedrooms)
+                                    <li class="mb-2">
+                                        <strong>Bedrooms:</strong> {{ $property->bedrooms }}
+                                    </li>
+                                    @endif
+                                    @if($property->bathrooms)
+                                    <li class="mb-2">
+                                        <strong>Bathrooms:</strong> {{ $property->bathrooms }}
+                                    </li>
+                                    @endif
                                 </ul>
                             </div>
                             <div class="col-md-6">
-                                @if($property->nearest_landmark)
-                                <ul class="list-unstyled">
-                                    <li class="mb-2">
-                                        <strong>Nearest Landmark:</strong><br>
-                                        <span class="text-muted">{{ $property->nearest_landmark }}</span>
-                                    </li>
-                                </ul>
-                                @endif
+                                <h5 class="text-primary">
+                                    <i class="fas fa-user-tie me-2"></i>Landlord Information
+                                </h5>
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <ul class="list-unstyled mb-0">
+                                            <li class="mb-2">
+                                                <strong>Name:</strong> {{ $landlord->first_name }} {{ $landlord->last_name }}
+                                            </li>
+                                            <li class="mb-2">
+                                                <strong>Email:</strong> 
+                                                <a href="mailto:{{ $landlord->email }}">{{ $landlord->email }}</a>
+                                            </li>
+                                            <li class="mb-2">
+                                                <strong>Phone:</strong> 
+                                                <a href="tel:{{ $landlord->phone }}">{{ $landlord->phone }}</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        @if($property->prop_description)
+                        <div class="mt-4">
+                            <h5 class="text-primary">
+                                <i class="fas fa-file-alt me-2"></i>Property Description
+                            </h5>
+                            <p class="text-muted">{{ $property->prop_description }}</p>
+                        </div>
+                        @endif
+                        
+                        <!-- Amenities Section -->
+                        @if($property->amenities && $property->amenities->count() > 0)
+                        <div class="mt-4">
+                            <h5 class="text-primary">
+                                <i class="fas fa-star me-2"></i>Amenities & Features
+                            </h5>
+                            <div class="row">
+                                @foreach($property->amenities as $amenity)
+                                    <div class="col-md-6 mb-2">
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="fas fa-check-circle text-success me-1"></i>{{ $amenity->name }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                        
+                        <!-- Additional Property Information -->
+                        <div class="mt-4">
+                            <h5 class="text-primary">
+                                <i class="fas fa-map-marker-alt me-2"></i>Location Details
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <strong>Full Address:</strong><br>
+                                            <span class="text-muted">{{ $property->prop_address }}</span>
+                                        </li>
+                                        <li class="mb-2">
+                                            <strong>State:</strong> {{ $property->prop_state }}
+                                        </li>
+                                        <li class="mb-2">
+                                            <strong>Local Government:</strong> {{ $property->prop_lga }}
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    @if($property->nearest_landmark)
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <strong>Nearest Landmark:</strong><br>
+                                            <span class="text-muted">{{ $property->nearest_landmark }}</span>
+                                        </li>
+                                    </ul>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-lg-4">
-            <!-- Application Form -->
-            <div class="card sticky-top shadow">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-key me-2"></i>Apply for this Apartment
-                    </h5>
-                </div>
-                <div class="card-body">
-                    @if(session('success'))
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                        </div>
-                    @endif
-                    
-                    @if(session('error'))
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
-                        </div>
-                    @endif
+            
+            <div class="col-lg-4">
+                <!-- Application Form -->
+                <div class="card sticky-top shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-key me-2"></i>Apply for this Apartment
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if(session('success'))
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                            </div>
+                        @endif
+                        
+                        @if(session('error'))
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
+                            </div>
+                        @endif
 
-                    @if(session('info'))
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>{{ session('info') }}
-                        </div>
-                    @endif
-                    
-                    @auth
-                        <!-- Authenticated User - Show Application Form -->
-                        <form action="{{ route('apartment.invite.apply', $invitation->invitation_token) }}" method="POST" id="applicationForm">
-                            @csrf
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">
-                                    <i class="fas fa-calendar me-1 text-primary"></i>Lease Duration (months) *
-                                </label>
-                                <select name="duration" class="form-select form-select-lg" required id="durationSelect">
-                                    <option value="6">6 months</option>
-                                    <option value="12" selected>12 months</option>
-                                    <option value="18">18 months</option>
-                                    <option value="24">24 months</option>
-                                </select>
-                                <small class="text-muted">Choose your preferred lease duration</small>
+                        @if(session('info'))
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>{{ session('info') }}
                             </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">
-                                    <i class="fas fa-calendar-check me-1 text-primary"></i>Preferred Move-in Date *
-                                </label>
-                                <input type="date" name="move_in_date" class="form-control form-control-lg" 
-                                       min="{{ date('Y-m-d', strtotime('+1 day')) }}" 
-                                       value="{{ date('Y-m-d', strtotime('+7 days')) }}" required>
-                                <small class="text-muted">Select when you'd like to move in</small>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">
-                                    <i class="fas fa-comment me-1 text-primary"></i>Additional Notes (Optional)
-                                </label>
-                                <textarea name="additional_notes" class="form-control" rows="3" 
-                                          placeholder="Any special requests or questions about the apartment..."></textarea>
-                                <small class="text-muted">Share any special requirements or questions</small>
-                            </div>
-                            
-                            <div class="total-calculation mb-4" 
-                                 data-apartment-amount="{{ $apartment->amount }}" 
-                                 data-pricing-type="{{ $proformaData['pricing_type'] ?? 'total' }}">
-                                <div class="card bg-gradient payment-summary-card" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-primary mb-3">
-                                            <i class="fas fa-calculator me-2"></i>Payment Summary
-                                        </h6>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">
-                                                @if(isset($proformaData['pricing_type']) && $proformaData['pricing_type'] === 'total')
-                                                    Total Price:
-                                                @else
-                                                    Monthly Price:
-                                                @endif
-                                            </span>
-                                            <span class="fw-bold">₦{{ number_format($apartment->amount) }}</span>
-                                        </div>
-                                        @if(isset($proformaData['pricing_type']))
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Pricing Type:</span>
-                                            <span class="fw-bold text-info">
-                                                {{ ucfirst($proformaData['pricing_type']) }}
-                                                @if($proformaData['pricing_type'] === 'total')
-                                                    <small class="text-muted">(Fixed amount)</small>
-                                                @else
-                                                    <small class="text-muted">(Per month)</small>
-                                                @endif
-                                            </span>
-                                        </div>
-                                        @endif
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Duration:</span>
-                                            <span id="duration-display" class="fw-bold">12 months</span>
-                                        </div>
-                                        @if(isset($proformaData['calculation_method']))
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Calculation:</span>
-                                            <span class="fw-bold text-secondary small">
-                                                @if($proformaData['calculation_method'] === 'total_price_no_multiplication')
-                                                    Fixed total amount
-                                                @elseif($proformaData['calculation_method'] === 'monthly_price_with_duration_multiplication')
-                                                    Monthly × Duration
-                                                @else
-                                                    {{ ucfirst(str_replace('_', ' ', $proformaData['calculation_method'])) }}
-                                                @endif
-                                            </span>
-                                        </div>
-                                        @endif
-                                        
-                                        <!-- Calculation breakdown for monthly pricing -->
-                                        @if(isset($proformaData['pricing_type']) && $proformaData['pricing_type'] === 'monthly')
-                                        <div class="calculation-breakdown mt-2 p-2" style="background: rgba(0,123,255,0.05); border-radius: 6px; border-left: 3px solid #007bff;">
-                                            <small class="text-muted d-block mb-1">Calculation Breakdown:</small>
-                                            <small class="d-flex justify-content-between">
-                                                <span>₦{{ number_format($apartment->amount) }} × <span id="calc-duration">12</span> months</span>
-                                                <span>=</span>
-                                            </small>
-                                        </div>
-                                        @endif
-                                        
-                                        <hr class="my-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span class="fw-bold text-success fs-6">Total Amount:</span>
-                                            <span id="total-amount" class="fw-bold text-success fs-4">₦{{ number_format($proformaData['total_amount'] ?? ($apartment->amount * 12)) }}</span>
-                                        </div>
-                                        
-                                        <!-- Error display area -->
-                                        <div id="calculation-error" class="alert alert-warning mt-2" style="display: none;">
-                                            <small><i class="fas fa-exclamation-triangle me-1"></i>
-                                            <span id="error-message">Calculation error occurred</span></small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="alert alert-info border-0" style="background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-info-circle fa-lg text-info me-3"></i>
-                                    <div>
-                                        <small class="fw-semibold">Secure Application Process</small>
-                                        <div class="small">By applying, you agree to proceed with secure payment to reserve this apartment.</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-success btn-lg w-100 py-3" style="border-radius: 12px; font-weight: 600;">
-                                <i class="fas fa-credit-card me-2"></i>Proceed to Secure Payment
-                            </button>
-                        </form>
-                    @else
-                        <!-- Unauthenticated User - Pay-First Flow -->
-                        <div class="unauthenticated-application">
-                            <div class="mb-4 text-center">
-                                <div class="mb-3" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-                                    <i class="fas fa-user-lock fa-2x text-primary"></i>
-                                </div>
-                                <h6 class="text-primary fw-semibold">Preview Your Application</h6>
-                                <p class="small text-muted mb-0">
-                                    Configure your rental preferences below, then proceed to secure payment. You will register after payment to finalize your apartment.
-                                </p>
-                            </div>
-                            
-                            <!-- Application Form for Guests (Pay First) -->
-                            <form id="unauthenticatedApplicationForm" class="mb-4" method="POST" action="{{ route('apartment.invite.apply', $invitation->invitation_token) }}">
+                        @endif
+                        
+                        @auth
+                            <!-- Authenticated User - Show Application Form -->
+                            <form action="{{ route('apartment.invite.apply', $invitation->invitation_token) }}" method="POST" id="applicationForm">
                                 @csrf
+                                
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">
-                                        <i class="fas fa-calendar me-1 text-primary"></i>Preferred Lease Duration *
+                                        <i class="fas fa-calendar me-1 text-primary"></i>Lease Duration *
                                     </label>
-                                    <select id="unauthDurationSelect" name="duration" class="form-select form-select-lg">
-                                        <option value="6">6 months</option>
-                                        <option value="12" selected>12 months</option>
-                                        <option value="18">18 months</option>
-                                        <option value="24">24 months</option>
+                                    <select name="duration" class="form-select form-select-lg" required id="durationSelect">
+                                        @foreach($durationOptions as $durationValue => $durationName)
+                                            <option value="{{ $durationValue }}" {{ $durationValue == 12 ? 'selected' : '' }}>
+                                                {{ $durationName }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                     <small class="text-muted">Choose your preferred lease duration</small>
                                 </div>
@@ -383,9 +247,9 @@
                                     <label class="form-label fw-semibold">
                                         <i class="fas fa-calendar-check me-1 text-primary"></i>Preferred Move-in Date *
                                     </label>
-                                    <input type="date" id="unauthMoveInDate" name="move_in_date" class="form-control form-control-lg" 
-                                           min="{{ date('Y-m-d', strtotime('+1 day')) }}" 
-                                           value="{{ date('Y-m-d', strtotime('+7 days')) }}">
+                                    <input type="date" name="move_in_date" class="form-control form-control-lg" 
+                                        min="{{ date('Y-m-d', strtotime('+1 day')) }}" 
+                                        value="{{ date('Y-m-d', strtotime('+7 days')) }}" required>
                                     <small class="text-muted">Select when you'd like to move in</small>
                                 </div>
                                 
@@ -393,120 +257,260 @@
                                     <label class="form-label fw-semibold">
                                         <i class="fas fa-comment me-1 text-primary"></i>Additional Notes (Optional)
                                     </label>
-                                    <textarea id="unauthNotes" name="additional_notes" class="form-control" rows="3" 
-                                              placeholder="Any special requests or questions about the apartment..."></textarea>
+                                    <textarea name="additional_notes" class="form-control" rows="3" 
+                                            placeholder="Any special requests or questions about the apartment..."></textarea>
                                     <small class="text-muted">Share any special requirements or questions</small>
                                 </div>
                                 
-                                <div class="d-grid gap-3">
-                                    <button type="submit" class="btn btn-success btn-lg py-3" style="border-radius: 12px; font-weight: 600;">
-                                        <i class="fas fa-credit-card me-2"></i>Proceed to Secure Payment
-                                    </button>
+                                <div class="total-calculation mb-4" 
+                                    data-apartment-amount="{{ $apartment->amount }}" 
+                                    data-pricing-type="{{ $proformaData['pricing_type'] ?? 'total' }}">
+                                    <div class="card bg-gradient payment-summary-card" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-primary mb-3">
+                                                <i class="fas fa-calculator me-2"></i>Payment Summary
+                                            </h6>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span class="text-muted">
+                                                    @if(isset($proformaData['pricing_type']) && $proformaData['pricing_type'] === 'total')
+                                                        Total Price:
+                                                    @else
+                                                        Monthly Price:
+                                                    @endif
+                                                </span>
+                                                <span class="fw-bold">₦{{ number_format($apartment->amount) }}</span>
+                                            </div>
+                                            @if(isset($proformaData['pricing_type']))
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span class="text-muted">Pricing Type:</span>
+                                                <span class="fw-bold text-info">
+                                                    {{ ucfirst($proformaData['pricing_type']) }}
+                                                    @if($proformaData['pricing_type'] === 'total')
+                                                        <small class="text-muted">(Fixed amount)</small>
+                                                    @else
+                                                        <small class="text-muted">(Per month)</small>
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            @endif
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span class="text-muted">Duration:</span>
+                                                <span id="duration-display" class="fw-bold">12 months</span>
+                                            </div>
+                                            @if(isset($proformaData['calculation_method']))
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span class="text-muted">Calculation:</span>
+                                                <span class="fw-bold text-secondary small">
+                                                    @if($proformaData['calculation_method'] === 'total_price_no_multiplication')
+                                                        Fixed total amount
+                                                    @elseif($proformaData['calculation_method'] === 'monthly_price_with_duration_multiplication')
+                                                        Monthly × Duration
+                                                    @else
+                                                        {{ ucfirst(str_replace('_', ' ', $proformaData['calculation_method'])) }}
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            @endif
+                                            
+                                            <!-- Calculation breakdown for monthly pricing -->
+                                            @if(isset($proformaData['pricing_type']) && $proformaData['pricing_type'] === 'monthly')
+                                            <div class="calculation-breakdown mt-2 p-2" style="background: rgba(0,123,255,0.05); border-radius: 6px; border-left: 3px solid #007bff;">
+                                                <small class="text-muted d-block mb-1">Calculation Breakdown:</small>
+                                                <small class="d-flex justify-content-between">
+                                                    <span>₦{{ number_format($apartment->amount) }} × <span id="calc-duration">12</span> months</span>
+                                                    <span>=</span>
+                                                </small>
+                                            </div>
+                                            @endif
+                                            
+                                            <hr class="my-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="fw-bold text-success fs-6">Total Amount:</span>
+                                                <span id="total-amount" class="fw-bold text-success fs-4">₦{{ number_format($proformaData['total_amount'] ?? ($apartment->amount * 12)) }}</span>
+                                            </div>
+                                            
+                                            <!-- Error display area -->
+                                            <div id="calculation-error" class="alert alert-warning mt-2" style="display: none;">
+                                                <small><i class="fas fa-exclamation-triangle me-1"></i>
+                                                <span id="error-message">Calculation error occurred</span></small>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                                
+                                <div class="alert alert-info border-0" style="background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-info-circle fa-lg text-info me-3"></i>
+                                        <div>
+                                            <small class="fw-semibold">Secure Application Process</small>
+                                            <div class="small">By applying, you agree to proceed with secure payment to reserve this apartment.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-success btn-lg w-100 py-3" style="border-radius: 12px; font-weight: 600;">
+                                    <i class="fas fa-credit-card me-2"></i>Proceed to Secure Payment
+                                </button>
                             </form>
-                            
-                            <!-- Payment Summary for Unauthenticated Users -->
-                            <div class="total-calculation mb-4" 
-                                 data-apartment-amount="{{ $apartment->amount }}" 
-                                 data-pricing-type="{{ $proformaData['pricing_type'] ?? 'total' }}">
-                                <div class="card bg-gradient payment-summary-card" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
-                                    <div class="card-body">
-                                        <h6 class="card-title text-primary mb-3">
-                                            <i class="fas fa-calculator me-2"></i>Payment Summary
-                                        </h6>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">
-                                                @if(isset($proformaData['pricing_type']) && $proformaData['pricing_type'] === 'total')
-                                                    Total Price:
-                                                @else
-                                                    Monthly Price:
-                                                @endif
-                                            </span>
-                                            <span class="fw-bold">₦{{ number_format($apartment->amount) }}</span>
+                        @else
+                            <!-- Unauthenticated User - Pay-First Flow -->
+                            <div class="unauthenticated-application">
+                                <div class="mb-4 text-center">
+                                    <div class="mb-3" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                        <i class="fas fa-user-lock fa-2x text-primary"></i>
+                                    </div>
+                                    <h6 class="text-primary fw-semibold">Preview Your Application</h6>
+                                    <p class="small text-muted mb-0">
+                                        Configure your rental preferences below, then proceed to secure payment. You will register after payment to finalize your apartment.
+                                    </p>
+                                </div>
+                                
+                                <!-- Application Form for Guests (Pay First) -->
+                                <form id="unauthenticatedApplicationForm" class="mb-4" method="POST" action="{{ route('apartment.invite.apply', $invitation->invitation_token) }}">
+                                    @csrf
+                                    <div class="mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="fas fa-calendar me-1 text-primary"></i>Preferred Lease Duration *
+                                    </label>
+                                    <select id="unauthDurationSelect" name="duration" class="form-select form-select-lg">
+                                        @foreach($durationOptions as $durationValue => $durationName)
+                                            <option value="{{ $durationValue }}" {{ $durationValue == 12 ? 'selected' : '' }}>
+                                                {{ $durationName }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">Choose your preferred lease duration</small>
+                                </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">
+                                            <i class="fas fa-calendar-check me-1 text-primary"></i>Preferred Move-in Date *
+                                        </label>
+                                        <input type="date" id="unauthMoveInDate" name="move_in_date" class="form-control form-control-lg" 
+                                            min="{{ date('Y-m-d', strtotime('+1 day')) }}" 
+                                            value="{{ date('Y-m-d', strtotime('+7 days')) }}">
+                                        <small class="text-muted">Select when you'd like to move in</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">
+                                            <i class="fas fa-comment me-1 text-primary"></i>Additional Notes (Optional)
+                                        </label>
+                                        <textarea id="unauthNotes" name="additional_notes" class="form-control" rows="3" 
+                                                placeholder="Any special requests or questions about the apartment..."></textarea>
+                                        <small class="text-muted">Share any special requirements or questions</small>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-3">
+                                        <button type="submit" class="btn btn-success btn-lg py-3" style="border-radius: 12px; font-weight: 600;">
+                                            <i class="fas fa-credit-card me-2"></i>Proceed to Secure Payment
+                                        </button>
+                                    </div>
+                                </form>
+                                
+                                <!-- Payment Summary for Unauthenticated Users -->
+                                <div class="total-calculation mb-4" 
+                                    data-apartment-amount="{{ $apartment->amount }}" 
+                                    data-pricing-type="{{ $proformaData['pricing_type'] ?? 'total' }}">
+                                    <div class="card bg-gradient payment-summary-card" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-primary mb-3">
+                                                <i class="fas fa-calculator me-2"></i>Payment Summary
+                                            </h6>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span class="text-muted">
+                                                    @if(isset($proformaData['pricing_type']) && $proformaData['pricing_type'] === 'total')
+                                                        Total Price:
+                                                    @else
+                                                        Monthly Price:
+                                                    @endif
+                                                </span>
+                                                <span class="fw-bold">₦{{ number_format($apartment->amount) }}</span>
+                                            </div>
+                                            @if(isset($proformaData['pricing_type']))
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span class="text-muted">Pricing Type:</span>
+                                                <span class="fw-bold text-info">
+                                                    {{ ucfirst($proformaData['pricing_type']) }}
+                                                    @if($proformaData['pricing_type'] === 'total')
+                                                        <small class="text-muted">(Fixed amount)</small>
+                                                    @else
+                                                        <small class="text-muted">(Per month)</small>
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            @endif
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span class="text-muted">Duration:</span>
+                                                <span id="unauth-duration-display" class="fw-bold">12 months</span>
+                                            </div>
+                                            @if(isset($proformaData['calculation_method']))
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span class="text-muted">Calculation:</span>
+                                                <span class="fw-bold text-secondary small">
+                                                    @if($proformaData['calculation_method'] === 'total_price_no_multiplication')
+                                                        Fixed total amount
+                                                    @elseif($proformaData['calculation_method'] === 'monthly_price_with_duration_multiplication')
+                                                        Monthly × Duration
+                                                    @else
+                                                        {{ ucfirst(str_replace('_', ' ', $proformaData['calculation_method'])) }}
+                                                    @endif
+                                                </span>
+                                            </div>
+                                            @endif
+                                            
+                                            <!-- Calculation breakdown for monthly pricing -->
+                                            @if(isset($proformaData['pricing_type']) && $proformaData['pricing_type'] === 'monthly')
+                                            <div class="calculation-breakdown mt-2 p-2" style="background: rgba(0,123,255,0.05); border-radius: 6px; border-left: 3px solid #007bff;">
+                                                <small class="text-muted d-block mb-1">Calculation Breakdown:</small>
+                                                <small class="d-flex justify-content-between">
+                                                    <span>₦{{ number_format($apartment->amount) }} × <span id="unauth-calc-duration">12</span> months</span>
+                                                    <span>=</span>
+                                                </small>
+                                            </div>
+                                            @endif
+                                            
+                                            <hr class="my-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="fw-bold text-success fs-6">Total Amount:</span>
+                                                <span id="unauth-total-amount" class="fw-bold text-success fs-4">₦{{ number_format($proformaData['total_amount'] ?? ($apartment->amount * 12)) }}</span>
+                                            </div>
+                                            
+                                            <!-- Error display area -->
+                                            <div id="unauth-calculation-error" class="alert alert-warning mt-2" style="display: none;">
+                                                <small><i class="fas fa-exclamation-triangle me-1"></i>
+                                                <span id="unauth-error-message">Calculation error occurred</span></small>
+                                            </div>
                                         </div>
-                                        @if(isset($proformaData['pricing_type']))
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Pricing Type:</span>
-                                            <span class="fw-bold text-info">
-                                                {{ ucfirst($proformaData['pricing_type']) }}
-                                                @if($proformaData['pricing_type'] === 'total')
-                                                    <small class="text-muted">(Fixed amount)</small>
-                                                @else
-                                                    <small class="text-muted">(Per month)</small>
-                                                @endif
-                                            </span>
-                                        </div>
-                                        @endif
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Duration:</span>
-                                            <span id="unauth-duration-display" class="fw-bold">12 months</span>
-                                        </div>
-                                        @if(isset($proformaData['calculation_method']))
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Calculation:</span>
-                                            <span class="fw-bold text-secondary small">
-                                                @if($proformaData['calculation_method'] === 'total_price_no_multiplication')
-                                                    Fixed total amount
-                                                @elseif($proformaData['calculation_method'] === 'monthly_price_with_duration_multiplication')
-                                                    Monthly × Duration
-                                                @else
-                                                    {{ ucfirst(str_replace('_', ' ', $proformaData['calculation_method'])) }}
-                                                @endif
-                                            </span>
-                                        </div>
-                                        @endif
-                                        
-                                        <!-- Calculation breakdown for monthly pricing -->
-                                        @if(isset($proformaData['pricing_type']) && $proformaData['pricing_type'] === 'monthly')
-                                        <div class="calculation-breakdown mt-2 p-2" style="background: rgba(0,123,255,0.05); border-radius: 6px; border-left: 3px solid #007bff;">
-                                            <small class="text-muted d-block mb-1">Calculation Breakdown:</small>
-                                            <small class="d-flex justify-content-between">
-                                                <span>₦{{ number_format($apartment->amount) }} × <span id="unauth-calc-duration">12</span> months</span>
-                                                <span>=</span>
-                                            </small>
-                                        </div>
-                                        @endif
-                                        
-                                        <hr class="my-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span class="fw-bold text-success fs-6">Total Amount:</span>
-                                            <span id="unauth-total-amount" class="fw-bold text-success fs-4">₦{{ number_format($proformaData['total_amount'] ?? ($apartment->amount * 12)) }}</span>
-                                        </div>
-                                        
-                                        <!-- Error display area -->
-                                        <div id="unauth-calculation-error" class="alert alert-warning mt-2" style="display: none;">
-                                            <small><i class="fas fa-exclamation-triangle me-1"></i>
-                                            <span id="unauth-error-message">Calculation error occurred</span></small>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-info border-0 mt-3" style="background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-shield-alt fa-lg text-info me-3"></i>
+                                        <div>
+                                            <small class="fw-semibold">Secure Reservation</small>
+                                            <div class="small">You will be asked to register after payment so we can link this apartment to your account automatically.</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="alert alert-info border-0 mt-3" style="background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-shield-alt fa-lg text-info me-3"></i>
-                                    <div>
-                                        <small class="fw-semibold">Secure Reservation</small>
-                                        <div class="small">You will be asked to register after payment so we can link this apartment to your account automatically.</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endauth
+                        @endauth
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Additional Info -->
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h6 class="card-title">
-                        <i class="fas fa-shield-alt me-2 text-success"></i>Secure & Protected
-                    </h6>
-                    <ul class="list-unstyled small text-muted mb-0">
-                        <li><i class="fas fa-check text-success me-2"></i>SSL encrypted payments</li>
-                        <li><i class="fas fa-check text-success me-2"></i>Verified landlord</li>
-                        <li><i class="fas fa-check text-success me-2"></i>24/7 support available</li>
-                    </ul>
+                
+                <!-- Additional Info -->
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-shield-alt me-2 text-success"></i>Secure & Protected
+                        </h6>
+                        <ul class="list-unstyled small text-muted mb-0">
+                            <li><i class="fas fa-check text-success me-2"></i>SSL encrypted payments</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Verified landlord</li>
+                            <li><i class="fas fa-check text-success me-2"></i>24/7 support available</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -675,6 +679,9 @@
 </style>
 
 <script>
+// Duration mapping for proper display
+const durationNames = @json($durationOptions);
+
 // Calculation display and error handling functions
 function updateCalculationDisplay(duration, isUnauthenticated = false) {
     try {
@@ -718,7 +725,10 @@ function updateCalculationDisplay(duration, isUnauthenticated = false) {
         const totalAmountEl = document.getElementById(prefix + 'total-amount');
         const calcDurationEl = document.getElementById((isUnauthenticated ? 'unauth-' : '') + 'calc-duration');
         
-        if (durationDisplay) durationDisplay.textContent = durationInt + ' months';
+        if (durationDisplay) {
+            const durationName = durationNames[durationInt] || durationInt + ' months';
+            durationDisplay.textContent = durationName;
+        }
         if (totalAmountEl) totalAmountEl.textContent = '₦' + calculatedTotal.toLocaleString();
         if (calcDurationEl) calcDurationEl.textContent = durationInt;
         
@@ -796,4 +806,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endsection
+<!-- Footer area start -->
+@include('footer')
+<!-- Footer area end -->
