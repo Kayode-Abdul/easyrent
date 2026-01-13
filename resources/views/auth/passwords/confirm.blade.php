@@ -1,6 +1,19 @@
 @include('header')
 
 <style>
+.navbar{
+    display: none;
+}
+footer{
+    display: none;
+
+}
+.pt-pad {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 90px;
+    padding-bottom: 90px;
+}
 .auth-container {
     min-height: 100vh;
     background: linear-gradient(45deg, #17a2b8, #6bd098) !important;
@@ -20,7 +33,7 @@
 }
 
 .auth-header {
-    background: linear-gradient(45deg, #17a2b8, #6bd098) !important;
+    /* background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%); */
     color: white;
     padding: 2rem;
     text-align: center;
@@ -132,10 +145,15 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
+                <!-- Logo above card -->
+                <div class="text-center mb-4">
+                    <img src="/assets/images/logo-small.png" alt="EasyRent Logo" style="width:80px;">
+                </div>
+                
                 <div class="auth-card">
                     <div class="auth-header">
-                        <h2><i class="fas fa-shield-check me-2"></i>Confirm Password</h2>
-                        <p class="mb-0 mt-2 opacity-90">Security verification required</p>
+                        <!-- <h2><i class="fas fa-shield-check me-2"></i>Confirm Password</h2>
+                        <p class="mb-0 mt-2 opacity-90">Security verification required</p> -->
                     </div>
 
                     <div class="auth-body">
@@ -149,10 +167,10 @@
                         <form method="POST" action="{{ route('password.confirm') }}">
                             @csrf
 
-                            <div class="form-floating position-relative">
+                            <div class="mb-3 position-relative">
+                                <label for="password" class="form-label"><i class="fas fa-lock me-2"></i>Current Password</label>
                                 <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" 
                                        name="password" required autocomplete="current-password" placeholder="Current Password">
-                                <label for="password"><i class="fas fa-lock me-2"></i>Current Password</label>
                                 <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password')">
                                     <i class="fas fa-eye-slash" id="password-toggle-icon"></i>
                                 </button>
@@ -191,8 +209,7 @@
 .password-toggle-btn {
     position: absolute;
     right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 38px;
     background: none;
     border: none;
     color: #6c757d;
@@ -209,6 +226,12 @@
 .password-toggle-btn:focus {
     outline: none;
     color: #667eea;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
 }
 </style>
 

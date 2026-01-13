@@ -1,6 +1,19 @@
 @include('header')
 
 <style> 
+.navbar{
+    display: none;
+}
+footer{
+    display: none;
+
+}
+.pt-pad {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 90px;
+    padding-bottom: 90px;
+}
 
 .auth-card {
     background: rgba(255, 255, 255, 0.95);
@@ -14,7 +27,7 @@
 
 .auth-header {
 
-    background: linear-gradient(45deg, #17a2b8, #6bd098) !important;    color: white;
+    /* background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%); */
     padding: 2rem;
     text-align: center;
     border: none;
@@ -134,10 +147,15 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
+                <!-- Logo above card -->
+                <div class="text-center mb-4">
+                    <img src="/assets/images/logo-small.png" alt="EasyRent Logo" style="width:80px;">
+                </div>
+                
                 <div class="auth-card">
                     <div class="auth-header">
-                        <h2><i class="fas fa-key me-2"></i>Reset Password</h2>
-                        <p class="mb-0 mt-2 opacity-90">Enter your email to reset password</p>
+                        <!-- <h2><i class="fas fa-key me-2"></i>Reset Password</h2>
+                        <p class="mb-0 mt-2 opacity-90">Enter your email to reset password</p> -->
                     </div>
 
                     <div class="auth-body">
@@ -151,11 +169,11 @@
                         <form method="POST" action="{{ route('password.email') }}">
                             @csrf
 
-                            <div class="form-floating">
+                            <div class="mb-3">
+                                <label for="email" class="form-label"><i class="fas fa-envelope me-2"></i>Email Address</label>
                                 <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" 
                                        name="email" value="{{ old('email') }}" required autocomplete="email" 
                                        autofocus placeholder="Email Address">
-                                <label for="email"><i class="fas fa-envelope me-2"></i>Email Address</label>
                                 @error('email')
                                     <div class="invalid-feedback">
                                         <strong>{{ $message }}</strong>

@@ -116,6 +116,10 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+// Social Authentication routes
+Route::get('/auth/{provider}/redirect', [App\Http\Controllers\Auth\SocialAuthController::class, 'redirect'])->name('social.redirect');
+Route::get('/auth/{provider}/callback', [App\Http\Controllers\Auth\SocialAuthController::class, 'callback'])->name('social.callback');
+
 // Password Reset routes (fixes Route [password.request] not defined)
 Route::middleware('guest')->group(function () {
     Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
@@ -581,6 +585,7 @@ Route::prefix('apartment/invite')->name('apartment.invite.')->group(function () 
     })->name('apply.redirect');
     Route::post('/store-session', [App\Http\Controllers\ApartmentInvitationController::class, 'storeSession'])->name('store-session');
     Route::get('/{token}/payment/{payment}', [App\Http\Controllers\ApartmentInvitationController::class, 'payment'])->name('payment');
+    Route::get('/{token}/payment', [App\Http\Controllers\ApartmentInvitationController::class, 'paymentDirect'])->name('payment.direct');
     Route::post('/{token}/payment/callback', [App\Http\Controllers\ApartmentInvitationController::class, 'paymentCallback'])->name('payment.callback');
     Route::get('/{token}/success', [App\Http\Controllers\ApartmentInvitationController::class, 'success'])->name('invite.success');
     

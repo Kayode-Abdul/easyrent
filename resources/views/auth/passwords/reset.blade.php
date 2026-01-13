@@ -1,6 +1,19 @@
 @include('header')
 
 <style> 
+.navbar{
+    display: none;
+}
+footer{
+    display: none;
+
+}
+.pt-pad {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 90px;
+    padding-bottom: 90px;
+}
 .auth-card {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -13,7 +26,7 @@
 
 .auth-header {
 
-    background: linear-gradient(45deg, #17a2b8, #6bd098) !important;    color: white;
+    /* background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%); */
     padding: 2rem;
     text-align: center;
     border: none;
@@ -141,10 +154,15 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
+                <!-- Logo above card -->
+                <div class="text-center mb-4">
+                    <img src="/assets/images/logo-small.png" alt="EasyRent Logo" style="width:80px;">
+                </div>
+                
                 <div class="auth-card">
                     <div class="auth-header">
-                        <h2><i class="fas fa-lock-open me-2"></i>Reset Password</h2>
-                        <p class="mb-0 mt-2 opacity-90">Create your new password</p>
+                        <!-- <h2><i class="fas fa-lock-open me-2"></i>Reset Password</h2>
+                        <p class="mb-0 mt-2 opacity-90">Create your new password</p> -->
                     </div>
 
                     <div class="auth-body">
@@ -159,11 +177,11 @@
                             @csrf
                             <input type="hidden" name="token" value="{{ $token }}">
 
-                            <div class="form-floating">
+                            <div class="mb-3">
+                                <label for="email" class="form-label"><i class="fas fa-envelope me-2"></i>Email Address</label>
                                 <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" 
                                        name="email" value="{{ $email ?? old('email') }}" required autocomplete="email" 
                                        autofocus placeholder="Email Address" readonly>
-                                <label for="email"><i class="fas fa-envelope me-2"></i>Email Address</label>
                                 @error('email')
                                     <div class="invalid-feedback">
                                         <strong>{{ $message }}</strong>
@@ -171,10 +189,10 @@
                                 @enderror
                             </div>
 
-                            <div class="form-floating position-relative">
+                            <div class="mb-3 position-relative">
+                                <label for="password" class="form-label"><i class="fas fa-lock me-2"></i>New Password</label>
                                 <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" 
                                        name="password" required autocomplete="new-password" placeholder="New Password">
-                                <label for="password"><i class="fas fa-lock me-2"></i>New Password</label>
                                 <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password')">
                                     <i class="fas fa-eye-slash" id="password-toggle-icon"></i>
                                 </button>
@@ -185,11 +203,11 @@
                                 @enderror
                             </div>
 
-                            <div class="form-floating position-relative">
+                            <div class="mb-3 position-relative">
+                                <label for="password-confirm" class="form-label"><i class="fas fa-lock me-2"></i>Confirm New Password</label>
                                 <input id="password-confirm" type="password" class="form-control" 
                                        name="password_confirmation" required autocomplete="new-password" 
                                        placeholder="Confirm New Password">
-                                <label for="password-confirm"><i class="fas fa-lock me-2"></i>Confirm New Password</label>
                                 <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password-confirm')">
                                     <i class="fas fa-eye-slash" id="password-confirm-toggle-icon"></i>
                                 </button>
@@ -226,8 +244,7 @@
 .password-toggle-btn {
     position: absolute;
     right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 38px;
     background: none;
     border: none;
     color: #6c757d;
@@ -244,6 +261,12 @@
 .password-toggle-btn:focus {
     outline: none;
     color: #667eea;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
 }
 </style>
 

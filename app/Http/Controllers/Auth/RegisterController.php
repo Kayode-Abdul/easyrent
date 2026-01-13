@@ -69,19 +69,26 @@ class RegisterController extends Controller
      */
     protected function validator(array $data)
     {
-        return Validator::make($data, [
+        $rules = [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users'],
+            'phone' => ['required', 'string', 'max:20'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'role' => ['required', 'integer'],
-            'occupation' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'state' => ['nullable', 'string', 'max:255'],
-            'lga' => ['nullable', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        ];
+
+        $messages = [
+            'first_name.required' => 'First name is required',
+            'last_name.required' => 'Last name is required',
+            'phone.required' => 'Phone number is required',
+            'email.required' => 'Email address is required',
+            'email.unique' => 'This email is already registered',
+            'password.required' => 'Password is required',
+            'password.min' => 'Password must be at least 8 characters',
+            'password.confirmed' => 'Password confirmation does not match',
+        ];
+
+        return Validator::make($data, $rules, $messages);
     }
 
     /**
@@ -230,15 +237,21 @@ class RegisterController extends Controller
         // Check if this is an invitation-based registration
         $registrationSource = session('invitation_token') ? 'easyrent_invitation' : 'direct';
 
+        // Generate username from email if not provided
+        $username = $data['username'] ?? explode('@', $data['email'])[0] . '_' . substr($user_id, -4);
+
+        // Default role to tenant (1) if not provided
+        $role = $data['role'] ?? 1;
+
         return User::create([
             'user_id' => $user_id,
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
-            'username' => $data['username'],
+            'username' => $username,
             'email' => $data['email'],
-            'role' => $data['role'],
+            'role' => $role,
             'occupation' => $data['occupation'] ?? null,
-            'phone' => $data['phone'] ?? null,
+            'phone' => $data['phone'],
             'address' => $data['address'] ?? null,
             'state' => $data['state'] ?? null,
             'lga' => $data['lga'] ?? null,

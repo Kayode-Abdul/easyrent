@@ -2,6 +2,19 @@
 @include('header')
 
 <style>
+.navbar{
+    display: none;
+}
+footer{
+    display: none;
+
+}
+.pt-pad {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 90px;
+    padding-bottom: 90px;
+}
 .auth-container {
     min-height: 100vh;
     background: linear-gradient(45deg, #17a2b8, #6bd098) !important;
@@ -26,9 +39,9 @@
 }
 
 .auth-header {
-
-
-    background: linear-gradient(45deg, #17a2b8, #6bd098) !important;    padding: 2rem;
+    color: white;
+    padding: 2rem;
+    /* background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%); */
     text-align: center;
     border: none;
 }
@@ -150,10 +163,15 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
+                <!-- Logo above card -->
+                <div class="text-center mb-4">
+                    <img src="/assets/images/logo-small.png" alt="EasyRent Logo" style="width:80px;">
+                </div>
+                
                 <div class="auth-card">
                     <div class="auth-header">
-                        <h2><i class="fas fa-sign-in-alt me-2"></i>Welcome Back</h2>
-                        <p class="mb-0 mt-2 opacity-90">Sign in to your account</p>
+                        <!-- <h2><i class="fas fa-sign-in-alt me-2"></i>Welcome Back</h2>
+                        <p class="mb-0 mt-2 opacity-90">Sign in to your account</p> -->
                     </div>
 
                     <div class="auth-body">
@@ -162,11 +180,11 @@
                         <form method="POST" action="{{ route('login') }}">
                             @csrf
 
-                            <div class="form-floating">
+                            <div class="mb-3">
+                                <label for="email" class="form-label"><i class="fas fa-envelope me-2"></i>Email Address</label>
                                 <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" 
                                        name="email" value="{{ old('email') }}" required autocomplete="email" 
                                        autofocus placeholder="johndoe@email.com">
-                                <label for="email"><i class="fas fa-envelope me-2"></i>Email Address</label>
                                 @error('email')
                                     <div class="invalid-feedback">
                                         <strong>{{ $message }}</strong>
@@ -174,10 +192,10 @@
                                 @enderror
                             </div>
 
-                            <div class="form-floating position-relative">
+                            <div class="mb-3 position-relative">
+                                <label for="password" class="form-label"><i class="fas fa-lock me-2"></i>Password</label>
                                 <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" 
                                        name="password" required autocomplete="current-password" placeholder="Password">
-                                <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
                                 <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password')">
                                     <i class="bi bi-eye-slash" id="password-toggle-icon"></i>
                                 </button>
@@ -226,8 +244,7 @@
 .password-toggle-btn {
     position: absolute !important;
     right: 15px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
+    top: 38px !important;
     background: none !important;
     border: none !important;
     color: #6c757d !important;
@@ -251,12 +268,10 @@
     color: #667eea !important;
 }
 
-.form-floating.position-relative {
-    position: relative !important;
-}
-
-.form-floating .password-toggle-btn {
-    right: 12px !important;
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
 }
 
 /* Debug styles to make sure button is visible */
@@ -302,8 +317,11 @@ function togglePasswordVisibility(fieldId) {
 }
 
 // Show session messages as modern toasts and handle redirects
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded');
+document.addEventListener('DOMContentLoaded', function() { 
+    
+    // const navBar = document.getElementsByTagName('nav')[0];
+    // navBar.hide();
+    console.log("Dom loaded");
     
     // Check if password toggle button exists
     const toggleBtn = document.querySelector('.password-toggle-btn');

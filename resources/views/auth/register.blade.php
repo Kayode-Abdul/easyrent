@@ -1,10 +1,42 @@
 @include('header')
 
+@php
+    $invitationToken = request('invitation_token');
+    $invitation = null;
+    $hasCompletedPayment = false;
+    
+    if ($invitationToken) {
+        $invitation = \App\Models\ApartmentInvitation::where('invitation_token', $invitationToken)
+            ->with(['apartment.property', 'landlord'])
+            ->first();
+            
+        if ($invitation) {
+            $hasCompletedPayment = \App\Models\Payment::where('payment_meta->invitation_token', $invitationToken)
+                ->where('status', 'completed')
+                ->whereNull('tenant_id')
+                ->exists();
+        }
+    }
+@endphp
+
 <style>
+.navbar{
+    display: none;
+}
+footer{
+    display: none;
+
+}
+.pt-pad {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 90px;
+    padding-bottom: 90px;
+}
 .auth-container {
     min-height: 100vh;
     background: linear-gradient(45deg, #17a2b8, #6bd098) !important;
-    padding: 2rem 0;
+    padding: 4rem 0;
 }
 
 .auth-card {
@@ -19,7 +51,7 @@
 
 .auth-header {
 
-    background: linear-gradient(45deg, #17a2b8, #6bd098) !important;    color: white;
+    /* background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%); */
     padding: 2rem;
     text-align: center;
     border: none;
@@ -148,6 +180,38 @@
     transform: translateY(-2px);
 }
 
+.social-auth-section {
+    padding: 0;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.5rem 0;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.divider-text {
+    padding: 0 1rem;
+    color: #6c757d;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.btn-outline-danger:hover,
+.btn-outline-primary:hover,
+.btn-outline-dark:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 .auth-links {
     text-align: center;
     margin-top: 2rem;
@@ -171,8 +235,7 @@
 .password-toggle-btn {
     position: absolute !important;
     right: 15px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
+    top: 38px !important;
     background: none !important;
     border: none !important;
     color: #6c757d !important;
@@ -196,19 +259,17 @@
     color: #667eea !important;
 }
 
-.form-floating.position-relative {
-    position: relative !important;
-}
-
-.form-floating .password-toggle-btn {
-    right: 12px !important;
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
 }
 
 /* Toast styles are now handled by the global modern-toasts.css file */
 
 @media (max-width: 768px) {
     .auth-container {
-        padding: 1rem;
+        padding: 3rem 1rem;
     }
     
     .auth-body {
@@ -224,221 +285,143 @@
 </style>
 
 <div class="pt-pad">
-    <div aria-live="polite" aria-atomic="true" class="sticky-top">
-        <div id="toast-container" class="modern-toast-container"></div>
-    </div>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-7">
+                <!-- Logo above card -->
+                <div class="text-center mb-4">
+                    <img src="/assets/images/logo-small.png" alt="EasyRent Logo" style="width:80px;">
+                </div>
+                
                 <div class="auth-card">
                     <div class="auth-header">
-                        <h2><i class="fas fa-user-plus me-2"></i>Create Account</h2>
-                        <p class="mb-0 mt-2 opacity-90">Join our community today</p>
+                        <!-- <h2><i class="fas fa-user-plus me-2"></i>Create Account</h2>
+                        <p class="mb-0 mt-2 opacity-90">Join our community today</p> -->
                     </div>
 
                     <div class="auth-body">
                         
-                        <div class="text-center mb-4">
-                            <span id="step-indicator" class="step-indicator">Step 1 of 2: Account Info</span>
+                        @if($hasCompletedPayment && $invitation)
+                        <div class="alert alert-success border-0 mb-4" style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle fa-2x text-success me-3"></i>
+                                <div>
+                                    <h6 class="mb-1 text-success fw-semibold">Payment Completed!</h6>
+                                    <p class="mb-0 small">You've successfully paid for your apartment at {{ $invitation->apartment->property->prop_name }}. Please complete your registration below to finalize your booking.</p>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- Social Authentication Buttons -->
+                        <div class="social-auth-section mb-4">
+                            <div class="text-center mb-3">
+                                <p class="text-muted mb-3">Sign up with</p>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-4">
+                                    <button type="button" class="btn btn-outline-danger w-100" onclick="socialLogin('google')">
+                                        <i class="fab fa-google me-1"></i> Google
+                                    </button>
+                                </div>
+                                <div class="col-4">
+                                    <button type="button" class="btn btn-outline-primary w-100" onclick="socialLogin('facebook')">
+                                        <i class="fab fa-facebook-f me-1"></i> Facebook
+                                    </button>
+                                </div>
+                                <div class="col-4">
+                                    <button type="button" class="btn btn-outline-dark w-100" onclick="socialLogin('github')">
+                                        <i class="fab fa-github me-1"></i> GitHub
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div class="divider">
+                                    <span class="divider-text">OR</span>
+                                </div>
+                            </div>
                         </div>
 
                         <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" id="registerForm">
                             @csrf
                             
-                            <div id="step1">
-                                <div class="photo-upload">
-                                    <input id="photo" type="file" class="d-none @error('photo') is-invalid @enderror" name="photo" accept="image/*" onchange="previewPhoto(event)">
-                                    <div class="photo-preview" onclick="document.getElementById('photo').click()">
-                                        <img src="{{ asset('assets/images/default-avatar.png') }}" alt="Profile Photo" id="photo-preview-img" />
-                                        <div class="photo-overlay">
-                                            <i class="fas fa-camera"></i>
-                                        </div>
+                            <!-- Simplified Single Step Form -->
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label"><i class="fas fa-user me-2"></i>First Name *</label>
+                                <input id="first_name" type="text" class="form-control @error('first_name') is-invalid @enderror" 
+                                       name="first_name" value="{{ old('first_name', $invitationData['suggested_first_name'] ?? '') }}" required placeholder="John">
+                                @error('first_name')
+                                    <div class="invalid-feedback">
+                                        <strong>{{ $message }}</strong>
                                     </div>
-                                    <p class="text-muted mt-3 mb-0">Click to upload profile photo</p>
-                                    <small class="text-muted">JPG, PNG, GIF up to 2MB</small>
-                                    @error('photo')
-                                        <div class="text-danger mt-2">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-floating">
-                                    <input id="name" type="text" class="form-control @error('name') is-invalid @enderror" 
-                                           name="name" value="{{ old('name') }}" required autocomplete="name" 
-                                           autofocus placeholder="john doe">
-                                    <label for="name"><i class="fas fa-user me-2"></i>Full Name</label>
-                                    @error('name')
-                                        <div class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-floating">
-                                    <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" 
-                                           name="email" value="{{ old('email') }}" required autocomplete="email" 
-                                           placeholder="johndoe@email.com">
-                                    <label for="email"><i class="fas fa-envelope me-2"></i>Email Address</label>
-                                    @error('email')
-                                        <div class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-floating position-relative">
-                                    <small>Password must be at least 8 characters long</small>
-                                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" 
-                                           name="password" required autocomplete="new-password" placeholder="Password">
-                                    <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
-                                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password')">
-                                        <i class="bi bi-eye-slash" id="password-toggle-icon"></i>
-                                    </button>
-                                    @error('password')
-                                        <div class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-floating position-relative">
-                                    <input id="password-confirm" type="password" class="form-control" 
-                                           name="password_confirmation" required autocomplete="new-password" 
-                                           placeholder="Confirm Password">
-                                    <label for="password-confirm"><i class="fas fa-lock me-2"></i>Confirm Password</label>
-                                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password-confirm')">
-                                        <i class="bi bi-eye-slash" id="password-confirm-toggle-icon"></i>
-                                    </button>
-                                </div>
-
-                                <div class="d-flex justify-content-end">
-                                    <button type="button" class="btn btn-auth" onclick="validateStep1()">
-                                        Next Step <i class="fas fa-arrow-right ms-2"></i>
-                                    </button>
-                                </div>
+                                @enderror
                             </div>
-                            <div id="step2" class="d-none">
-                                <div class="form-floating">
-                                    <input id="first_name" type="text" class="form-control @error('first_name') is-invalid @enderror" 
-                                           name="first_name" value="{{ old('first_name') }}" required placeholder="john">
-                                    <label for="first_name"><i class="fas fa-user me-2"></i>First Name</label>
-                                    @error('first_name')
-                                        <div class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
 
-                                <div class="form-floating">
-                                    <input id="last_name" type="text" class="form-control @error('last_name') is-invalid @enderror" 
-                                           name="last_name" value="{{ old('last_name') }}" required placeholder="doe">
-                                    <label for="last_name"><i class="fas fa-user me-2"></i>Last Name</label>
-                                    @error('last_name')
-                                        <div class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-floating">
-                                    <input id="username" type="text" class="form-control @error('username') is-invalid @enderror" 
-                                           name="username" value="{{ old('username') }}" required placeholder="johnny">
-                                    <label for="username"><i class="fas fa-at me-2"></i>Username</label>
-                                    @error('username')
-                                        <div class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-floating">
-                                    <select id="role" name="role" class="form-select @error('role') is-invalid @enderror" required>
-                                        <option value="" disabled selected>Select Your Role</option>
-                                        <option value="2" {{ old('role') == 2 ? 'selected' : '' }}>🏠 Landlord</option>
-                                        <option value="1" {{ old('role') == 1 ? 'selected' : '' }}>🏡 Tenant</option>
-                                        <option value="5" {{ old('role') == 5 ? 'selected' : '' }}>🔧 Artisan</option>
-                                        <option value="6" {{ old('role') == 6 ? 'selected' : '' }}>🏢 Property Manager</option>
-                                        <option value="3" {{ old('role') == 3 ? 'selected' : '' }}>📈 Marketer</option>
-                                    </select>
-                                    <label for="role"><i class="fas fa-user-tag me-2"></i>Role</label>
-                                    @error('role')
-                                        <div class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-floating">
-                                    <input id="occupation" type="text" class="form-control @error('occupation') is-invalid @enderror" 
-                                           name="occupation" value="{{ old('occupation') }}" placeholder="Software engineer">
-                                    <label for="occupation"><i class="fas fa-briefcase me-2"></i>Occupation (Optional)</label>
-                                    @error('occupation')
-                                        <div class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-floating">
-                                    <input id="phone" type="tel" class="form-control @error('phone') is-invalid @enderror" 
-                                           name="phone" value="{{ old('phone') }}" placeholder="08123456789">
-                                    <label for="phone"><i class="fas fa-phone me-2"></i>Phone Number (Optional)</label>
-                                    @error('phone')
-                                        <div class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-floating">
-                                    <input id="address" type="text" class="form-control @error('address') is-invalid @enderror" 
-                                           name="address" value="{{ old('address') }}" placeholder="north earth, vertical street">
-                                    <label for="address"><i class="fas fa-map-marker-alt me-2"></i>Address (Optional)</label>
-                                    @error('address')
-                                        <div class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-floating">
-                                    <select id="state" name="state" class="form-select @error('state') is-invalid @enderror" onchange="getCities()" required>
-                                        <option value="" disabled selected>Select State</option>
-                                        @foreach(json_decode(file_get_contents(resource_path('states-and-cities.json')), true) as $item)
-                                            <option value="{{ $item['name'] }}" {{ old('state') == $item['name'] ? 'selected' : '' }}>{{ $item['name'] }}</option>
-                                        @endforeach
-                                    </select>
-                                    <label for="state"><i class="fas fa-map me-2"></i>State</label>
-                                    @error('state')
-                                        <div class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-floating">
-                                    <select id="lga" name="lga" class="form-select @error('lga') is-invalid @enderror" required>
-                                        <option value="" disabled selected>Select LGA</option>
-                                        <!-- LGAs will be populated by JS -->
-                                    </select>
-                                    <label for="lga"><i class="fas fa-map-pin me-2"></i>Local Government Area</label>
-                                    @error('lga')
-                                        <div class="invalid-feedback">
-                                            <strong>{{ $message }}</strong>
-                                        </div>
-                                    @enderror
-                                </div>
-
-                                <div class="d-flex justify-content-between gap-3">
-                                    <button type="button" class="btn btn-secondary-auth flex-fill" onclick="showStep(1)">
-                                        <i class="fas fa-arrow-left me-2"></i>Previous
-                                    </button>
-                                    <button type="submit" class="btn btn-auth flex-fill">
-                                        <i class="fas fa-user-plus me-2"></i>Create Account
-                                    </button>
-                                </div>
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label"><i class="fas fa-user me-2"></i>Last Name *</label>
+                                <input id="last_name" type="text" class="form-control @error('last_name') is-invalid @enderror" 
+                                       name="last_name" value="{{ old('last_name', $invitationData['suggested_last_name'] ?? '') }}" required placeholder="Doe">
+                                @error('last_name')
+                                    <div class="invalid-feedback">
+                                        <strong>{{ $message }}</strong>
+                                    </div>
+                                @enderror
                             </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label"><i class="fas fa-phone me-2"></i>Phone Number *</label>
+                                <input id="phone" type="tel" class="form-control @error('phone') is-invalid @enderror" 
+                                       name="phone" value="{{ old('phone', $invitationData['suggested_phone'] ?? '') }}" required placeholder="08123456789">
+                                @error('phone')
+                                    <div class="invalid-feedback">
+                                        <strong>{{ $message }}</strong>
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label"><i class="fas fa-envelope me-2"></i>Email Address *</label>
+                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" 
+                                       name="email" value="{{ old('email', $invitationData['suggested_email'] ?? '') }}" required autocomplete="email" 
+                                       placeholder="johndoe@email.com">
+                                @error('email')
+                                    <div class="invalid-feedback">
+                                        <strong>{{ $message }}</strong>
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3 position-relative">
+                                <label for="password" class="form-label"><i class="fas fa-lock me-2"></i>Password (min 8 characters) *</label>
+                                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" 
+                                       name="password" required autocomplete="new-password" placeholder="Password">
+                                <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password')">
+                                    <i class="bi bi-eye-slash" id="password-toggle-icon"></i>
+                                </button>
+                                @error('password')
+                                    <div class="invalid-feedback">
+                                        <strong>{{ $message }}</strong>
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3 position-relative">
+                                <label for="password-confirm" class="form-label"><i class="fas fa-lock me-2"></i>Confirm Password *</label>
+                                <input id="password-confirm" type="password" class="form-control" 
+                                       name="password_confirmation" required autocomplete="new-password" 
+                                       placeholder="Confirm Password">
+                                <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password-confirm')">
+                                    <i class="bi bi-eye-slash" id="password-confirm-toggle-icon"></i>
+                                </button>
+                            </div>
+
+                            <div class="text-center mt-3 mb-2">
+                                <small class="text-muted">* Required fields</small>
+                            </div>
+
+                            <button type="submit" class="btn btn-auth w-100">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </button>
                         </form>
 
                         <div class="auth-links">
@@ -454,35 +437,6 @@
     </div>
 </div>
 <script>
-    function showStep(step) {
-        const step1 = document.getElementById('step1');
-        const step2 = document.getElementById('step2');
-        const indicator = document.getElementById('step-indicator');
-        
-        if(step === 1) {
-            step1.classList.remove('d-none');
-            step2.classList.add('d-none');
-            indicator.textContent = 'Step 1 of 2: Account Info';
-            step1.style.opacity = '0';
-            step1.style.transform = 'translateX(-20px)';
-            setTimeout(() => {
-                step1.style.transition = 'all 0.3s ease';
-                step1.style.opacity = '1';
-                step1.style.transform = 'translateX(0)';
-            }, 50);
-        } else {
-            step1.classList.add('d-none');
-            step2.classList.remove('d-none');
-            indicator.textContent = 'Step 2 of 2: Personal Details';
-            step2.style.opacity = '0';
-            step2.style.transform = 'translateX(20px)';
-            setTimeout(() => {
-                step2.style.transition = 'all 0.3s ease';
-                step2.style.opacity = '1';
-                step2.style.transform = 'translateX(0)';
-            }, 50);
-        }
-    }
     // Password visibility toggle function
     function togglePasswordVisibility(fieldId) {
         const passwordField = document.getElementById(fieldId);
@@ -499,6 +453,19 @@
         }
     }
 
+    // Social login function
+    function socialLogin(provider) {
+        // Check if Socialite is configured
+        @if(!config('services.google.client_id') && !config('services.facebook.client_id') && !config('services.github.client_id'))
+            showToast('Social authentication is not yet configured. Please use email registration.', 'info');
+            return;
+        @endif
+        
+        showToast(`Redirecting to ${provider.charAt(0).toUpperCase() + provider.slice(1)}...`, 'info');
+        // Redirect to social auth route
+        window.location.href = `/auth/${provider}/redirect`;
+    }
+
     // Toast functions are now handled by the global modern-toasts.js file
     // Show server-side session messages as toast
     @if (session('status'))
@@ -513,78 +480,53 @@
     @if(session('success'))
         showToast("{{ session('success') }}", 'success');
     @endif
-    // Enhanced client-side validation for step 1
-    function validateStep1() {
-        let valid = true;
-        let errorMessages = [];
-        const requiredFields = ['name', 'email', 'password', 'password-confirm'];
+
+    // Form validation
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        const requiredFields = ['first_name', 'last_name', 'phone', 'email', 'password', 'password-confirm'];
+        let missingFields = [];
         
-        // Clear previous validation states
-        requiredFields.forEach(function(id) {
-            const el = document.getElementById(id);
-            if(el) {
-                el.classList.remove('is-invalid');
+        requiredFields.forEach(function(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field && !field.value.trim()) {
+                field.classList.add('is-invalid');
+                const label = field.previousElementSibling?.textContent || fieldId;
+                missingFields.push(label.replace('*', '').trim());
+            } else if (field) {
+                field.classList.remove('is-invalid');
             }
         });
         
-        // Validate required fields
-        requiredFields.forEach(function(id) {
-            const el = document.getElementById(id);
-            if(el && !el.value.trim()) {
-                el.classList.add('is-invalid');
-                valid = false;
-            }
-        });
+        if (missingFields.length > 0) {
+            e.preventDefault();
+            showToast(`Please fill in: ${missingFields.join(', ')}`, 'error');
+            return false;
+        }
+        
+        // Validate password match
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('password-confirm').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            document.getElementById('password-confirm').classList.add('is-invalid');
+            showToast('Password confirmation does not match', 'error');
+            return false;
+        }
         
         // Validate email format
-        const email = document.getElementById('email');
+        const email = document.getElementById('email').value;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if(email && email.value && !emailRegex.test(email.value)) {
-            email.classList.add('is-invalid');
-            valid = false;
-            errorMessages.push('Please enter a valid email address');
+        if (!emailRegex.test(email)) {
+            e.preventDefault();
+            document.getElementById('email').classList.add('is-invalid');
+            showToast('Please enter a valid email address', 'error');
+            return false;
         }
-        
-        // Validate password strength
-        const password = document.getElementById('password');
-        if(password && password.value && password.value.length < 8) {
-            password.classList.add('is-invalid');
-            valid = false;
-            errorMessages.push('Password must be at least 8 characters long');
-        }
-        
-        // Validate password confirmation
-        const pw = document.getElementById('password');
-        const pwc = document.getElementById('password-confirm');
-        if(pw && pwc && pw.value !== pwc.value) {
-            pwc.classList.add('is-invalid');
-            valid = false;
-            errorMessages.push('Passwords do not match');
-        }
-        
-        // Show appropriate message
-        if(!valid) {
-            // Close any existing toasts first
-            closeAllToasts();
-            
-            // Show the most relevant error message
-            if(errorMessages.length > 0) {
-                showToast(errorMessages[0], 'error');
-            } else {
-                showToast('Please fill all required fields correctly', 'error');
-            }
-        } else {
-            // Close any existing toasts and show success
-            closeAllToasts();
-            showToast('Step 1 completed successfully!', 'success');
-            setTimeout(() => showStep(2), 500);
-        }
-    }
-    // Show first step by default
+    });
+
+    // On page load
     document.addEventListener('DOMContentLoaded', function() {
-        showStep(1);
-        if(document.getElementById('state').value) getCities();
-        
         // Ensure toast container exists
         if (!document.getElementById('toast-container')) {
             const container = document.createElement('div');
@@ -592,64 +534,6 @@
             container.className = 'modern-toast-container';
             document.body.appendChild(container);
         }
-    });
-    function previewPhoto(event) {
-        const input = event.target;
-        const img = document.getElementById('photo-preview-img');
-        const preview = document.querySelector('.photo-preview');
-        
-        if (input.files && input.files[0]) {
-            // Validate file size (2MB max)
-            if (input.files[0].size > 2 * 1024 * 1024) {
-                showToast('File size must be less than 2MB', 'error');
-                input.value = '';
-                return;
-            }
-            
-            // Validate file type
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/svg+xml'];
-            if (!allowedTypes.includes(input.files[0].type)) {
-                showToast('Please select a valid image file (JPEG, PNG, GIF, SVG)', 'error');
-                input.value = '';
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                img.src = e.target.result;
-                // preview.style.transform = 'scale(1.05)';
-                // setTimeout(() => {
-                //     preview.style.transform = 'scale(1)';
-                // }, 200);
-            }
-            reader.readAsDataURL(input.files[0]);
-        } else {
-            img.src = "{{ asset('assets/images/default-avatar.png') }}";
-        }
-    }
-    // Populate LGAs based on selected state
-    // Convert array of state objects to object with state names as keys
-    const statesArray = @json(json_decode(file_get_contents(resource_path('states-and-cities.json')), true));
-    const statesData = {};
-    statesArray.forEach(state => {
-        statesData[state.name] = state.cities;
-    });
-    
-    function getCities() {
-         const state = document.getElementById('state').value;
-         const lgaSelect = document.getElementById('lga');
-         lgaSelect.innerHTML = '<option value="" disabled selected>Select LGA</option>';
-         const cities = statesData[state] || [];
-         cities.forEach(function(city) {
-             const opt = document.createElement('option');
-             opt.value = city;
-             opt.text = city;
-             lgaSelect.appendChild(opt);
-         });
-     }
-    // On page load, if state is selected, populate LGAs
-    document.addEventListener('DOMContentLoaded', function() {
-        if(document.getElementById('state').value) getCities();
     });
 </script>
 
