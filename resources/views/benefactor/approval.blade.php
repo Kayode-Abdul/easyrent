@@ -1,12 +1,21 @@
-@extends('layouts.app')
+@include('header')
 
-@section('content')
+<div class="hero-wrap" style="background-image: url('/assets/images/bg_1.jpg'); height: 100px;">
+    <div class="overlay"></div>
+    <div class="container">
+        <div class="row no-gutters slider-text align-items-center justify-content-center">
+            <div class="col-md-9 text-center">
+                <h1 class="mb-2 bread" style="color: white;">Rent Payment Request</h1>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Payment Request Approval</h4>
+                <div class="card-header bg-primary">
+                    <h4 class="mb-0  text-white">Payment Request Approval</h4>
                 </div>
                 <div class="card-body">
                     @if(session('success'))
@@ -77,13 +86,13 @@
                             <div class="col-md-6 mb-3">
                                 <form action="{{ route('benefactor.payment.approve', $invitation->token) }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="btn btn-success btn-lg w-100">
+                                    <button type="submit" class="btn btn-success btn-sm w-100">
                                         <i class="fas fa-check-circle"></i> Approve & Continue to Payment
                                     </button>
                                 </form>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <button type="button" class="btn btn-outline-danger btn-lg w-100" data-bs-toggle="modal" data-bs-target="#declineModal">
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="modal" data-bs-target="#declineModal">
                                     <i class="fas fa-times-circle"></i> Decline Request
                                 </button>
                             </div>
@@ -121,4 +130,5 @@
         </div>
     </div>
 </div>
-@endsection
+@include('footer')
+

@@ -253,7 +253,7 @@
 <style>
 /* Enhanced Contact Form Styles */
 .contact-hero {
-    background: linear-gradient(45deg, #51cbce, #6bd098) !important;
+    background: linear-gradient(45deg, #28a745, #6bd098) !important;
     color: white;
     padding: 100px 0 50px;
     position: relative;
@@ -313,7 +313,7 @@
 .method-icon {
     width: 80px;
     height: 80px;
-    background:linear-gradient(45deg, #51cbce, #6bd098) !important;
+    background:linear-gradient(45deg, #28a745, #6bd098) !important;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -332,7 +332,7 @@
 }
 
 .contact-link {
-    color: #667eea;
+    color: #28a745;
     text-decoration: none;
     font-weight: 600;
 }
@@ -392,7 +392,7 @@
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #28a745;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -417,7 +417,7 @@
     top: 0;
     left: 40px;
     font-size: 12px;
-    color: #667eea;
+    color: #28a745;
 }
 
 .checkbox-wrapper {
@@ -431,7 +431,7 @@
 }
 
 .contact-submit-btn {
-    background: linear-gradient(45deg, #51cbce, #6bd098) !important;
+    background: linear-gradient(45deg, #28a745, #6bd098) !important;
     color: white;
     border: none;
     padding: 15px 40px;
@@ -469,7 +469,7 @@
 }
 
 .feature-item i {
-    color: #667eea;
+    color: #28a745;
     margin-right: 15px;
     margin-top: 5px;
 }
@@ -493,7 +493,7 @@
 }
 
 .directions-btn {
-    background: #667eea;
+    background: #28a745;
     color: white;
     padding: 10px 20px;
     border-radius: 5px;

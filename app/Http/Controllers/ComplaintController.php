@@ -267,7 +267,7 @@ class ComplaintController extends Controller
     /**
      * Landlord dashboard for complaints
      */
-    public function landlordDashboard()
+    public function landlordDashboard(Request $request)
     {
         $user = Auth::user();
         
@@ -275,11 +275,80 @@ class ComplaintController extends Controller
             abort(403, 'Access denied.');
         }
 
-        $complaints = Complaint::forLandlord($user->user_id)
-            ->with(['category', 'tenant', 'apartment.property'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        // Build query with filters
+        $query = Complaint::forLandlord($user->user_id)
+            ->with(['category', 'tenant', 'apartment.property']);
 
+        // Search by tenant name
+        if ($request->filled('tenant_name')) {
+            $query->whereHas('tenant', function ($q) use ($request) {
+                $q->where('first_name', 'like', '%' . $request->tenant_name . '%')
+                  ->orWhere('last_name', 'like', '%' . $request->tenant_name . '%');
+            });
+        }
+
+        // Search by complaint title
+        if ($request->filled('title')) {
+            $query->where('title', 'like', '%' . $request->title . '%')
+                  ->orWhere('description', 'like', '%' . $request->title . '%');
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by priority
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        // Filter by category
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        // Filter by property
+        if ($request->filled('property')) {
+            $query->whereHas('apartment.property', function ($q) use ($request) {
+                $q->where('prop_name', 'like', '%' . $request->property . '%');
+            });
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Sort by
+        $sortBy = $request->input('sort_by', 'latest');
+        switch ($sortBy) {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'priority':
+                $query->orderByRaw("FIELD(priority, 'urgent', 'high', 'medium', 'low')")
+                      ->orderBy('created_at', 'desc');
+                break;
+            case 'status':
+                $query->orderByRaw("FIELD(status, 'open', 'in_progress', 'resolved', 'closed')")
+                      ->orderBy('created_at', 'desc');
+                break;
+            case 'latest':
+            default:
+                $query->orderBy('created_at', 'desc');
+        }
+
+        $complaints = $query->paginate(10);
+
+        // Get categories for filter dropdown
+        $categories = ComplaintCategory::all();
+
+        // Calculate stats (unfiltered for accurate counts)
         $stats = [
             'total' => Complaint::forLandlord($user->user_id)->count(),
             'open' => Complaint::forLandlord($user->user_id)->open()->count(),
@@ -287,7 +356,7 @@ class ComplaintController extends Controller
             'overdue' => Complaint::forLandlord($user->user_id)->overdue()->count(),
         ];
 
-        return view('complaints.landlord-dashboard', compact('complaints', 'stats'));
+        return view('complaints.landlord-dashboard', compact('complaints', 'stats', 'categories'));
     }
 
     /**

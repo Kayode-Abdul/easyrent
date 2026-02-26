@@ -16,12 +16,13 @@ class SingleApartmentRequest extends FormRequest
     {
         return [
             'propertyId' => 'required|exists:properties,property_id',
-            'apartmentType' => 'required|string|max:100',
-            'tenantId' => 'nullable|string|exists:users,user_id',
+            'apartmentType' => 'nullable|string|max:100',
+            'tenantId' => 'nullable|string',
             'duration' => 'required|numeric|min:0.01',
-            'fromDate' => 'required|date',
-            'toDate' => 'required|date|after:fromDate',
-            'price' => 'required|numeric|min:0',
+            'fromRange' => 'required|date',
+            'toRange' => 'required|date|after:fromRange',
+            'amount' => 'required|numeric|min:0',
+            'rentalType' => 'required|in:hourly,daily,weekly,monthly,quarterly,semi_annually,yearly,bi_annually',
         ];
     }
 
@@ -30,21 +31,22 @@ class SingleApartmentRequest extends FormRequest
         return [
             'propertyId.required' => 'Property ID is required',
             'propertyId.exists' => 'Selected property does not exist',
-            'apartmentType.required' => 'Apartment type is required',
             'apartmentType.string' => 'Apartment type must be a string',
             'apartmentType.max' => 'Apartment type cannot exceed 100 characters',
-            'tenantId.exists' => 'Selected tenant does not exist',
+            'tenantId.string' => 'Tenant ID must be a string',
             'duration.required' => 'Duration is required',
             'duration.numeric' => 'Duration must be a number',
             'duration.min' => 'Duration must be greater than 0',
-            'fromDate.required' => 'Start date is required',
-            'fromDate.date' => 'Invalid start date format',
-            'toDate.required' => 'End date is required',
-            'toDate.date' => 'Invalid end date format',
-            'toDate.after' => 'End date must be after start date',
-            'price.required' => 'Price is required',
-            'price.numeric' => 'Price must be a number',
-            'price.min' => 'Price must be greater than or equal to 0',
+            'fromRange.required' => 'Start date is required',
+            'fromRange.date' => 'Invalid start date format',
+            'toRange.required' => 'End date is required',
+            'toRange.date' => 'Invalid end date format',
+            'toRange.after' => 'End date must be after start date',
+            'amount.required' => 'Price is required',
+            'amount.numeric' => 'Price must be a number',
+            'amount.min' => 'Price must be greater than or equal to 0',
+            'rentalType.required' => 'Rental type is required',
+            'rentalType.in' => 'Invalid rental type selected',
         ];
     }
 }

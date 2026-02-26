@@ -129,6 +129,15 @@
         if (document.querySelector('.bottom-nav')) {
             document.body.classList.add('has-bottom-nav');
         }
+        
+        // Keep footer always visible on mobile (prevent hiding on scroll)
+        const bottomNav = document.querySelector('.bottom-nav, .mobile-floating-footer');
+        if (bottomNav && window.innerWidth < 992) {
+            bottomNav.style.position = 'fixed';
+            bottomNav.style.bottom = '0';
+            bottomNav.style.transform = 'translateY(0)';
+            bottomNav.style.transition = 'none';
+        }
     }
 
     // ========================================

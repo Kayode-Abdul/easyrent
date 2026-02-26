@@ -180,6 +180,8 @@
 <script src="/assets/js/main.js"></script>
 @endif
 
+  @include('components.mobile-floating-footer')
+
   <!-- SweetAlert2 (global) -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>

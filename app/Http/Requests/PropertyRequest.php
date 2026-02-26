@@ -18,7 +18,9 @@ class PropertyRequest extends FormRequest
             'address' => 'required|string|max:255',
             'state' => 'required|string|max:100',
             'city' => 'required|string|max:100',
-            'aboveOne' => 'nullable|boolean'
+            'aboveOne' => 'nullable|boolean',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120'
         ];
     }
 

@@ -364,8 +364,8 @@ new Chart(locationCtx, {
         datasets: [{
             label: 'Properties',
             data: {!! json_encode(array_values($stats['properties_by_location']->toArray() ?? [])) !!},
-            backgroundColor: '#51cbce',
-            borderColor: '#51cbce',
+            backgroundColor: '#28a745',
+            borderColor: '#28a745',
             borderWidth: 1
         }]
     },
@@ -393,7 +393,7 @@ new Chart(categoryCtx, {
         datasets: [{
             data: {!! json_encode(array_values($stats['properties_by_category']->toArray() ?? [])) !!},
             backgroundColor: [
-                '#51cbce',
+                '#28a745',
                 '#fbc658',
                 '#ef8157',
                 '#6bd098',

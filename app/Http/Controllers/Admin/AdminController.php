@@ -70,16 +70,51 @@ class AdminController extends Controller
             'vacant_apartments' => Apartment::where('occupied', false)->count(),
             'properties_added_today' => Property::whereDate('created_at', Carbon::today())->count(),
             'properties_by_category' => Property::select('prop_type', DB::raw('count(*) as count'))
-                ->groupBy('prop_type')
-                ->pluck('count', 'prop_type'),
+            ->groupBy('prop_type')
+            ->pluck('count', 'prop_type'),
             'properties_by_location' => Property::select('state', DB::raw('count(*) as count'))
-                ->groupBy('state')
-                ->orderBy('count', 'desc')
-                ->limit(10)
-                ->pluck('count', 'state'),
+            ->groupBy('state')
+            ->orderBy('count', 'desc')
+            ->limit(10)
+            ->pluck('count', 'state'),
         ];
 
         return view('admin.properties', compact('properties', 'stats'));
+    }
+
+    /**
+     * Pending Property Approvals (Global Oversight)
+     */
+    public function pendingApprovals()
+    {
+        $properties = Property::with(['user', 'apartments'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('admin.pending_approvals', compact('properties'));
+    }
+
+    /**
+     * Bulk Action for Property Approval
+     */
+    public function bulkPropertyAction(Request $request)
+    {
+        $request->validate([
+            'property_ids' => 'required|array',
+            'action' => 'required|in:approve,reject'
+        ]);
+
+        $status = $request->action === 'approve' ? 'approved' : 'rejected';
+
+        Property::whereIn('property_id', $request->property_ids)
+            ->update([
+            'status' => $status,
+            'approved_at' => $status === 'approved' ? now() : null,
+            'rejected_at' => $status === 'rejected' ? now() : null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Properties ' . $status . ' successfully.']);
     }
 
     /**
@@ -116,7 +151,7 @@ class AdminController extends Controller
         if ($user->admin == 1) {
             return redirect()->back()->with('error', 'Cannot modify admin status.');
         }
-        
+
         // Toggle between active roles (for demo purposes)
         // You might want to add a status column to the users table instead
         return redirect()->back()->with('success', 'User status feature needs implementation.');
@@ -198,16 +233,16 @@ class AdminController extends Controller
         $revenue_report = [
             'total_revenue' => Payment::where('status', 'completed')->sum('amount'),
             'monthly_revenue' => Payment::where('status', 'completed')
-                ->whereMonth('created_at', Carbon::now()->month)
-                ->sum('amount'),
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->sum('amount'),
             'yearly_revenue' => Payment::where('status', 'completed')
-                ->whereYear('created_at', Carbon::now()->year)
-                ->sum('amount'),
+            ->whereYear('created_at', Carbon::now()->year)
+            ->sum('amount'),
             'revenue_by_month' => Payment::where('status', 'completed')
-                ->selectRaw('MONTH(created_at) as month, SUM(amount) as total')
-                ->whereYear('created_at', Carbon::now()->year)
-                ->groupBy('month')
-                ->pluck('total', 'month'),
+            ->selectRaw('MONTH(created_at) as month, SUM(amount) as total')
+            ->whereYear('created_at', Carbon::now()->year)
+            ->groupBy('month')
+            ->pluck('total', 'month'),
         ];
 
         $user_report = [
@@ -241,7 +276,8 @@ class AdminController extends Controller
                 }
                 $message = 'Application is now live. Maintenance mode disabled.';
                 $status = 'live';
-            } else {
+            }
+            else {
                 // Enter maintenance mode
                 $maintenanceData = [
                     'time' => time(),
@@ -249,7 +285,7 @@ class AdminController extends Controller
                     'retry' => $request->input('retry', 3600),
                     'allowed' => [$request->ip()]
                 ];
-                
+
                 file_put_contents($maintenanceFile, '<?php return ' . var_export($maintenanceData, true) . ';');
                 $message = 'Application is now in maintenance mode.';
                 $status = 'maintenance';
@@ -261,7 +297,8 @@ class AdminController extends Controller
                 'status' => $status
             ]);
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to toggle maintenance mode: ' . $e->getMessage()
@@ -326,53 +363,53 @@ class AdminController extends Controller
         $recentRequests = DB::table('api_requests_log as log')
             ->leftJoin('api_keys as keys', 'log.api_key_id', '=', 'keys.id')
             ->select([
-                'log.created_at as timestamp',
-                'log.method',
-                'log.endpoint',
-                'log.ip_address',
-                'keys.key_preview as api_key',
-                'log.status_code as status',
-                'log.response_time'
-            ])
+            'log.created_at as timestamp',
+            'log.method',
+            'log.endpoint',
+            'log.ip_address',
+            'keys.key_preview as api_key',
+            'log.status_code as status',
+            'log.response_time'
+        ])
             ->orderBy('log.created_at', 'desc')
             ->limit(10)
             ->get()
             ->map(function ($request) {
-                return [
-                    'timestamp' => $request->timestamp,
-                    'method' => $request->method,
-                    'endpoint' => $request->endpoint,
-                    'ip_address' => $request->ip_address,
-                    'api_key' => $request->api_key,
-                    'status' => $request->status,
-                    'response_time' => $request->response_time
-                ];
-            });
+            return [
+            'timestamp' => $request->timestamp,
+            'method' => $request->method,
+            'endpoint' => $request->endpoint,
+            'ip_address' => $request->ip_address,
+            'api_key' => $request->api_key,
+            'status' => $request->status,
+            'response_time' => $request->response_time
+            ];
+        });
 
         // Get API keys
         $apiKeys = DB::table('api_keys')
             ->select([
-                'id',
-                'name',
-                'key_preview as key',
-                'created_at',
-                'last_used_at as last_used',
-                'requests_count as request_count',
-                'status'
-            ])
+            'id',
+            'name',
+            'key_preview as key',
+            'created_at',
+            'last_used_at as last_used',
+            'requests_count as request_count',
+            'status'
+        ])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($key) {
-                return [
-                    'id' => $key->id,
-                    'name' => $key->name,
-                    'key' => $key->key,
-                    'created_at' => $key->created_at,
-                    'last_used' => $key->last_used,
-                    'request_count' => $key->request_count,
-                    'status' => $key->status
-                ];
-            });
+            return [
+            'id' => $key->id,
+            'name' => $key->name,
+            'key' => $key->key,
+            'created_at' => $key->created_at,
+            'last_used' => $key->last_used,
+            'request_count' => $key->request_count,
+            'status' => $key->status
+            ];
+        });
 
         return view('admin.api-management.index', compact('apiStats', 'recentRequests', 'apiKeys'));
     }
@@ -384,7 +421,7 @@ class AdminController extends Controller
     {
         $logFiles = [];
         $logDirectory = storage_path('logs');
-        
+
         if (is_dir($logDirectory)) {
             $files = glob($logDirectory . '/*.log');
             foreach ($files as $file) {
@@ -398,7 +435,7 @@ class AdminController extends Controller
         }
 
         // Sort by modification time (newest first)
-        usort($logFiles, function($a, $b) {
+        usort($logFiles, function ($a, $b) {
             return strtotime($b['modified']) - strtotime($a['modified']);
         });
 
@@ -420,28 +457,29 @@ class AdminController extends Controller
     public function getLogContent(Request $request)
     {
         $filePath = $request->get('file');
-        
+
         // Security check - ensure file is in logs directory
         if (!$filePath || !str_starts_with(realpath($filePath), storage_path('logs'))) {
             return response()->json(['error' => 'Invalid file path'], 403);
         }
-        
+
         if (!file_exists($filePath)) {
             return response()->json(['error' => 'File not found'], 404);
         }
-        
+
         try {
             $content = file_get_contents($filePath);
-            
+
             // Limit content size for performance (last 10000 lines)
             $lines = explode("\n", $content);
             if (count($lines) > 10000) {
                 $lines = array_slice($lines, -10000);
                 $content = implode("\n", $lines);
             }
-            
+
             return response()->json(['content' => $content]);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return response()->json(['error' => 'Error reading file'], 500);
         }
     }
@@ -453,12 +491,12 @@ class AdminController extends Controller
     {
         $fileName = $request->get('file');
         $filePath = storage_path('logs/' . $fileName);
-        
+
         // Security check
         if (!$fileName || !file_exists($filePath) || strpos($fileName, '..') !== false) {
             abort(404, 'File not found');
         }
-        
+
         return response()->download($filePath);
     }
 
@@ -471,7 +509,7 @@ class AdminController extends Controller
             $logDirectory = storage_path('logs');
             $files = glob($logDirectory . '/*.log');
             $cutoffDate = Carbon::now()->subDays(30); // Keep logs for 30 days
-            
+
             $deletedCount = 0;
             foreach ($files as $file) {
                 if (filemtime($file) < $cutoffDate->timestamp) {
@@ -479,13 +517,14 @@ class AdminController extends Controller
                     $deletedCount++;
                 }
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => "Deleted {$deletedCount} old log files",
                 'deleted_count' => $deletedCount
             ]);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error clearing log files: ' . $e->getMessage()
@@ -499,7 +538,8 @@ class AdminController extends Controller
         try {
             DB::connection()->getPdo();
             return ['status' => 'healthy', 'message' => 'Database connection is working'];
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return ['status' => 'error', 'message' => 'Database connection failed'];
         }
     }
@@ -524,7 +564,8 @@ class AdminController extends Controller
             cache()->put('health_check', 'test', 60);
             $value = cache()->get('health_check');
             return ['status' => $value === 'test' ? 'healthy' : 'error', 'message' => 'Cache is working'];
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return ['status' => 'error', 'message' => 'Cache system error'];
         }
     }
@@ -571,7 +612,7 @@ class AdminController extends Controller
     {
         $currentMonth = User::whereMonth('created_at', Carbon::now()->month)->count();
         $lastMonth = User::whereMonth('created_at', Carbon::now()->subMonth()->month)->count();
-        
+
         return $lastMonth > 0 ? round((($currentMonth - $lastMonth) / $lastMonth) * 100, 2) . '%' : 'N/A';
     }
 
@@ -580,7 +621,7 @@ class AdminController extends Controller
         // Simplified retention calculation
         $activeUsers = User::where('updated_at', '>=', Carbon::now()->subMonth())->count();
         $totalUsers = User::count();
-        
+
         return $totalUsers > 0 ? round(($activeUsers / $totalUsers) * 100, 2) . '%' : '0%';
     }
 
@@ -599,7 +640,7 @@ class AdminController extends Controller
     {
         $totalApartments = Apartment::count();
         $occupiedApartments = Apartment::where('occupied', true)->count();
-        
+
         return $totalApartments > 0 ? round(($occupiedApartments / $totalApartments) * 100, 2) . '%' : '0%';
     }
 
@@ -674,7 +715,8 @@ class AdminController extends Controller
                 ->with('success', 'API key created successfully!')
                 ->with('new_api_key', $apiKey); // Show full key only once
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return redirect()->route('admin.api-management')
                 ->with('error', 'Failed to create API key: ' . $e->getMessage());
         }
@@ -689,16 +731,17 @@ class AdminController extends Controller
             DB::table('api_keys')
                 ->where('id', $keyId)
                 ->update([
-                    'status' => 'inactive',
-                    'updated_at' => now()
-                ]);
+                'status' => 'inactive',
+                'updated_at' => now()
+            ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'API key revoked successfully'
             ]);
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to revoke API key: ' . $e->getMessage()
@@ -720,10 +763,10 @@ class AdminController extends Controller
             DB::table('api_keys')
                 ->where('id', $keyId)
                 ->update([
-                    'key_hash' => hash('sha256', $newApiKey),
-                    'key_preview' => substr($newApiKey, 0, 20) . '...',
-                    'updated_at' => now()
-                ]);
+                'key_hash' => hash('sha256', $newApiKey),
+                'key_preview' => substr($newApiKey, 0, 20) . '...',
+                'updated_at' => now()
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -731,7 +774,8 @@ class AdminController extends Controller
                 'new_key' => $newApiKey
             ]);
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to regenerate API key: ' . $e->getMessage()

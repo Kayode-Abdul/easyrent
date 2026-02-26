@@ -422,7 +422,7 @@ Copyright (c) 2015 Daniel Eden
     top: 1px; }
 
 .btn-primary {
-  background-color: #51cbce;
+  background-color: #28a745;
   color: #FFFFFF; }
   .btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .btn-primary:active:focus, .btn-primary:active:hover, .btn-primary.active:focus, .btn-primary.active:hover,
   .show > .btn-primary.dropdown-toggle,
@@ -440,18 +440,18 @@ Copyright (c) 2015 Daniel Eden
   fieldset[disabled] .btn-primary.focus,
   fieldset[disabled] .btn-primary:active,
   fieldset[disabled] .btn-primary.active {
-    background-color: #51cbce;
-    border-color: #51cbce; }
+    background-color: #28a745;
+    border-color: #28a745; }
   .btn-primary.btn-simple {
-    color: #51cbce;
-    border-color: #51cbce; }
+    color: #28a745;
+    border-color: #28a745; }
     .btn-primary.btn-simple:hover, .btn-primary.btn-simple:focus, .btn-primary.btn-simple:active {
       background-color: transparent;
       color: #34b5b8;
       border-color: #34b5b8;
       box-shadow: none; }
   .btn-primary.btn-link {
-    color: #51cbce; }
+    color: #28a745; }
     .btn-primary.btn-link:hover, .btn-primary.btn-link:focus, .btn-primary.btn-link:active, .btn-primary.btn-link:active:focus {
       background-color: transparent;
       color: #34b5b8;
@@ -634,15 +634,15 @@ Copyright (c) 2015 Daniel Eden
 
 .btn-outline-primary {
   background: transparent;
-  border: 2px solid #51cbce !important;
-  color: #51cbce;
+  border: 2px solid #28a745 !important;
+  color: #28a745;
   opacity: 1;
   filter: alpha(opacity=100); }
   .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active, .btn-outline-primary:focus:active, .btn-outline-primary.active,
   .open > .btn-outline-primary.dropdown-toggle {
-    background-color: #51cbce !important;
+    background-color: #28a745 !important;
     color: rgba(255, 255, 255, 0.8) !important;
-    border-color: #51cbce !important; }
+    border-color: #28a745 !important; }
     .btn-outline-primary:hover .caret, .btn-outline-primary:focus .caret, .btn-outline-primary:active .caret, .btn-outline-primary:focus:active .caret, .btn-outline-primary.active .caret,
     .open > .btn-outline-primary.dropdown-toggle .caret {
       border-top-color: rgba(255, 255, 255, 0.8) !important; }
@@ -656,7 +656,7 @@ Copyright (c) 2015 Daniel Eden
   fieldset[disabled] .btn-outline-primary:active,
   fieldset[disabled] .btn-outline-primary.active {
     background-color: transparent !important;
-    border-color: #51cbce !important; }
+    border-color: #28a745 !important; }
 
 .btn-outline-success {
   background: transparent;
@@ -793,7 +793,7 @@ Copyright (c) 2015 Daniel Eden
 
 .btn-neutral {
   background-color: #FFFFFF;
-  color: #51cbce;
+  color: #28a745;
   color: #66615B; }
   .btn-neutral:hover, .btn-neutral:focus, .btn-neutral:active, .btn-neutral.active, .btn-neutral:active:focus, .btn-neutral:active:hover, .btn-neutral.active:focus, .btn-neutral.active:hover,
   .show > .btn-neutral.dropdown-toggle,
@@ -1371,9 +1371,9 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 400; }
 
 a {
-  color: #51cbce; }
+  color: #28a745; }
   a:hover, a:focus {
-    color: #51cbce; }
+    color: #28a745; }
 
 h1, .h1 {
   font-size: 3.5em;
@@ -1445,7 +1445,7 @@ p.description {
 
 .text-primary,
 a.text-primary:focus, a.text-primary:hover {
-  color: #51cbce !important; }
+  color: #28a745 !important; }
 
 .text-info,
 a.text-info:focus, a.text-info:hover {
@@ -1478,10 +1478,10 @@ a.text-gray:focus, a.text-gray:hover {
     font-size: 0.8571em;
     text-transform: uppercase; }
   .blockquote.blockquote-primary {
-    border-color: #51cbce;
-    color: #51cbce; }
+    border-color: #28a745;
+    color: #28a745; }
     .blockquote.blockquote-primary small {
-      color: #51cbce; }
+      color: #28a745; }
   .blockquote.blockquote-danger {
     border-color: #ef8157;
     color: #ef8157; }
@@ -1611,8 +1611,8 @@ a[data-toggle="collapse"][aria-expanded="true"] .caret,
   background-color: #66615B; }
 
 .badge.badge-primary {
-  border-color: #51cbce;
-  background-color: #51cbce; }
+  border-color: #28a745;
+  background-color: #28a745; }
 
 .badge.badge-info {
   border-color: #51bcda;
@@ -1916,7 +1916,7 @@ a[data-toggle="collapse"][aria-expanded="true"] .caret,
     .navbar.navbar-transparent .nav-item .nav-link:not(.btn):hover,
     .navbar.navbar-transparent .nav-item .nav-link:not(.btn):focus:hover,
     .navbar.navbar-transparent .nav-item .nav-link:not(.btn):active {
-      color: #51cbce; }
+      color: #28a745; }
   .navbar.bg-white a:not(.dropdown-item):not(.btn) {
     color: #66615B; }
     .navbar.bg-white a:not(.dropdown-item):not(.btn).disabled {
@@ -1938,7 +1938,7 @@ a[data-toggle="collapse"][aria-expanded="true"] .caret,
   background-color: #66615B !important; }
 
 .bg-primary {
-  background-color: #51cbce !important; }
+  background-color: #28a745 !important; }
 
 .bg-info {
   background-color: #51bcda !important; }
@@ -3258,7 +3258,7 @@ License - nucleoapp.com/license/
   .off-canvas-sidebar[data-active-color="primary"] .nav li.active > a[data-toggle="collapse"] i,
   .off-canvas-sidebar[data-active-color="primary"] .nav li.active > a[data-toggle="collapse"] ~ div > ul > li.active .sidebar-mini-icon,
   .off-canvas-sidebar[data-active-color="primary"] .nav li.active > a[data-toggle="collapse"] ~ div > ul > li.active > a {
-    color: #51cbce;
+    color: #28a745;
     opacity: 1; }
   .sidebar[data-active-color="info"] .nav li.active > a,
   .sidebar[data-active-color="info"] .nav li.active > a i,
@@ -3492,7 +3492,7 @@ License - nucleoapp.com/license/
   .fixed-plugin .badge-green {
     background-color: #6bd098; }
   .fixed-plugin .badge-orange {
-    background-color: #51cbce; }
+    background-color: #28a745; }
   .fixed-plugin .badge-yellow {
     background-color: #fbc658; }
   .fixed-plugin .badge-red {
@@ -3661,9 +3661,9 @@ License - nucleoapp.com/license/
     .card .map.map-big {
       height: 500px; }
   .card[data-background-color="orange"] {
-    background-color: #51cbce; }
+    background-color: #28a745; }
     .card[data-background-color="orange"] .card-header {
-      background-color: #51cbce; }
+      background-color: #28a745; }
     .card[data-background-color="orange"] .card-footer .stats {
       color: #FFFFFF; }
   .card[data-background-color="red"] {

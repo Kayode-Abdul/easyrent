@@ -353,144 +353,62 @@
                                 </button>
                             </form>
                         @else
-                            <!-- Unauthenticated User - Pay-First Flow -->
+                            <!-- Unauthenticated User - Must Login/Signup First -->
                             <div class="unauthenticated-application">
                                 <div class="mb-4 text-center">
                                     <div class="mb-3" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
                                         <i class="fas fa-user-lock fa-2x text-primary"></i>
                                     </div>
-                                    <h6 class="text-primary fw-semibold">Preview Your Application</h6>
+                                    <h6 class="text-primary fw-semibold">Secure Your Apartment</h6>
                                     <p class="small text-muted mb-0">
-                                        Configure your rental preferences below, then proceed to secure payment. You will register after payment to finalize your apartment.
+                                        Please log in or create an account to proceed with your apartment application and payment.
                                     </p>
                                 </div>
                                 
-                                <!-- Application Form for Guests (Pay First) -->
-                                <form id="unauthenticatedApplicationForm" class="mb-4" method="POST" action="{{ route('apartment.invite.apply', $invitation->invitation_token) }}">
-                                    @csrf
-                                    <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-calendar me-1 text-primary"></i>Preferred Lease Duration *
-                                    </label>
-                                    <select id="unauthDurationSelect" name="duration" class="form-select form-select-lg">
-                                        @foreach($durationOptions as $durationValue => $durationName)
-                                            <option value="{{ $durationValue }}" {{ $durationValue == 12 ? 'selected' : '' }}>
-                                                {{ $durationName }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <small class="text-muted">Choose your preferred lease duration</small>
+                                <!-- Authentication Buttons -->
+                                <div class="d-grid gap-3 mb-4">
+                                    <a href="{{ route('login', ['invitation_token' => $invitation->invitation_token]) }}" class="btn btn-primary btn-lg py-3" style="border-radius: 12px; font-weight: 600;">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Log In
+                                    </a>
+                                    <a href="{{ route('register', ['invitation_token' => $invitation->invitation_token]) }}" class="btn btn-success btn-lg py-3" style="border-radius: 12px; font-weight: 600;">
+                                        <i class="fas fa-user-plus me-2"></i>Create Account
+                                    </a>
                                 </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label fw-semibold">
-                                            <i class="fas fa-calendar-check me-1 text-primary"></i>Preferred Move-in Date *
-                                        </label>
-                                        <input type="date" id="unauthMoveInDate" name="move_in_date" class="form-control form-control-lg" 
-                                            min="{{ date('Y-m-d', strtotime('+1 day')) }}" 
-                                            value="{{ date('Y-m-d', strtotime('+7 days')) }}">
-                                        <small class="text-muted">Select when you'd like to move in</small>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label fw-semibold">
-                                            <i class="fas fa-comment me-1 text-primary"></i>Additional Notes (Optional)
-                                        </label>
-                                        <textarea id="unauthNotes" name="additional_notes" class="form-control" rows="3" 
-                                                placeholder="Any special requests or questions about the apartment..."></textarea>
-                                        <small class="text-muted">Share any special requirements or questions</small>
-                                    </div>
-                                    
-                                    <div class="d-grid gap-3">
-                                        <button type="submit" class="btn btn-success btn-lg py-3" style="border-radius: 12px; font-weight: 600;">
-                                            <i class="fas fa-credit-card me-2"></i>Proceed to Secure Payment
-                                        </button>
-                                    </div>
-                                </form>
                                 
-                                <!-- Payment Summary for Unauthenticated Users -->
-                                <div class="total-calculation mb-4" 
-                                    data-apartment-amount="{{ $apartment->amount }}" 
-                                    data-pricing-type="{{ $proformaData['pricing_type'] ?? 'total' }}">
-                                    <div class="card bg-gradient payment-summary-card" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
-                                        <div class="card-body">
-                                            <h6 class="card-title text-primary mb-3">
-                                                <i class="fas fa-calculator me-2"></i>Payment Summary
-                                            </h6>
-                                            <div class="d-flex justify-content-between mb-2">
-                                                <span class="text-muted">
-                                                    @if(isset($proformaData['pricing_type']) && $proformaData['pricing_type'] === 'total')
-                                                        Total Price:
-                                                    @else
-                                                        Monthly Price:
-                                                    @endif
-                                                </span>
-                                                <span class="fw-bold">₦{{ number_format($apartment->amount) }}</span>
-                                            </div>
-                                            @if(isset($proformaData['pricing_type']))
-                                            <div class="d-flex justify-content-between mb-2">
-                                                <span class="text-muted">Pricing Type:</span>
-                                                <span class="fw-bold text-info">
-                                                    {{ ucfirst($proformaData['pricing_type']) }}
-                                                    @if($proformaData['pricing_type'] === 'total')
-                                                        <small class="text-muted">(Fixed amount)</small>
-                                                    @else
-                                                        <small class="text-muted">(Per month)</small>
-                                                    @endif
-                                                </span>
-                                            </div>
-                                            @endif
-                                            <div class="d-flex justify-content-between mb-2">
-                                                <span class="text-muted">Duration:</span>
-                                                <span id="unauth-duration-display" class="fw-bold">12 months</span>
-                                            </div>
-                                            @if(isset($proformaData['calculation_method']))
-                                            <div class="d-flex justify-content-between mb-2">
-                                                <span class="text-muted">Calculation:</span>
-                                                <span class="fw-bold text-secondary small">
-                                                    @if($proformaData['calculation_method'] === 'total_price_no_multiplication')
-                                                        Fixed total amount
-                                                    @elseif($proformaData['calculation_method'] === 'monthly_price_with_duration_multiplication')
-                                                        Monthly × Duration
-                                                    @else
-                                                        {{ ucfirst(str_replace('_', ' ', $proformaData['calculation_method'])) }}
-                                                    @endif
-                                                </span>
-                                            </div>
-                                            @endif
-                                            
-                                            <!-- Calculation breakdown for monthly pricing -->
-                                            @if(isset($proformaData['pricing_type']) && $proformaData['pricing_type'] === 'monthly')
-                                            <div class="calculation-breakdown mt-2 p-2" style="background: rgba(0,123,255,0.05); border-radius: 6px; border-left: 3px solid #007bff;">
-                                                <small class="text-muted d-block mb-1">Calculation Breakdown:</small>
-                                                <small class="d-flex justify-content-between">
-                                                    <span>₦{{ number_format($apartment->amount) }} × <span id="unauth-calc-duration">12</span> months</span>
-                                                    <span>=</span>
-                                                </small>
-                                            </div>
-                                            @endif
-                                            
-                                            <hr class="my-3">
-                                            <div class="d-flex justify-content-between">
-                                                <span class="fw-bold text-success fs-6">Total Amount:</span>
-                                                <span id="unauth-total-amount" class="fw-bold text-success fs-4">₦{{ number_format($proformaData['total_amount'] ?? ($apartment->amount * 12)) }}</span>
-                                            </div>
-                                            
-                                            <!-- Error display area -->
-                                            <div id="unauth-calculation-error" class="alert alert-warning mt-2" style="display: none;">
-                                                <small><i class="fas fa-exclamation-triangle me-1"></i>
-                                                <span id="unauth-error-message">Calculation error occurred</span></small>
-                                            </div>
+                                <!-- Info Box -->
+                                <div class="alert alert-info border-0" style="background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-info-circle fa-lg text-info me-3"></i>
+                                        <div>
+                                            <small class="fw-semibold">Why Create an Account?</small>
+                                            <div class="small">Your account helps us process your payment securely and manage your apartment details.</div>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <div class="alert alert-info border-0 mt-3" style="background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-shield-alt fa-lg text-info me-3"></i>
-                                        <div>
-                                            <small class="fw-semibold">Secure Reservation</small>
-                                            <div class="small">You will be asked to register after payment so we can link this apartment to your account automatically.</div>
+                                <!-- Property Summary for Reference -->
+                                <div class="card bg-light mt-4">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-primary mb-3">
+                                            <i class="fas fa-home me-2"></i>Property Summary
+                                        </h6>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted">Type:</span>
+                                            <span class="fw-bold">{{ $apartment->apartment_type }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted">
+                                                @if(isset($proformaData['pricing_type']) && $proformaData['pricing_type'] === 'total')
+                                                    Total Price:
+                                                @else
+                                                    Monthly Price:
+                                                @endif
+                                            </span>
+                                            <span class="fw-bold text-success">₦{{ number_format($apartment->amount) }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">Location:</span>
+                                            <span class="fw-bold">{{ $property->prop_address }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -776,26 +694,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const authForm = document.getElementById('applicationForm');
         if (authForm) {
             authForm.addEventListener('submit', function() {
-                const submitBtn = this.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
-                    submitBtn.disabled = true;
-                }
-            });
-        }
-    } else {
-        const unauthDurationSelect = document.getElementById('unauthDurationSelect');
-        if (unauthDurationSelect) {
-            unauthDurationSelect.addEventListener('change', function() {
-                updateCalculationDisplay(this.value, true);
-            });
-            // Initialize totals for guest view
-            updateCalculationDisplay(unauthDurationSelect.value, true);
-        }
-
-        const guestForm = document.getElementById('unauthenticatedApplicationForm');
-        if (guestForm) {
-            guestForm.addEventListener('submit', function() {
                 const submitBtn = this.querySelector('button[type="submit"]');
                 if (submitBtn) {
                     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';

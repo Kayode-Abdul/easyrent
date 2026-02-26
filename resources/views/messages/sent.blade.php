@@ -11,15 +11,18 @@
             </tr>
         </thead>
         <tbody>
-        @forelse($messages as $message)
+            @forelse($messages ?? [] as $message)
             <tr>
                 <td>{{ $message->receiver->username ?? 'Unknown' }}</td>
-                <td><a href="{{ route('messages.show', $message->id) }}">{{ $message->subject ?? '(No Subject)' }}</a></td>
+                <td><a href="{{ route('messages.show', $message->id) }}">{{ $message->subject ?? '(No Subject)' }}</a>
+                </td>
                 <td>{{ $message->created_at->format('d M Y H:i') }}</td>
             </tr>
-        @empty
-            <tr><td colspan="3" class="text-muted">No sent messages.</td></tr>
-        @endforelse
+            @empty
+            <tr>
+                <td colspan="3" class="text-muted">No sent messages.</td>
+            </tr>
+            @endforelse
         </tbody>
     </table>
 </div>
@@ -30,12 +33,12 @@
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
 <script>
-$(document).ready(function() {
-    $('#sent-table').DataTable({
-        "order": [[2, "desc"]], // Sort by date column
-        "pageLength": 25,
-        "responsive": true
+    $(document).ready(function () {
+        $('#sent-table').DataTable({
+            "order": [[2, "desc"]], // Sort by date column
+            "pageLength": 25,
+            "responsive": true
+        });
     });
-});
 </script>
 @endpush

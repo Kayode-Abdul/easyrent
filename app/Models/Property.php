@@ -39,6 +39,19 @@ class Property extends Model
         'prop_type' => 'integer'
     ];
 
+    /**
+     * Relationships
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(PropertyImage::class, 'property_id');
+    }
+
+    public function mainImage()
+    {
+        return $this->hasOne(PropertyImage::class, 'property_id')->where('is_main', true);
+    }
+
     // Backward compatibility accessors for old column names
     protected $appends = [];
 

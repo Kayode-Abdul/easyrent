@@ -120,7 +120,45 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label class="checkbox-wrapper">
+                                    <input type="checkbox" name="is_artisan" id="is-artisan-checkbox" onchange="toggleArtisanFields()">
+                                    <span class="checkmark"></span>
+                                    I am an artisan
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="artisan-fields" style="display: none;">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-tools input-icon"></i>
+                                        <select name="artisan_category_id" id="artisan-category" class="form-select">
+                                            <option value="">Select Your Service</option>
+                                            @php
+                                                $categories = \App\Models\ComplaintCategory::all();
+                                            @endphp
+                                            @foreach($categories as $category)
+                                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <label class="floating-label">Artisan Service</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <div class="input-wrapper">
+                                        <i class="fas fa-info-circle input-icon"></i>
+                                        <textarea name="artisan_bio" id="artisan-bio" class="form-textarea" placeholder="Brief bio/description of your services" rows="2"></textarea>
+                                        <label class="floating-label">Artisan Bio</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                     <!-- Step 2: Account Details -->
                     <div class="form-step" data-step="2">
@@ -269,7 +307,7 @@
 }
 
 .register-header {
-    background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%);
+    background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%) ;
     color: white;
     padding: 40px;
     text-align: center;
@@ -342,7 +380,7 @@
 }
 
 .step.active .step-number {
-    background: #3e8189;
+    background: #1e7e34;
     color: white;
 }
 
@@ -353,7 +391,7 @@
 }
 
 .step.active span {
-    color: #3e8189;
+    color: #1e7e34;
 }
 
 .form-container {
@@ -398,7 +436,7 @@
 }
 
 .photo-preview:hover {
-    border-color: #3e8189;
+    border-color: #1e7e34;
 }
 
 .photo-preview img {
@@ -486,7 +524,7 @@
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
-    border-color: #3e8189;
+    border-color: #1e7e34;
     background: white;
     box-shadow: 0 0 0 3px rgba(62, 129, 137, 0.1);
 }
@@ -511,13 +549,13 @@
 .form-textarea:focus + .floating-label,
 .form-textarea:not(:placeholder-shown) + .floating-label {
     transform: translateY(-28px) scale(0.85);
-    color: #3e8189;
+    color: #1e7e34;
 }
 
 .password-toggle {
     position: absolute;
     right: 16px;
-    top: 50%;
+    top: 70%;
     transform: translateY(-50%);
     background: none;
     border: none;
@@ -528,7 +566,7 @@
 }
 
 .password-toggle:hover {
-    color: #3e8189;
+    color: #1e7e34;
 }
 
 .password-strength {
@@ -585,8 +623,8 @@
 }
 
 .checkbox-wrapper input:checked + .checkmark {
-    background: #3e8189;
-    border-color: #3e8189;
+    background: #1e7e34;
+    border-color: #1e7e34;
 }
 
 .checkbox-wrapper input:checked + .checkmark::after {
@@ -601,7 +639,7 @@
 }
 
 .checkbox-wrapper a {
-    color: #3e8189;
+    color: #1e7e34;
     text-decoration: none;
 }
 
@@ -643,7 +681,7 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%);
+    background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%) ;
     color: white;
 }
 
@@ -674,7 +712,7 @@
 }
 
 .login-link a {
-    color: #3e8189;
+    color: #1e7e34;
     text-decoration: none;
     font-weight: 600;
 }
@@ -796,6 +834,45 @@ function validateCurrentStep() {
         submitBtn.disabled = !isValid;
     }
 }
+
+// Photo upload functionality
+function toggleArtisanFields() {
+    const isArtisan = document.getElementById('is-artisan-checkbox').checked;
+    const artisanFields = document.getElementById('artisan-fields');
+    const artisanCategory = document.getElementById('artisan-category');
+    const userRole = document.getElementById('user-role');
+    const artisanRoleId = "{{ \App\Models\User::getRoleId('Artisan') }}";
+
+    if (isArtisan) {
+        artisanFields.style.display = 'block';
+        artisanCategory.required = true;
+        // Automatically set role to Artisan if checked
+        if (artisanRoleId) {
+            userRole.value = artisanRoleId;
+            // Trigger change event if needed
+            userRole.dispatchEvent(new Event('change'));
+        }
+    } else {
+        artisanFields.style.display = 'none';
+        artisanCategory.required = false;
+    }
+}
+
+// Add event listener to role select to sync with checkbox
+document.addEventListener('DOMContentLoaded', function() {
+    const userRole = document.getElementById('user-role');
+    const isArtisanCheckbox = document.getElementById('is-artisan-checkbox');
+    const artisanRoleId = "{{ \App\Models\User::getRoleId('Artisan') }}";
+
+    userRole.addEventListener('change', function() {
+        if (this.value == artisanRoleId) {
+            isArtisanCheckbox.checked = true;
+        } else {
+            isArtisanCheckbox.checked = false;
+        }
+        toggleArtisanFields();
+    });
+});
 
 // Photo upload functionality
 function setupPhotoUpload() {

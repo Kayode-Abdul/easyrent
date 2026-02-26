@@ -10,6 +10,19 @@ use App\Services\Payment\PaymentCalculationServiceInterface;
 class Apartment extends Model
 {
     public $timestamps = false;
+
+    /**
+     * Relationships
+     */
+    public function images()
+    {
+        return $this->hasMany(PropertyImage::class, 'apartment_id');
+    }
+
+    public function mainImage()
+    {
+        return $this->hasOne(PropertyImage::class, 'apartment_id')->where('is_main', true);
+    }
     
     /**
      * Get the route key for the model.

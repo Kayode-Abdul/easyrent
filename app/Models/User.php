@@ -17,7 +17,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $primaryKey = 'user_id';
     public $incrementing = false; // user_id is custom generated
     protected $keyType = 'int';
-    
+
     /**
      * Get the route key for the model.
      */
@@ -55,7 +55,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'referral_code',
         'photo',
         'registration_source',
-        'referred_by'
+        'referred_by',
+        'artisan_category_id',
+        'is_artisan_verified',
+        'artisan_bio',
+        'city'
     ];
 
     /**
@@ -80,25 +84,25 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function managedProperties()
     {
-        return $this->hasMany(Property::class, 'agent_id');
+        return $this->hasMany(Property::class , 'agent_id');
     }
 
     // Apartments owned by this user (as landlord)
     public function apartments()
     {
-        return $this->hasMany(Apartment::class, 'user_id', 'user_id');
+        return $this->hasMany(Apartment::class , 'user_id', 'user_id');
     }
 
     // Apartments where this user is the tenant (leases)
     public function tenantLeases()
     {
-        return $this->hasMany(Apartment::class, 'tenant_id', 'user_id');
+        return $this->hasMany(Apartment::class , 'tenant_id', 'user_id');
     }
 
     public function isLandlord()
     {
         $id = self::getRoleId('landlord');
-        $legacy = strtolower((string) $this->role);
+        $legacy = strtolower((string)$this->role);
         return $this->hasRole('landlord') || $legacy === 'landlord' || (is_numeric($this->role) && (int)$this->role === (int)$id);
     }
 
@@ -106,7 +110,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $agentId = self::getRoleId('agent');
         $pmId = self::getRoleId('property_manager');
-        $legacy = strtolower((string) $this->role);
+        $legacy = strtolower((string)$this->role);
         $isLegacyMatch = $legacy === 'agent' || $legacy === 'property_manager' || (is_numeric($this->role) && in_array((int)$this->role, array_filter([(int)$agentId, (int)$pmId, 4]), true));
         return $this->hasRole('agent') || $this->hasRole('property_manager') || $isLegacyMatch;
     }
@@ -114,7 +118,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isTenant()
     {
         $id = self::getRoleId('tenant');
-        $legacy = strtolower((string) $this->role);
+        $legacy = strtolower((string)$this->role);
         return $this->hasRole('tenant') || $legacy === 'tenant' || (is_numeric($this->role) && (int)$this->role === (int)$id);
     }
 
@@ -123,23 +127,29 @@ class User extends Authenticatable implements MustVerifyEmail
         if (is_array($role)) {
             $names = array_filter(array_map(fn($r) => is_numeric($r) ? null : $r, $role));
             $ids = array_values(array_filter(array_map(fn($r) => is_numeric($r) ? (int)$r : null, $role), fn($v) => !is_null($v)));
-            return $query->where(function($q) use ($names, $ids){
+            return $query->where(function ($q) use ($names, $ids) {
                 if (!empty($ids)) {
                     $q->orWhereIn('role', $ids)
-                      ->orWhereHas('roles', function($r) use ($ids){ $r->whereIn('id', $ids); });
+                        ->orWhereHas('roles', function ($r) use ($ids) {
+                        $r->whereIn('id', $ids); }
+                    );
                 }
                 if (!empty($names)) {
                     $q->orWhereIn('role', $names)
-                      ->orWhereHas('roles', function($r) use ($names){ $r->whereIn('name', $names); });
+                        ->orWhereHas('roles', function ($r) use ($names) {
+                        $r->whereIn('name', $names); }
+                    );
                 }
             });
         }
         if (is_numeric($role)) {
             return $query->where('role', (int)$role)
-                ->orWhereHas('roles', function($q) use ($role){ $q->where('id', (int)$role); });
+                ->orWhereHas('roles', function ($q) use ($role) {
+                $q->where('id', (int)$role); });
         }
         return $query->where('role', $role)
-            ->orWhereHas('roles', function($q) use ($role){ $q->where('name', $role); });
+            ->orWhereHas('roles', function ($q) use ($role) {
+            $q->where('name', $role); });
     }
 
     // Check if this user is a tenant of a given landlord
@@ -159,16 +169,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function activityLogs()
     {
         // Explicit keys prevent Laravel from guessing `user_user_id`
-        return $this->hasMany(ActivityLog::class, 'user_id', 'user_id');
+        return $this->hasMany(ActivityLog::class , 'user_id', 'user_id');
     }
 
     public function receivedMessages()
     {
-        return $this->hasMany(Message::class, 'receiver_id', 'user_id');
+        return $this->hasMany(Message::class , 'receiver_id', 'user_id');
     }
     public function sentMessages()
     {
-        return $this->hasMany(Message::class, 'sender_id', 'user_id');
+        return $this->hasMany(Message::class , 'sender_id', 'user_id');
     }
 
     public function getReferralLink()
@@ -178,48 +188,48 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function agentRatings()
     {
-        return $this->hasMany(\App\Models\AgentRating::class, 'agent_id', 'user_id');
+        return $this->hasMany(\App\Models\AgentRating::class , 'agent_id', 'user_id');
     }
 
     public function givenRatings()
     {
-        return $this->hasMany(\App\Models\AgentRating::class, 'user_id', 'user_id');
+        return $this->hasMany(\App\Models\AgentRating::class , 'user_id', 'user_id');
     }
 
     // Marketer-related relationships and methods
     public function marketerProfile()
     {
-        return $this->hasOne(MarketerProfile::class, 'user_id', 'user_id');
+        return $this->hasOne(MarketerProfile::class , 'user_id', 'user_id');
     }
 
     public function referralCampaigns()
     {
-        return $this->hasMany(ReferralCampaign::class, 'marketer_id', 'user_id');
+        return $this->hasMany(ReferralCampaign::class , 'marketer_id', 'user_id');
     }
 
     public function referralRewards()
     {
-        return $this->hasMany(ReferralReward::class, 'marketer_id', 'user_id');
+        return $this->hasMany(ReferralReward::class , 'marketer_id', 'user_id');
     }
 
     public function commissionPayments()
     {
-        return $this->hasMany(CommissionPayment::class, 'marketer_id', 'user_id');
+        return $this->hasMany(CommissionPayment::class , 'marketer_id', 'user_id');
     }
 
     public function referrals()
     {
-        return $this->hasMany(Referral::class, 'referrer_id', 'user_id');
+        return $this->hasMany(Referral::class , 'referrer_id', 'user_id');
     }
 
     public function referredUsers()
     {
-        return $this->hasMany(Referral::class, 'referred_id', 'user_id');
+        return $this->hasMany(Referral::class , 'referred_id', 'user_id');
     }
 
     public function referredBy()
     {
-        return $this->belongsTo(User::class, 'referred_by', 'user_id');
+        return $this->belongsTo(User::class , 'referred_by', 'user_id');
     }
 
     // Role checking methods
@@ -230,17 +240,38 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === $marketerRoleId || $this->hasRole('marketer');
     }
 
+    public function isArtisan()
+    {
+        $id = self::getRoleId('Artisan');
+        return $this->hasRole('Artisan') || (is_numeric($this->role) && (int)$this->role === (int)$id);
+    }
+
+    public function artisanCategory()
+    {
+        return $this->belongsTo(ComplaintCategory::class , 'artisan_category_id');
+    }
+
+    public function artisanTasks()
+    {
+        return $this->hasMany(ArtisanTask::class , 'landlord_id', 'user_id');
+    }
+
+    public function artisanBids()
+    {
+        return $this->hasMany(ArtisanBid::class , 'artisan_id', 'user_id');
+    }
+
     /**
      * Get role ID by name with caching
      */
     public static function getRoleId(string $roleName): ?int
     {
         static $roleCache = [];
-        
+
         if (!isset($roleCache[$roleName])) {
             $roleCache[$roleName] = DB::table('roles')->where('name', $roleName)->value('id');
         }
-        
+
         return $roleCache[$roleName];
     }
 
@@ -271,7 +302,7 @@ class User extends Authenticatable implements MustVerifyEmail
             do {
                 $code = 'REF-' . strtoupper(\Illuminate\Support\Str::random(8));
             } while (User::where('referral_code', $code)->exists());
-            
+
             $this->update(['referral_code' => $code]);
         }
         return $this->referral_code;
@@ -286,9 +317,9 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return [
             'total_referrals' => $this->referrals()->count(),
-            'successful_referrals' => $this->referrals()->whereHas('referred', function($q) {
-                $q->where('role', 2); // Landlords only
-            })->count(),
+            'successful_referrals' => $this->referrals()->whereHas('referred', function ($q) {
+            $q->where('role', 2); // Landlords only
+        })->count(),
             'total_commission' => $this->referralRewards()->where('status', 'paid')->sum('amount'),
             'pending_commission' => $this->referralRewards()->where('status', 'approved')->sum('amount'),
             'total_clicks' => $this->referralCampaigns()->sum('clicks'),
@@ -301,18 +332,18 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $totalClicks = $this->referralCampaigns()->sum('clicks');
         $totalConversions = $this->referralCampaigns()->sum('conversions');
-        
+
         return $totalClicks > 0 ? round(($totalConversions / $totalClicks) * 100, 2) : 0;
     }
 
     public function roles()
     {
-        return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id');
+        return $this->belongsToMany(Role::class , 'role_user', 'user_id', 'role_id');
     }
 
     public function regionalScopes()
     {
-        return $this->hasMany(RegionalScope::class, 'user_id', 'user_id');
+        return $this->hasMany(RegionalScope::class , 'user_id', 'user_id');
     }
 
     /**
@@ -322,24 +353,24 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $scopes = $this->regionalScopes()->get();
         $formattedScopes = collect();
-        
+
         // If no scopes exist, return empty collection
         if ($scopes->isEmpty()) {
             return $formattedScopes;
         }
-        
+
         // Group scopes by state
         $stateScopes = $scopes->where('scope_type', 'state');
         $lgaScopes = $scopes->where('scope_type', 'lga');
-        
+
         foreach ($stateScopes as $stateScope) {
             $state = $stateScope->scope_value;
-            
+
             // Find LGAs for this state
-            $stateLgas = $lgaScopes->filter(function($lgaScope) use ($state) {
+            $stateLgas = $lgaScopes->filter(function ($lgaScope) use ($state) {
                 return strpos($lgaScope->scope_value, $state . '::') === 0;
             });
-            
+
             if ($stateLgas->count() > 0) {
                 // Create scope objects for each LGA
                 foreach ($stateLgas as $lgaScope) {
@@ -349,7 +380,8 @@ class User extends Authenticatable implements MustVerifyEmail
                         'lga' => $lga
                     ]);
                 }
-            } else {
+            }
+            else {
                 // State-wide scope (no specific LGA)
                 $formattedScopes->push((object)[
                     'state' => $state,
@@ -357,7 +389,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 ]);
             }
         }
-        
+
         return $formattedScopes;
     }
 
@@ -367,7 +399,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // Super Marketer role methods (Task 3.1)
-    
+
     /**
      * Check if user is a Super Marketer
      */
@@ -383,13 +415,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getReferralChain(): array
     {
         $chain = [];
-        
+
         // If this user is a Super Marketer, get their referred marketers and landlords
         if ($this->isSuperMarketer()) {
             $referralChains = ReferralChain::where('super_marketer_id', $this->user_id)
                 ->with(['marketer', 'landlord'])
                 ->get();
-                
+
             foreach ($referralChains as $referralChain) {
                 $chain[] = [
                     'type' => 'super_marketer_chain',
@@ -402,13 +434,13 @@ class User extends Authenticatable implements MustVerifyEmail
                 ];
             }
         }
-        
+
         // If this user is a Marketer, check if they're part of a Super Marketer chain
         if ($this->isMarketer()) {
             $referralChain = ReferralChain::where('marketer_id', $this->user_id)
                 ->with(['superMarketer', 'landlord'])
                 ->first();
-                
+
             if ($referralChain) {
                 $chain[] = [
                     'type' => 'marketer_in_chain',
@@ -420,15 +452,15 @@ class User extends Authenticatable implements MustVerifyEmail
                     'participants' => $referralChain->getParticipants()
                 ];
             }
-            
+
             // Also get direct referrals (landlords referred by this marketer)
             $directReferrals = $this->referrals()
                 ->with('referred')
-                ->whereHas('referred', function($q) {
-                    $q->where('role', 2); // Landlords
-                })
+                ->whereHas('referred', function ($q) {
+                $q->where('role', 2); // Landlords
+            })
                 ->get();
-                
+
             foreach ($directReferrals as $referral) {
                 $chain[] = [
                     'type' => 'direct_referral',
@@ -439,13 +471,13 @@ class User extends Authenticatable implements MustVerifyEmail
                 ];
             }
         }
-        
+
         // If this user is a Landlord, check if they're part of any chain
         if ($this->isLandlord()) {
             $referralChain = ReferralChain::where('landlord_id', $this->user_id)
                 ->with(['superMarketer', 'marketer'])
                 ->first();
-                
+
             if ($referralChain) {
                 $chain[] = [
                     'type' => 'landlord_in_chain',
@@ -456,12 +488,13 @@ class User extends Authenticatable implements MustVerifyEmail
                     'status' => $referralChain->status,
                     'participants' => $referralChain->getParticipants()
                 ];
-            } else {
+            }
+            else {
                 // Check for direct referral relationship
                 $directReferral = Referral::where('referred_id', $this->user_id)
                     ->with('referrer')
                     ->first();
-                    
+
                 if ($directReferral) {
                     $chain[] = [
                         'type' => 'direct_referral_landlord',
@@ -473,7 +506,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 }
             }
         }
-        
+
         return $chain;
     }
 
@@ -486,21 +519,21 @@ class User extends Authenticatable implements MustVerifyEmail
         if (!$this->isSuperMarketer()) {
             return false;
         }
-        
+
         // Must have active marketer status
         if (!$this->isActiveMarketer()) {
             return false;
         }
-        
+
         // Additional business rules can be added here
         // For example: check if they have reached referral limits, 
         // account standing, etc.
-        
+
         return true;
     }
 
     // Referral relationship methods (Task 3.2)
-    
+
     /**
      * Check if user qualifies for marketer status
      * User must have shared referral link that resulted in landlord registration
@@ -509,21 +542,24 @@ class User extends Authenticatable implements MustVerifyEmail
     public function qualifiesForMarketerStatus(): bool
     {
         return $this->referrals()
-            ->whereHas('referred', function($query) {
-                $query->whereHas('roles', function($roleQuery) {
+            ->whereHas('referred', function ($query) {
+            $query->whereHas('roles', function ($roleQuery) {
                     $roleQuery->where('name', 'landlord');
-                })->orWhere('role', self::getRoleId('landlord'));
+                }
+                )->orWhere('role', self::getRoleId('landlord'));
             })
-            ->whereHas('referred', function($query) {
-                $query->whereHas('apartments', function($apartmentQuery) {
-                    $apartmentQuery->whereHas('payments', function($paymentQuery) {
-                        $paymentQuery->where('status', 'completed');
-                    });
-                });
-            })
+            ->whereHas('referred', function ($query) {
+            $query->whereHas('apartments', function ($apartmentQuery) {
+                    $apartmentQuery->whereHas('payments', function ($paymentQuery) {
+                            $paymentQuery->where('status', 'completed');
+                        }
+                        );
+                    }
+                    );
+                })
             ->exists();
     }
-    
+
     /**
      * Automatically promote to marketer if qualified
      */
@@ -533,7 +569,7 @@ class User extends Authenticatable implements MustVerifyEmail
             $this->promoteToMarketer();
         }
     }
-    
+
     /**
      * Promote user to marketer role
      */
@@ -541,20 +577,20 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         try {
             $marketerRole = Role::where('name', 'marketer')->first();
-            
+
             if ($marketerRole && !$this->hasRole('marketer')) {
                 // Add marketer role
                 $this->roles()->attach($marketerRole->id);
-                
+
                 // Update marketer status
                 $this->update([
                     'marketer_status' => 'active',
                     'commission_rate' => 5.0 // Default commission rate
                 ]);
-                
+
                 // Generate referral code
                 $this->generateReferralCode();
-                
+
                 // Create marketer profile if it doesn't exist
                 if (!$this->marketerProfile) {
                     MarketerProfile::create([
@@ -562,22 +598,24 @@ class User extends Authenticatable implements MustVerifyEmail
                         'status' => 'active',
                         'commission_rate' => 5.0,
                         'total_referrals' => $this->referrals()->count(),
-                        'successful_referrals' => $this->referrals()->whereHas('referred', function($q) {
-                            $q->whereHas('roles', function($roleQuery) {
+                        'successful_referrals' => $this->referrals()->whereHas('referred', function ($q) {
+                        $q->whereHas('roles', function ($roleQuery) {
                                 $roleQuery->where('name', 'landlord');
-                            });
+                            }
+                            );
                         })->count()
                     ]);
                 }
-                
+
                 Log::info('User promoted to marketer', [
                     'user_id' => $this->user_id,
                     'email' => $this->email,
                     'referral_count' => $this->referrals()->count()
                 ]);
             }
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             Log::error('Failed to promote user to marketer', [
                 'user_id' => $this->user_id,
                 'error' => $e->getMessage()
@@ -591,46 +629,47 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getMarketerQualificationStatus(): array
     {
         $referrals = $this->referrals()->with(['referred.roles', 'referred.apartments.payments'])->get();
-        
-        $qualifyingReferrals = $referrals->filter(function($referral) {
+
+        $qualifyingReferrals = $referrals->filter(function ($referral) {
             $referred = $referral->referred;
-            
+
             // Check if referred user is a landlord
-            $isLandlord = $referred->hasRole('landlord') || 
-                         $referred->role == self::getRoleId('landlord');
-            
+            $isLandlord = $referred->hasRole('landlord') ||
+                $referred->role == self::getRoleId('landlord');
+
             if (!$isLandlord) {
                 return false;
             }
-            
+
             // Check if landlord has properties with successful payments
             $hasSuccessfulPayments = $referred->apartments()
-                ->whereHas('payments', function($query) {
-                    $query->where('status', 'completed');
-                })
+                ->whereHas('payments', function ($query) {
+                $query->where('status', 'completed');
+            }
+            )
                 ->exists();
-            
+
             return $hasSuccessfulPayments;
         });
-        
+
         return [
             'is_qualified' => $this->qualifiesForMarketerStatus(),
             'is_marketer' => $this->isMarketer(),
             'total_referrals' => $referrals->count(),
-            'landlord_referrals' => $referrals->filter(function($referral) {
-                $referred = $referral->referred;
-                return $referred->hasRole('landlord') || 
-                       $referred->role == self::getRoleId('landlord');
-            })->count(),
+            'landlord_referrals' => $referrals->filter(function ($referral) {
+            $referred = $referral->referred;
+            return $referred->hasRole('landlord') ||
+                $referred->role == self::getRoleId('landlord');
+        })->count(),
             'qualifying_referrals' => $qualifyingReferrals->count(),
-            'qualifying_referral_details' => $qualifyingReferrals->map(function($referral) {
-                $referred = $referral->referred;
-                $paymentCount = $referred->apartments()
-                    ->join('payments', 'apartments.apartment_id', '=', 'payments.apartment_id')
-                    ->where('payments.status', 'completed')
-                    ->count();
-                
-                return [
+            'qualifying_referral_details' => $qualifyingReferrals->map(function ($referral) {
+            $referred = $referral->referred;
+            $paymentCount = $referred->apartments()
+                ->join('payments', 'apartments.apartment_id', '=', 'payments.apartment_id')
+                ->where('payments.status', 'completed')
+                ->count();
+
+            return [
                     'referral_id' => $referral->id,
                     'referred_user_id' => $referred->user_id,
                     'referred_user_name' => $referred->first_name . ' ' . $referred->last_name,
@@ -638,11 +677,11 @@ class User extends Authenticatable implements MustVerifyEmail
                     'successful_payments' => $paymentCount,
                     'referral_date' => $referral->created_at
                 ];
-            })->values()->toArray(),
+        })->values()->toArray(),
             'next_steps' => $this->getMarketerQualificationNextSteps()
         ];
     }
-    
+
     /**
      * Get next steps for marketer qualification
      */
@@ -651,33 +690,34 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($this->isMarketer()) {
             return ['status' => 'Already a marketer'];
         }
-        
+
         if ($this->qualifiesForMarketerStatus()) {
             return ['status' => 'Qualified for promotion', 'action' => 'Automatic promotion will occur'];
         }
-        
+
         $referrals = $this->referrals()->with(['referred.roles', 'referred.apartments.payments'])->get();
-        $landlordReferrals = $referrals->filter(function($referral) {
+        $landlordReferrals = $referrals->filter(function ($referral) {
             $referred = $referral->referred;
-            return $referred->hasRole('landlord') || 
-                   $referred->role == self::getRoleId('landlord');
+            return $referred->hasRole('landlord') ||
+            $referred->role == self::getRoleId('landlord');
         });
-        
+
         if ($landlordReferrals->isEmpty()) {
             return [
                 'status' => 'Need landlord referrals',
                 'action' => 'Share your referral link to attract landlords to the platform'
             ];
         }
-        
-        $landlordsWithoutPayments = $landlordReferrals->filter(function($referral) {
+
+        $landlordsWithoutPayments = $landlordReferrals->filter(function ($referral) {
             return !$referral->referred->apartments()
-                ->whereHas('payments', function($query) {
+            ->whereHas('payments', function ($query) {
                     $query->where('status', 'completed');
-                })
+                }
+                )
                 ->exists();
-        });
-        
+            });
+
         if ($landlordsWithoutPayments->isNotEmpty()) {
             return [
                 'status' => 'Waiting for tenant payments',
@@ -685,7 +725,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 'landlords_pending' => $landlordsWithoutPayments->count()
             ];
         }
-        
+
         return ['status' => 'Unknown qualification status'];
     }
 
@@ -706,20 +746,21 @@ class User extends Authenticatable implements MustVerifyEmail
                 'referral_source' => $context['source'] ?? 'direct',
                 'tracking_data' => json_encode($context)
             ]);
-            
+
             Log::info('Referral tracked for marketer qualification', [
                 'referrer_id' => $this->user_id,
                 'referred_id' => $referredUser->user_id,
                 'referral_id' => $referral->id,
                 'context' => $context
             ]);
-            
+
             // If referred user is a landlord, check qualification immediately
             if ($referredUser->hasRole('landlord') || $referredUser->role == self::getRoleId('landlord')) {
                 $this->evaluateMarketerPromotion();
             }
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             Log::error('Failed to track referral for marketer qualification', [
                 'referrer_id' => $this->user_id,
                 'referred_id' => $referredUser->user_id,
@@ -736,16 +777,16 @@ class User extends Authenticatable implements MustVerifyEmail
         try {
             // Check if this user referred the landlord who received the payment
             $landlord = User::where('user_id', $payment->landlord_id)->first();
-            
+
             if (!$landlord) {
                 return;
             }
-            
+
             // Check if this user referred the landlord
             $referral = Referral::where('referrer_id', $this->user_id)
                 ->where('referred_id', $landlord->user_id)
                 ->first();
-            
+
             if ($referral && $payment->status === 'completed') {
                 Log::info('Checking marketer qualification after payment', [
                     'referrer_id' => $this->user_id,
@@ -753,24 +794,25 @@ class User extends Authenticatable implements MustVerifyEmail
                     'payment_id' => $payment->id,
                     'payment_amount' => $payment->amount
                 ]);
-                
+
                 // Update referral with payment information
                 $referral->update([
                     'commission_amount' => $payment->amount * 0.05, // 5% commission
                     'commission_status' => 'pending',
                     'property_id' => $payment->property_id
                 ]);
-                
+
                 // Evaluate marketer promotion
                 $this->evaluateMarketerPromotion();
-                
+
                 // If promoted, create commission reward
                 if ($this->isMarketer()) {
                     $this->createCommissionReward($referral, $payment);
                 }
             }
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             Log::error('Failed to check marketer qualification after payment', [
                 'user_id' => $this->user_id,
                 'payment_id' => $payment->id,
@@ -786,7 +828,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         try {
             $commissionAmount = $payment->amount * 0.05; // 5% commission
-            
+
             ReferralReward::create([
                 'marketer_id' => $this->user_id,
                 'referral_id' => $referral->id,
@@ -796,15 +838,16 @@ class User extends Authenticatable implements MustVerifyEmail
                 'payment_id' => $payment->id,
                 'earned_at' => now()
             ]);
-            
+
             Log::info('Commission reward created for marketer', [
                 'marketer_id' => $this->user_id,
                 'referral_id' => $referral->id,
                 'payment_id' => $payment->id,
                 'commission_amount' => $commissionAmount
             ]);
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             Log::error('Failed to create commission reward', [
                 'marketer_id' => $this->user_id,
                 'referral_id' => $referral->id,
@@ -819,7 +862,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function superMarketerReferrals()
     {
-        return $this->hasMany(ReferralChain::class, 'super_marketer_id', 'user_id');
+        return $this->hasMany(ReferralChain::class , 'super_marketer_id', 'user_id');
     }
 
     /**
@@ -828,13 +871,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function referredMarketers()
     {
         return $this->hasManyThrough(
-            User::class,
-            ReferralChain::class,
+            User::class ,
+            ReferralChain::class ,
             'super_marketer_id', // Foreign key on referral_chains table
-            'user_id',           // Foreign key on users table
-            'user_id',           // Local key on users table (this Super Marketer)
-            'marketer_id'        // Local key on referral_chains table
-        )->whereHas('roles', function($q) {
+            'user_id', // Foreign key on users table
+            'user_id', // Local key on users table (this Super Marketer)
+            'marketer_id' // Local key on referral_chains table
+        )->whereHas('roles', function ($q) {
             $q->where('name', 'marketer');
         });
     }
@@ -852,7 +895,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         // Get user's primary role for commission calculation
         $primaryRole = $this->getPrimaryRoleForCommission();
-        
+
         if (!$primaryRole) {
             return 0.0;
         }
@@ -864,7 +907,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->first();
 
         if ($commissionRate) {
-            return (float) $commissionRate->commission_percentage;
+            return (float)$commissionRate->commission_percentage;
         }
 
         // Fallback to default region if specific region not found
@@ -875,13 +918,13 @@ class User extends Authenticatable implements MustVerifyEmail
                 ->first();
 
             if ($defaultRate) {
-                return (float) $defaultRate->commission_percentage;
+                return (float)$defaultRate->commission_percentage;
             }
         }
 
         // Final fallback to user's individual commission rate if set
         if ($this->commission_rate) {
-            return (float) $this->commission_rate;
+            return (float)$this->commission_rate;
         }
 
         return 0.0;
@@ -894,7 +937,7 @@ class User extends Authenticatable implements MustVerifyEmail
     private function getPrimaryRoleForCommission()
     {
         $userRoles = $this->roles;
-        
+
         // Priority order for commission calculation
         $rolePriority = [
             'super_marketer' => 1,
@@ -923,7 +966,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function superMarketerChains()
     {
-        return $this->hasMany(ReferralChain::class, 'super_marketer_id', 'user_id');
+        return $this->hasMany(ReferralChain::class , 'super_marketer_id', 'user_id');
     }
 
     /**
@@ -931,7 +974,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function marketerChain()
     {
-        return $this->hasOne(ReferralChain::class, 'marketer_id', 'user_id');
+        return $this->hasOne(ReferralChain::class , 'marketer_id', 'user_id');
     }
 
     /**
@@ -939,7 +982,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function landlordChain()
     {
-        return $this->hasOne(ReferralChain::class, 'landlord_id', 'user_id');
+        return $this->hasOne(ReferralChain::class , 'landlord_id', 'user_id');
     }
 
     /**
@@ -977,7 +1020,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         if ($this->isSuperMarketer()) {
             $breakdown['super_marketer_rate'] = $this->getCommissionRate($region);
-            
+
             // Get rates for referred marketers
             $marketerRole = Role::where('name', 'marketer')->first();
             if ($marketerRole) {
@@ -985,11 +1028,12 @@ class User extends Authenticatable implements MustVerifyEmail
                     ->forRegion($region)
                     ->forRole($marketerRole->id)
                     ->first();
-                $breakdown['marketer_rate'] = $marketerRate ? (float) $marketerRate->commission_percentage : 0.0;
+                $breakdown['marketer_rate'] = $marketerRate ? (float)$marketerRate->commission_percentage : 0.0;
             }
-        } elseif ($this->isMarketer()) {
+        }
+        elseif ($this->isMarketer()) {
             $breakdown['marketer_rate'] = $this->getCommissionRate($region);
-            
+
             // Check if this marketer has a referring Super Marketer
             $superMarketer = $this->referringSuperMarketer();
             if ($superMarketer) {
@@ -1004,14 +1048,14 @@ class User extends Authenticatable implements MustVerifyEmail
                 ->forRegion($region)
                 ->forRole($regionalManagerRole->id)
                 ->first();
-            $breakdown['regional_manager_rate'] = $rmRate ? (float) $rmRate->commission_percentage : 0.0;
+            $breakdown['regional_manager_rate'] = $rmRate ? (float)$rmRate->commission_percentage : 0.0;
         }
 
         return $breakdown;
     }
 
     // Fraud Detection Methods
-    
+
     /**
      * Check if user is flagged for review
      */
@@ -1069,13 +1113,13 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // Complaint System Relationships
-    
+
     /**
      * Complaints submitted by this user (as tenant)
      */
     public function tenantComplaints()
     {
-        return $this->hasMany(\App\Models\Complaint::class, 'tenant_id', 'user_id');
+        return $this->hasMany(\App\Models\Complaint::class , 'tenant_id', 'user_id');
     }
 
     /**
@@ -1083,7 +1127,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function landlordComplaints()
     {
-        return $this->hasMany(\App\Models\Complaint::class, 'landlord_id', 'user_id');
+        return $this->hasMany(\App\Models\Complaint::class , 'landlord_id', 'user_id');
     }
 
     /**
@@ -1091,7 +1135,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function assignedComplaints()
     {
-        return $this->hasMany(\App\Models\Complaint::class, 'assigned_to', 'user_id');
+        return $this->hasMany(\App\Models\Complaint::class , 'assigned_to', 'user_id');
     }
 
     /**
@@ -1099,7 +1143,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function resolvedComplaints()
     {
-        return $this->hasMany(\App\Models\Complaint::class, 'resolved_by', 'user_id');
+        return $this->hasMany(\App\Models\Complaint::class , 'resolved_by', 'user_id');
     }
 
     /**
@@ -1114,14 +1158,16 @@ class User extends Authenticatable implements MustVerifyEmail
                 'resolved' => $this->tenantComplaints()->resolved()->count(),
                 'overdue' => $this->tenantComplaints()->overdue()->count(),
             ];
-        } elseif ($this->isLandlord()) {
+        }
+        elseif ($this->isLandlord()) {
             return [
                 'total' => $this->landlordComplaints()->count(),
                 'open' => $this->landlordComplaints()->open()->count(),
                 'resolved' => $this->landlordComplaints()->resolved()->count(),
                 'overdue' => $this->landlordComplaints()->overdue()->count(),
             ];
-        } elseif ($this->isAgent()) {
+        }
+        elseif ($this->isAgent()) {
             return [
                 'total' => $this->assignedComplaints()->count(),
                 'open' => $this->assignedComplaints()->open()->count(),

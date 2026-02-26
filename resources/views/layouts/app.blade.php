@@ -18,6 +18,7 @@
     <!-- CSS Files -->
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
     <link href="{{ asset('assets/paper-dashboard.css') }}" rel="stylesheet" />
+    <link href="{{ asset('assets/css/dashboard-mobile-logo.css') }}" rel="stylesheet" />
     
     <!-- Custom CSS -->
     <style>
@@ -114,8 +115,14 @@
                                 <span class="navbar-toggler-bar bar2"></span>
                                 <span class="navbar-toggler-bar bar3"></span>
                             </button>
+                            <a class="navbar-brand" href="{{ url('/dashboard') }}">
+                                <img src="{{ asset('assets/images/logo-small.png') }}" alt="EasyRent" style="height: 40px !important; width: auto !important; margin-left: 15px !important; display: block !important; visibility: visible !important; opacity: 1 !important;">
+                            </a>
                         </div>
-                        <a class="navbar-brand" href="#pablo">@yield('title', 'Dashboard')</a>
+                        <a class="navbar-brand" href="{{ url('/dashboard') }}">
+                            <img src="{{ asset('assets/images/logo-small.png') }}" alt="EasyRent" style="height: 30px; width: auto; margin-right: 10px;">
+                            @yield('title', 'Dashboard')
+                        </a>
                     </div>
                     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-bar navbar-kebab"></span>

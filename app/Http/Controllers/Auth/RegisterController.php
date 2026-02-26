@@ -75,6 +75,8 @@ class RegisterController extends Controller
             'phone' => ['required', 'string', 'max:20'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'artisan_category_id' => ['nullable', 'required_if:is_artisan,on', 'exists:complaint_categories,id'],
+            'artisan_bio' => ['nullable', 'string', 'max:1000'],
         ];
 
         $messages = [
@@ -260,6 +262,10 @@ class RegisterController extends Controller
             'password' => Hash::make($data['password']),
             'photo' => $data['photo'] ?? null,
             'registration_source' => $registrationSource,
+            'artisan_category_id' => $data['artisan_category_id'] ?? null,
+            'artisan_bio' => $data['artisan_bio'] ?? null,
+            'is_artisan_verified' => 0,
+            'city' => $data['city'] ?? null,
         ]);
     }
 

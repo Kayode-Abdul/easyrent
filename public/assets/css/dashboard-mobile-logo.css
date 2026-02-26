@@ -1,0 +1,92 @@
+/**
+ * Dashboard Mobile Logo Fix
+ * Shows logo beside hamburger menu on mobile only
+ */
+
+/* Mobile styles - force logo visibility */
+@media (max-width: 991px) {
+    /* Hide main navbar-brand on mobile */
+    .navbar .navbar-wrapper > .navbar-brand:not(.navbar-toggle .navbar-brand) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+    }
+    
+    /* Force navbar-toggle to be visible and flex */
+    .navbar .navbar-toggle {
+        display: flex !important;
+        align-items: center !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 9999 !important;
+    }
+    
+    /* Force logo inside navbar-toggle to be visible when not toggled */
+    .navbar .navbar-toggle:not(.toggled) .navbar-brand {
+        display: inline-flex !important;
+        align-items: center !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 9999 !important;
+        margin-left: 15px !important;
+        text-decoration: none !important;
+    }
+    
+    /* Hide logo when navbar-toggle is toggled (menu open) */
+    .navbar .navbar-toggle.toggled .navbar-brand {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+    }
+    
+    /* Force logo image to be visible and large */
+    .navbar .navbar-toggle:not(.toggled) .navbar-brand img {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 9999 !important;
+        height: 45px !important;
+        width: auto !important;
+        min-height: 45px !important;
+        min-width: 45px !important;
+        max-width: none !important;
+    }
+    
+    /* Override any hiding styles */
+    .navbar .navbar-toggle:not(.toggled) .navbar-brand img[src*="logo-small.png"],
+    .navbar .navbar-toggle:not(.toggled) .navbar-brand img[alt="EasyRent"] {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: 9999 !important;
+    }
+}
+
+/* Desktop styles */
+@media (min-width: 992px) {
+    /* Hide mobile logo on desktop */
+    .navbar .navbar-toggle .navbar-brand {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+    }
+    
+    /* Show main navbar-brand on desktop */
+    .navbar .navbar-wrapper > .navbar-brand {
+        display: flex !important;
+        align-items: center !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+}
+
+/* Dark mode support */
+@media (max-width: 991px) {
+    html[data-chrome-dark="true"] .navbar .navbar-toggle .navbar-brand img {
+        filter: brightness(0) invert(1);
+    }
+}

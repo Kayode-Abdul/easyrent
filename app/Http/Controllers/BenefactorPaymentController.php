@@ -104,17 +104,31 @@ class BenefactorPaymentController extends Controller
         // Check if user is logged in
         $isLoggedIn = Auth::check();
 
+        // Build validation rules based on user authentication status
+        $validationRules = [
+            'payment_type' => 'required|in:one_time,recurring',
+            'frequency' => 'required_if:payment_type,recurring|in:monthly,quarterly,annually',
+            'payment_day_of_month' => 'nullable|integer|min:1|max:31',
+            'relationship_type' => 'required|in:employer,parent,guardian,sponsor,organization,other',
+            'phone' => 'nullable|string|max:20',
+        ];
+
+        // Add guest-specific validation rules
+        if (!$isLoggedIn) {
+            $validationRules['full_name'] = 'required|string|max:255';
+            $validationRules['email'] = 'required|email|max:255';
+            $validationRules['create_account'] = 'nullable|boolean';
+            
+            // Only require password if user explicitly wants to create an account
+            if ($request->has('create_account') && $request->input('create_account') == '1') {
+                $validationRules['password'] = 'required|min:8|confirmed';
+            }
+        } else {
+            $validationRules['full_name'] = 'nullable|string|max:255';
+        }
+
         try {
-            $validated = $request->validate([
-                'payment_type' => 'required|in:one_time,recurring',
-                'frequency' => 'required_if:payment_type,recurring|in:monthly,quarterly,annually',
-                'payment_day_of_month' => 'nullable|integer|min:1|max:31',
-                'relationship_type' => 'required|in:employer,parent,guardian,sponsor,organization,other',
-                'full_name' => $isLoggedIn ? 'nullable|string|max:255' : 'required|string|max:255',
-                'phone' => 'nullable|string|max:20',
-                'create_account' => 'nullable|boolean',
-                'password' => 'required_if:create_account,1|min:8|confirmed',
-            ]);
+            $validated = $request->validate($validationRules);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->validator)->withInput();
         }
@@ -164,10 +178,16 @@ class BenefactorPaymentController extends Controller
                 }
             } else {
                 // Guest user or creating account
+                $guestEmail = $request->email ?? $invitation->benefactor_email;
+                
+                if (!$guestEmail) {
+                    throw new \Exception('Email address is required for payment processing.');
+                }
+                
                 if ($request->create_account) {
                     // Create user account
                     $user = User::create([
-                        'email' => $invitation->benefactor_email,
+                        'email' => $guestEmail,
                         'first_name' => explode(' ', $request->full_name)[0],
                         'last_name' => explode(' ', $request->full_name)[1] ?? '',
                         'phone' => $request->phone,
@@ -175,7 +195,7 @@ class BenefactorPaymentController extends Controller
                     ]);
 
                     $benefactor = Benefactor::create([
-                        'user_id' => $user->id,
+                        'user_id' => $user->user_id,
                         'email' => $user->email,
                         'full_name' => $request->full_name,
                         'phone' => $request->phone,
@@ -188,7 +208,7 @@ class BenefactorPaymentController extends Controller
                     Auth::login($user);
                 } else {
                     // Guest checkout - check if benefactor exists from previous payments
-                    $benefactor = Benefactor::where('email', $invitation->benefactor_email)->first();
+                    $benefactor = Benefactor::where('email', $guestEmail)->first();
                     
                     if ($benefactor) {
                         // Update existing guest benefactor
@@ -200,7 +220,7 @@ class BenefactorPaymentController extends Controller
                     } else {
                         // Create new guest benefactor
                         $benefactor = Benefactor::create([
-                            'email' => $invitation->benefactor_email,
+                            'email' => $guestEmail,
                             'full_name' => $request->full_name,
                             'phone' => $request->phone,
                             'type' => 'guest',

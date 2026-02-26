@@ -304,7 +304,7 @@ monitoringChart = new Chart(ctx, {
         datasets: [{
             label: 'CPU Usage (%)',
             data: [],
-            borderColor: '#51cbce',
+            borderColor: '#28a745',
             backgroundColor: 'rgba(81, 203, 206, 0.1)',
             tension: 0.4
         }, {

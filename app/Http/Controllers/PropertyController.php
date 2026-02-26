@@ -116,6 +116,31 @@ class PropertyController extends Controller
                 'prop_type' => $propType
             ]);
 
+            // Handle Image Uploads
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $index => $image) {
+                    $originalName = $image->getClientOriginalName();
+                    $extension = $image->getClientOriginalExtension();
+                    $fileName = 'prop_' . Str::random(10) . '_' . time() . '.' . $extension;
+                    $filePath = 'properties/' . $property->property_id . '/images';
+                    
+                    $path = $image->storeAs('public/' . $filePath, $fileName);
+                    $storagePath = str_replace('public/', '', $path);
+
+                    PropertyImage::create([
+                        'property_id' => $property->id, // Use primary ID for FK
+                        'uploaded_by' => $userId,
+                        'file_name' => $fileName,
+                        'file_path' => $storagePath,
+                        'original_name' => $originalName,
+                        'file_size' => $image->getSize(),
+                        'mime_type' => $image->getMimeType(),
+                        'is_main' => ($index === 0), // Set first image as main by default
+                        'order' => $index
+                    ]);
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'messages' => [
@@ -140,12 +165,30 @@ class PropertyController extends Controller
             $property = Property::where('property_id', $request->propertyId)->firstOrFail();
             
             $createdApartments = [];
-            $tenantIds = $request->tenantId ?? [];
-            $fromRanges = $request->fromRange ?? [];
-            $toRanges = $request->toRange ?? [];
-            $amounts = $request->amount ?? [];
-            $rentalTypes = $request->rentalType ?? [];
-            $durations = $request->duration ?? [];
+            
+            // Detect if request has singular or array fields
+            // Singular fields: tenantId, fromRange, toRange, amount, rentalType
+            // Array fields: tenantId[], fromRange[], toRange[], amount[], rentalType[]
+            $isSingular = !is_array($request->amount);
+            
+            if ($isSingular) {
+                // Single apartment creation (from property show page)
+                // Wrap singular values in arrays for uniform processing
+                $tenantIds = [$request->tenantId ?? null];
+                $fromRanges = [$request->fromRange ?? null];
+                $toRanges = [$request->toRange ?? null];
+                $amounts = [$request->amount];
+                $rentalTypes = [$request->rentalType ?? 'monthly'];
+                $durations = [$request->duration ?? null];
+            } else {
+                // Bulk apartment creation (from listing page if still used)
+                $tenantIds = $request->tenantId ?? [];
+                $fromRanges = $request->fromRange ?? [];
+                $toRanges = $request->toRange ?? [];
+                $amounts = $request->amount ?? [];
+                $rentalTypes = $request->rentalType ?? [];
+                $durations = $request->duration ?? [];
+            }
             
             // Ensure we have at least one apartment to create
             if (empty($amounts)) {
@@ -244,30 +287,33 @@ class PropertyController extends Controller
             } while (Apartment::where('apartment_id', $apartmentId)->exists());
             
             // Parse dates
-            $startDate = Carbon::parse($request->fromDate);
-            $endDate = Carbon::parse($request->toDate);
+            $startDate = Carbon::parse($request->fromRange);
+            $endDate = Carbon::parse($request->toRange);
             $isOccupied = ($request->tenantId && $startDate && $endDate) ? 1 : 0;
             
             // Store selected duration (decimal months) from the form.
             // Using diffInMonths() would return 0 for weekly/daily leases.
             $duration = (float) $request->duration;
             
-            // Determine rental type based on duration
-            $rentalType = $this->determineRentalType($request->duration);
+            // Use rental type from request
+            $rentalType = $request->rentalType ?? 'monthly';
             
             // Set up rental configuration
-            $rentalConfig = $this->setupRentalConfiguration($rentalType, $request->price);
+            $rentalConfig = $this->setupRentalConfiguration($rentalType, $request->amount);
+            
+            // Get apartment type from property if not provided
+            $apartmentType = $request->apartmentType ?? $property->property_type ?? 'Standard';
             
             $apartment = Apartment::create([
                 'apartment_id' => $apartmentId,
                 'property_id' => $property->property_id,
-                'apartment_type' => $request->apartmentType,
+                'apartment_type' => $apartmentType,
                 'tenant_id' => $request->tenantId,
                 'user_id' => auth()->user()->user_id,
                 'duration' => $duration,
                 'range_start' => $startDate,
                 'range_end' => $endDate,
-                'amount' => $request->price,
+                'amount' => $request->amount,
                 'occupied' => $isOccupied,
                 'created_at' => now(),
                 // Rental duration fields
@@ -433,7 +479,7 @@ class PropertyController extends Controller
         $myApartment = collect();
         if ($mode === 'landlord') {
             $myProperties = Property::where('user_id', $userId)
-                ->with(['apartments'])
+                ->with(['apartments', 'mainImage'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
             // Flatten all apartments from all properties into one collection for statistics
@@ -937,7 +983,7 @@ class PropertyController extends Controller
             return view('auth.login');
         }
         $property = Property::where('property_id', $propId)
-            ->with(['apartments.tenant', 'apartments.apartmentType', 'owner', 'agent'])
+            ->with(['apartments.tenant', 'apartments.apartmentType', 'owner', 'agent', 'images'])
             ->firstOrFail();
         $userId = auth()->check() ? auth()->user()->user_id : null;
         

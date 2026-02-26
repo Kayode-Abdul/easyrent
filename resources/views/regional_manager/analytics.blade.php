@@ -26,18 +26,21 @@
                     <label for="property_type">Property Type</label>
                     <select class="form-control" name="property_type" id="property_type">
                         <option value="">All Types</option>
-                        <option value="apartment" {{ $propertyType == 'apartment' ? 'selected' : '' }}>Apartment</option>
-                        <option value="house" {{ $propertyType == 'house' ? 'selected' : '' }}>House</option>
-                        <option value="commercial" {{ $propertyType == 'commercial' ? 'selected' : '' }}>Commercial</option>
+                        <option value="apartment" {{ $propertyType=='apartment' ? 'selected' : '' }}>Apartment</option>
+                        <option value="house" {{ $propertyType=='house' ? 'selected' : '' }}>House</option>
+                        <option value="commercial" {{ $propertyType=='commercial' ? 'selected' : '' }}>Commercial
+                        </option>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label for="referral_tier">Commission Tier</label>
                     <select class="form-control" name="referral_tier" id="referral_tier">
                         <option value="">All Tiers</option>
-                        <option value="super_marketer" {{ $referralTier == 'super_marketer' ? 'selected' : '' }}>Super Marketer</option>
-                        <option value="marketer" {{ $referralTier == 'marketer' ? 'selected' : '' }}>Marketer</option>
-                        <option value="regional_manager" {{ $referralTier == 'regional_manager' ? 'selected' : '' }}>Regional Manager</option>
+                        <option value="super_marketer" {{ $referralTier=='super_marketer' ? 'selected' : '' }}>Super
+                            Marketer</option>
+                        <option value="marketer" {{ $referralTier=='marketer' ? 'selected' : '' }}>Marketer</option>
+                        <option value="regional_manager" {{ $referralTier=='regional_manager' ? 'selected' : '' }}>
+                            Regional Manager</option>
                     </select>
                 </div>
                 <div class="col-12 mt-3">
@@ -49,9 +52,10 @@
     </div>
 
     @if(!$hasData)
-        <div class="alert alert-info">
-            <i class="fa fa-info-circle"></i> No data found for the selected filters. Try adjusting your date range or filter criteria.
-        </div>
+    <div class="alert alert-info">
+        <i class="fa fa-info-circle"></i> No data found for the selected filters. Try adjusting your date range or
+        filter criteria.
+    </div>
     @else
 
     <!-- Commission Breakdown by Tier -->
@@ -78,7 +82,9 @@
                             <small class="text-muted">Total Payments</small>
                         </div>
                         <div class="col-6">
-                            <h5>₦{{ number_format($commissionBreakdown['total_count'] > 0 ? $commissionBreakdown['total_amount'] / $commissionBreakdown['total_count'] : 0, 2) }}</h5>
+                            <h5>₦{{ number_format($commissionBreakdown['total_count'] > 0 ?
+                                $commissionBreakdown['total_amount'] / $commissionBreakdown['total_count'] : 0, 2) }}
+                            </h5>
                             <small class="text-muted">Avg Payment</small>
                         </div>
                     </div>
@@ -184,11 +190,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($topPerformers['super_marketers'] as $idx => $performer)
+                                @forelse(($topPerformers['super_marketers'] ?? []) as $idx => $performer)
                                 <tr>
                                     <td>{{ $idx + 1 }}</td>
                                     <td>
-                                        <small>{{ $performer['user']->first_name ?? 'N/A' }} {{ $performer['user']->last_name ?? '' }}</small>
+                                        <small>{{ $performer['user']->first_name ?? 'N/A' }} {{
+                                            $performer['user']->last_name ?? '' }}</small>
                                     </td>
                                     <td><small>₦{{ number_format($performer['total_commissions'], 0) }}</small></td>
                                 </tr>
@@ -217,11 +224,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($topPerformers['marketers'] as $idx => $performer)
+                                @forelse(($topPerformers['marketers'] ?? []) as $idx => $performer)
                                 <tr>
                                     <td>{{ $idx + 1 }}</td>
                                     <td>
-                                        <small>{{ $performer['user']->first_name ?? 'N/A' }} {{ $performer['user']->last_name ?? '' }}</small>
+                                        <small>{{ $performer['user']->first_name ?? 'N/A' }} {{
+                                            $performer['user']->last_name ?? '' }}</small>
                                     </td>
                                     <td><small>₦{{ number_format($performer['total_commissions'], 0) }}</small></td>
                                 </tr>
@@ -250,11 +258,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($topPerformers['regional_managers'] as $idx => $performer)
+                                @forelse(($topPerformers['regional_managers'] ?? []) as $idx => $performer)
                                 <tr>
                                     <td>{{ $idx + 1 }}</td>
                                     <td>
-                                        <small>{{ $performer['user']->first_name ?? 'N/A' }} {{ $performer['user']->last_name ?? '' }}</small>
+                                        <small>{{ $performer['user']->first_name ?? 'N/A' }} {{
+                                            $performer['user']->last_name ?? '' }}</small>
                                     </td>
                                     <td><small>₦{{ number_format($performer['total_commissions'], 0) }}</small></td>
                                 </tr>
@@ -277,34 +286,34 @@
 <!-- Chart.js Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    @if($hasData)
-    
-    // Commission Breakdown Chart
-    const commissionCtx = document.getElementById('commissionBreakdownChart').getContext('2d');
-    new Chart(commissionCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Super Marketer', 'Marketer', 'Regional Manager', 'Company'],
-            datasets: [{
-                data: [
-                    {{ $commissionBreakdown['super_marketer']['total_amount'] }},
-                    {{ $commissionBreakdown['marketer']['total_amount'] }},
+    document.addEventListener('DOMContentLoaded', function () {
+        @if ($hasData)
+
+            // Commission Breakdown Chart
+            const commissionCtx = document.getElementById('commissionBreakdownChart').getContext('2d');
+        new Chart(commissionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Super Marketer', 'Marketer', 'Regional Manager', 'Company'],
+                datasets: [{
+                    data: [
+                        {{ $commissionBreakdown['super_marketer']['total_amount'] }},
+                {{ $commissionBreakdown['marketer']['total_amount'] }},
                     {{ $commissionBreakdown['regional_manager']['total_amount'] }},
-                    {{ $commissionBreakdown['company']['total_amount'] }}
+        {{ $commissionBreakdown['company']['total_amount'] }}
                 ],
-                backgroundColor: ['#007bff', '#28a745', '#ffc107', '#6c757d'],
-                borderWidth: 2
+        backgroundColor: ['#007bff', '#28a745', '#ffc107', '#6c757d'],
+        borderWidth: 2
             }]
         },
         options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
             }
         }
+    }
     });
 
     // Chain Effectiveness Chart
@@ -317,20 +326,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 label: 'Chains',
                 data: [
                     {{ $chainEffectiveness['active_chains'] }},
-                    {{ $chainEffectiveness['completed_chains'] }},
+            {{ $chainEffectiveness['completed_chains'] }},
                     {{ $chainEffectiveness['broken_chains'] }}
                 ],
-                backgroundColor: ['#28a745', '#007bff', '#dc3545']
+        backgroundColor: ['#28a745', '#007bff', '#dc3545']
             }]
         },
         options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
             }
         }
+    }
     });
 
     // Performance Trend Chart
@@ -348,46 +357,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: [
                     @foreach($performanceData as $data)
                     {{ $data['super_marketer_commissions'] }},
-                    @endforeach
-                ],
-                borderColor: '#007bff',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                fill: false
-            }, {
-                label: 'Marketer',
-                data: [
-                    @foreach($performanceData as $data)
+            @endforeach
+            ],
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+            fill: false
+        }, {
+        label: 'Marketer',
+        data: [
+            @foreach($performanceData as $data)
                     {{ $data['marketer_commissions'] }},
-                    @endforeach
+        @endforeach
                 ],
-                borderColor: '#28a745',
-                backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                fill: false
+        borderColor: '#28a745',
+        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+        fill: false
             }, {
-                label: 'Regional Manager',
-                data: [
-                    @foreach($performanceData as $data)
+            label: 'Regional Manager',
+            data: [
+                @foreach($performanceData as $data)
                     {{ $data['regional_manager_commissions'] }},
-                    @endforeach
+        @endforeach
                 ],
-                borderColor: '#ffc107',
-                backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                fill: false
+        borderColor: '#ffc107',
+        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+        fill: false
             }]
         },
         options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
             }
         }
+    }
     });
 
-    @if(count($regionalComparison) > 1)
-    // Regional Comparison Chart
-    const regionalCtx = document.getElementById('regionalComparisonChart').getContext('2d');
+    @if (count($regionalComparison) > 1)
+        // Regional Comparison Chart
+        const regionalCtx = document.getElementById('regionalComparisonChart').getContext('2d');
     new Chart(regionalCtx, {
         type: 'bar',
         data: {
@@ -401,19 +410,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: [
                     @foreach($regionalComparison as $region => $data)
                     {{ $data['total_commissions'] }},
-                    @endforeach
-                ],
-                backgroundColor: '#007bff'
-            }]
-        },
+            @endforeach
+            ],
+            backgroundColor: '#007bff'
+        }]
+    },
         options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
             }
         }
+    }
     });
     @endif
 

@@ -583,6 +583,16 @@ function payWithPaystack() {
             finalMetadata: metadata
         });
         
+        // Server-side debug logging
+        @php
+            Log::info('Payment page auth debug', [
+                'is_authenticated' => auth()->check(),
+                'user_id' => auth()->check() ? auth()->user()->user_id : null,
+                'user_email' => auth()->check() ? auth()->user()->email : null,
+                'invitation_token' => $invitation->invitation_token
+            ]);
+        @endphp
+        
         // Add enhanced calculation details to metadata if available
         if (window.calculationDetails) {
             metadata.enhanced_calculation = {

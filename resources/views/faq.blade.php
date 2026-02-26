@@ -315,7 +315,7 @@
 }
 
 .bg-gradient-primary {
-    background: linear-gradient(45deg, #51cbce, #6bd098) !important;
+    background: linear-gradient(45deg, #28a745, #6bd098) !important;
 }
 
 .faq-item {

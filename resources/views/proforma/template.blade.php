@@ -102,60 +102,7 @@
             </tr>
         </tbody>
     </table>
-    <!-- Calculation Breakdown Section -->
-    @if($proforma->calculation_method || $proforma->calculation_log)
-    <div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:8px;border-left:4px solid #007bff;">
-        <h6 style="margin:0 0 10px 0;color:#007bff;font-size:16px;">
-            <i class="fas fa-calculator" style="margin-right:8px;"></i>Calculation Details
-        </h6>
-        
-        @if($proforma->calculation_method)
-        <div style="margin-bottom:10px;">
-            <strong>Method:</strong> 
-            <span style="color:#6c757d;">
-                @if($proforma->calculation_method === 'total_price_no_multiplication')
-                    Total pricing (no duration multiplication)
-                @elseif($proforma->calculation_method === 'monthly_price_with_duration_multiplication')
-                    Monthly pricing (multiplied by duration)
-                @else
-                    {{ ucfirst(str_replace('_', ' ', $proforma->calculation_method)) }}
-                @endif
-            </span>
-        </div>
-        @endif
-        
-        @if($proforma->apartment)
-        <div style="margin-bottom:10px;">
-            <strong>Pricing Type:</strong> 
-            <span style="color:#6c757d;">{{ ucfirst($proforma->apartment->getPricingType()) }}</span>
-        </div>
-        @endif
-        
-        @if($proforma->calculation_log && is_array($proforma->calculation_log))
-        <details style="margin-top:10px;">
-            <summary style="cursor:pointer;color:#007bff;font-weight:500;">View Calculation Steps</summary>
-            <div style="margin-top:10px;padding:10px;background:white;border-radius:4px;font-size:12px;">
-                @foreach($proforma->calculation_log as $index => $step)
-                    @if(is_array($step))
-                        <div style="margin-bottom:8px;padding:8px;border-left:3px solid #e9ecef;">
-                            <strong>Step {{ $index }}:</strong> {{ $step['step'] ?? 'Unknown' }}
-                            @if(isset($step['apartment_price']))
-                                <br><small>Base Price: ₦{{ number_format($step['apartment_price'], 2) }}</small>
-                            @endif
-                            @if(isset($step['rental_duration']))
-                                <br><small>Duration: {{ $step['rental_duration'] }} months</small>
-                            @endif
-                            @if(isset($step['total_amount']))
-                                <br><small>Result: ₦{{ number_format($step['total_amount'], 2) }}</small>
-                            @endif
-                        </div>
-                    @endif
-                @endforeach
-            </div>
-        </details>
-        @endif
-    </div>
-    @endif
+   
     
     <p style="margin-top:20px;font-size:14px;color:#555;">
         <strong>Note:</strong> This is an estimate/statement before payment. Upon receipt of the payment, a formal receipt w
@@ -335,7 +282,7 @@ $(document).ready(function() {
 
     function showInviteModal(paymentLink, invitationToken) {
         const amount = '₦{{ number_format($proforma->total, 2) }}';
-        const propertyName = {!! json_encode($proforma->apartment->property->address ?? "Property") !!};
+        const propertyName = {!! json_encode($proforma->property->apartment->address ?? "Property") !!};
         const tenantName = {!! json_encode(auth()->user()->first_name . ' ' . auth()->user()->last_name) !!};
         
         Swal.fire({
@@ -456,7 +403,7 @@ $(document).ready(function() {
         let whatsappText = `🏠 *Payment Request from ${tenantName}*\n\n`;
         whatsappText += `📍 Property: ${propertyName}\n`;
         whatsappText += `💰 Amount: ${amount}\n\n`;
-        whatsappText += `Please click this link to make payment:\n${paymentLink}\n\n`;
+        whatsappText += `Please click this link to make payment:\n\n${paymentLink}\n\n`;
         whatsappText += `Thank you! 🙏`;
         
         // Open WhatsApp immediately without phone number (user selects recipient in WhatsApp)

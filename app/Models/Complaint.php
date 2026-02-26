@@ -110,6 +110,11 @@ class Complaint extends Model
         return $this->hasMany(ComplaintUpdate::class)->orderBy('created_at', 'desc');
     }
 
+    public function artisanTask(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ArtisanTask::class, 'complaint_id');
+    }
+
     public function attachments(): HasMany
     {
         return $this->hasMany(ComplaintAttachment::class);

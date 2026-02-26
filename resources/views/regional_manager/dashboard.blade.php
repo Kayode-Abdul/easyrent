@@ -4,23 +4,22 @@
 
 @push('styles')
 <style>
-  
     .welcome-content {
         position: relative;
         z-index: 1;
     }
-    
+
     .stat-card-modern {
         background: white;
         border-radius: 16px;
         padding: 28px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
         border: none;
         position: relative;
         overflow: hidden;
     }
-    
+
     .stat-card-modern::before {
         content: '';
         position: absolute;
@@ -28,26 +27,26 @@
         left: 0;
         width: 4px;
         height: 100%;
-        background: linear-gradient(180deg, #3e8189 0%, #51cbce 100%);
+        background: linear-gradient(180deg, #1e7e34 0%, #28a745 100%);
     }
-    
+
     .stat-card-modern:hover {
         transform: translateY(-8px);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
     }
-    
+
     .stat-card-modern.purple::before {
-        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(180deg, #28a745 0%, #ffc107 100%);
     }
-    
+
     .stat-card-modern.orange::before {
         background: linear-gradient(180deg, #f093fb 0%, #f5576c 100%);
     }
-    
+
     .stat-card-modern.blue::before {
         background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
     }
-    
+
     .stat-icon-modern {
         width: 70px;
         height: 70px;
@@ -61,22 +60,22 @@
         color: white;
         box-shadow: 0 8px 20px rgba(62, 129, 137, 0.3);
     }
-    
+
     .stat-card-modern.purple .stat-icon-modern {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%);
         box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
     }
-    
+
     .stat-card-modern.orange .stat-icon-modern {
         background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         box-shadow: 0 8px 20px rgba(240, 147, 251, 0.3);
     }
-    
+
     .stat-card-modern.blue .stat-icon-modern {
         background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);
     }
-    
+
     .stat-value-modern {
         font-size: 42px;
         font-weight: 700;
@@ -84,7 +83,7 @@
         margin-bottom: 8px;
         line-height: 1;
     }
-    
+
     .stat-label-modern {
         font-size: 15px;
         color: #718096;
@@ -92,7 +91,7 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
-    
+
     .stat-change {
         font-size: 13px;
         margin-top: 12px;
@@ -100,25 +99,25 @@
         border-radius: 20px;
         display: inline-block;
     }
-    
+
     .stat-change.positive {
         background: #d4edda;
         color: #155724;
     }
-    
+
     .stat-change.negative {
         background: #f8d7da;
         color: #721c24;
     }
-    
+
     .region-card {
         background: white;
         border-radius: 16px;
         padding: 24px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         margin-bottom: 24px;
     }
-    
+
     .region-badge-large {
         display: inline-flex;
         align-items: center;
@@ -132,16 +131,16 @@
         margin: 6px;
         transition: all 0.3s ease;
     }
-    
+
     .region-badge-large:hover {
         transform: scale(1.05);
         box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
     }
-    
+
     .region-badge-large i {
         margin-right: 8px;
     }
-    
+
     .quick-action-card {
         background: white;
         border-radius: 16px;
@@ -150,15 +149,15 @@
         transition: all 0.3s ease;
         cursor: pointer;
         border: 2px solid transparent;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
-    
+
     .quick-action-card:hover {
         transform: translateY(-5px);
-        border-color: #3e8189;
+        border-color: #1e7e34;
         box-shadow: 0 8px 30px rgba(62, 129, 137, 0.2);
     }
-    
+
     .quick-action-icon {
         width: 60px;
         height: 60px;
@@ -171,19 +170,19 @@
         font-size: 24px;
         margin: 0 auto 16px;
     }
-    
+
     .quick-action-title {
         font-size: 16px;
         font-weight: 600;
         color: #2d3748;
         margin-bottom: 8px;
     }
-    
+
     .quick-action-desc {
         font-size: 13px;
         color: #718096;
     }
-    
+
     .activity-item {
         padding: 16px;
         border-left: 3px solid #e2e8f0;
@@ -192,26 +191,26 @@
         border-radius: 8px;
         transition: all 0.3s ease;
     }
-    
+
     .activity-item:hover {
-        border-left-color: #3e8189;
+        border-left-color: #1e7e34;
         background: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
-    
+
     .activity-time {
         font-size: 12px;
         color: #a0aec0;
     }
-    
+
     .empty-state-modern {
         text-align: center;
         padding: 60px 20px;
         background: white;
         border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
-    
+
     .empty-state-icon-modern {
         font-size: 80px;
         color: #e2e8f0;
@@ -306,32 +305,32 @@
                         {{ $scopes->count() }} Region{{ $scopes->count() != 1 ? 's' : '' }}
                     </span>
                 </div>
-                
+
                 @if($scopes->count() > 0)
-                    <div class="d-flex flex-wrap">
-                        @foreach($scopes as $scope)
-                            <div class="region-badge-large">
-                                <i class="fa fa-map-pin"></i>
-                                <strong>{{ $scope->scope_value }}</strong>
-                                @if($scope->scope_type === 'lga')
-                                    <span class="ms-1">(LGA)</span>
-                                @else
-                                    <span class="ms-1">(All LGAs)</span>
-                                @endif
-                            </div>
-                        @endforeach
+                <div class="d-flex flex-wrap">
+                    @foreach($scopes as $scope)
+                    <div class="region-badge-large">
+                        <i class="fa fa-map-pin"></i>
+                        <strong>{{ $scope->scope_value }}</strong>
+                        @if($scope->scope_type === 'lga')
+                        <span class="ms-1">(LGA)</span>
+                        @else
+                        <span class="ms-1">(All LGAs)</span>
+                        @endif
                     </div>
+                    @endforeach
+                </div>
                 @else
-                    <div class="empty-state-modern">
-                        <div class="empty-state-icon-modern">
-                            <i class="fa fa-map-marked"></i>
-                        </div>
-                        <h4 class="text-muted mb-3">No Regions Assigned</h4>
-                        <p class="text-muted mb-4">Contact your administrator to get regions assigned to your account.</p>
-                        <button class="btn btn-primary btn-lg">
-                            <i class="fa fa-envelope me-2"></i>Contact Admin
-                        </button>
+                <div class="empty-state-modern">
+                    <div class="empty-state-icon-modern">
+                        <i class="fa fa-map-marked"></i>
                     </div>
+                    <h4 class="text-muted mb-3">No Regions Assigned</h4>
+                    <p class="text-muted mb-4">Contact your administrator to get regions assigned to your account.</p>
+                    <button class="btn btn-primary btn-lg">
+                        <i class="fa fa-envelope me-2"></i>Contact Admin
+                    </button>
+                </div>
                 @endif
             </div>
 
@@ -352,7 +351,8 @@
                     </div>
                     <div class="col-md-4">
                         <div class="quick-action-card" onclick="window.location='{{ route('regional.marketers') }}'">
-                            <div class="quick-action-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="quick-action-icon"
+                                style="background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%) ;">
                                 <i class="fa fa-users"></i>
                             </div>
                             <div class="quick-action-title">Manage Marketers</div>
@@ -361,7 +361,8 @@
                     </div>
                     <div class="col-md-4">
                         <div class="quick-action-card" onclick="window.location='{{ route('regional.analytics') }}'">
-                            <div class="quick-action-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <div class="quick-action-icon"
+                                style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                                 <i class="fa fa-chart-bar"></i>
                             </div>
                             <div class="quick-action-title">Analytics</div>
@@ -378,7 +379,7 @@
                 <h4 class="mb-4">
                     <i class="fa fa-history me-2 text-info"></i>Recent Activity
                 </h4>
-                
+
                 <div class="activity-item">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <strong>New Property Listed</strong>
@@ -386,7 +387,7 @@
                     </div>
                     <p class="mb-0 text-muted small">3-bedroom apartment in Lagos</p>
                 </div>
-                
+
                 <div class="activity-item">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <strong>Marketer Approved</strong>
@@ -394,7 +395,7 @@
                     </div>
                     <p class="mb-0 text-muted small">John Doe verified as marketer</p>
                 </div>
-                
+
                 <div class="activity-item">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <strong>Property Approved</strong>
@@ -402,7 +403,7 @@
                     </div>
                     <p class="mb-0 text-muted small">Commercial space in Abuja approved</p>
                 </div>
-                
+
                 <div class="activity-item">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <strong>Commission Paid</strong>
@@ -410,7 +411,7 @@
                     </div>
                     <p class="mb-0 text-muted small">₦50,000 commission processed</p>
                 </div>
-                
+
                 <div class="text-center mt-3">
                     <a href="#" class="btn btn-outline-primary btn-sm">
                         View All Activity <i class="fa fa-arrow-right ms-1"></i>
@@ -423,7 +424,7 @@
                 <h4 class="mb-4">
                     <i class="fa fa-trophy me-2 text-warning"></i>This Month
                 </h4>
-                
+
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Properties Approved</span>
@@ -433,7 +434,7 @@
                         <div class="progress-bar bg-success" style="width: 75%"></div>
                     </div>
                 </div>
-                
+
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Marketers Onboarded</span>
@@ -443,7 +444,7 @@
                         <div class="progress-bar bg-primary" style="width: 60%"></div>
                     </div>
                 </div>
-                
+
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Revenue Generated</span>
@@ -461,9 +462,9 @@
 
 @push('scripts')
 <script>
-// Add any interactive features here
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Regional Manager Dashboard loaded');
-});
+    // Add any interactive features here
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Regional Manager Dashboard loaded');
+    });
 </script>
 @endpush

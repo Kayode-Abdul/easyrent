@@ -2,21 +2,25 @@
 
 /* Loader animation improvements */
 #ftco-loader {
-  z-index: 9999; /* Ensure loader is above all content */
+  z-index: 9999;
+  /* Ensure loader is above all content */
 }
 
 #ftco-loader.show {
   transition: opacity 0.3s ease-out, visibility 0s linear 0s;
 }
+
 /* Pagination */
 
 /* Pagination Container */
 nav[role="navigation"] {
   margin-top: 20px;
 }
+
 .sidebar .logo a.logo-normal img {
   height: 40px;
 }
+
 /* Pagination Links */
 .relative.inline-flex {
   display: inline-flex;
@@ -25,12 +29,13 @@ nav[role="navigation"] {
   margin: 0 2px;
   font-size: 0.875rem;
   line-height: 1.25;
-  color: #51cbce;
+  color: #28a745;
   background-color: #fff;
   border: 1px solid #dee2e6;
   border-radius: 30px;
   transition: all 0.15s ease-in-out;
 }
+
 /* Avatar */
 .avatar img.img-circle {
   width: 40px;
@@ -48,31 +53,35 @@ nav[role="navigation"] {
 .avatar .username {
   font-size: 14px;
 }
+
 /* Active Page */
 [aria-current="page"] span {
-  background-color: #51cbce !important;
+  background-color: #28a745 !important;
   color: #fff !important;
-  border-color: #51cbce !important;
+  border-color: #28a745 !important;
 }
 
 .card-title {
   font-size: medium;
   font-weight: bold;
 }
+
 .numbers>.card-title {
   font-size: medium;
   font-weight: normal;
 }
+
 /* Hover State */
 .relative.inline-flex:hover {
   color: #fff;
-  background-color: #51cbce;
-  border-color: #51cbce;
+  background-color: #28a745;
+  border-color: #28a745;
   text-decoration: none;
 }
 
 /* Previous/Next Buttons */
-.rounded-l-md, .rounded-r-md {
+.rounded-l-md,
+.rounded-r-md {
   padding: 0.5rem;
 }
 
@@ -97,7 +106,7 @@ nav[role="navigation"] {
 /* Hide Mobile Navigation on Desktop */
 @media (min-width: 640px) {
   .sm\:hidden {
-      display: none;
+    display: none;
   }
 }
 
@@ -108,35 +117,56 @@ nav[role="navigation"] {
     font-weight: bold;
   }
 }
+
 /* Fix inconsistent button styling */
 .btn-primary {
-  background-color: #51cbce !important;
-  border-color: #51cbce !important;
+  background-color: #28a745 !important;
+  border-color: #28a745 !important;
   transition: all 0.3s ease;
 }
 
 .btn-primary:hover {
-  background-color: #3db9bd !important;
-  border-color: #3db9bd !important;
+  background-color: #1e7e34 !important;
+  border-color: #1e7e34 !important;
 }
 
 /* Improve responsive design */
+@media (max-width: 991.98px) {
+  .ftco_navbar .container {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .ftco_navbar .nav-link i {
+    font-size: 20px !important;
+  }
+
+  .navbar-toggler i {
+    font-size: 24px !important;
+  }
+
+  .navbar-brand img {
+    height: 45px !important;
+  }
+}
+
 @media (max-width: 767.98px) {
   .navbar-brand {
     font-size: 18px;
   }
-  
+
   .property-wrap .text {
     padding: 15px;
   }
-  
+
   .table-responsive {
     overflow-x: auto;
   }
-  
+
   .card-body {
     padding: 15px;
   }
+
   .card-title {
     font-size: medium;
   }
@@ -144,7 +174,7 @@ nav[role="navigation"] {
 
 /* Fix form styling */
 .form-control:focus {
-  border-color: #51cbce;
+  border-color: #28a745;
   box-shadow: 0 0 0 0.2rem rgba(81, 203, 206, 0.25);
 }
 
@@ -183,6 +213,6 @@ nav[role="navigation"] {
 
 /* Fix navigation active state */
 .navbar-nav .nav-item.active .nav-link {
-  color: #51cbce !important;
+  color: #28a745 !important;
   font-weight: bold;
 }

@@ -33,7 +33,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($properties as $property)
+                                @forelse($properties ?? [] as $property)
                                 <tr>
                                     <td>{{ $property->property_id }}</td>
                                     <td>{{ $property->title }}</td>
@@ -42,33 +42,40 @@
                                     <td>${{ number_format($property->price) }}</td>
                                     <td>
                                         @if($property->status == 'active')
-                                            <span class="badge badge-success">Active</span>
+                                        <span class="badge badge-success">Active</span>
                                         @elseif($property->status == 'pending')
-                                            <span class="badge badge-warning">Pending</span>
+                                        <span class="badge badge-warning">Pending</span>
                                         @elseif($property->status == 'suspended')
-                                            <span class="badge badge-danger">Suspended</span>
+                                        <span class="badge badge-danger">Suspended</span>
                                         @else
-                                            <span class="badge badge-secondary">{{ ucfirst($property->status) }}</span>
+                                        <span class="badge badge-secondary">{{ ucfirst($property->status) }}</span>
                                         @endif
                                     </td>
                                     <td>{{ $property->created_at->format('M d, Y') }}</td>
                                     <td>
                                         <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                            <button type="button" class="btn btn-sm btn-primary dropdown-toggle"
+                                                data-toggle="dropdown" aria-expanded="false">
                                                 Actions
                                             </button>
                                             <div class="dropdown-menu">
-                                                <a class="dropdown-item" href="{{ url('/dashboard/property/' . $property->property_id) }}">View Details</a>
-                                                
+                                                <a class="dropdown-item"
+                                                    href="{{ url('/dashboard/property/' . $property->property_id) }}">View
+                                                    Details</a>
+
                                                 @if($property->status != 'suspended')
-                                                <form action="{{ route('regional.property.suspend', $property->property_id) }}" method="POST">
+                                                <form
+                                                    action="{{ route('regional.property.suspend', $property->property_id) }}"
+                                                    method="POST">
                                                     @csrf
                                                     <button type="submit" class="dropdown-item text-danger">
                                                         Suspend
                                                     </button>
                                                 </form>
                                                 @else
-                                                <form action="{{ route('regional.property.activate', $property->property_id) }}" method="POST">
+                                                <form
+                                                    action="{{ route('regional.property.activate', $property->property_id) }}"
+                                                    method="POST">
                                                     @csrf
                                                     <button type="submit" class="dropdown-item text-success">
                                                         Activate
@@ -87,7 +94,7 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <div class="d-flex justify-content-center mt-4">
                         {{ $properties->links() }}
                     </div>

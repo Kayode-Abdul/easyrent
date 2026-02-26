@@ -10,7 +10,7 @@
 @media (max-width: 991px) {
     /* Fix Mobile Header Layout */
     .navbar {
-        padding: 12px 0 !important;
+        padding: 16px 0 !important;
     }
 
     .navbar .container {

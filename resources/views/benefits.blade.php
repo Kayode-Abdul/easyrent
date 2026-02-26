@@ -7,7 +7,7 @@
         <!-- Hero Section -->
         <div class="row mb-5">
             <div class="col-md-12">
-                <div class="card bg-gradient-primary text-white">
+                <div class="card bg-gradient text-white">
                     <div class="card-body text-center py-5">
                         <h1 class="display-4 mb-3">
                             <i class="nc-icon nc-diamond"></i> Why Choose EasyRent?
@@ -363,12 +363,12 @@
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
-.bg-gradient-primary {
-    background: linear-gradient(45deg, #51cbce, #6bd098) !important;
+.bg-gradient {
+    background: linear-gradient(45deg, #28a745, #6bd098) !important;
 }
 
 .bg-gradient-success {
-    background: linear-gradient(45deg, #6bd098, #51cbce) !important;
+    background: linear-gradient(45deg, #6bd098, #28a745) !important;
 }
 </style>
 

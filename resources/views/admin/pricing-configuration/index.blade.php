@@ -5,28 +5,28 @@
 @push('styles')
 <style>
     .page-header-custom {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%);
         color: white;
         padding: 32px;
         border-radius: 16px;
         margin-bottom: 32px;
         box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
     }
-    
+
     .stats-mini-card {
         background: white;
         border-radius: 12px;
         padding: 20px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
         transition: transform 0.3s ease;
-        border-left: 4px solid #3e8189;
+        border-left: 4px solid #1e7e34;
     }
-    
+
     .stats-mini-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
     }
-    
+
     .stats-mini-card .icon {
         width: 48px;
         height: 48px;
@@ -38,20 +38,20 @@
         color: white;
         font-size: 20px;
     }
-    
+
     .stats-mini-card .value {
         font-size: 28px;
         font-weight: 700;
         color: #333;
     }
-    
+
     .stats-mini-card .label {
         font-size: 13px;
         color: #6c757d;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
-    
+
     .pricing-type-badge {
         display: inline-block;
         padding: 4px 10px;
@@ -60,25 +60,25 @@
         font-weight: 500;
         text-transform: uppercase;
     }
-    
+
     .pricing-type-total {
         background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
         color: #2e7d32;
         border: 1px solid #81c784;
     }
-    
+
     .pricing-type-monthly {
         background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
         color: #1976d2;
         border: 1px solid #90caf9;
     }
-    
+
     .amount-display {
         font-weight: 600;
         color: #2e7d32;
         font-size: 16px;
     }
-    
+
     .config-indicator {
         width: 12px;
         height: 12px;
@@ -86,24 +86,24 @@
         display: inline-block;
         margin-left: 8px;
     }
-    
+
     .config-indicator.configured {
         background: #4caf50;
     }
-    
+
     .config-indicator.not-configured {
         background: #ff9800;
     }
-    
+
     .table-hover tbody tr:hover {
         background-color: #f8f9fa;
         transform: scale(1.01);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
-    
+
     .preview-modal .calculation-step {
         background: #f8f9fa;
-        border-left: 4px solid #3e8189;
+        border-left: 4px solid #1e7e34;
         padding: 12px;
         margin: 8px 0;
         border-radius: 4px;
@@ -195,17 +195,17 @@
                     <form method="GET" class="row g-3">
                         <div class="col-md-3">
                             <label for="search" class="form-label">Search</label>
-                            <input type="text" class="form-control" id="search" name="search" 
-                                   value="{{ $search }}" placeholder="Apartment ID or Property name...">
+                            <input type="text" class="form-control" id="search" name="search" value="{{ $search }}"
+                                placeholder="Apartment ID or Property name...">
                         </div>
                         <div class="col-md-3">
                             <label for="pricing_type" class="form-label">Pricing Type</label>
                             <select class="form-select" id="pricing_type" name="pricing_type">
                                 <option value="">All Types</option>
                                 @foreach($pricingTypes as $type)
-                                    <option value="{{ $type }}" {{ $pricingType == $type ? 'selected' : '' }}>
-                                        {{ ucfirst($type) }}
-                                    </option>
+                                <option value="{{ $type }}" {{ $pricingType==$type ? 'selected' : '' }}>
+                                    {{ ucfirst($type) }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -214,9 +214,10 @@
                             <select class="form-select" id="property_id" name="property_id">
                                 <option value="">All Properties</option>
                                 @foreach($properties as $property)
-                                    <option value="{{ $property->property_id }}" {{ $propertyId == $property->property_id ? 'selected' : '' }}>
-                                        {{ $property->property_name }}
-                                    </option>
+                                <option value="{{ $property->property_id }}" {{ $propertyId==$property->property_id ?
+                                    'selected' : '' }}>
+                                    {{ $property->property_name }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -224,7 +225,8 @@
                             <button type="submit" class="btn btn-outline-primary me-2">
                                 <i class="fa fa-search"></i> Filter
                             </button>
-                            <a href="{{ route('admin.pricing-configuration.index') }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('admin.pricing-configuration.index') }}"
+                                class="btn btn-outline-secondary">
                                 <i class="fa fa-times"></i> Clear
                             </a>
                         </div>
@@ -239,99 +241,103 @@
                 </div>
                 <div class="card-body">
                     @if($apartments->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>
-                                            <input type="checkbox" id="selectAll" class="form-check-input">
-                                        </th>
-                                        <th>Apartment</th>
-                                        <th>Property</th>
-                                        <th>Type</th>
-                                        <th>Amount</th>
-                                        <th>Pricing Type</th>
-                                        <th>Configuration</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($apartments as $apartment)
-                                        <tr>
-                                            <td>
-                                                <input type="checkbox" class="form-check-input apartment-checkbox" 
-                                                       value="{{ $apartment->apartment_id }}">
-                                            </td>
-                                            <td>
-                                                <div class="fw-bold">{{ $apartment->apartment_id }}</div>
-                                                <small class="text-muted">ID: {{ $apartment->apartment_id }}</small>
-                                            </td>
-                                            <td>
-                                                <div class="fw-bold">{{ $apartment->property->property_name ?? 'Unknown' }}</div>
-                                                <small class="text-muted">ID: {{ $apartment->property_id }}</small>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-secondary">{{ $apartment->apartment_type }}</span>
-                                            </td>
-                                            <td>
-                                                <div class="amount-display">₦{{ number_format($apartment->amount, 2) }}</div>
-                                            </td>
-                                            <td>
-                                                <span class="pricing-type-badge pricing-type-{{ $apartment->getPricingType() }}">
-                                                    {{ ucfirst($apartment->getPricingType()) }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                @if($apartment->price_configuration)
-                                                    <span class="text-success">
-                                                        <i class="fa fa-check-circle"></i> Configured
-                                                    </span>
-                                                    <span class="config-indicator configured" title="Has custom configuration"></span>
-                                                @else
-                                                    <span class="text-warning">
-                                                        <i class="fa fa-exclamation-triangle"></i> Default
-                                                    </span>
-                                                    <span class="config-indicator not-configured" title="Using default configuration"></span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <div class="btn-group" role="group">
-                                                    <a href="{{ route('admin.pricing-configuration.edit', $apartment) }}" 
-                                                       class="btn btn-sm btn-outline-primary" title="Edit Configuration">
-                                                        <i class="fa fa-edit"></i>
-                                                    </a>
-                                                    <button type="button" class="btn btn-sm btn-outline-info" 
-                                                            onclick="showPreview('{{ $apartment->apartment_id }}', '{{ $apartment->getPricingType() }}', {{ $apartment->amount }})"
-                                                            title="Preview Calculation">
-                                                        <i class="fa fa-calculator"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-outline-success" 
-                                                            onclick="showApartmentDetails('{{ $apartment->apartment_id }}')"
-                                                            title="View Details">
-                                                        <i class="fa fa-eye"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAll" class="form-check-input">
+                                    </th>
+                                    <th>Apartment</th>
+                                    <th>Property</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Pricing Type</th>
+                                    <th>Configuration</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($apartments as $apartment)
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input apartment-checkbox"
+                                            value="{{ $apartment->apartment_id }}">
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">{{ $apartment->apartment_id }}</div>
+                                        <small class="text-muted">ID: {{ $apartment->apartment_id }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">{{ $apartment->property->property_name ?? 'Unknown' }}
+                                        </div>
+                                        <small class="text-muted">ID: {{ $apartment->property_id }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ $apartment->apartment_type }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="amount-display">₦{{ number_format($apartment->amount, 2) }}</div>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="pricing-type-badge pricing-type-{{ $apartment->getPricingType() }}">
+                                            {{ ucfirst($apartment->getPricingType()) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if($apartment->price_configuration)
+                                        <span class="text-success">
+                                            <i class="fa fa-check-circle"></i> Configured
+                                        </span>
+                                        <span class="config-indicator configured"
+                                            title="Has custom configuration"></span>
+                                        @else
+                                        <span class="text-warning">
+                                            <i class="fa fa-exclamation-triangle"></i> Default
+                                        </span>
+                                        <span class="config-indicator not-configured"
+                                            title="Using default configuration"></span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ route('admin.pricing-configuration.edit', $apartment) }}"
+                                                class="btn btn-sm btn-outline-primary" title="Edit Configuration">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                onclick="showPreview('{{ $apartment->apartment_id }}', '{{ $apartment->getPricingType() }}', {{ $apartment->amount }})"
+                                                title="Preview Calculation">
+                                                <i class="fa fa-calculator"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-success"
+                                                onclick="showApartmentDetails('{{ $apartment->apartment_id }}')"
+                                                title="View Details">
+                                                <i class="fa fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
 
-                        <!-- Pagination -->
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <div>
-                                Showing {{ $apartments->firstItem() }} to {{ $apartments->lastItem() }} 
-                                of {{ $apartments->total() }} results
-                            </div>
-                            {{ $apartments->appends(request()->query())->links() }}
+                    <!-- Pagination -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div>
+                            Showing {{ $apartments->firstItem() }} to {{ $apartments->lastItem() }}
+                            of {{ $apartments->total() }} results
                         </div>
+                        {{ $apartments->appends(request()->query())->links() }}
+                    </div>
                     @else
-                        <div class="text-center py-4">
-                            <i class="fa fa-home fa-3x text-muted mb-3"></i>
-                            <h5>No Apartments Found</h5>
-                            <p class="text-muted">No apartments match your current filters.</p>
-                        </div>
+                    <div class="text-center py-4">
+                        <i class="fa fa-home fa-3x text-muted mb-3"></i>
+                        <h5>No Apartments Found</h5>
+                        <p class="text-muted">No apartments match your current filters.</p>
+                    </div>
                     @endif
                 </div>
             </div>
@@ -390,8 +396,8 @@
 
                     <div class="mb-3">
                         <label class="form-label">Configuration Description (Optional)</label>
-                        <textarea name="price_configuration[description]" class="form-control" rows="3" 
-                                  placeholder="Optional description for this pricing configuration..."></textarea>
+                        <textarea name="price_configuration[description]" class="form-control" rows="3"
+                            placeholder="Optional description for this pricing configuration..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -423,7 +429,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <div id="previewResults" style="display: none;">
                     <h6>Calculation Results</h6>
                     <div id="calculationDetails"></div>
@@ -437,110 +443,110 @@
 
 @push('scripts')
 <script>
-let currentPreviewApartment = null;
-let currentPreviewType = null;
-let currentPreviewAmount = null;
+    let currentPreviewApartment = null;
+    let currentPreviewType = null;
+    let currentPreviewAmount = null;
 
-// Handle select all checkbox
-document.getElementById('selectAll').addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.apartment-checkbox');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = this.checked;
-    });
-    updateSelectedApartments();
-});
-
-// Handle individual checkboxes
-document.addEventListener('change', function(e) {
-    if (e.target.classList.contains('apartment-checkbox')) {
+    // Handle select all checkbox
+    document.getElementById('selectAll').addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('.apartment-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
         updateSelectedApartments();
-    }
-});
-
-// Update selected apartments display
-function updateSelectedApartments() {
-    const selectedCheckboxes = document.querySelectorAll('.apartment-checkbox:checked');
-    const selectedContainer = document.getElementById('selectedApartments');
-    const selectedIds = document.getElementById('selectedApartmentIds');
-    
-    if (selectedCheckboxes.length === 0) {
-        selectedContainer.innerHTML = '<em class="text-muted">Select apartments from the list above</em>';
-        selectedIds.value = '';
-        return;
-    }
-    
-    const ids = [];
-    const apartmentIds = [];
-    
-    selectedCheckboxes.forEach(checkbox => {
-        ids.push(checkbox.value);
-        apartmentIds.push(checkbox.value);
     });
-    
-    selectedIds.value = ids.join(',');
-    selectedContainer.innerHTML = apartmentIds.map(id => 
-        `<span class="badge bg-primary me-1">Apartment ${id}</span>`
-    ).join('');
-}
 
-// Handle update amount checkbox
-document.getElementById('updateAmount').addEventListener('change', function() {
-    const amountField = document.getElementById('amountField');
-    if (this.checked) {
-        amountField.style.display = 'block';
-        amountField.querySelector('input').required = true;
-    } else {
-        amountField.style.display = 'none';
-        amountField.querySelector('input').required = false;
+    // Handle individual checkboxes
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains('apartment-checkbox')) {
+            updateSelectedApartments();
+        }
+    });
+
+    // Update selected apartments display
+    function updateSelectedApartments() {
+        const selectedCheckboxes = document.querySelectorAll('.apartment-checkbox:checked');
+        const selectedContainer = document.getElementById('selectedApartments');
+        const selectedIds = document.getElementById('selectedApartmentIds');
+
+        if (selectedCheckboxes.length === 0) {
+            selectedContainer.innerHTML = '<em class="text-muted">Select apartments from the list above</em>';
+            selectedIds.value = '';
+            return;
+        }
+
+        const ids = [];
+        const apartmentIds = [];
+
+        selectedCheckboxes.forEach(checkbox => {
+            ids.push(checkbox.value);
+            apartmentIds.push(checkbox.value);
+        });
+
+        selectedIds.value = ids.join(',');
+        selectedContainer.innerHTML = apartmentIds.map(id =>
+            `<span class="badge bg-primary me-1">Apartment ${id}</span>`
+        ).join('');
     }
-});
 
-// Show preview modal
-function showPreview(apartmentId, pricingType, amount) {
-    currentPreviewApartment = apartmentId;
-    currentPreviewType = pricingType;
-    currentPreviewAmount = amount;
-    
-    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
-    modal.show();
-}
+    // Handle update amount checkbox
+    document.getElementById('updateAmount').addEventListener('change', function () {
+        const amountField = document.getElementById('amountField');
+        if (this.checked) {
+            amountField.style.display = 'block';
+            amountField.querySelector('input').required = true;
+        } else {
+            amountField.style.display = 'none';
+            amountField.querySelector('input').required = false;
+        }
+    });
 
-// Calculate preview
-function calculatePreview() {
-    if (!currentPreviewApartment) return;
-    
-    const duration = document.getElementById('previewDuration').value;
-    
-    if (!duration || duration < 1) {
-        alert('Please enter a valid duration');
-        return;
+    // Show preview modal
+    function showPreview(apartmentId, pricingType, amount) {
+        currentPreviewApartment = apartmentId;
+        currentPreviewType = pricingType;
+        currentPreviewAmount = amount;
+
+        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+        modal.show();
     }
-    
-    // Show loading
-    const resultsDiv = document.getElementById('previewResults');
-    const detailsDiv = document.getElementById('calculationDetails');
-    detailsDiv.innerHTML = '<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Calculating...</div>';
-    resultsDiv.style.display = 'block';
-    
-    // Make AJAX request
-    fetch('{{ route("admin.pricing-configuration.preview") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            apartment_id: currentPreviewApartment,
-            pricing_type: currentPreviewType,
-            amount: currentPreviewAmount,
-            duration: parseInt(duration)
+
+    // Calculate preview
+    function calculatePreview() {
+        if (!currentPreviewApartment) return;
+
+        const duration = document.getElementById('previewDuration').value;
+
+        if (!duration || duration < 1) {
+            alert('Please enter a valid duration');
+            return;
+        }
+
+        // Show loading
+        const resultsDiv = document.getElementById('previewResults');
+        const detailsDiv = document.getElementById('calculationDetails');
+        detailsDiv.innerHTML = '<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Calculating...</div>';
+        resultsDiv.style.display = 'block';
+
+        // Make AJAX request
+        fetch('{{ route("admin.pricing-configuration.preview") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                apartment_id: currentPreviewApartment,
+                pricing_type: currentPreviewType,
+                amount: currentPreviewAmount,
+                duration: parseInt(duration)
+            })
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const calc = data.calculation;
-            let html = `
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const calc = data.calculation;
+                    let html = `
                 <div class="calculation-step">
                     <strong>Apartment:</strong> ${data.apartment.id} (${data.apartment.property_name})
                 </div>
@@ -557,47 +563,47 @@ function calculatePreview() {
                     <strong>Calculation Method:</strong> ${calc.calculation_method}
                 </div>
             `;
-            
-            if (calc.calculation_steps && calc.calculation_steps.length > 0) {
-                html += '<div class="calculation-step"><strong>Steps:</strong><ul>';
-                calc.calculation_steps.forEach(step => {
-                    html += `<li>${step}</li>`;
-                });
-                html += '</ul></div>';
-            }
-            
-            html += `
+
+                    if (calc.calculation_steps && calc.calculation_steps.length > 0) {
+                        html += '<div class="calculation-step"><strong>Steps:</strong><ul>';
+                        calc.calculation_steps.forEach(step => {
+                            html += `<li>${step}</li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+
+                    html += `
                 <div class="calculation-step bg-success text-white">
                     <strong>Total Amount: ₦${parseFloat(calc.total_amount).toLocaleString()}</strong>
                 </div>
             `;
-            
-            detailsDiv.innerHTML = html;
-        } else {
-            detailsDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        detailsDiv.innerHTML = '<div class="alert alert-danger">Failed to calculate preview</div>';
-    });
-}
 
-// Show apartment details
-function showApartmentDetails(apartmentId) {
-    // Make AJAX request to get apartment data
-    fetch(`{{ route('admin.pricing-configuration.apartment-data') }}?apartment_id=${apartmentId}`)
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const apartment = data.apartment;
-            let configHtml = 'No custom configuration';
-            
-            if (apartment.price_configuration) {
-                configHtml = '<pre>' + JSON.stringify(apartment.price_configuration, null, 2) + '</pre>';
-            }
-            
-            const detailsHtml = `
+                    detailsDiv.innerHTML = html;
+                } else {
+                    detailsDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                detailsDiv.innerHTML = '<div class="alert alert-danger">Failed to calculate preview</div>';
+            });
+    }
+
+    // Show apartment details
+    function showApartmentDetails(apartmentId) {
+        // Make AJAX request to get apartment data
+        fetch(`{{ route('admin.pricing-configuration.apartment-data') }}?apartment_id=${apartmentId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const apartment = data.apartment;
+                    let configHtml = 'No custom configuration';
+
+                    if (apartment.price_configuration) {
+                        configHtml = '<pre>' + JSON.stringify(apartment.price_configuration, null, 2) + '</pre>';
+                    }
+
+                    const detailsHtml = `
                 <div class="row">
                     <div class="col-md-6">
                         <strong>Apartment ID:</strong> ${apartment.id}<br>
@@ -613,10 +619,10 @@ function showApartmentDetails(apartmentId) {
                 <strong>Configuration:</strong><br>
                 ${configHtml}
             `;
-            
-            // Show in a simple alert for now (could be enhanced with a proper modal)
-            const modal = document.createElement('div');
-            modal.innerHTML = `
+
+                    // Show in a simple alert for now (could be enhanced with a proper modal)
+                    const modal = document.createElement('div');
+                    modal.innerHTML = `
                 <div class="modal fade" id="detailsModal" tabindex="-1">
                     <div class="modal-dialog">
                         <div class="modal-content">
@@ -629,44 +635,44 @@ function showApartmentDetails(apartmentId) {
                     </div>
                 </div>
             `;
-            document.body.appendChild(modal);
-            
-            const bootstrapModal = new bootstrap.Modal(document.getElementById('detailsModal'));
-            bootstrapModal.show();
-            
-            // Clean up modal after hiding
-            document.getElementById('detailsModal').addEventListener('hidden.bs.modal', function() {
-                document.body.removeChild(modal);
-            });
-        } else {
-            alert('Failed to load apartment details');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to load apartment details');
-    });
-}
+                    document.body.appendChild(modal);
 
-// Form submission handlers
-document.addEventListener('DOMContentLoaded', function() {
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const submitBtn = form.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                const originalText = submitBtn.innerHTML;
-                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
-                
-                // Re-enable after 5 seconds to prevent permanent disable
-                setTimeout(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                }, 5000);
-            }
+                    const bootstrapModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+                    bootstrapModal.show();
+
+                    // Clean up modal after hiding
+                    document.getElementById('detailsModal').addEventListener('hidden.bs.modal', function () {
+                        document.body.removeChild(modal);
+                    });
+                } else {
+                    alert('Failed to load apartment details');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to load apartment details');
+            });
+    }
+
+    // Form submission handlers
+    document.addEventListener('DOMContentLoaded', function () {
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function (e) {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+                    // Re-enable after 5 seconds to prevent permanent disable
+                    setTimeout(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }, 5000);
+                }
+            });
         });
     });
-});
 </script>
 @endpush

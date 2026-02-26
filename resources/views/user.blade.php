@@ -85,17 +85,17 @@
                     
                     <style>
                     .referral-role-selector .btn-outline-primary {
-                        border-color: #51cbce;
-                        color: #51cbce;
+                        border-color: #28a745;
+                        color: #28a745;
                     }
                     
                     .referral-role-selector .btn-outline-primary.active {
-                        background-color: #51cbce;
+                        background-color: #28a745;
                         color: white;
                     }
                     
                     .referral-role-selector .btn-outline-primary:hover {
-                        background-color: #51cbce;
+                        background-color: #28a745;
                         color: white;
                     }
                     
@@ -343,12 +343,12 @@
 }
 
 .password-toggle-btn-user:hover {
-    color: #667eea;
+    color: #28a745;
 }
 
 .password-toggle-btn-user:focus {
     outline: none;
-    color: #667eea;
+    color: #28a745;
 }
 </style>
 

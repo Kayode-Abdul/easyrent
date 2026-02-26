@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .payment-form-component .card-header {
-    background: linear-gradient(45deg, #51cbce, #4CAF50);
+    background: linear-gradient(45deg, #28a745, #4CAF50);
     color: white;
     border-radius: 10px 10px 0 0;
 }
@@ -221,18 +221,18 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .payment-form-component .form-control:focus {
-    border-color: #51cbce;
+    border-color: #28a745;
     box-shadow: 0 0 0 0.2rem rgba(81, 203, 206, 0.25);
 }
 
 .payment-form-component .btn-primary {
-    background: linear-gradient(45deg, #51cbce, #4CAF50);
+    background: linear-gradient(45deg, #28a745, #4CAF50);
     border: none;
     font-weight: 600;
 }
 
 .payment-form-component .btn-primary:hover {
-    background: linear-gradient(45deg, #4CAF50, #51cbce);
+    background: linear-gradient(45deg, #4CAF50, #28a745);
     transform: translateY(-1px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }

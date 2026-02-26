@@ -1,33 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('assets/images/logo-small.png') }}">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <title>@yield('title', 'EasyRent Admin Dashboard')</title>
-    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
-    
+    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no'
+        name='viewport' />
+
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+
     <!-- Fonts and icons -->
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200" rel="stylesheet" />
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" rel="stylesheet">
-    
+
     <!-- CSS Files -->
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
     <link href="{{ asset('assets/paper-dashboard.css') }}" rel="stylesheet" />
-    
+
     <!-- Custom Admin CSS -->
     <style>
         .sidebar[data-color="admin"] {
             background: linear-gradient(0deg, #1f8ef1, #1171ef);
         }
-        .sidebar[data-color="admin"] .nav li.active > a {
+
+        .sidebar[data-color="admin"] .nav li.active>a {
             background-color: rgba(255, 255, 255, 0.2);
             color: #FFFFFF;
         }
+
         .admin-badge {
             background: linear-gradient(45deg, #ff6b6b, #ee5a24);
             color: white;
@@ -36,25 +40,30 @@
             font-size: 0.75rem;
             font-weight: bold;
         }
+
         .card-stats .numbers {
             text-align: right;
         }
+
         .card-stats .icon-big {
             text-align: center;
         }
+
         .table th {
             border-top: none;
         }
+
         .modal-xl {
             max-width: 90%;
         }
+
         @media (max-width: 768px) {
             .modal-xl {
                 max-width: 95%;
             }
         }
     </style>
-    
+
     @yield('styles')
 </head>
 
@@ -80,10 +89,16 @@
                             <p>Admin Dashboard</p>
                         </a>
                     </li>
-                    <li class="{{ request()->is('admin/properties*') ? 'active' : '' }}">
+                    <li class="{{ request()->is('admin/properties') ? 'active' : '' }}">
                         <a href="{{ url('/admin/properties') }}">
                             <i class="nc-icon nc-istanbul"></i>
-                            <p>Properties</p>
+                            <p>Properties Dashboard</p>
+                        </a>
+                    </li>
+                    <li class="{{ request()->is('admin/properties/pending') ? 'active' : '' }}">
+                        <a href="{{ url('/admin/properties/pending') }}">
+                            <i class="nc-icon nc-time-alarm"></i>
+                            <p>Pending Approvals</p>
                         </a>
                     </li>
                     <li class="{{ request()->is('admin/users*') ? 'active' : '' }}">
@@ -125,7 +140,7 @@
                 </ul>
             </div>
         </div>
-        
+
         <!-- Main Panel -->
         <div class="main-panel">
             <!-- Navbar -->
@@ -141,7 +156,8 @@
                         </div>
                         <a class="navbar-brand" href="#pablo">@yield('title', 'Admin Dashboard')</a>
                     </div>
-                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation"
+                        aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-bar navbar-kebab"></span>
                         <span class="navbar-toggler-bar navbar-kebab"></span>
                         <span class="navbar-toggler-bar navbar-kebab"></span>
@@ -155,7 +171,8 @@
                                 </a>
                             </li>
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <i class="nc-icon nc-single-02"></i>
                                     {{ auth()->user()->first_name ?? 'Admin' }}
                                     <span class="admin-badge">ADMIN</span>
@@ -163,11 +180,11 @@
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
                                     <a class="dropdown-item" href="{{ url('/dashboard/user') }}">Profile</a>
                                     <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="#"
-                                       onclick="handleLogout('logout-form')">
+                                    <a class="dropdown-item" href="#" onclick="handleLogout('logout-form')">
                                         Logout
                                     </a>
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                        style="display: none;">
                                         @csrf
                                     </form>
                                 </div>
@@ -176,10 +193,10 @@
                     </div>
                 </div>
             </nav>
-            
+
             <!-- Content -->
             @yield('content')
-            
+
             <!-- Footer -->
             <footer class="footer footer-black footer-white">
                 <div class="container-fluid">
@@ -201,28 +218,28 @@
             </footer>
         </div>
     </div>
-    
+
     <!-- Core JS Files -->
     <script src="{{ asset('assets/js/core/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugins/perfect-scrollbar.jquery.min.js') }}"></script>
-    
+
     <!-- Paper Dashboard CORE plugins -->
     <script src="{{ asset('assets/js/paper-dashboard.min.js') }}"></script>
-    
+
     <!-- Global logout handler -->
     <script src="{{ asset('assets/js/logout-handler.js') }}"></script>
-    
+
     <!-- Chrome Dark Mode System -->
     <link rel="stylesheet" href="{{ asset('assets/css/chrome-dark-mode.css') }}">
     <script src="{{ asset('assets/js/chrome-dark-mode.js') }}"></script>
-    
+
     <!-- DataTables -->
     <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
-    
+
     <!-- Global CSRF setup for AJAX -->
     <script>
         $.ajaxSetup({
@@ -231,8 +248,9 @@
             }
         });
     </script>
-    
+
     @yield('scripts')
     @stack('scripts')
 </body>
+
 </html>

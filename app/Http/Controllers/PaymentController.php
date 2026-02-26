@@ -427,6 +427,17 @@ class PaymentController extends Controller
                             $tenantId = !empty($metadata['tenant_id']) && is_numeric($metadata['tenant_id']) 
                                 ? (int) $metadata['tenant_id'] 
                                 : null;
+                            
+                            // Fallback: check if user is authenticated but tenant_id missing from metadata
+                            if (empty($tenantId) && auth()->check()) {
+                                $tenantId = auth()->user()->user_id;
+                                Log::info('Using authenticated user fallback for tenant_id', [
+                                    'reference' => $reference,
+                                    'original_tenant_id' => $metadata['tenant_id'] ?? null,
+                                    'fallback_tenant_id' => $tenantId,
+                                    'user_email' => auth()->user()->email
+                                ]);
+                            }
 
                             $payment = new Payment();
                             $payment->transaction_id = $reference;
@@ -794,7 +805,7 @@ class PaymentController extends Controller
                 // Generate receipt
                 $receiptFile = $this->generateReceipt($payment);
                 
-                return redirect()->route('payment.receipt', ['id' => $payment->id])->with('success', 'Payment was successful! Your receipt has been generated.');
+                return redirect()->route('proforma.payment.success', ['payment' => $payment->id])->with('success', 'Payment completed successfully! Your apartment has been assigned.');
             }
 
             Log::warning('Payment verification failed', ['payment_details' => $paymentDetails ?? null]);
@@ -1854,6 +1865,43 @@ class PaymentController extends Controller
             
         } catch (\Exception $e) {
             Log::error('Fallback payment creation failed', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Show proforma payment success page
+     */
+    public function proformaPaymentSuccess($paymentId)
+    {
+        try {
+            $payment = Payment::with(['tenant', 'landlord', 'apartment.property'])
+                ->findOrFail($paymentId);
+            
+            // Verify user owns this payment (either as tenant or landlord)
+            if ($payment->tenant_id !== auth()->user()->user_id && $payment->landlord_id !== auth()->user()->user_id) {
+                abort(403, 'Unauthorized access to this payment');
+            }
+            
+            // Verify payment is completed
+            if ($payment->status !== 'completed') {
+                return redirect()->route('dashboard')->with('error', 'This payment has not been completed yet.');
+            }
+            
+            Log::info('Proforma payment success page accessed', [
+                'payment_id' => $payment->id,
+                'user_id' => auth()->user()->user_id,
+                'transaction_id' => $payment->transaction_id
+            ]);
+            
+            return view('proforma.payment-success', compact('payment'));
+            
+        } catch (\Exception $e) {
+            Log::error('Error loading proforma payment success page', [
+                'payment_id' => $paymentId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->route('dashboard')->with('error', 'Payment not found or access denied.');
         }
     }
 }

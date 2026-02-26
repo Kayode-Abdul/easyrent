@@ -89,7 +89,7 @@
                                     <div class="custom-control custom-radio">
                                         <input type="radio" id="recurring" name="payment_type" value="recurring" class="custom-control-input" required>
                                         <label class="custom-control-label" for="recurring">
-                                            <strong>Recurring Payment (Recommended)</strong>
+                                            <strong>Recurring Payment</strong>
                                             <p class="text-muted mb-0">Automatically pay future rent</p>
                                         </label>
                                     </div>
@@ -136,19 +136,56 @@
                             </div>
 
                             @if(!$isLoggedIn)
+                            <hr>
+                            
+                            <!-- Authentication Options -->
+                            <div class="alert alert-info border-left-info mb-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="nc-icon nc-bulb-63 fa-2x text-info me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1">Have an EasyRent Account?</h6>
+                                        <p class="mb-0">Log in or sign up to track your payment history and manage recurring payments easily.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Login and Sign Up Buttons -->
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-2">
+                                    <a href="{{ route('login') }}?redirect={{ urlencode(route('benefactor.payment.show', $invitation->token)) }}" class="btn btn-primary btn-block w-100">
+                                        <i class="nc-icon nc-key-25"></i> Log In
+                                    </a>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <a href="{{ route('register') }}?redirect={{ urlencode(route('benefactor.payment.show', $invitation->token)) }}" class="btn btn-success btn-block w-100">
+                                        <i class="nc-icon nc-simple-add"></i> Sign Up
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="text-center mb-4">
+                                <span class="text-muted font-weight-bold">— OR —</span>
+                            </div>
+
                             <!-- Guest Checkout Section -->
                             <div id="guestSection">
-                                <hr>
-                                <h5>Your Information</h5>
+                                <h5>Continue as Guest</h5>
+                                <p class="text-muted small mb-3">You can pay without creating an account</p>
                                 
                                 <div class="form-group">
                                     <label for="full_name">Full Name *</label>
-                                    <input type="text" name="full_name" id="full_name" class="form-control" required>
+                                    <input type="text" name="full_name" id="full_name" class="form-control" value="{{ old('full_name') }}" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="email">Email Address *</label>
+                                    <input type="email" name="email" id="email" class="form-control" value="{{ old('email', $invitation->benefactor_email ?? '') }}" required>
+                                    <small class="form-text text-muted">We'll send payment confirmation to this email</small>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="phone">Phone Number</label>
-                                    <input type="tel" name="phone" id="phone" class="form-control">
+                                    <input type="tel" name="phone" id="phone" class="form-control" value="{{ old('phone') }}">
                                 </div>
 
                                 <!-- Account Creation Option (for recurring only) -->
@@ -187,12 +224,6 @@
                                     <i class="nc-icon nc-check-2"></i> Proceed to Payment
                                 </button>
                             </div>
-
-                            @if(!$isLoggedIn)
-                            <div class="text-center mt-3">
-                                <p class="text-muted">Already have an account? <a href="{{ route('login') }}?redirect={{ urlencode(route('benefactor.payment.show', $invitation->token)) }}">Sign In</a></p>
-                            </div>
-                            @endif
                         </form>
                     </div>
                 </div>
@@ -231,11 +262,22 @@ function selectPaymentType(type) {
 @if(!$isLoggedIn)
 // Toggle password fields when create account is checked
 document.getElementById('create_account').addEventListener('change', function() {
-    document.getElementById('passwordSection').style.display = this.checked ? 'block' : 'none';
+    const passwordSection = document.getElementById('passwordSection');
+    const passwordField = document.getElementById('password');
+    const passwordConfirmField = document.getElementById('password_confirmation');
     
-    // Make password required if creating account
-    document.getElementById('password').required = this.checked;
-    document.getElementById('password_confirmation').required = this.checked;
+    if (this.checked) {
+        passwordSection.style.display = 'block';
+        passwordField.required = true;
+        passwordConfirmField.required = true;
+    } else {
+        passwordSection.style.display = 'none';
+        passwordField.required = false;
+        passwordConfirmField.required = false;
+        // Clear password values when unchecked
+        passwordField.value = '';
+        passwordConfirmField.value = '';
+    }
 });
 @endif
 

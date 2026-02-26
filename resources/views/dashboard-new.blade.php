@@ -521,7 +521,7 @@
                     datasets: [{
                         label: 'Revenue (₦)',
                         data: {!! json_encode(collect($revenueTrend ?? [])->pluck('revenue')) !!},
-                        borderColor: '#51cbce',
+                        borderColor: '#28a745',
                         backgroundColor: 'rgba(81, 203, 206, 0.1)',
                         tension: 0.4,
                         fill: true
@@ -556,7 +556,7 @@
                         label: 'Payments (₦)',
                         data: {!! json_encode(collect($paymentHistory ?? [])->pluck('amount')) !!},
                         backgroundColor: 'rgba(81, 203, 206, 0.8)',
-                        borderColor: '#51cbce',
+                        borderColor: '#28a745',
                         borderWidth: 1
                     }]
                 },

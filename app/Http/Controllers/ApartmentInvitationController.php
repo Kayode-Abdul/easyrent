@@ -648,7 +648,7 @@ class ApartmentInvitationController extends Controller
                 'invitation_id' => $invitation->id
             ]);
 
-            return redirect()->route('apartment.invite.payment', [
+            return redirect()->route('apartment.invite.payment.direct', [
                 'token' => $token
             ])->with('success', 'Please complete payment to secure your apartment.');
         }
@@ -790,6 +790,55 @@ class ApartmentInvitationController extends Controller
 
             return back()->with('error', 'Failed to submit application. Please try again.');
         }
+    }
+
+    /**
+     * Show payment page for apartment (direct flow without pre-created payment)
+     */
+    public function paymentDirect(string $token)
+    {
+        $invitation = ApartmentInvitation::where('invitation_token', $token)
+            ->with(['apartment.property', 'landlord'])
+            ->first();
+
+        if (!$invitation) {
+            return redirect()->route('apartment.invite.show', $token);
+        }
+
+        // Ensure invitation has required data for payment
+        if (!$invitation->total_amount || $invitation->total_amount <= 0) {
+            Log::warning('Invitation missing total_amount for payment', [
+                'invitation_id' => $invitation->id,
+                'token' => substr($token, 0, 8) . '...'
+            ]);
+            
+            // Calculate total amount using centralized service
+            $duration = $invitation->lease_duration ?? 12;
+            $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
+                $invitation->apartment->amount,
+                $duration,
+                $invitation->apartment->getPricingType()
+            );
+
+            if ($calculationResult->isValid) {
+                $invitation->total_amount = $calculationResult->totalAmount;
+                $invitation->save();
+                
+                // Log calculation for audit purposes
+                $this->paymentCalculationService->logCalculationSteps($calculationResult);
+            } else {
+                Log::error('Failed to calculate payment amount for invitation', [
+                    'invitation_id' => $invitation->id,
+                    'error' => $calculationResult->errorMessage
+                ]);
+                
+                // Fallback to basic calculation
+                $invitation->total_amount = $invitation->apartment->amount;
+                $invitation->save();
+            }
+        }
+
+        return view('apartment.invite.payment', compact('invitation'));
     }
 
     /**

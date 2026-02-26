@@ -31,19 +31,19 @@ class MarketerManagementController extends Controller
     public function index()
     {
         $stats = [
-            'total_marketers' => User::where('role', 5)->count(),
-            'active_marketers' => User::where('role', 5)->where('marketer_status', 'active')->count(),
-            'pending_marketers' => User::where('role', 5)->where('marketer_status', 'pending')->count(),
+            'total_marketers' => User::where('role', 3)->count(),
+            'active_marketers' => User::where('role', 3)->where('marketer_status', 'active')->count(),
+            'pending_marketers' => User::where('role', 3)->where('marketer_status', 'pending')->count(),
             'total_referrals' => Referral::count(),
-            'successful_referrals' => Referral::whereHas('referred', function($q) {
-                $q->where('role', 2); // Landlords
-            })->count(),
+            'successful_referrals' => Referral::whereHas('referred', function ($q) {
+            $q->where('role', 2); // Landlords
+        })->count(),
             'total_commission_paid' => ReferralReward::where('status', 'paid')->sum('amount'),
             'pending_commission' => ReferralReward::where('status', 'approved')->sum('amount'),
         ];
 
         // Recent marketer applications
-        $recentApplications = User::where('role', 5)
+        $recentApplications = User::where('role', 3)
             ->where('marketer_status', 'pending')
             ->with('marketerProfile')
             ->latest()
@@ -51,7 +51,7 @@ class MarketerManagementController extends Controller
             ->get();
 
         // Top performing marketers
-        $topMarketers = User::where('role', 5)
+        $topMarketers = User::where('role', 3)
             ->where('marketer_status', 'active')
             ->withCount('referrals')
             ->orderBy('referrals_count', 'desc')
@@ -66,9 +66,9 @@ class MarketerManagementController extends Controller
             ->get();
 
         return view('admin.marketers.index', compact(
-            'stats', 
-            'recentApplications', 
-            'topMarketers', 
+            'stats',
+            'recentApplications',
+            'topMarketers',
             'pendingRewards'
         ));
     }
@@ -78,7 +78,7 @@ class MarketerManagementController extends Controller
      */
     public function marketers(Request $request)
     {
-        $query = User::where('role', 5)->with('marketerProfile');
+        $query = User::where('role', 3)->with('marketerProfile');
 
         // Filter by status
         if ($request->filled('status')) {
@@ -88,15 +88,15 @@ class MarketerManagementController extends Controller
         // Search by name or email
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
         $marketers = $query->paginate(20);
-        
+
         return view('admin.marketers.list', compact('marketers'));
     }
 
@@ -110,9 +110,9 @@ class MarketerManagementController extends Controller
         }
 
         $marketer->load(['marketerProfile', 'referralCampaigns', 'referralRewards', 'commissionPayments']);
-        
+
         $stats = $marketer->getMarketerStats();
-        
+
         // Recent activity
         $recentReferrals = $marketer->referrals()
             ->with('referred')
@@ -164,7 +164,7 @@ class MarketerManagementController extends Controller
         }
 
         $marketer->update(['marketer_status' => 'rejected']);
-        
+
         $marketer->marketerProfile->update([
             'kyc_status' => MarketerProfile::KYC_REJECTED,
             'kyc_documents' => array_merge($marketer->marketerProfile->kyc_documents ?? [], [
@@ -254,10 +254,10 @@ class MarketerManagementController extends Controller
         // Search by marketer
         if ($request->filled('marketer_search')) {
             $search = $request->marketer_search;
-            $query->whereHas('marketer', function($q) use ($search) {
+            $query->whereHas('marketer', function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -371,21 +371,21 @@ class MarketerManagementController extends Controller
             $monthlyData[] = [
                 'month' => $date->format('M Y'),
                 'new_marketers' => User::where('role', 5)
-                    ->whereMonth('created_at', $date->month)
-                    ->whereYear('created_at', $date->year)
-                    ->count(),
+                ->whereMonth('created_at', $date->month)
+                ->whereYear('created_at', $date->year)
+                ->count(),
                 'referrals' => Referral::whereMonth('created_at', $date->month)
-                    ->whereYear('created_at', $date->year)
-                    ->count(),
+                ->whereYear('created_at', $date->year)
+                ->count(),
                 'commission_paid' => ReferralReward::where('status', 'paid')
-                    ->whereMonth('processed_at', $date->month)
-                    ->whereYear('processed_at', $date->year)
-                    ->sum('amount')
+                ->whereMonth('processed_at', $date->month)
+                ->whereYear('processed_at', $date->year)
+                ->sum('amount')
             ];
         }
 
         // Top performers
-        $topPerformers = User::where('role', 5)
+        $topPerformers = User::where('role', 3)
             ->where('marketer_status', 'active')
             ->withCount('referrals')
             ->with('marketerProfile')

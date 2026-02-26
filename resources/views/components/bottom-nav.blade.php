@@ -1,4 +1,4 @@
-{{-- Bottom Navigation for Mobile --}}
+{{-- Bottom Navigation for Mobile - Only show when logged in --}}
 @auth
 <nav class="bottom-nav d-md-none">
     <a href="{{ route('home') }}" class="bottom-nav-item {{ request()->routeIs('home') ? 'active' : '' }}">
@@ -32,10 +32,8 @@
         <span>Profile</span>
     </a>
 </nav>
-@endauth
 
-{{-- Floating Action Button --}}
-@auth
+{{-- Floating Action Button - Only show when logged in --}}
 @if(request()->routeIs('dashboard') || request()->routeIs('myProperty'))
 <button class="fab d-md-none" onclick="document.getElementById('addPropertyBtn')?.click() || window.location.href='{{ route('property.add') }}'">
     <i class="fa fa-plus"></i>
