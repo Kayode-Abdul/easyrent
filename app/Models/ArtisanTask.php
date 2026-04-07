@@ -28,6 +28,11 @@ class ArtisanTask extends Model
         return $this->belongsTo(User::class , 'landlord_id', 'user_id');
     }
 
+    public function tenant()
+    {
+        return $this->belongsTo(User::class , 'tenant_id', 'user_id');
+    }
+
     public function bids()
     {
         return $this->hasMany(ArtisanBid::class , 'task_id');

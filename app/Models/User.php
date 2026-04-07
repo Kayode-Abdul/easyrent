@@ -84,7 +84,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function managedProperties()
     {
-        return $this->hasMany(Property::class , 'agent_id');
+        return $this->hasMany(Property::class , 'agent_id', 'user_id');
+    }
+
+    public function properties()
+    {
+        return $this->hasMany(Property::class , 'user_id', 'user_id');
     }
 
     // Apartments owned by this user (as landlord)
@@ -103,7 +108,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $id = self::getRoleId('landlord');
         $legacy = strtolower((string)$this->role);
-        return $this->hasRole('landlord') || $legacy === 'landlord' || (is_numeric($this->role) && (int)$this->role === (int)$id);
+        $hasRole = $this->hasRole('landlord') || $legacy === 'landlord' || (is_numeric($this->role) && (int)$this->role === (int)$id);
+
+        return $hasRole || $this->properties()->exists() || $this->apartments()->exists();
     }
 
     public function isAgent()
@@ -112,14 +119,16 @@ class User extends Authenticatable implements MustVerifyEmail
         $pmId = self::getRoleId('property_manager');
         $legacy = strtolower((string)$this->role);
         $isLegacyMatch = $legacy === 'agent' || $legacy === 'property_manager' || (is_numeric($this->role) && in_array((int)$this->role, array_filter([(int)$agentId, (int)$pmId, 4]), true));
-        return $this->hasRole('agent') || $this->hasRole('property_manager') || $isLegacyMatch;
+        return $this->hasRole('agent') || $this->hasRole('property_manager') || $isLegacyMatch || $this->managedProperties()->exists();
     }
 
     public function isTenant()
     {
         $id = self::getRoleId('tenant');
         $legacy = strtolower((string)$this->role);
-        return $this->hasRole('tenant') || $legacy === 'tenant' || (is_numeric($this->role) && (int)$this->role === (int)$id);
+        $hasRole = $this->hasRole('tenant') || $legacy === 'tenant' || (is_numeric($this->role) && (int)$this->role === (int)$id);
+
+        return $hasRole || $this->tenantLeases()->exists();
     }
 
     public function scopeWithRole($query, $role)
@@ -131,13 +140,15 @@ class User extends Authenticatable implements MustVerifyEmail
                 if (!empty($ids)) {
                     $q->orWhereIn('role', $ids)
                         ->orWhereHas('roles', function ($r) use ($ids) {
-                        $r->whereIn('id', $ids); }
+                        $r->whereIn('id', $ids);
+                    }
                     );
                 }
                 if (!empty($names)) {
                     $q->orWhereIn('role', $names)
                         ->orWhereHas('roles', function ($r) use ($names) {
-                        $r->whereIn('name', $names); }
+                        $r->whereIn('name', $names);
+                    }
                     );
                 }
             });
@@ -145,11 +156,13 @@ class User extends Authenticatable implements MustVerifyEmail
         if (is_numeric($role)) {
             return $query->where('role', (int)$role)
                 ->orWhereHas('roles', function ($q) use ($role) {
-                $q->where('id', (int)$role); });
+                $q->where('id', (int)$role);
+            });
         }
         return $query->where('role', $role)
             ->orWhereHas('roles', function ($q) use ($role) {
-            $q->where('name', $role); });
+            $q->where('name', $role);
+        });
     }
 
     // Check if this user is a tenant of a given landlord
@@ -237,7 +250,18 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         // Check both legacy role field and modern roles relationship
         $marketerRoleId = self::getRoleId('marketer');
-        return $this->role === $marketerRoleId || $this->hasRole('marketer');
+        $hasRole = $this->role === $marketerRoleId || $this->hasRole('marketer');
+
+        // Data-aware: Acquiring the role through a landlord referral
+        $hasLandlordReferral = $this->referrals()->whereHas('referred', function ($q) {
+            $q->where(function ($sq) {
+                    $sq->where('role', self::getRoleId('landlord'))
+                        ->orWhereHas('roles', fn($rq) => $rq->where('name', 'landlord'));
+                }
+                );
+            })->exists();
+
+        return $hasRole || $hasLandlordReferral;
     }
 
     public function isArtisan()
@@ -277,7 +301,17 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isActiveMarketer()
     {
-        return $this->isMarketer() && $this->marketer_status === 'active';
+        // Marketer is active if they have the active status OR if they have referred at least one landlord
+        $hasActiveRole = $this->marketer_status === 'active';
+        $hasLandlordReferral = $this->referrals()->whereHas('referred', function ($q) {
+            $q->where(function ($sq) {
+                    $sq->where('role', self::getRoleId('landlord'))
+                        ->orWhereHas('roles', fn($rq) => $rq->where('name', 'landlord'));
+                }
+                );
+            })->exists();
+
+        return $this->isMarketer() && ($hasActiveRole || $hasLandlordReferral);
     }
 
     public function isPendingMarketer()
@@ -541,6 +575,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function qualifiesForMarketerStatus(): bool
     {
+        // Qualification is now based on simply referring a landlord
         return $this->referrals()
             ->whereHas('referred', function ($query) {
             $query->whereHas('roles', function ($roleQuery) {
@@ -548,15 +583,6 @@ class User extends Authenticatable implements MustVerifyEmail
                 }
                 )->orWhere('role', self::getRoleId('landlord'));
             })
-            ->whereHas('referred', function ($query) {
-            $query->whereHas('apartments', function ($apartmentQuery) {
-                    $apartmentQuery->whereHas('payments', function ($paymentQuery) {
-                            $paymentQuery->where('status', 'completed');
-                        }
-                        );
-                    }
-                    );
-                })
             ->exists();
     }
 
@@ -1151,36 +1177,38 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getComplaintStats(): array
     {
-        if ($this->isTenant()) {
-            return [
-                'total' => $this->tenantComplaints()->count(),
-                'open' => $this->tenantComplaints()->open()->count(),
-                'resolved' => $this->tenantComplaints()->resolved()->count(),
-                'overdue' => $this->tenantComplaints()->overdue()->count(),
-            ];
-        }
-        elseif ($this->isLandlord()) {
-            return [
-                'total' => $this->landlordComplaints()->count(),
-                'open' => $this->landlordComplaints()->open()->count(),
-                'resolved' => $this->landlordComplaints()->resolved()->count(),
-                'overdue' => $this->landlordComplaints()->overdue()->count(),
-            ];
-        }
-        elseif ($this->isAgent()) {
-            return [
-                'total' => $this->assignedComplaints()->count(),
-                'open' => $this->assignedComplaints()->open()->count(),
-                'resolved' => $this->assignedComplaints()->resolved()->count(),
-                'overdue' => $this->assignedComplaints()->overdue()->count(),
-            ];
-        }
+        $isTenant = $this->isTenant() || $this->tenantLeases()->exists();
+        $isLandlord = $this->isLandlord();
+        $isAgent = $this->isAgent();
 
-        return [
+        $stats = [
             'total' => 0,
             'open' => 0,
             'resolved' => 0,
             'overdue' => 0,
         ];
+
+        if ($isTenant) {
+            $stats['total'] += $this->tenantComplaints()->count();
+            $stats['open'] += $this->tenantComplaints()->open()->count();
+            $stats['resolved'] += $this->tenantComplaints()->resolved()->count();
+            $stats['overdue'] += $this->tenantComplaints()->overdue()->count();
+        }
+
+        if ($isLandlord) {
+            $stats['total'] += $this->landlordComplaints()->count();
+            $stats['open'] += $this->landlordComplaints()->open()->count();
+            $stats['resolved'] += $this->landlordComplaints()->resolved()->count();
+            $stats['overdue'] += $this->landlordComplaints()->overdue()->count();
+        }
+
+        if ($isAgent) {
+            $stats['total'] += $this->assignedComplaints()->count();
+            $stats['open'] += $this->assignedComplaints()->open()->count();
+            $stats['resolved'] += $this->assignedComplaints()->resolved()->count();
+            $stats['overdue'] += $this->assignedComplaints()->overdue()->count();
+        }
+
+        return $stats;
     }
 }

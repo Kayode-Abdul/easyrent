@@ -83,7 +83,8 @@ class ApartmentInvitationController extends Controller
         EasyRentErrorHandler $errorHandler = null,
         ErrorRecoveryService $recoveryService = null,
         ErrorMonitoringService $monitoringService = null
-    ) {
+        )
+    {
         $this->sessionManager = $sessionManager;
         $this->paymentIntegrationService = $paymentIntegrationService;
         $this->paymentCalculationService = $paymentCalculationService;
@@ -126,9 +127,9 @@ class ApartmentInvitationController extends Controller
 
         try {
             $link = $apartment->generateEasyRentLink(auth()->id(), [
-                'expires_at' => $request->expires_at ?
-                    Carbon::parse($request->expires_at) :
-                    now()->addDays(30)
+                'expires_at' => $request->expires_at ? 
+                Carbon::parse($request->expires_at) :
+                now()->addDays(30)
             ]);
 
             $invitation = $apartment->activeInvitation;
@@ -145,7 +146,8 @@ class ApartmentInvitationController extends Controller
                 'message' => 'EasyRent link generated successfully!'
             ]);
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             // Use comprehensive error handling
             if ($this->errorHandler && $this->monitoringService) {
                 $context = ['apartment_id' => $apartment->id, 'user_id' => auth()->id()];
@@ -194,7 +196,7 @@ class ApartmentInvitationController extends Controller
                     'token' => substr($token, 0, 8) . '...',
                     'validation_errors' => $tokenValidation['errors'] ?? []
                 ]);
-                
+
                 if ($this->suspiciousActivityDetector) {
                     $this->suspiciousActivityDetector->recordFailedTokenAttempt(request()->ip());
                 }
@@ -236,47 +238,48 @@ class ApartmentInvitationController extends Controller
                     $property->setRawAttributes($cachedInvitationData['apartment_data']['property']);
                 }
             }
-        } else {
+        }
+        else {
             // Fallback to optimized database query
             $invitation = ApartmentInvitation::where('invitation_token', $token)
                 ->with([
-                    'apartment' => function ($query) {
-                        $query->select([
-                            'apartment_id',
-                            'property_id',
-                            'apartment_type',
-                            'apartment_type_id',
-                            'amount',
-                            'range_start',
-                            'range_end',
-                            'tenant_id',
-                            'user_id',
-                            'occupied'
-                        ]);
-                    },
-                    'apartment.apartmentType:id,name',
-                    'apartment.property' => function ($query) {
-                        $query->select([
-                            'property_id',
-                            'address',
-                            'state',
-                            'lga',
-                            'prop_type',
-                            'user_id'
-                        ]);
-                    },
-                    'landlord:user_id,first_name,last_name,email,phone'
-                ])
+                'apartment' => function ($query) {
+                $query->select([
+                        'apartment_id',
+                        'property_id',
+                        'apartment_type',
+                        'apartment_type_id',
+                        'amount',
+                        'range_start',
+                        'range_end',
+                        'tenant_id',
+                        'user_id',
+                        'occupied'
+                    ]);
+            },
+                'apartment.apartmentType:id,name',
+                'apartment.property' => function ($query) {
+                $query->select([
+                        'property_id',
+                        'address',
+                        'state',
+                        'lga',
+                        'prop_type',
+                        'user_id'
+                    ]);
+            },
+                'landlord:user_id,first_name,last_name,email,phone'
+            ])
                 ->select([
-                    'id',
-                    'apartment_id',
-                    'landlord_id',
-                    'invitation_token',
-                    'status',
-                    'expires_at',
-                    'created_at',
-                    'updated_at'
-                ])
+                'id',
+                'apartment_id',
+                'landlord_id',
+                'invitation_token',
+                'status',
+                'expires_at',
+                'created_at',
+                'updated_at'
+            ])
                 ->first();
 
             // Cache the invitation data for future requests
@@ -287,6 +290,15 @@ class ApartmentInvitationController extends Controller
 
         if (!$invitation) {
             return view('apartment.invite.invalid-token');
+        }
+
+        // Check if invitation has already been used
+        if ($invitation->status === ApartmentInvitation::STATUS_USED) {
+            Log::info('Used invitation link accessed', [
+                'invitation_id' => $invitation->id,
+                'token' => substr($token, 0, 8) . '...'
+            ]);
+            return view('apartment.invite.used', compact('invitation'));
         }
 
         // Check for suspicious activity patterns
@@ -312,7 +324,7 @@ class ApartmentInvitationController extends Controller
             'invitation_id' => $invitation->id,
             'token' => substr($token, 0, 8) . '...'
         ]);
-        
+
         $securityIssues = $invitation->performSecurityValidation(
             request()->ip(),
             request()->userAgent()
@@ -389,16 +401,17 @@ class ApartmentInvitationController extends Controller
             // Use cached amenities and attributes
             if (isset($apartmentData['amenities'])) {
                 $property->setRelation('amenities', collect($apartmentData['amenities'])->map(function ($name) {
-                    return (object) ['name' => $name];
+                    return (object)['name' => $name];
                 }));
             }
 
             if (isset($apartmentData['attributes'])) {
                 $property->setRelation('attributes', collect($apartmentData['attributes'])->map(function ($value, $name) {
-                    return (object) ['attribute_key' => $name, 'attribute_value' => $value];
+                    return (object)['attribute_key' => $name, 'attribute_value' => $value];
                 }));
             }
-        } else {
+        }
+        else {
             // Load with optimized eager loading and cache the result
             $property->load([
                 'amenities:id,name',
@@ -448,12 +461,13 @@ class ApartmentInvitationController extends Controller
                 'error' => $calculationResult->errorMessage,
                 'pricing_type' => $apartment->getPricingType()
             ]);
-            
+
             // Fallback to basic calculation for display
             $totalAmount = $apartment->amount;
-        } else {
+        }
+        else {
             $totalAmount = $calculationResult->totalAmount;
-            
+
             // Log calculation for audit purposes
             $this->paymentCalculationService->logCalculationSteps($calculationResult);
         }
@@ -499,7 +513,8 @@ class ApartmentInvitationController extends Controller
             if (isset($this->sessionManager)) {
                 try {
                     $this->sessionManager->storeInvitationContext($token, $invitationContext);
-                } catch (\Exception $e) {
+                }
+                catch (\Exception $e) {
                     $this->logEasyRentError('Failed to store invitation context in session manager', $e, [
                         'invitation_token' => substr($token, 0, 8) . '...',
                     ]);
@@ -579,7 +594,7 @@ class ApartmentInvitationController extends Controller
 
             $duration = $request->input('duration');
             $moveInDate = $request->input('move_in_date');
-            
+
             // Validate pricing configuration before processing payment
             if (!$invitation->apartment->validatePricingConfiguration()) {
                 Log::error('Invalid pricing configuration for guest application', [
@@ -587,10 +602,10 @@ class ApartmentInvitationController extends Controller
                     'apartment_id' => $invitation->apartment_id,
                     'pricing_type' => $invitation->apartment->getPricingType()
                 ]);
-                
+
                 return back()->with('error', 'Apartment pricing configuration is invalid. Please contact the landlord.');
             }
-            
+
             // Use centralized calculation service for consistent payment calculation
             $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
                 $invitation->apartment->amount,
@@ -605,12 +620,12 @@ class ApartmentInvitationController extends Controller
                     'duration' => $duration,
                     'error' => $calculationResult->errorMessage
                 ]);
-                
+
                 return back()->with('error', 'Unable to calculate payment amount. Please try again or contact support.');
             }
 
             $totalAmount = $calculationResult->totalAmount;
-            
+
             // Log calculation for audit purposes
             $this->paymentCalculationService->logCalculationSteps($calculationResult);
 
@@ -672,7 +687,8 @@ class ApartmentInvitationController extends Controller
                 'invitation_token' => substr($token, 0, 8) . '...',
                 'duration' => $duration
             ]);
-        } else {
+        }
+        else {
             // Validate new form data
             $request->validate([
                 'duration' => 'required|integer|min:1|max:24',
@@ -691,7 +707,7 @@ class ApartmentInvitationController extends Controller
                 'user_id' => $user->user_id,
                 'pricing_type' => $apartment->getPricingType()
             ]);
-            
+
             return back()->with('error', 'Apartment pricing configuration is invalid. Please contact the landlord.');
         }
 
@@ -710,12 +726,12 @@ class ApartmentInvitationController extends Controller
                 'duration' => $duration,
                 'error' => $calculationResult->errorMessage
             ]);
-            
+
             return back()->with('error', 'Unable to calculate payment amount. Please try again or contact support.');
         }
 
         $totalAmount = $calculationResult->totalAmount;
-        
+
         // Log calculation for audit purposes
         $this->paymentCalculationService->logCalculationSteps($calculationResult);
 
@@ -761,7 +777,8 @@ class ApartmentInvitationController extends Controller
                 'payment' => $payment->id
             ])->with('success', 'Application submitted successfully! Please complete payment to secure your apartment.');
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             // Use comprehensive error handling
             if ($this->errorHandler && $this->recoveryService && $this->monitoringService) {
                 $context = [
@@ -811,7 +828,7 @@ class ApartmentInvitationController extends Controller
                 'invitation_id' => $invitation->id,
                 'token' => substr($token, 0, 8) . '...'
             ]);
-            
+
             // Calculate total amount using centralized service
             $duration = $invitation->lease_duration ?? 12;
             $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
@@ -823,15 +840,16 @@ class ApartmentInvitationController extends Controller
             if ($calculationResult->isValid) {
                 $invitation->total_amount = $calculationResult->totalAmount;
                 $invitation->save();
-                
+
                 // Log calculation for audit purposes
                 $this->paymentCalculationService->logCalculationSteps($calculationResult);
-            } else {
+            }
+            else {
                 Log::error('Failed to calculate payment amount for invitation', [
                     'invitation_id' => $invitation->id,
                     'error' => $calculationResult->errorMessage
                 ]);
-                
+
                 // Fallback to basic calculation
                 $invitation->total_amount = $invitation->apartment->amount;
                 $invitation->save();
@@ -866,7 +884,7 @@ class ApartmentInvitationController extends Controller
                 'invitation_id' => $invitation->id,
                 'token' => substr($token, 0, 8) . '...'
             ]);
-            
+
             // Calculate total amount using centralized service
             $duration = $invitation->lease_duration ?? 12;
             $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
@@ -878,15 +896,16 @@ class ApartmentInvitationController extends Controller
             if ($calculationResult->isValid) {
                 $invitation->total_amount = $calculationResult->totalAmount;
                 $invitation->save();
-                
+
                 // Log calculation for audit purposes
                 $this->paymentCalculationService->logCalculationSteps($calculationResult);
-            } else {
+            }
+            else {
                 Log::error('Failed to calculate payment amount for invitation', [
                     'invitation_id' => $invitation->id,
                     'error' => $calculationResult->errorMessage
                 ]);
-                
+
                 // Fallback to basic calculation
                 $invitation->total_amount = $invitation->apartment->amount;
                 $invitation->save();
@@ -929,25 +948,38 @@ class ApartmentInvitationController extends Controller
                 ]);
 
                 // If apartment was not assigned (guest payment), redirect to registration
-                $redirectUrl = $result['apartment_assigned']
-                    ? route('apartment.invite.success', $token)
-                    : route('register', ['invitation_token' => $token]);
+                if ($result['apartment_assigned']) {
+                    $invitation->update(['status' => ApartmentInvitation::STATUS_USED]);
+                    session()->flash('payment_congratulations', true);
+                    session()->flash('congrats_apartment_id', $invitation->apartment_id);
+                    // Try to find the payment for the ID
+                    $paymentRecord = Payment::where('payment_reference', 'easyrent_' . $token)->first();
+                    if ($paymentRecord) {
+                        session()->flash('congrats_payment_id', $paymentRecord->id);
+                    }
+                    $redirectUrl = route('dashboard');
+                }
+                else {
+                    $redirectUrl = route('register', ['invitation_token' => $token]);
+                }
 
                 return response()->json([
                     'success' => true,
                     'message' => $result['apartment_assigned']
-                        ? 'Payment completed successfully!'
-                        : 'Payment completed. Please register to finalize your apartment.',
+                    ? 'Payment completed successfully!'
+                    : 'Payment completed. Please register to finalize your apartment.',
                     'redirect_url' => $redirectUrl
                 ]);
-            } else {
+            }
+            else {
                 return response()->json([
                     'success' => false,
                     'message' => 'Payment processing failed: ' . $result['error']
                 ]);
             }
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             // Use comprehensive error handling for payment errors
             if ($this->errorHandler && $this->recoveryService && $this->monitoringService) {
                 $context = [
@@ -1016,7 +1048,8 @@ class ApartmentInvitationController extends Controller
                 new TenantApplicationMail($invitation, $payment, 'tenant')
             );
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Failed to send application emails', [
                 'invitation_id' => $invitation->id,
                 'error' => $e->getMessage()
@@ -1040,7 +1073,8 @@ class ApartmentInvitationController extends Controller
                 new ApartmentAssignedMail($invitation, $payment, 'tenant')
             );
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Failed to send completion emails', [
                 'invitation_id' => $invitation->id,
                 'error' => $e->getMessage()
@@ -1117,7 +1151,8 @@ class ApartmentInvitationController extends Controller
                 'message' => 'Application data stored successfully'
             ]);
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Failed to store session data', [
                 'error' => $e->getMessage(),
                 'token' => substr($request->input('token', ''), 0, 8) . '...'

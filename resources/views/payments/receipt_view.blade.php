@@ -8,7 +8,7 @@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
                         <a href="{{ route('billing.index') }}" class="btn btn-sm btn-outline-secondary me-3">
-                            <i class="fafa-arrow-left"></i> Back
+                            <i class="fa fa-arrow-left"></i> Back
                         </a>
                         <h5 class="card-title mb-0">Payment Receipt</h5>
                     </div>

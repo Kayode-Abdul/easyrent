@@ -25,12 +25,21 @@ class ComplaintController extends Controller
         $query = Complaint::with(['category', 'tenant', 'landlord', 'apartment.property', 'assignedTo']);
 
         // Filter based on user role
-        if ($user->isTenant()) {
-            $query->forTenant($user->user_id);
-        } elseif ($user->isLandlord()) {
-            $query->forLandlord($user->user_id);
-        } elseif ($user->isAgent()) {
-            $query->assignedTo($user->user_id);
+        if (!$user->admin) {
+            $query->where(function ($q) use ($user) {
+                // Anyone can see complaints where they are the tenant
+                $q->orWhere('tenant_id', $user->user_id);
+
+                // Landlords can see complaints for their properties
+                if ($user->isLandlord()) {
+                    $q->orWhere('landlord_id', $user->user_id);
+                }
+
+                // Agents can see assigned complaints
+                if ($user->isAgent()) {
+                    $q->orWhere('assigned_to', $user->user_id);
+                }
+            });
         }
 
         // Apply filters
@@ -58,8 +67,8 @@ class ComplaintController extends Controller
     public function create(Request $request)
     {
         $user = Auth::user();
-        
-        if (!$user->isTenant()) {
+
+        if (!$user->isTenant() && !Apartment::where('tenant_id', $user->user_id)->exists()) {
             abort(403, 'Only tenants can create complaints.');
         }
 
@@ -85,8 +94,8 @@ class ComplaintController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        
-        if (!$user->isTenant()) {
+
+        if (!$user->isTenant() && !Apartment::where('tenant_id', $user->user_id)->exists()) {
             abort(403, 'Only tenants can create complaints.');
         }
 
@@ -138,7 +147,8 @@ class ComplaintController extends Controller
             if ($landlord && $landlord->email) {
                 Mail::to($landlord->email)->send(new ComplaintNotification($complaint, 'new'));
             }
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             \Log::error('Failed to send complaint notification: ' . $e->getMessage());
         }
 
@@ -152,7 +162,7 @@ class ComplaintController extends Controller
     public function show(Complaint $complaint)
     {
         $user = Auth::user();
-        
+
         // Check access permissions
         if (!$this->canViewComplaint($complaint, $user)) {
             abort(403, 'You do not have permission to view this complaint.');
@@ -185,7 +195,7 @@ class ComplaintController extends Controller
     public function addComment(Request $request, Complaint $complaint)
     {
         $user = Auth::user();
-        
+
         if (!$this->canViewComplaint($complaint, $user)) {
             abort(403, 'You do not have permission to comment on this complaint.');
         }
@@ -209,7 +219,7 @@ class ComplaintController extends Controller
     public function updateStatus(Request $request, Complaint $complaint)
     {
         $user = Auth::user();
-        
+
         // Only landlords, agents, and admins can update status
         if (!($user->isLandlord() || $user->isAgent() || $user->admin)) {
             abort(403, 'You do not have permission to update complaint status.');
@@ -233,7 +243,8 @@ class ComplaintController extends Controller
             if ($tenant && $tenant->email) {
                 Mail::to($tenant->email)->send(new ComplaintNotification($complaint, 'status_update'));
             }
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             \Log::error('Failed to send status update notification: ' . $e->getMessage());
         }
 
@@ -247,7 +258,7 @@ class ComplaintController extends Controller
     public function assign(Request $request, Complaint $complaint)
     {
         $user = Auth::user();
-        
+
         // Only landlords, agents, and admins can assign complaints
         if (!($user->isLandlord() || $user->isAgent() || $user->admin)) {
             abort(403, 'You do not have permission to assign complaints.');
@@ -270,7 +281,7 @@ class ComplaintController extends Controller
     public function landlordDashboard(Request $request)
     {
         $user = Auth::user();
-        
+
         if (!$user->isLandlord()) {
             abort(403, 'Access denied.');
         }
@@ -283,14 +294,14 @@ class ComplaintController extends Controller
         if ($request->filled('tenant_name')) {
             $query->whereHas('tenant', function ($q) use ($request) {
                 $q->where('first_name', 'like', '%' . $request->tenant_name . '%')
-                  ->orWhere('last_name', 'like', '%' . $request->tenant_name . '%');
+                    ->orWhere('last_name', 'like', '%' . $request->tenant_name . '%');
             });
         }
 
         // Search by complaint title
         if ($request->filled('title')) {
             $query->where('title', 'like', '%' . $request->title . '%')
-                  ->orWhere('description', 'like', '%' . $request->title . '%');
+                ->orWhere('description', 'like', '%' . $request->title . '%');
         }
 
         // Filter by status
@@ -332,11 +343,11 @@ class ComplaintController extends Controller
                 break;
             case 'priority':
                 $query->orderByRaw("FIELD(priority, 'urgent', 'high', 'medium', 'low')")
-                      ->orderBy('created_at', 'desc');
+                    ->orderBy('created_at', 'desc');
                 break;
             case 'status':
                 $query->orderByRaw("FIELD(status, 'open', 'in_progress', 'resolved', 'closed')")
-                      ->orderBy('created_at', 'desc');
+                    ->orderBy('created_at', 'desc');
                 break;
             case 'latest':
             default:

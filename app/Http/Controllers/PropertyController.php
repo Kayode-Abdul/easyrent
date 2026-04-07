@@ -33,8 +33,10 @@ class PropertyController extends Controller
     public function add(PropertyRequest $request): \Illuminate\View\View|JsonResponse
     {
         if (!$request->isMethod('post')) {
-            $locations = File::get(resource_path('/states-and-cities.json'));
-            return view('listing', compact('locations'));
+            $countries = json_decode(File::get(resource_path('/countries.json')), true);
+            // Keep $location for backward compatibility with the listing blade view
+            $location = $countries[0]['states'] ?? [];
+            return view('listing', compact('countries', 'location'));
         }
         try {
             // Check if user is logged in
@@ -52,6 +54,7 @@ class PropertyController extends Controller
                 'property_id' => $this->generateUniquePropertyId(),
                 'prop_type' => $request->propertyType,
                 'address' => $request->address,
+                'country' => $request->country ?? 'Nigeria',
                 'state' => $request->state,
                 'lga' => $request->city,
                 'no_of_apartment' => $request->noOfApartment ?? null,
@@ -446,7 +449,7 @@ class PropertyController extends Controller
         return response()->json(['success' => true, 'message' => 'Dashboard mode switched', 'mode' => $mode]);
     }
 
-    public function userProperty()
+    public function userProperty(Request $request)
     {
         if (!auth()->check()) {
             return view('auth.login');
@@ -486,12 +489,27 @@ class PropertyController extends Controller
             $myApartment = $myProperties->pluck('apartments')->flatten(1);
         }
         if ($mode === 'tenant') {
-            $myApartment = Apartment::where('tenant_id', $userId)
+            $query = Apartment::where('tenant_id', $userId)
                 ->with(['property', 'tenant'])
-                ->orderBy('created_at', 'desc')
-                ->get();
+                ->orderBy('created_at', 'desc');
+
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where(function($q) use ($search) {
+                    $q->where('apartment_id', 'like', "%{$search}%")
+                      ->orWhere('apartment_type', 'like', "%{$search}%")
+                      ->orWhereHas('property', function($q2) use ($search) {
+                          $q2->where('address', 'like', "%{$search}%")
+                             ->orWhere('state', 'like', "%{$search}%")
+                             ->orWhere('lga', 'like', "%{$search}%");
+                      });
+                });
+            }
+
+            $myApartment = $query->paginate(10)->withQueryString();
         }
-        $locations = json_decode(File::get(resource_path('/states-and-cities.json')), true);
+        $countries = json_decode(File::get(resource_path('/countries.json')), true);
+        $locations = $countries[0]['states'] ?? [];
         
         // Get commission transparency data for landlord mode
         $commissionData = [];
@@ -499,7 +517,7 @@ class PropertyController extends Controller
             $commissionData = $this->getCommissionTransparencyData($userId);
         }
         
-        return view('myProperty', compact('myProperties', 'myApartment', 'locations', 'mode', 'hasProperties', 'commissionData'));
+        return view('myProperty', compact('myProperties', 'myApartment', 'locations', 'countries', 'mode', 'hasProperties', 'commissionData'));
     }
 
     private function generateUniquePropertyId(): int
@@ -1003,8 +1021,9 @@ class PropertyController extends Controller
             ->get();
         $apartments = $property->apartments;
 
-        $locations = json_decode(File::get(resource_path('/states-and-cities.json')), true);
-        return view('property.show', compact('property', 'apartments', 'durations', 'durationOptions', 'previousAgents', 'userId', 'locations'));
+        $countries = json_decode(File::get(resource_path('/countries.json')), true);
+        $locations = $countries[0]['states'] ?? [];
+        return view('property.show', compact('property', 'apartments', 'durations', 'durationOptions', 'previousAgents', 'userId', 'locations', 'countries'));
     }
 
     public function assignAgent(Request $request, string $propId): JsonResponse
@@ -1252,8 +1271,9 @@ class PropertyController extends Controller
             return view('auth.login');
         }
         $property = Property::where('property_id', $propId)->firstOrFail();
-        $locations = json_decode(File::get(resource_path('/states-and-cities.json')), true);
-        return view('property.edit', compact('property', 'locations'));
+        $countries = json_decode(File::get(resource_path('/countries.json')), true);
+        $locations = $countries[0]['states'] ?? [];
+        return view('property.edit', compact('property', 'locations', 'countries'));
     }
 
     public function update(Request $request, string $propId): JsonResponse
@@ -1263,6 +1283,7 @@ class PropertyController extends Controller
             $property->update([
                 'prop_type' => $request->propertyType,
                 'address' => $request->address,
+                'country' => $request->country ?? $property->country ?? 'Nigeria',
                 'state' => $request->state,
                 'lga' => $request->city,
                 'no_of_apartment' => $request->noOfApartment
@@ -1390,6 +1411,25 @@ class PropertyController extends Controller
         return response()->json([
             'success' => false,
             'message' => 'Method not implemented yet'
+        ]);
+    }
+
+    /**
+     * API endpoint to get location data (states/cities) for a given country.
+     */
+    public function getLocationData(Request $request): JsonResponse
+    {
+        $countryName = $request->input('country', 'Nigeria');
+        $countries = json_decode(File::get(resource_path('/countries.json')), true);
+
+        $country = collect($countries)->firstWhere('name', $countryName);
+
+        if (!$country) {
+            return response()->json(['states' => []]);
+        }
+
+        return response()->json([
+            'states' => $country['states'] ?? []
         ]);
     }
 }

@@ -18,6 +18,7 @@ class Property extends Model
         'property_id', // Business identifier (renamed from prop_id)
         'prop_type',
         'address',
+        'country',
         'state',
         'lga',
         'no_of_apartment',
@@ -257,7 +258,8 @@ class Property extends Model
 
     public function getFullAddress(): string
     {
-        return "{$this->address}, {$this->lga}, {$this->state}";
+        $parts = array_filter([$this->address, $this->lga, $this->state, $this->country]);
+        return implode(', ', $parts);
     }
 
     public function isOwner(int $userId): bool

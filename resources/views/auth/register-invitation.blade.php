@@ -476,14 +476,31 @@
                                 </div>
 
                                 <div class="form-floating">
+                                    <select id="country" name="country" class="form-select"
+                                        onchange="getStatesForReg()">
+                                        <option value="" disabled selected>Select Country</option>
+                                        @foreach(json_decode(file_get_contents(resource_path('countries.json')),
+                                        true) as $c)
+                                        <option value="{{ $c['name'] }}" {{ $c['name']==='Nigeria' ? 'selected' : '' }}>
+                                            {{ $c['name'] }}</option>
+                                        @endforeach
+                                    </select>
+                                    <label for="country"><i class="fas fa-globe me-2"></i>Country</label>
+                                </div>
+
+                                <div class="form-floating">
                                     <select id="state" name="state"
                                         class="form-select @error('state') is-invalid @enderror" onchange="getCities()"
                                         required>
                                         <option value="" disabled selected>Select State</option>
-                                        @foreach(json_decode(file_get_contents(resource_path('states-and-cities.json')),
-                                        true) as $item)
+                                        @foreach(json_decode(file_get_contents(resource_path('countries.json')),
+                                        true) as $c)
+                                        @if($c['name'] === 'Nigeria')
+                                        @foreach($c['states'] as $item)
                                         <option value="{{ $item['name'] }}" {{ old('state')==$item['name'] ? 'selected'
                                             : '' }}>{{ $item['name'] }}</option>
+                                        @endforeach
+                                        @endif
                                         @endforeach
                                     </select>
                                     <label for="state"><i class="fas fa-map me-2"></i>State</label>
@@ -500,7 +517,8 @@
                                         <option value="" disabled selected>Select LGA</option>
                                         <!-- LGAs will be populated by JS -->
                                     </select>
-                                    <label for="lga"><i class="fas fa-map-pin me-2"></i>Local Government Area</label>
+                                    <label for="lga" id="lgaLabel"><i class="fas fa-map-pin me-2"></i>Local Government
+                                        Area</label>
                                     @error('lga')
                                     <div class="invalid-feedback">
                                         <strong>{{ $message }}</strong>
@@ -703,25 +721,63 @@
         }
     }
 
-    // Populate LGAs based on selected state
-    const statesArray = @json(json_decode(file_get_contents(resource_path('states-and-cities.json')), true));
-    const statesData = {};
-    statesArray.forEach(state => {
-        statesData[state.name] = state.cities;
-    });
+    // API-based cascading location selection for registration
+    let cachedRegLocationData = null;
+
+    function getStatesForReg() {
+        const country = document.getElementById('country').value;
+        const stateSelect = document.getElementById('state');
+        const lgaSelect = document.getElementById('lga');
+        const lgaLabel = document.getElementById('lgaLabel');
+
+        if (lgaLabel) {
+            lgaLabel.innerHTML = '<i class="fas fa-map-pin me-2"></i>' + (country === 'Nigeria' ? 'Local Government Area' : 'City');
+        }
+
+        stateSelect.innerHTML = '<option value="" disabled selected>Select State</option>';
+        lgaSelect.innerHTML = '<option value="" disabled selected>Select ' + (country === 'Nigeria' ? 'LGA' : 'City') + '</option>';
+
+        if (!country) return;
+
+        fetch('/api/location-data?country=' + encodeURIComponent(country))
+            .then(r => r.json())
+            .then(data => {
+                cachedRegLocationData = data.states || [];
+                cachedRegLocationData.forEach(function (state) {
+                    const opt = document.createElement('option');
+                    opt.value = state.name;
+                    opt.textContent = state.name;
+                    stateSelect.appendChild(opt);
+                });
+            });
+    }
 
     function getCities() {
         const state = document.getElementById('state').value;
+        const country = document.getElementById('country').value;
         const lgaSelect = document.getElementById('lga');
-        lgaSelect.innerHTML = '<option value="" disabled selected>Select LGA</option>';
-        const cities = statesData[state] || [];
-        cities.forEach(function (city) {
-            const opt = document.createElement('option');
-            opt.value = city;
-            opt.text = city;
-            lgaSelect.appendChild(opt);
-        });
+        lgaSelect.innerHTML = '<option value="" disabled selected>Select ' + (country === 'Nigeria' ? 'LGA' : 'City') + '</option>';
+
+        if (!state || !cachedRegLocationData) return;
+
+        const found = cachedRegLocationData.find(s => s.name === state);
+        if (found && found.cities) {
+            found.cities.forEach(function (city) {
+                const opt = document.createElement('option');
+                opt.value = city;
+                opt.text = city;
+                lgaSelect.appendChild(opt);
+            });
+        }
     }
+
+    // Initialize: load states for default Nigeria selection
+    document.addEventListener('DOMContentLoaded', function () {
+        const countrySelect = document.getElementById('country');
+        if (countrySelect && countrySelect.value) {
+            getStatesForReg();
+        }
+    });
 </script>
 
 @include('footer')

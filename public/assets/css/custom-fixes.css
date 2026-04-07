@@ -216,3 +216,54 @@ nav[role="navigation"] {
   color: #28a745 !important;
   font-weight: bold;
 }
+
+/* Homepage Layout Fixes */
+
+/* Our Services & Workflow Sections */
+.services,
+.services-2 {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.services .media-body,
+.services-2 .media-body {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Testimony Section - Owl Carousel Equal Height */
+.carousel-testimony .owl-stage {
+  display: flex !important;
+}
+
+.carousel-testimony .owl-item {
+  display: flex !important;
+}
+
+.carousel-testimony .item {
+  display: flex !important;
+  flex: 1 !important;
+  width: 100% !important;
+}
+
+.testimony-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  width: 100% !important;
+  margin-bottom: 0 !important;
+}
+
+.testimony-wrap .text {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.testimony-wrap .text p.mb-4 {
+  flex: 1 !important;
+}

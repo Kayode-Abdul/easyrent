@@ -8,8 +8,8 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="page-header-custom shadow-sm">
-                <div class="d-flex align-items-center mb-3">
-                    <a href="{{ route('dashboard') }}" class="btn btn-sm btn-outline-secondary me-3">
+                <div class="align-items-center mb-2">
+                    <a href="{{ route('dashboard') }}" class="btn btn-sm btn-outline-secondary me-1">
                         <i class="fafa-arrow-left"></i> Back
                     </a>
                     <div>

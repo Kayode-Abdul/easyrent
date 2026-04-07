@@ -165,7 +165,7 @@
                         <div class="row">
                             <div class="col-5 col-md-4">
                                 <div class="icon-big text-center icon-warning">
-                                    <i class="nc-icon nc-box text-success"></i>
+                                    <i class="nc-icon nc-shop text-success"></i>
                                 </div>
                             </div>
                             <div class="col-7 col-md-8">
@@ -620,7 +620,7 @@
                                     <div class="row">
                                         <div class="col-5 col-md-4">
                                             <div class="icon-big text-center icon-warning">
-                                                <i class="nc-icon nc-home-gear text-primary"></i>
+                                                <i class="nc-icon nc-settings-gear-65 text-primary"></i>
                                             </div>
                                         </div>
                                         <div class="col-7 col-md-8">
@@ -723,8 +723,30 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title">My Tenancies</h4>
-                    <p class="card-category">Apartments you are renting</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="card-title">My Tenancies</h4>
+                            <p class="card-category">Apartments you are renting</p>
+                        </div>
+                    </div>
+                    <div class="row mb-4 mt-3">
+                        <div class="col-md-6">
+                            <form action="{{ route('dashboard.myproperty') }}" method="GET">
+                                <input type="hidden" name="mode" value="tenant">
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control"
+                                        value="{{ request('search') }}"
+                                        placeholder="Search with ID, Type, Address, Location...">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-primary m-0"
+                                            style="border-radius: 0 4px 4px 0;">
+                                            <i class="fa fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     @if($myApartment->isEmpty())
@@ -839,6 +861,13 @@
                                         @endforeach
                             </tbody>
                         </table>
+
+                        <!-- Add pagination links -->
+                        @if(method_exists($myApartment, 'links'))
+                        <div class="d-flex justify-content-center mt-4">
+                            {{ $myApartment->links() }}
+                        </div>
+                        @endif
                     </div>
                     @endif
                 </div>
@@ -994,6 +1023,17 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label for="country">Country</label>
+                        <select name="country" id="country" class="form-control" onchange="getStatesForModal()"
+                            required>
+                            <option value="" disabled>Select Country</option>
+                            @foreach ($countries as $c)
+                            <option value="{{ $c['name'] }}" {{ $c['name']==='Nigeria' ? 'selected' : '' }}>{{
+                                $c['name'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="states">State</label>
                         <select name="state" id="states" class="form-control" onchange="getCities()">
                             <option value="" disabled="disabled" selected>Select State</option>
@@ -1003,7 +1043,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="cities">L.G.A</label>
+                        <label for="cities" id="cityLabel">L.G.A</label>
                         <select name="city" id="cities" class="form-control">
                             <option value="" disabled="disabled" selected>Select L.G.A</option>
                         </select>
@@ -1277,19 +1317,49 @@
     }
 
 
+    let cachedModalLocationData = null;
+
+    function getStatesForModal() {
+        const country = document.getElementById('country').value;
+        const stateSelect = document.getElementById('states');
+        const citySelect = document.getElementById('cities');
+        const cityLabel = document.getElementById('cityLabel');
+
+        if (cityLabel) {
+            cityLabel.textContent = (country === 'Nigeria') ? 'L.G.A' : 'City';
+        }
+
+        stateSelect.innerHTML = '<option value="" disabled selected>Select State</option>';
+        citySelect.innerHTML = '<option value="" disabled selected>Select ' + (country === 'Nigeria' ? 'L.G.A' : 'City') + '</option>';
+
+        if (!country) return;
+
+        fetch('/api/location-data?country=' + encodeURIComponent(country))
+            .then(r => r.json())
+            .then(data => {
+                cachedModalLocationData = data.states || [];
+                cachedModalLocationData.forEach(function (state) {
+                    const opt = document.createElement('option');
+                    opt.value = state.name;
+                    opt.textContent = state.name;
+                    stateSelect.appendChild(opt);
+                });
+            });
+    }
+
     function getCities() {
-        const locations = <?= json_encode($locations) ?>;
         const stateSelect = document.getElementById("states");
         const citySelect = document.getElementById("cities");
+        const country = document.getElementById('country').value;
         const selectedState = stateSelect.value;
 
-        // Clear existing options
-        citySelect.innerHTML = '<option value="" disabled="disabled" selected>Select L.G.A</option>';
+        citySelect.innerHTML = '<option value="" disabled selected>Select ' + (country === 'Nigeria' ? 'L.G.A' : 'City') + '</option>';
 
-        // Find the selected state in locations
-        const state = locations.find(loc => loc.name === selectedState);
-        if (state && state.cities) {
-            state.cities.forEach(city => {
+        if (!selectedState || !cachedModalLocationData) return;
+
+        const found = cachedModalLocationData.find(s => s.name === selectedState);
+        if (found && found.cities) {
+            found.cities.forEach(function (city) {
                 const option = document.createElement("option");
                 option.value = city;
                 option.textContent = city;
@@ -1302,16 +1372,24 @@
     document.addEventListener('DOMContentLoaded', function () {
         // Handle modal reset
         const addPropertyModal = document.getElementById('addPropertyModal');
-        addPropertyModal.addEventListener('hidden.bs.modal', function () {
-            document.getElementById('propertyForm').reset();
-            document.getElementById('apartmentForm').reset();
-            document.getElementById('apartmentSection').style.display = 'none';
-            document.getElementById('saveProperty').style.display = 'inline-block';
-            document.getElementById('saveApartments').style.display = 'none';
-            document.getElementById('propertyMessage').innerHTML = '';
-            document.getElementById('apartmentMessage').innerHTML = '';
-
-        });
+        if (addPropertyModal) {
+            addPropertyModal.addEventListener('hidden.bs.modal', function () {
+                var pf = document.getElementById('propertyForm');
+                if (pf) pf.reset();
+                var af = document.getElementById('apartmentForm');
+                if (af) af.reset();
+                var as = document.getElementById('apartmentSection');
+                if (as) as.style.display = 'none';
+                var sp = document.getElementById('saveProperty');
+                if (sp) sp.style.display = 'inline-block';
+                var sa = document.getElementById('saveApartments');
+                if (sa) sa.style.display = 'none';
+                var pm = document.getElementById('propertyMessage');
+                if (pm) pm.innerHTML = '';
+                var am = document.getElementById('apartmentMessage');
+                if (am) am.innerHTML = '';
+            });
+        }
     });
 
 </script>

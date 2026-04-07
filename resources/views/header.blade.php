@@ -583,12 +583,22 @@
                             aria-controls="complaintsMenu">
                             <i class="nc-icon nc-support-17"></i>
                             <p>
-                                @if(auth()->user()->isTenant())
+                                @php
+                                $user = auth()->user();
+                                $isTenant = $user->isTenant();
+                                $isLandlord = $user->isLandlord();
+                                $isAgent = $user->isAgent();
+                                $hasTenancy = $user->tenantLeases()->exists();
+                                @endphp
+
+                                @if($isTenant && !$isLandlord && !$isAgent)
                                 Complaints
-                                @elseif(auth()->user()->isLandlord())
+                                @elseif($isLandlord && !$hasTenancy && !$isAgent)
                                 Tenant Complaints
-                                @else
+                                @elseif($isAgent && !$isLandlord && !$hasTenancy)
                                 Assigned Complaints
+                                @else
+                                My Complaints & Tasks
                                 @endif
                                 @php
                                 $complaintStats = auth()->user()->getComplaintStats();
@@ -601,7 +611,7 @@
                         </a>
                         <div class="collapse {{ request()->is('complaints*') ? 'show' : '' }}" id="complaintsMenu">
                             <ul class="nav flex-column ml-3">
-                                @if(auth()->user()->isTenant())
+                                @if($isTenant)
                                 <li class="nav-item {{ request()->is('complaints/create') ? 'active' : '' }}">
                                     <a class="nav-link" href="{{ route('complaints.create') }}">
                                         <i class="nc-icon nc-simple-add"></i> Submit Complaint
@@ -612,7 +622,7 @@
                                     class="nav-item {{ request()->is('complaints') && !request()->is('complaints/create') ? 'active' : '' }}">
                                     <a class="nav-link" href="{{ route('complaints.index') }}">
                                         <i class="nc-icon nc-bullet-list-67"></i>
-                                        @if(auth()->user()->isTenant())
+                                        @if($isTenant && !$isLandlord && !$isAgent)
                                         My Complaints
                                         @else
                                         All Complaints

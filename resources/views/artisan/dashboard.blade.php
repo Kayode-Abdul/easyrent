@@ -2,6 +2,42 @@
 
 @section('content')
 <div class="content">
+    <!-- Dashboard Mode Toggles -->
+    <div class="container-fluid mb-3">
+        <div class="d-flex justify-content-end align-items-center">
+            @php
+            $user = auth()->user();
+            $isAdmin = ($user->admin == 1 || $user->role == 7);
+            $isArtisan = $user->isArtisan();
+            @endphp
+
+            @if($isAdmin)
+            <!-- Admin Toggle -->
+            <div class="mr-4">
+                <span class="switch-label-left">Personal</span>
+                <label class="switch mb-0">
+                    <input type="checkbox" id="adminDashboardSwitch" {{ session('admin_dashboard_mode')==='admin'
+                        ? 'checked' : '' }}>
+                    <span class="slider"></span>
+                </label>
+                <span class="switch-label">Admin Dashboard</span>
+            </div>
+            @endif
+
+            @if($isArtisan)
+            <!-- Artisan Toggle -->
+            <div>
+                <span class="switch-label-left">Personal</span>
+                <label class="switch mb-0">
+                    <input type="checkbox" id="artisanDashboardSwitch" {{ session('dashboard_mode', 'personal'
+                        )==='artisan' ? 'checked' : '' }}>
+                    <span class="slider"></span>
+                </label>
+                <span class="switch-label">Artisan Dashboard</span>
+            </div>
+            @endif
+        </div>
+    </div>
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-12">
@@ -10,7 +46,7 @@
                         <div class="row">
                             <div class="col-5">
                                 <div class="icon-big text-center icon-warning">
-                                    <i class="nc-icon nc-settings-tool-66 text-warning"></i>
+                                    <i class="nc-icon nc-settings-gear-65 text-warning"></i>
                                 </div>
                             </div>
                             <div class="col-7">
@@ -140,3 +176,129 @@
     </div>
 </div>
 @endsection
+
+@push('head')
+<style>
+    /* Modern switch toggle */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .switch input {
+        display: none;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked+.slider {
+        background-color: #007bff;
+    }
+
+    input:checked+.slider:before {
+        transform: translateX(26px);
+    }
+
+    .switch-label {
+        margin-left: 12px;
+        font-weight: bold;
+        vertical-align: middle;
+        font-size: 14px;
+        color: #495057;
+    }
+
+    .switch-label-left {
+        margin-right: 12px;
+        font-weight: bold;
+        vertical-align: middle;
+        font-size: 14px;
+        color: #495057;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    $(function () {
+        // Admin Dashboard Toggle
+        $('#adminDashboardSwitch').on('change', function () {
+            var mode = this.checked ? 'admin' : 'personal';
+            var $switch = $(this);
+            $switch.prop('disabled', true);
+
+            $.ajax({
+                url: '/dashboard/switch-admin-mode',
+                method: 'POST',
+                data: { mode: mode },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function (res) {
+                    if (res.success) {
+                        window.location.href = '/dashboard';
+                    } else {
+                        $switch.prop('disabled', false);
+                        alert('Failed to switch admin mode: ' + (res.message || 'Unknown error'));
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $switch.prop('disabled', false);
+                    alert('Error switching admin mode.');
+                }
+            });
+        });
+
+        // Artisan Dashboard Toggle
+        $('#artisanDashboardSwitch').on('change', function () {
+            var mode = this.checked ? 'artisan' : 'personal';
+            var $switch = $(this);
+            $switch.prop('disabled', true);
+
+            $.ajax({
+                url: '/dashboard/switch-artisan-mode',
+                method: 'POST',
+                data: { mode: mode },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function (res) {
+                    if (res.success) {
+                        window.location.href = res.mode === 'artisan' ? '/artisan/dashboard' : '/dashboard';
+                    } else {
+                        $switch.prop('disabled', false);
+                        alert('Failed to switch artisan mode: ' + (res.message || 'Unknown error'));
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $switch.prop('disabled', false);
+                    alert('Error switching artisan mode.');
+                }
+            });
+        });
+    });
+</script>
+@endpush

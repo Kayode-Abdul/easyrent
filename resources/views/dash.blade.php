@@ -8,6 +8,93 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 @include('header')
+
+<!-- Payment Success Modal -->
+@if(session('payment_congratulations'))
+<div class="modal fade" id="paymentSuccessModal" tabindex="-1" role="dialog" aria-labelledby="paymentSuccessModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header bg-success text-white border-0 py-4 text-center d-block">
+                <div class="mb-3">
+                    <i class="fas fa-check-circle fa-4x animate__animated animate__bounceIn"></i>
+                </div>
+                <h3 class="modal-title w-100 fw-bold" id="paymentSuccessModalLabel">Congratulations!</h3>
+                <p class="mb-0 opacity-75">Your Apartment has been Secured</p>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="mb-4">
+                    <i class="fas fa-house-user fa-3x text-success mb-2"></i>
+                    <h4 class="text-dark">Welcome to your new home!</h4>
+                </div>
+                <p class="lead text-muted mb-4">
+                    Your payment was successful and the apartment has been officially assigned to you. We're excited to
+                    have you as part of the EasyRent community!
+                </p>
+                <div class="d-grid gap-3 d-flex flex-column">
+                    <a href="{{ route('payment.receipt', ['id' => session('congrats_payment_id')]) }}"
+                        class="btn btn-success btn-lg mb-2 shadow-sm" style="border-radius: 12px;">
+                        <i class="fas fa-file-invoice-dollar me-2"></i> View Payment Receipt
+                    </a>
+                    <a href="{{ route('dashboard.myproperty', ['mode' => 'tenant']) }}"
+                        class="btn btn-primary btn-lg shadow-sm" style="border-radius: 12px;">
+                        <i class="fas fa-home me-2"></i> View Apartment Details
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-link text-muted text-decoration-none"
+                    data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Show modal if the session flag is set
+        if (typeof $ !== 'undefined' && $('#paymentSuccessModal').length) {
+            $('#paymentSuccessModal').modal('show');
+        }
+    });
+</script>
+
+<style>
+    @keyframes bounceIn {
+        from {
+            transform: scale(0.5);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .animate__bounceIn {
+        animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    #paymentSuccessModal .modal-content {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    #paymentSuccessModal .btn-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        border: none;
+    }
+
+    #paymentSuccessModal .btn-success {
+        background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+        border: none;
+    }
+
+    #paymentSuccessModal .modal-header {
+        position: relative;
+    }
+</style>
+@endif
 <!-- end of header -->
 
 <div class="content">
@@ -15,15 +102,46 @@
     <div class="container-fluid mb-3">
         <div class="d-flex justify-content-end align-items-center">
 
-            @if(auth()->user()->admin == 1 || auth()->user()->role == 7)
-            <!-- Admin Toggle (only for admins) -->
-            <div>
+            @php
+            $user = auth()->user();
+            $isAdmin = ($user->admin == 1 || $user->role == 7);
+            $isArtisan = $user->isArtisan();
+            $isPM = $user->isAgent();
+            @endphp
+            
+            @if($isAdmin)
+            <!-- Admin Toggle -->
+            <div class="mr-4">
                 <span class="switch-label-left">Personal</span>
                 <label class="switch mb-0">
-                    <input type="checkbox" id="adminDashboardSwitch">
+                    <input type="checkbox" id="adminDashboardSwitch" {{ session('admin_dashboard_mode')==='admin' ? 'checked' : '' }}>
                     <span class="slider"></span>
                 </label>
                 <span class="switch-label">Admin Dashboard</span>
+            </div>
+            @endif
+
+            @if($isPM)
+            <!-- Property Manager Toggle -->
+            <div class="mr-4">
+                <span class="switch-label-left">Personal</span>
+                <label class="switch mb-0">
+                    <input type="checkbox" id="propertyManagerDashboardSwitch" {{ (session('dashboard_mode') === 'property_manager') ? 'checked' : '' }}>
+                    <span class="slider"></span>
+                </label>
+                <span class="switch-label">PM Dashboard</span>
+            </div>
+            @endif
+
+            @if($isArtisan)
+            <!-- Artisan Toggle -->
+            <div>
+                <span class="switch-label-left">Personal</span>
+                <label class="switch mb-0">
+                    <input type="checkbox" id="artisanDashboardSwitch" {{ (session('dashboard_mode') === 'artisan') ? 'checked' : '' }}>
+                    <span class="slider"></span>
+                </label>
+                <span class="switch-label">Artisan Dashboard</span>
             </div>
             @endif
 
@@ -245,7 +363,7 @@
                     <div class="row">
                         <div class="col-5 col-md-4">
                             <div class="icon-big text-center icon-warning">
-                                <i class="nc-icon nc-home-2 text-info"></i>
+                                <i class="nc-icon nc-bullet-list-67 text-info"></i>
                             </div>
                         </div>
                         <div class="col-7 col-md-8">
@@ -358,16 +476,26 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">
                             <i class="nc-icon nc-support-17"></i>
-                            @if(auth()->user()->isTenant())
+                            @php
+                            $user = auth()->user();
+                            $isTenant = $user->isTenant();
+                            $isLandlord = $user->isLandlord();
+                            $isAgent = $user->isAgent();
+                            $hasTenancy = $user->tenantLeases()->exists();
+                            @endphp
+
+                            @if($isTenant && !$isLandlord && !$isAgent)
                             My Complaints
-                            @elseif(auth()->user()->isLandlord())
+                            @elseif($isLandlord && !$hasTenancy && !$isAgent)
                             Tenant Complaints
-                            @else
+                            @elseif($isAgent && !$isLandlord && !$hasTenancy)
                             Assigned Complaints
+                            @else
+                            My Complaints & Tasks
                             @endif
                         </h5>
                         <div>
-                            @if(auth()->user()->isTenant())
+                            @if(auth()->user()->isTenant() || auth()->user()->tenantLeases()->exists())
                             <a href="{{ route('complaints.create') }}" class="btn btn-primary btn-sm">
                                 <i class="nc-icon nc-simple-add"></i> Submit Complaint
                             </a>
@@ -834,11 +962,7 @@
                 success: function (res) {
                     console.log('Success response:', res);
                     if (res.success) {
-                        if (mode === 'admin') {
-                            window.location.href = '/dashboard';
-                        } else {
-                            location.reload();
-                        }
+                        window.location.href = '/dashboard';
                     } else {
                         $switch.prop('disabled', false);
                         alert('Failed to switch admin mode: ' + (res.message || 'Unknown error'));
@@ -849,6 +973,70 @@
                     console.log('Status:', status, 'Error:', error);
                     $switch.prop('disabled', false);
                     alert('Error switching admin mode. Please check console for details.');
+                }
+            });
+        });
+
+        // Artisan Dashboard Toggle
+        $('#artisanDashboardSwitch').on('change', function () {
+            var mode = this.checked ? 'artisan' : 'personal';
+            var $switch = $(this);
+            $switch.prop('disabled', true);
+
+            console.log('Artisan toggle clicked, switching to mode:', mode);
+
+            $.ajax({
+                url: '/dashboard/switch-artisan-mode',
+                method: 'POST',
+                data: { mode: mode },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function (res) {
+                    console.log('Success response:', res);
+                    if (res.success) {
+                        window.location.href = res.mode === 'artisan' ? '/artisan/dashboard' : '/dashboard';
+                    } else {
+                        $switch.prop('disabled', false);
+                        alert('Failed to switch artisan mode: ' + (res.message || 'Unknown error'));
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log('Error response:', xhr.responseText);
+                    $switch.prop('disabled', false);
+                    alert('Error switching artisan mode. Please check console for details.');
+                }
+            });
+        });
+        
+        // Property Manager Dashboard Toggle
+        $('#propertyManagerDashboardSwitch').on('change', function () {
+            var mode = this.checked ? 'property_manager' : 'personal';
+            var $switch = $(this);
+            $switch.prop('disabled', true);
+
+            console.log('PM toggle clicked, switching to mode:', mode);
+
+            $.ajax({
+                url: '/dashboard/switch-property-manager-mode',
+                method: 'POST',
+                data: { mode: mode },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function (res) {
+                    console.log('Success response:', res);
+                    if (res.success) {
+                        window.location.href = res.mode === 'property_manager' ? '/property-manager/dashboard' : '/dashboard';
+                    } else {
+                        $switch.prop('disabled', false);
+                        alert('Failed to switch PM mode: ' + (res.message || 'Unknown error'));
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log('Error response:', xhr.responseText);
+                    $switch.prop('disabled', false);
+                    alert('Error switching PM mode. Please check console for details.');
                 }
             });
         });

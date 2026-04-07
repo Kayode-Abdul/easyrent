@@ -1,0 +1,3754 @@
+[
+    {
+        "name": "Nigeria",
+        "code": "NG",
+        "states": [
+            {
+                "name": "Abia",
+                "cities": [
+                    "Aba South",
+                    "Arochukwu",
+                    "Bende",
+                    "Ikwuano",
+                    "Isiala Ngwa North",
+                    "Isiala Ngwa South",
+                    "Isuikwuato",
+                    "Obi Ngwa",
+                    "Ohafia",
+                    "Osisioma",
+                    "Ugwunagbo",
+                    "Ukwa East",
+                    "Ukwa West",
+                    "Umuahia North",
+                    "Umuahia South",
+                    "Umu Nneochi"
+                ]
+            },
+            {
+                "name": "Adamawa",
+                "cities": [
+                    "Fufure",
+                    "Ganye",
+                    "Gayuk",
+                    "Gombi",
+                    "Grie",
+                    "Hong",
+                    "Jada",
+                    "Lamurde",
+                    "Madagali",
+                    "Maiha",
+                    "Mayo Belwa",
+                    "Michika",
+                    "Mubi North",
+                    "Mubi South",
+                    "Numan",
+                    "Shelleng",
+                    "Song",
+                    "Toungo",
+                    "Yola North",
+                    "Yola South"
+                ]
+            },
+            {
+                "name": "Akwa Ibom",
+                "cities": [
+                    "Eastern Obolo",
+                    "Eket",
+                    "Esit Eket",
+                    "Essien Udim",
+                    "Etim Ekpo",
+                    "Etinan",
+                    "Ibeno",
+                    "Ibesikpo Asutan",
+                    "Ibiono-Ibom",
+                    "Ika",
+                    "Ikono",
+                    "Ikot Abasi",
+                    "Ikot Ekpene",
+                    "Ini",
+                    "Itu",
+                    "Mbo",
+                    "Mkpat-Enin",
+                    "Nsit-Atai",
+                    "Nsit-Ibom",
+                    "Nsit-Ubium",
+                    "Obot Akara",
+                    "Okobo",
+                    "Onna",
+                    "Oron",
+                    "Oruk Anam",
+                    "Udung-Uko",
+                    "Ukanafun",
+                    "Uruan",
+                    "Urue-Offong\/Oruko",
+                    "Uyo"
+                ]
+            },
+            {
+                "name": "Anambra",
+                "cities": [
+                    "Anambra East",
+                    "Anambra West",
+                    "Anaocha",
+                    "Awka North",
+                    "Awka South",
+                    "Ayamelum",
+                    "Dunukofia",
+                    "Ekwusigo",
+                    "Idemili North",
+                    "Idemili South",
+                    "Ihiala",
+                    "Njikoka",
+                    "Nnewi North",
+                    "Nnewi South",
+                    "Ogbaru",
+                    "Onitsha North",
+                    "Onitsha South",
+                    "Orumba North",
+                    "Orumba South",
+                    "Oyi"
+                ]
+            },
+            {
+                "name": "Bauchi",
+                "cities": [
+                    "Bauchi",
+                    "Bogoro",
+                    "Damban",
+                    "Darazo",
+                    "Dass",
+                    "Gamawa",
+                    "Ganjuwa",
+                    "Giade",
+                    "Itas\/Gadau",
+                    "Jama'are",
+                    "Katagum",
+                    "Kirfi",
+                    "Misau",
+                    "Ningi",
+                    "Shira",
+                    "Tafawa Balewa",
+                    "Toro",
+                    "Warji",
+                    "Zaki"
+                ]
+            },
+            {
+                "name": "Bayelsa",
+                "cities": [
+                    "Ekeremor",
+                    "Kolokuma\/Opokuma",
+                    "Nembe",
+                    "Ogbia",
+                    "Sagbama",
+                    "Southern Ijaw",
+                    "Yenagoa"
+                ]
+            },
+            {
+                "name": "Benue",
+                "cities": [
+                    "Apa",
+                    "Ado",
+                    "Buruku",
+                    "Gboko",
+                    "Guma",
+                    "Gwer East",
+                    "Gwer West",
+                    "Katsina-Ala",
+                    "Konshisha",
+                    "Kwande",
+                    "Logo",
+                    "Makurdi",
+                    "Obi",
+                    "Ogbadibo",
+                    "Ohimini",
+                    "Oju",
+                    "Okpokwu",
+                    "Oturkpo",
+                    "Tarka",
+                    "Ukum",
+                    "Ushongo",
+                    "Vandeikya"
+                ]
+            },
+            {
+                "name": "Borno",
+                "cities": [
+                    "Askira\/Uba",
+                    "Bama",
+                    "Bayo",
+                    "Biu",
+                    "Chibok",
+                    "Damboa",
+                    "Dikwa",
+                    "Gubio",
+                    "Guzamala",
+                    "Gwoza",
+                    "Hawul",
+                    "Jere",
+                    "Kaga",
+                    "Kala\/Balge",
+                    "Konduga",
+                    "Kukawa",
+                    "Kwaya Kusar",
+                    "Mafa",
+                    "Magumeri",
+                    "Maiduguri",
+                    "Marte",
+                    "Mobbar",
+                    "Monguno",
+                    "Ngala",
+                    "Nganzai",
+                    "Shani"
+                ]
+            },
+            {
+                "name": "Cross River",
+                "cities": [
+                    "Akamkpa",
+                    "Akpabuyo",
+                    "Bakassi",
+                    "Bekwarra",
+                    "Biase",
+                    "Boki",
+                    "Calabar Municipal",
+                    "Calabar South",
+                    "Etung",
+                    "Ikom",
+                    "Obanliku",
+                    "Obubra",
+                    "Obudu",
+                    "Odukpani",
+                    "Ogoja",
+                    "Yakuur",
+                    "Yala"
+                ]
+            },
+            {
+                "name": "Delta",
+                "cities": [
+                    "Aniocha South",
+                    "Bomadi",
+                    "Burutu",
+                    "Ethiope East",
+                    "Ethiope West",
+                    "Ika North East",
+                    "Ika South",
+                    "Isoko North",
+                    "Isoko South",
+                    "Ndokwa East",
+                    "Ndokwa West",
+                    "Okpe",
+                    "Oshimili North",
+                    "Oshimili South",
+                    "Patani",
+                    "Sapele",
+                    "Udu",
+                    "Ughelli North",
+                    "Ughelli South",
+                    "Ukwuani",
+                    "Uvwie",
+                    "Warri North",
+                    "Warri South",
+                    "Warri South West"
+                ]
+            },
+            {
+                "name": "Ebonyi",
+                "cities": [
+                    "Afikpo North",
+                    "Afikpo South",
+                    "Ebonyi",
+                    "Ezza North",
+                    "Ezza South",
+                    "Ikwo",
+                    "Ishielu",
+                    "Ivo",
+                    "Izzi",
+                    "Ohaozara",
+                    "Ohaukwu",
+                    "Onicha"
+                ]
+            },
+            {
+                "name": "Edo",
+                "cities": [
+                    "Egor",
+                    "Esan Central",
+                    "Esan North-East",
+                    "Esan South-East",
+                    "Esan West",
+                    "Etsako Central",
+                    "Etsako East",
+                    "Etsako West",
+                    "Igueben",
+                    "Ikpoba Okha",
+                    "Orhionmwon",
+                    "Oredo",
+                    "Ovia North-East",
+                    "Ovia South-West",
+                    "Owan East",
+                    "Owan West",
+                    "Uhunmwonde"
+                ]
+            },
+            {
+                "name": "Ekiti",
+                "cities": [
+                    "Efon",
+                    "Ekiti East",
+                    "Ekiti South-West",
+                    "Ekiti West",
+                    "Emure",
+                    "Gbonyin",
+                    "Ido Osi",
+                    "Ijero",
+                    "Ikere",
+                    "Ikole",
+                    "Ilejemeje",
+                    "Irepodun\/Ifelodun",
+                    "Ise\/Orun",
+                    "Moba",
+                    "Oye"
+                ]
+            },
+            {
+                "name": "Enugu",
+                "cities": [
+                    "Awgu",
+                    "Enugu East",
+                    "Enugu North",
+                    "Enugu South",
+                    "Ezeagu",
+                    "Igbo Etiti",
+                    "Igbo Eze North",
+                    "Igbo Eze South",
+                    "Isi Uzo",
+                    "Nkanu East",
+                    "Nkanu West",
+                    "Nsukka",
+                    "Oji River",
+                    "Udenu",
+                    "Udi",
+                    "Uzo Uwani"
+                ]
+            },
+            {
+                "name": "FCT",
+                "cities": [
+                    "Bwari",
+                    "Gwagwalada",
+                    "Kuje",
+                    "Kwali",
+                    "Municipal Area Council"
+                ]
+            },
+            {
+                "name": "Gombe",
+                "cities": [
+                    "Balanga",
+                    "Billiri",
+                    "Dukku",
+                    "Funakaye",
+                    "Gombe",
+                    "Kaltungo",
+                    "Kwami",
+                    "Nafada",
+                    "Shongom",
+                    "Yamaltu\/Deba"
+                ]
+            },
+            {
+                "name": "Imo",
+                "cities": [
+                    "Ahiazu Mbaise",
+                    "Ehime Mbano",
+                    "Ezinihitte",
+                    "Ideato North",
+                    "Ideato South",
+                    "Ihitte\/Uboma",
+                    "Ikeduru",
+                    "Isiala Mbano",
+                    "Isu",
+                    "Mbaitoli",
+                    "Ngor Okpala",
+                    "Njaba",
+                    "Nkwerre",
+                    "Nwangele",
+                    "Obowo",
+                    "Oguta",
+                    "Ohaji\/Egbema",
+                    "Okigwe",
+                    "Orlu",
+                    "Orsu",
+                    "Oru East",
+                    "Oru West",
+                    "Owerri Municipal",
+                    "Owerri North",
+                    "Owerri West",
+                    "Unuimo"
+                ]
+            },
+            {
+                "name": "Jigawa",
+                "cities": [
+                    "Babura",
+                    "Biriniwa",
+                    "Birnin Kudu",
+                    "Buji",
+                    "Dutse",
+                    "Gagarawa",
+                    "Garki",
+                    "Gumel",
+                    "Guri",
+                    "Gwaram",
+                    "Gwiwa",
+                    "Hadejia",
+                    "Jahun",
+                    "Kafin Hausa",
+                    "Kazaure",
+                    "Kiri Kasama",
+                    "Kiyawa",
+                    "Kaugama",
+                    "Maigatari",
+                    "Malam Madori",
+                    "Miga",
+                    "Ringim",
+                    "Roni",
+                    "Sule Tankarkar",
+                    "Taura",
+                    "Yankwashi"
+                ]
+            },
+            {
+                "name": "Kaduna",
+                "cities": [
+                    "Chikun",
+                    "Giwa",
+                    "Igabi",
+                    "Ikara",
+                    "Jaba",
+                    "Jema'a",
+                    "Kachia",
+                    "Kaduna North",
+                    "Kaduna South",
+                    "Kagarko",
+                    "Kajuru",
+                    "Kaura",
+                    "Kauru",
+                    "Kubau",
+                    "Kudan",
+                    "Lere",
+                    "Makarfi",
+                    "Sabon Gari",
+                    "Sanga",
+                    "Soba",
+                    "Zangon Kataf",
+                    "Zaria"
+                ]
+            },
+            {
+                "name": "Kano",
+                "cities": [
+                    "Albasu",
+                    "Bagwai",
+                    "Bebeji",
+                    "Bichi",
+                    "Bunkure",
+                    "Dala",
+                    "Dambatta",
+                    "Dawakin Kudu",
+                    "Dawakin Tofa",
+                    "Doguwa",
+                    "Fagge",
+                    "Gabasawa",
+                    "Garko",
+                    "Garun Mallam",
+                    "Gaya",
+                    "Gezawa",
+                    "Gwale",
+                    "Gwarzo",
+                    "Kabo",
+                    "Kano Municipal",
+                    "Karaye",
+                    "Kibiya",
+                    "Kiru",
+                    "Kumbotso",
+                    "Kunchi",
+                    "Kura",
+                    "Madobi",
+                    "Makoda",
+                    "Minjibir",
+                    "Nasarawa",
+                    "Rano",
+                    "Rimin Gado",
+                    "Rogo",
+                    "Shanono",
+                    "Sumaila",
+                    "Takai",
+                    "Tarauni",
+                    "Tofa",
+                    "Tsanyawa",
+                    "Tudun Wada",
+                    "Ungogo",
+                    "Warawa",
+                    "Wudil"
+                ]
+            },
+            {
+                "name": "Katsina",
+                "cities": [
+                    "Batagarawa",
+                    "Batsari",
+                    "Baure",
+                    "Bindawa",
+                    "Charanchi",
+                    "Dandume",
+                    "Danja",
+                    "Dan Musa",
+                    "Daura",
+                    "Dutsi",
+                    "Dutsin Ma",
+                    "Faskari",
+                    "Funtua",
+                    "Ingawa",
+                    "Jibia",
+                    "Kafur",
+                    "Kaita",
+                    "Kankara",
+                    "Kankia",
+                    "Katsina",
+                    "Kurfi",
+                    "Kusada",
+                    "Mai'Adua",
+                    "Malumfashi",
+                    "Mani",
+                    "Mashi",
+                    "Matazu",
+                    "Musawa",
+                    "Rimi",
+                    "Sabuwa",
+                    "Safana",
+                    "Sandamu",
+                    "Zango"
+                ]
+            },
+            {
+                "name": "Kebbi",
+                "cities": [
+                    "Arewa Dandi",
+                    "Argungu",
+                    "Augie",
+                    "Bagudo",
+                    "Birnin Kebbi",
+                    "Bunza",
+                    "Dandi",
+                    "Fakai",
+                    "Gwandu",
+                    "Jega",
+                    "Kalgo",
+                    "Koko\/Besse",
+                    "Maiyama",
+                    "Ngaski",
+                    "Sakaba",
+                    "Shanga",
+                    "Suru",
+                    "Wasagu\/Danko",
+                    "Yauri",
+                    "Zuru"
+                ]
+            },
+            {
+                "name": "Kogi",
+                "cities": [
+                    "Ajaokuta",
+                    "Ankpa",
+                    "Bassa",
+                    "Dekina",
+                    "Ibaji",
+                    "Idah",
+                    "Igalamela Odolu",
+                    "Ijumu",
+                    "Kabba\/Bunu",
+                    "Kogi",
+                    "Lokoja",
+                    "Mopa Muro",
+                    "Ofu",
+                    "Ogori\/Magongo",
+                    "Okehi",
+                    "Okene",
+                    "Olamaboro",
+                    "Omala",
+                    "Yagba East",
+                    "Yagba West"
+                ]
+            },
+            {
+                "name": "Kwara",
+                "cities": [
+                    "Baruten",
+                    "Edu",
+                    "Ekiti",
+                    "Ifelodun",
+                    "Ilorin East",
+                    "Ilorin South",
+                    "Ilorin West",
+                    "Irepodun",
+                    "Isin",
+                    "Kaiama",
+                    "Moro",
+                    "Offa",
+                    "Oke Ero",
+                    "Oyun",
+                    "Pategi"
+                ]
+            },
+            {
+                "name": "Lagos",
+                "cities": [
+                    "Ajeromi-Ifelodun",
+                    "Alimosho",
+                    "Amuwo-Odofin",
+                    "Apapa",
+                    "Badagry",
+                    "Epe",
+                    "Eti Osa",
+                    "Ibeju-Lekki",
+                    "Ifako-Ijaiye",
+                    "Ikeja",
+                    "Ikorodu",
+                    "Kosofe",
+                    "Lagos Island",
+                    "Lagos Mainland",
+                    "Mushin",
+                    "Ojo",
+                    "Oshodi-Isolo",
+                    "Shomolu",
+                    "Surulere"
+                ]
+            },
+            {
+                "name": "Nasarawa",
+                "cities": [
+                    "Awe",
+                    "Doma",
+                    "Karu",
+                    "Keana",
+                    "Keffi",
+                    "Kokona",
+                    "Lafia",
+                    "Nasarawa",
+                    "Nasarawa Egon",
+                    "Obi",
+                    "Toto",
+                    "Wamba"
+                ]
+            },
+            {
+                "name": "Niger",
+                "cities": [
+                    "Agwara",
+                    "Bida",
+                    "Borgu",
+                    "Bosso",
+                    "Chanchaga",
+                    "Edati",
+                    "Gbako",
+                    "Gurara",
+                    "Katcha",
+                    "Kontagora",
+                    "Lapai",
+                    "Lavun",
+                    "Magama",
+                    "Mariga",
+                    "Mashegu",
+                    "Mokwa",
+                    "Moya",
+                    "Paikoro",
+                    "Rafi",
+                    "Rijau",
+                    "Shiroro",
+                    "Suleja",
+                    "Tafa",
+                    "Wushishi"
+                ]
+            },
+            {
+                "name": "Ogun",
+                "cities": [
+                    "Abeokuta South",
+                    "Ado-Odo\/Ota",
+                    "Egbado North",
+                    "Egbado South",
+                    "Ewekoro",
+                    "Ifo",
+                    "Ijebu East",
+                    "Ijebu North",
+                    "Ijebu North East",
+                    "Ijebu Ode",
+                    "Ikenne",
+                    "Imeko Afon",
+                    "Ipokia",
+                    "Obafemi Owode",
+                    "Odeda",
+                    "Odogbolu",
+                    "Ogun Waterside",
+                    "Remo North",
+                    "Shagamu"
+                ]
+            },
+            {
+                "name": "Ondo",
+                "cities": [
+                    "Akoko North-West",
+                    "Akoko South-West",
+                    "Akoko South-East",
+                    "Akure North",
+                    "Akure South",
+                    "Ese Odo",
+                    "Idanre",
+                    "Ifedore",
+                    "Ilaje",
+                    "Ile Oluji\/Okeigbo",
+                    "Irele",
+                    "Odigbo",
+                    "Okitipupa",
+                    "Ondo East",
+                    "Ondo West",
+                    "Ose",
+                    "Owo"
+                ]
+            },
+            {
+                "name": "Osun",
+                "cities": [
+                    "Atakunmosa West",
+                    "Aiyedaade",
+                    "Aiyedire",
+                    "Boluwaduro",
+                    "Boripe",
+                    "Ede North",
+                    "Ede South",
+                    "Ife Central",
+                    "Ife East",
+                    "Ife North",
+                    "Ife South",
+                    "Egbedore",
+                    "Ejigbo",
+                    "Ifedayo",
+                    "Ifelodun",
+                    "Ila",
+                    "Ilesa East",
+                    "Ilesa West",
+                    "Irepodun",
+                    "Irewole",
+                    "Isokan",
+                    "Iwo",
+                    "Obokun",
+                    "Odo Otin",
+                    "Ola Oluwa",
+                    "Olorunda",
+                    "Oriade",
+                    "Orolu",
+                    "Osogbo"
+                ]
+            },
+            {
+                "name": "Oyo",
+                "cities": [
+                    "Akinyele",
+                    "Atiba",
+                    "Atisbo",
+                    "Egbeda",
+                    "Ibadan North",
+                    "Ibadan North-East",
+                    "Ibadan North-West",
+                    "Ibadan South-East",
+                    "Ibadan South-West",
+                    "Ibarapa Central",
+                    "Ibarapa East",
+                    "Ibarapa North",
+                    "Ido",
+                    "Irepo",
+                    "Iseyin",
+                    "Itesiwaju",
+                    "Iwajowa",
+                    "Kajola",
+                    "Lagelu",
+                    "Ogbomosho North",
+                    "Ogbomosho South",
+                    "Ogo Oluwa",
+                    "Olorunsogo",
+                    "Oluyole",
+                    "Ona Ara",
+                    "Orelope",
+                    "Ori Ire",
+                    "Oyo",
+                    "Oyo East",
+                    "Saki East",
+                    "Saki West",
+                    "Surulere"
+                ]
+            },
+            {
+                "name": "Plateau",
+                "cities": [
+                    "Barkin Ladi",
+                    "Bassa",
+                    "Jos East",
+                    "Jos North",
+                    "Jos South",
+                    "Kanam",
+                    "Kanke",
+                    "Langtang South",
+                    "Langtang North",
+                    "Mangu",
+                    "Mikang",
+                    "Pankshin",
+                    "Qua'an Pan",
+                    "Riyom",
+                    "Shendam",
+                    "Wase"
+                ]
+            },
+            {
+                "name": "Rivers",
+                "cities": [
+                    "Ahoada East",
+                    "Ahoada West",
+                    "Akuku-Toru",
+                    "Andoni",
+                    "Asari-Toru",
+                    "Bonny",
+                    "Degema",
+                    "Eleme",
+                    "Emuoha",
+                    "Etche",
+                    "Gokana",
+                    "Ikwerre",
+                    "Khana",
+                    "Obio\/Akpor",
+                    "Ogba\/Egbema\/Ndoni",
+                    "Ogu\/Bolo",
+                    "Okrika",
+                    "Omuma",
+                    "Opobo\/Nkoro",
+                    "Oyigbo",
+                    "Port Harcourt",
+                    "Tai"
+                ]
+            },
+            {
+                "name": "Sokoto",
+                "cities": [
+                    "Bodinga",
+                    "Dange Shuni",
+                    "Gada",
+                    "Goronyo",
+                    "Gudu",
+                    "Gwadabawa",
+                    "Illela",
+                    "Isa",
+                    "Kebbe",
+                    "Kware",
+                    "Rabah",
+                    "Sabon Birni",
+                    "Shagari",
+                    "Silame",
+                    "Sokoto North",
+                    "Sokoto South",
+                    "Tambuwal",
+                    "Tangaza",
+                    "Tureta",
+                    "Wamako",
+                    "Wurno",
+                    "Yabo"
+                ]
+            },
+            {
+                "name": "Taraba",
+                "cities": [
+                    "Bali",
+                    "Donga",
+                    "Gashaka",
+                    "Gassol",
+                    "Ibi",
+                    "Jalingo",
+                    "Karim Lamido",
+                    "Kumi",
+                    "Lau",
+                    "Sardauna",
+                    "Takum",
+                    "Ussa",
+                    "Wukari",
+                    "Yorro",
+                    "Zing"
+                ]
+            },
+            {
+                "name": "Yobe",
+                "cities": [
+                    "Bursari",
+                    "Damaturu",
+                    "Fika",
+                    "Fune",
+                    "Geidam",
+                    "Gujba",
+                    "Gulani",
+                    "Jakusko",
+                    "Karasuwa",
+                    "Machina",
+                    "Nangere",
+                    "Nguru",
+                    "Potiskum",
+                    "Tarmuwa",
+                    "Yunusari",
+                    "Yusufari"
+                ]
+            },
+            {
+                "name": "Zamfara",
+                "cities": [
+                    "Bakura",
+                    "Birnin Magaji\/Kiyaw",
+                    "Bukkuyum",
+                    "Bungudu",
+                    "Gummi",
+                    "Gusau",
+                    "Kaura Namoda",
+                    "Maradun",
+                    "Maru",
+                    "Shinkafi",
+                    "Talata Mafara",
+                    "Chafe",
+                    "Zurmi"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Ghana",
+        "code": "GH",
+        "states": [
+            {
+                "name": "Greater Accra",
+                "cities": [
+                    "Accra",
+                    "Tema",
+                    "Madina",
+                    "Nungua",
+                    "Teshie",
+                    "Ashaiman",
+                    "Dansoman"
+                ]
+            },
+            {
+                "name": "Ashanti",
+                "cities": [
+                    "Kumasi",
+                    "Obuasi",
+                    "Ejisu",
+                    "Mampong",
+                    "Konongo",
+                    "Bekwai"
+                ]
+            },
+            {
+                "name": "Western",
+                "cities": [
+                    "Sekondi-Takoradi",
+                    "Tarkwa",
+                    "Axim",
+                    "Prestea",
+                    "Sefwi Wiawso"
+                ]
+            },
+            {
+                "name": "Central",
+                "cities": [
+                    "Cape Coast",
+                    "Winneba",
+                    "Kasoa",
+                    "Mankessim",
+                    "Saltpond"
+                ]
+            },
+            {
+                "name": "Eastern",
+                "cities": [
+                    "Koforidua",
+                    "Nkawkaw",
+                    "Nsawam",
+                    "Akim Oda",
+                    "Suhum"
+                ]
+            },
+            {
+                "name": "Northern",
+                "cities": [
+                    "Tamale",
+                    "Yendi",
+                    "Savelugu",
+                    "Damongo"
+                ]
+            },
+            {
+                "name": "Volta",
+                "cities": [
+                    "Ho",
+                    "Keta",
+                    "Hohoe",
+                    "Aflao",
+                    "Kpando"
+                ]
+            },
+            {
+                "name": "Upper East",
+                "cities": [
+                    "Bolgatanga",
+                    "Navrongo",
+                    "Bawku",
+                    "Zebilla"
+                ]
+            },
+            {
+                "name": "Upper West",
+                "cities": [
+                    "Wa",
+                    "Lawra",
+                    "Tumu",
+                    "Nandom"
+                ]
+            },
+            {
+                "name": "Brong-Ahafo",
+                "cities": [
+                    "Sunyani",
+                    "Techiman",
+                    "Berekum",
+                    "Dormaa Ahenkro",
+                    "Wenchi"
+                ]
+            },
+            {
+                "name": "Oti",
+                "cities": [
+                    "Dambai",
+                    "Nkwanta",
+                    "Kadjebi",
+                    "Jasikan"
+                ]
+            },
+            {
+                "name": "Bono East",
+                "cities": [
+                    "Techiman",
+                    "Kintampo",
+                    "Atebubu",
+                    "Nkoranza"
+                ]
+            },
+            {
+                "name": "Ahafo",
+                "cities": [
+                    "Goaso",
+                    "Bechem",
+                    "Duayaw Nkwanta"
+                ]
+            },
+            {
+                "name": "Savannah",
+                "cities": [
+                    "Damongo",
+                    "Bole",
+                    "Salaga"
+                ]
+            },
+            {
+                "name": "North East",
+                "cities": [
+                    "Nalerigu",
+                    "Gambaga",
+                    "Walewale"
+                ]
+            },
+            {
+                "name": "Western North",
+                "cities": [
+                    "Sefwi Wiawso",
+                    "Bibiani",
+                    "Enchi"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Kenya",
+        "code": "KE",
+        "states": [
+            {
+                "name": "Nairobi",
+                "cities": [
+                    "Nairobi CBD",
+                    "Westlands",
+                    "Karen",
+                    "Kilimani",
+                    "Langata",
+                    "Embakasi"
+                ]
+            },
+            {
+                "name": "Mombasa",
+                "cities": [
+                    "Mombasa Island",
+                    "Nyali",
+                    "Bamburi",
+                    "Likoni",
+                    "Changamwe"
+                ]
+            },
+            {
+                "name": "Kisumu",
+                "cities": [
+                    "Kisumu Central",
+                    "Kondele",
+                    "Mamboleo",
+                    "Nyalenda"
+                ]
+            },
+            {
+                "name": "Nakuru",
+                "cities": [
+                    "Nakuru Town",
+                    "Naivasha",
+                    "Gilgil",
+                    "Molo"
+                ]
+            },
+            {
+                "name": "Kiambu",
+                "cities": [
+                    "Thika",
+                    "Ruiru",
+                    "Juja",
+                    "Limuru",
+                    "Kikuyu",
+                    "Kiambu Town"
+                ]
+            },
+            {
+                "name": "Uasin Gishu",
+                "cities": [
+                    "Eldoret",
+                    "Turbo",
+                    "Moiben"
+                ]
+            },
+            {
+                "name": "Machakos",
+                "cities": [
+                    "Machakos Town",
+                    "Athi River",
+                    "Syokimau",
+                    "Kangundo"
+                ]
+            },
+            {
+                "name": "Kajiado",
+                "cities": [
+                    "Kajiado Town",
+                    "Ngong",
+                    "Ongata Rongai",
+                    "Kitengela",
+                    "Kiserian"
+                ]
+            },
+            {
+                "name": "Nyeri",
+                "cities": [
+                    "Nyeri Town",
+                    "Karatina",
+                    "Othaya"
+                ]
+            },
+            {
+                "name": "Meru",
+                "cities": [
+                    "Meru Town",
+                    "Nkubu",
+                    "Maua",
+                    "Timau"
+                ]
+            },
+            {
+                "name": "Kilifi",
+                "cities": [
+                    "Kilifi Town",
+                    "Malindi",
+                    "Watamu",
+                    "Mtwapa"
+                ]
+            },
+            {
+                "name": "Kwale",
+                "cities": [
+                    "Kwale",
+                    "Ukunda",
+                    "Diani",
+                    "Msambweni"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "South Africa",
+        "code": "ZA",
+        "states": [
+            {
+                "name": "Gauteng",
+                "cities": [
+                    "Johannesburg",
+                    "Pretoria",
+                    "Sandton",
+                    "Soweto",
+                    "Centurion",
+                    "Midrand",
+                    "Randburg"
+                ]
+            },
+            {
+                "name": "Western Cape",
+                "cities": [
+                    "Cape Town",
+                    "Stellenbosch",
+                    "Paarl",
+                    "George",
+                    "Knysna",
+                    "Somerset West"
+                ]
+            },
+            {
+                "name": "KwaZulu-Natal",
+                "cities": [
+                    "Durban",
+                    "Pietermaritzburg",
+                    "Richards Bay",
+                    "Newcastle",
+                    "Umhlanga"
+                ]
+            },
+            {
+                "name": "Eastern Cape",
+                "cities": [
+                    "Port Elizabeth",
+                    "East London",
+                    "Mthatha",
+                    "Bhisho",
+                    "Grahamstown"
+                ]
+            },
+            {
+                "name": "Free State",
+                "cities": [
+                    "Bloemfontein",
+                    "Welkom",
+                    "Bethlehem",
+                    "Kroonstad"
+                ]
+            },
+            {
+                "name": "Limpopo",
+                "cities": [
+                    "Polokwane",
+                    "Tzaneen",
+                    "Thohoyandou",
+                    "Mokopane"
+                ]
+            },
+            {
+                "name": "Mpumalanga",
+                "cities": [
+                    "Nelspruit",
+                    "Witbank",
+                    "Secunda",
+                    "Standerton"
+                ]
+            },
+            {
+                "name": "North West",
+                "cities": [
+                    "Rustenburg",
+                    "Mahikeng",
+                    "Potchefstroom",
+                    "Klerksdorp"
+                ]
+            },
+            {
+                "name": "Northern Cape",
+                "cities": [
+                    "Kimberley",
+                    "Upington",
+                    "Springbok"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "United Kingdom",
+        "code": "GB",
+        "states": [
+            {
+                "name": "England",
+                "cities": [
+                    "London",
+                    "Manchester",
+                    "Birmingham",
+                    "Liverpool",
+                    "Leeds",
+                    "Bristol",
+                    "Sheffield",
+                    "Newcastle",
+                    "Nottingham",
+                    "Leicester"
+                ]
+            },
+            {
+                "name": "Scotland",
+                "cities": [
+                    "Edinburgh",
+                    "Glasgow",
+                    "Aberdeen",
+                    "Dundee",
+                    "Inverness"
+                ]
+            },
+            {
+                "name": "Wales",
+                "cities": [
+                    "Cardiff",
+                    "Swansea",
+                    "Newport",
+                    "Bangor",
+                    "Wrexham"
+                ]
+            },
+            {
+                "name": "Northern Ireland",
+                "cities": [
+                    "Belfast",
+                    "Derry",
+                    "Lisburn",
+                    "Newry"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "United States",
+        "code": "US",
+        "states": [
+            {
+                "name": "Alabama",
+                "cities": [
+                    "Birmingham",
+                    "Montgomery",
+                    "Huntsville",
+                    "Mobile"
+                ]
+            },
+            {
+                "name": "Alaska",
+                "cities": [
+                    "Anchorage",
+                    "Fairbanks",
+                    "Juneau"
+                ]
+            },
+            {
+                "name": "Arizona",
+                "cities": [
+                    "Phoenix",
+                    "Tucson",
+                    "Mesa",
+                    "Scottsdale"
+                ]
+            },
+            {
+                "name": "Arkansas",
+                "cities": [
+                    "Little Rock",
+                    "Fort Smith",
+                    "Fayetteville"
+                ]
+            },
+            {
+                "name": "California",
+                "cities": [
+                    "Los Angeles",
+                    "San Francisco",
+                    "San Diego",
+                    "San Jose",
+                    "Sacramento"
+                ]
+            },
+            {
+                "name": "Colorado",
+                "cities": [
+                    "Denver",
+                    "Colorado Springs",
+                    "Aurora",
+                    "Boulder"
+                ]
+            },
+            {
+                "name": "Connecticut",
+                "cities": [
+                    "Hartford",
+                    "New Haven",
+                    "Stamford",
+                    "Bridgeport"
+                ]
+            },
+            {
+                "name": "Delaware",
+                "cities": [
+                    "Wilmington",
+                    "Dover",
+                    "Newark"
+                ]
+            },
+            {
+                "name": "Florida",
+                "cities": [
+                    "Miami",
+                    "Orlando",
+                    "Tampa",
+                    "Jacksonville",
+                    "Fort Lauderdale"
+                ]
+            },
+            {
+                "name": "Georgia",
+                "cities": [
+                    "Atlanta",
+                    "Augusta",
+                    "Savannah",
+                    "Columbus"
+                ]
+            },
+            {
+                "name": "Hawaii",
+                "cities": [
+                    "Honolulu",
+                    "Hilo",
+                    "Kailua"
+                ]
+            },
+            {
+                "name": "Idaho",
+                "cities": [
+                    "Boise",
+                    "Meridian",
+                    "Nampa"
+                ]
+            },
+            {
+                "name": "Illinois",
+                "cities": [
+                    "Chicago",
+                    "Aurora",
+                    "Naperville",
+                    "Springfield"
+                ]
+            },
+            {
+                "name": "Indiana",
+                "cities": [
+                    "Indianapolis",
+                    "Fort Wayne",
+                    "Evansville"
+                ]
+            },
+            {
+                "name": "Iowa",
+                "cities": [
+                    "Des Moines",
+                    "Cedar Rapids",
+                    "Davenport"
+                ]
+            },
+            {
+                "name": "Kansas",
+                "cities": [
+                    "Wichita",
+                    "Overland Park",
+                    "Kansas City"
+                ]
+            },
+            {
+                "name": "Kentucky",
+                "cities": [
+                    "Louisville",
+                    "Lexington",
+                    "Bowling Green"
+                ]
+            },
+            {
+                "name": "Louisiana",
+                "cities": [
+                    "New Orleans",
+                    "Baton Rouge",
+                    "Shreveport"
+                ]
+            },
+            {
+                "name": "Maine",
+                "cities": [
+                    "Portland",
+                    "Lewiston",
+                    "Bangor"
+                ]
+            },
+            {
+                "name": "Maryland",
+                "cities": [
+                    "Baltimore",
+                    "Columbia",
+                    "Silver Spring"
+                ]
+            },
+            {
+                "name": "Massachusetts",
+                "cities": [
+                    "Boston",
+                    "Worcester",
+                    "Springfield",
+                    "Cambridge"
+                ]
+            },
+            {
+                "name": "Michigan",
+                "cities": [
+                    "Detroit",
+                    "Grand Rapids",
+                    "Ann Arbor"
+                ]
+            },
+            {
+                "name": "Minnesota",
+                "cities": [
+                    "Minneapolis",
+                    "Saint Paul",
+                    "Rochester"
+                ]
+            },
+            {
+                "name": "Mississippi",
+                "cities": [
+                    "Jackson",
+                    "Gulfport",
+                    "Hattiesburg"
+                ]
+            },
+            {
+                "name": "Missouri",
+                "cities": [
+                    "Kansas City",
+                    "St. Louis",
+                    "Springfield"
+                ]
+            },
+            {
+                "name": "Montana",
+                "cities": [
+                    "Billings",
+                    "Missoula",
+                    "Great Falls"
+                ]
+            },
+            {
+                "name": "Nebraska",
+                "cities": [
+                    "Omaha",
+                    "Lincoln",
+                    "Bellevue"
+                ]
+            },
+            {
+                "name": "Nevada",
+                "cities": [
+                    "Las Vegas",
+                    "Henderson",
+                    "Reno"
+                ]
+            },
+            {
+                "name": "New Hampshire",
+                "cities": [
+                    "Manchester",
+                    "Nashua",
+                    "Concord"
+                ]
+            },
+            {
+                "name": "New Jersey",
+                "cities": [
+                    "Newark",
+                    "Jersey City",
+                    "Trenton",
+                    "Paterson"
+                ]
+            },
+            {
+                "name": "New Mexico",
+                "cities": [
+                    "Albuquerque",
+                    "Las Cruces",
+                    "Santa Fe"
+                ]
+            },
+            {
+                "name": "New York",
+                "cities": [
+                    "New York City",
+                    "Buffalo",
+                    "Rochester",
+                    "Albany"
+                ]
+            },
+            {
+                "name": "North Carolina",
+                "cities": [
+                    "Charlotte",
+                    "Raleigh",
+                    "Greensboro",
+                    "Durham"
+                ]
+            },
+            {
+                "name": "North Dakota",
+                "cities": [
+                    "Fargo",
+                    "Bismarck",
+                    "Grand Forks"
+                ]
+            },
+            {
+                "name": "Ohio",
+                "cities": [
+                    "Columbus",
+                    "Cleveland",
+                    "Cincinnati",
+                    "Toledo"
+                ]
+            },
+            {
+                "name": "Oklahoma",
+                "cities": [
+                    "Oklahoma City",
+                    "Tulsa",
+                    "Norman"
+                ]
+            },
+            {
+                "name": "Oregon",
+                "cities": [
+                    "Portland",
+                    "Salem",
+                    "Eugene"
+                ]
+            },
+            {
+                "name": "Pennsylvania",
+                "cities": [
+                    "Philadelphia",
+                    "Pittsburgh",
+                    "Allentown"
+                ]
+            },
+            {
+                "name": "Rhode Island",
+                "cities": [
+                    "Providence",
+                    "Warwick",
+                    "Cranston"
+                ]
+            },
+            {
+                "name": "South Carolina",
+                "cities": [
+                    "Charleston",
+                    "Columbia",
+                    "Greenville"
+                ]
+            },
+            {
+                "name": "South Dakota",
+                "cities": [
+                    "Sioux Falls",
+                    "Rapid City",
+                    "Aberdeen"
+                ]
+            },
+            {
+                "name": "Tennessee",
+                "cities": [
+                    "Nashville",
+                    "Memphis",
+                    "Knoxville"
+                ]
+            },
+            {
+                "name": "Texas",
+                "cities": [
+                    "Houston",
+                    "Dallas",
+                    "Austin",
+                    "San Antonio",
+                    "Fort Worth"
+                ]
+            },
+            {
+                "name": "Utah",
+                "cities": [
+                    "Salt Lake City",
+                    "West Valley City",
+                    "Provo"
+                ]
+            },
+            {
+                "name": "Vermont",
+                "cities": [
+                    "Burlington",
+                    "South Burlington",
+                    "Rutland"
+                ]
+            },
+            {
+                "name": "Virginia",
+                "cities": [
+                    "Virginia Beach",
+                    "Norfolk",
+                    "Richmond"
+                ]
+            },
+            {
+                "name": "Washington",
+                "cities": [
+                    "Seattle",
+                    "Spokane",
+                    "Tacoma"
+                ]
+            },
+            {
+                "name": "West Virginia",
+                "cities": [
+                    "Charleston",
+                    "Huntington",
+                    "Morgantown"
+                ]
+            },
+            {
+                "name": "Wisconsin",
+                "cities": [
+                    "Milwaukee",
+                    "Madison",
+                    "Green Bay"
+                ]
+            },
+            {
+                "name": "Wyoming",
+                "cities": [
+                    "Cheyenne",
+                    "Casper",
+                    "Laramie"
+                ]
+            },
+            {
+                "name": "District of Columbia",
+                "cities": [
+                    "Washington D.C."
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Canada",
+        "code": "CA",
+        "states": [
+            {
+                "name": "Ontario",
+                "cities": [
+                    "Toronto",
+                    "Ottawa",
+                    "Mississauga",
+                    "Hamilton",
+                    "London",
+                    "Brampton"
+                ]
+            },
+            {
+                "name": "Quebec",
+                "cities": [
+                    "Montreal",
+                    "Quebec City",
+                    "Laval",
+                    "Gatineau",
+                    "Longueuil"
+                ]
+            },
+            {
+                "name": "British Columbia",
+                "cities": [
+                    "Vancouver",
+                    "Victoria",
+                    "Surrey",
+                    "Burnaby",
+                    "Kelowna"
+                ]
+            },
+            {
+                "name": "Alberta",
+                "cities": [
+                    "Calgary",
+                    "Edmonton",
+                    "Red Deer",
+                    "Lethbridge"
+                ]
+            },
+            {
+                "name": "Manitoba",
+                "cities": [
+                    "Winnipeg",
+                    "Brandon",
+                    "Steinbach"
+                ]
+            },
+            {
+                "name": "Saskatchewan",
+                "cities": [
+                    "Saskatoon",
+                    "Regina",
+                    "Prince Albert"
+                ]
+            },
+            {
+                "name": "Nova Scotia",
+                "cities": [
+                    "Halifax",
+                    "Dartmouth",
+                    "Sydney"
+                ]
+            },
+            {
+                "name": "New Brunswick",
+                "cities": [
+                    "Fredericton",
+                    "Saint John",
+                    "Moncton"
+                ]
+            },
+            {
+                "name": "Newfoundland and Labrador",
+                "cities": [
+                    "St. Johns",
+                    "Mount Pearl",
+                    "Corner Brook"
+                ]
+            },
+            {
+                "name": "Prince Edward Island",
+                "cities": [
+                    "Charlottetown",
+                    "Summerside"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Australia",
+        "code": "AU",
+        "states": [
+            {
+                "name": "New South Wales",
+                "cities": [
+                    "Sydney",
+                    "Newcastle",
+                    "Wollongong",
+                    "Central Coast"
+                ]
+            },
+            {
+                "name": "Victoria",
+                "cities": [
+                    "Melbourne",
+                    "Geelong",
+                    "Ballarat",
+                    "Bendigo"
+                ]
+            },
+            {
+                "name": "Queensland",
+                "cities": [
+                    "Brisbane",
+                    "Gold Coast",
+                    "Sunshine Coast",
+                    "Cairns",
+                    "Townsville"
+                ]
+            },
+            {
+                "name": "Western Australia",
+                "cities": [
+                    "Perth",
+                    "Fremantle",
+                    "Mandurah",
+                    "Bunbury"
+                ]
+            },
+            {
+                "name": "South Australia",
+                "cities": [
+                    "Adelaide",
+                    "Mount Gambier",
+                    "Whyalla"
+                ]
+            },
+            {
+                "name": "Tasmania",
+                "cities": [
+                    "Hobart",
+                    "Launceston",
+                    "Devonport"
+                ]
+            },
+            {
+                "name": "Australian Capital Territory",
+                "cities": [
+                    "Canberra"
+                ]
+            },
+            {
+                "name": "Northern Territory",
+                "cities": [
+                    "Darwin",
+                    "Alice Springs"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "India",
+        "code": "IN",
+        "states": [
+            {
+                "name": "Maharashtra",
+                "cities": [
+                    "Mumbai",
+                    "Pune",
+                    "Nagpur",
+                    "Nashik",
+                    "Thane"
+                ]
+            },
+            {
+                "name": "Delhi",
+                "cities": [
+                    "New Delhi",
+                    "North Delhi",
+                    "South Delhi",
+                    "East Delhi"
+                ]
+            },
+            {
+                "name": "Karnataka",
+                "cities": [
+                    "Bangalore",
+                    "Mysore",
+                    "Mangalore",
+                    "Hubli"
+                ]
+            },
+            {
+                "name": "Tamil Nadu",
+                "cities": [
+                    "Chennai",
+                    "Coimbatore",
+                    "Madurai",
+                    "Salem"
+                ]
+            },
+            {
+                "name": "Telangana",
+                "cities": [
+                    "Hyderabad",
+                    "Warangal",
+                    "Nizamabad",
+                    "Karimnagar"
+                ]
+            },
+            {
+                "name": "Gujarat",
+                "cities": [
+                    "Ahmedabad",
+                    "Surat",
+                    "Vadodara",
+                    "Rajkot"
+                ]
+            },
+            {
+                "name": "West Bengal",
+                "cities": [
+                    "Kolkata",
+                    "Howrah",
+                    "Durgapur",
+                    "Siliguri"
+                ]
+            },
+            {
+                "name": "Rajasthan",
+                "cities": [
+                    "Jaipur",
+                    "Jodhpur",
+                    "Udaipur",
+                    "Kota"
+                ]
+            },
+            {
+                "name": "Uttar Pradesh",
+                "cities": [
+                    "Lucknow",
+                    "Noida",
+                    "Agra",
+                    "Varanasi",
+                    "Kanpur"
+                ]
+            },
+            {
+                "name": "Kerala",
+                "cities": [
+                    "Kochi",
+                    "Thiruvananthapuram",
+                    "Kozhikode",
+                    "Thrissur"
+                ]
+            },
+            {
+                "name": "Punjab",
+                "cities": [
+                    "Chandigarh",
+                    "Ludhiana",
+                    "Amritsar",
+                    "Jalandhar"
+                ]
+            },
+            {
+                "name": "Madhya Pradesh",
+                "cities": [
+                    "Bhopal",
+                    "Indore",
+                    "Gwalior",
+                    "Jabalpur"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "United Arab Emirates",
+        "code": "AE",
+        "states": [
+            {
+                "name": "Dubai",
+                "cities": [
+                    "Dubai Marina",
+                    "Downtown Dubai",
+                    "Deira",
+                    "Jumeirah",
+                    "Business Bay",
+                    "Al Barsha"
+                ]
+            },
+            {
+                "name": "Abu Dhabi",
+                "cities": [
+                    "Abu Dhabi City",
+                    "Al Ain",
+                    "Khalifa City",
+                    "Reem Island"
+                ]
+            },
+            {
+                "name": "Sharjah",
+                "cities": [
+                    "Sharjah City",
+                    "Al Nahda",
+                    "Al Majaz"
+                ]
+            },
+            {
+                "name": "Ajman",
+                "cities": [
+                    "Ajman City",
+                    "Al Nuaimia"
+                ]
+            },
+            {
+                "name": "Ras Al Khaimah",
+                "cities": [
+                    "RAK City",
+                    "Al Hamra"
+                ]
+            },
+            {
+                "name": "Fujairah",
+                "cities": [
+                    "Fujairah City",
+                    "Dibba"
+                ]
+            },
+            {
+                "name": "Umm Al Quwain",
+                "cities": [
+                    "UAQ City"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Cameroon",
+        "code": "CM",
+        "states": [
+            {
+                "name": "Centre",
+                "cities": [
+                    "Yaounde",
+                    "Mbalmayo",
+                    "Obala",
+                    "Ebolowa"
+                ]
+            },
+            {
+                "name": "Littoral",
+                "cities": [
+                    "Douala",
+                    "Nkongsamba",
+                    "Edea",
+                    "Loum"
+                ]
+            },
+            {
+                "name": "West",
+                "cities": [
+                    "Bafoussam",
+                    "Dschang",
+                    "Mbouda",
+                    "Foumban"
+                ]
+            },
+            {
+                "name": "North West",
+                "cities": [
+                    "Bamenda",
+                    "Kumbo",
+                    "Wum",
+                    "Ndop"
+                ]
+            },
+            {
+                "name": "South West",
+                "cities": [
+                    "Buea",
+                    "Limbe",
+                    "Kumba",
+                    "Tiko"
+                ]
+            },
+            {
+                "name": "East",
+                "cities": [
+                    "Bertoua",
+                    "Batouri",
+                    "Abong-Mbang"
+                ]
+            },
+            {
+                "name": "North",
+                "cities": [
+                    "Garoua",
+                    "Guider",
+                    "Pitoa"
+                ]
+            },
+            {
+                "name": "Far North",
+                "cities": [
+                    "Maroua",
+                    "Kousseri",
+                    "Mokolo"
+                ]
+            },
+            {
+                "name": "Adamawa",
+                "cities": [
+                    "Ngaoundere",
+                    "Meiganga",
+                    "Banyo"
+                ]
+            },
+            {
+                "name": "South",
+                "cities": [
+                    "Ebolowa",
+                    "Kribi",
+                    "Sangmelima"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Tanzania",
+        "code": "TZ",
+        "states": [
+            {
+                "name": "Dar es Salaam",
+                "cities": [
+                    "Dar es Salaam",
+                    "Kinondoni",
+                    "Ilala",
+                    "Temeke"
+                ]
+            },
+            {
+                "name": "Arusha",
+                "cities": [
+                    "Arusha City",
+                    "Karatu",
+                    "Monduli"
+                ]
+            },
+            {
+                "name": "Mwanza",
+                "cities": [
+                    "Mwanza City",
+                    "Sengerema",
+                    "Misungwi"
+                ]
+            },
+            {
+                "name": "Dodoma",
+                "cities": [
+                    "Dodoma City",
+                    "Kondoa",
+                    "Mpwapwa"
+                ]
+            },
+            {
+                "name": "Zanzibar",
+                "cities": [
+                    "Zanzibar City",
+                    "Stone Town"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Uganda",
+        "code": "UG",
+        "states": [
+            {
+                "name": "Central",
+                "cities": [
+                    "Kampala",
+                    "Entebbe",
+                    "Mukono",
+                    "Wakiso"
+                ]
+            },
+            {
+                "name": "Eastern",
+                "cities": [
+                    "Jinja",
+                    "Mbale",
+                    "Soroti",
+                    "Iganga"
+                ]
+            },
+            {
+                "name": "Western",
+                "cities": [
+                    "Mbarara",
+                    "Fort Portal",
+                    "Kabale",
+                    "Kasese"
+                ]
+            },
+            {
+                "name": "Northern",
+                "cities": [
+                    "Gulu",
+                    "Lira",
+                    "Arua",
+                    "Moroto"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Rwanda",
+        "code": "RW",
+        "states": [
+            {
+                "name": "Kigali",
+                "cities": [
+                    "Kigali City",
+                    "Gasabo",
+                    "Kicukiro",
+                    "Nyarugenge"
+                ]
+            },
+            {
+                "name": "Eastern Province",
+                "cities": [
+                    "Rwamagana",
+                    "Kayonza",
+                    "Bugesera"
+                ]
+            },
+            {
+                "name": "Western Province",
+                "cities": [
+                    "Rusizi",
+                    "Karongi",
+                    "Rubavu"
+                ]
+            },
+            {
+                "name": "Northern Province",
+                "cities": [
+                    "Musanze",
+                    "Gicumbi",
+                    "Burera"
+                ]
+            },
+            {
+                "name": "Southern Province",
+                "cities": [
+                    "Huye",
+                    "Muhanga",
+                    "Nyanza"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Ethiopia",
+        "code": "ET",
+        "states": [
+            {
+                "name": "Addis Ababa",
+                "cities": [
+                    "Addis Ababa",
+                    "Bole",
+                    "Kirkos",
+                    "Yeka"
+                ]
+            },
+            {
+                "name": "Oromia",
+                "cities": [
+                    "Adama",
+                    "Jimma",
+                    "Bishoftu",
+                    "Shashamane"
+                ]
+            },
+            {
+                "name": "Amhara",
+                "cities": [
+                    "Bahir Dar",
+                    "Gondar",
+                    "Dessie",
+                    "Debre Markos"
+                ]
+            },
+            {
+                "name": "Tigray",
+                "cities": [
+                    "Mekelle",
+                    "Axum",
+                    "Adwa"
+                ]
+            },
+            {
+                "name": "SNNPR",
+                "cities": [
+                    "Hawassa",
+                    "Arba Minch",
+                    "Wolaita Sodo"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Egypt",
+        "code": "EG",
+        "states": [
+            {
+                "name": "Cairo",
+                "cities": [
+                    "Cairo",
+                    "Heliopolis",
+                    "Maadi",
+                    "Nasr City",
+                    "New Cairo"
+                ]
+            },
+            {
+                "name": "Alexandria",
+                "cities": [
+                    "Alexandria",
+                    "Borg El Arab",
+                    "Montaza"
+                ]
+            },
+            {
+                "name": "Giza",
+                "cities": [
+                    "Giza",
+                    "6th of October City",
+                    "Sheikh Zayed"
+                ]
+            },
+            {
+                "name": "Red Sea",
+                "cities": [
+                    "Hurghada",
+                    "El Gouna",
+                    "Marsa Alam"
+                ]
+            },
+            {
+                "name": "South Sinai",
+                "cities": [
+                    "Sharm El Sheikh",
+                    "Dahab",
+                    "Taba"
+                ]
+            },
+            {
+                "name": "Luxor",
+                "cities": [
+                    "Luxor"
+                ]
+            },
+            {
+                "name": "Aswan",
+                "cities": [
+                    "Aswan"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Morocco",
+        "code": "MA",
+        "states": [
+            {
+                "name": "Casablanca-Settat",
+                "cities": [
+                    "Casablanca",
+                    "Mohammedia",
+                    "El Jadida"
+                ]
+            },
+            {
+                "name": "Rabat-Sale-Kenitra",
+                "cities": [
+                    "Rabat",
+                    "Sale",
+                    "Kenitra",
+                    "Temara"
+                ]
+            },
+            {
+                "name": "Marrakech-Safi",
+                "cities": [
+                    "Marrakech",
+                    "Safi",
+                    "Essaouira"
+                ]
+            },
+            {
+                "name": "Fes-Meknes",
+                "cities": [
+                    "Fes",
+                    "Meknes",
+                    "Ifrane"
+                ]
+            },
+            {
+                "name": "Tanger-Tetouan-Al Hoceima",
+                "cities": [
+                    "Tangier",
+                    "Tetouan",
+                    "Chefchaouen"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Senegal",
+        "code": "SN",
+        "states": [
+            {
+                "name": "Dakar",
+                "cities": [
+                    "Dakar",
+                    "Pikine",
+                    "Guediawaye",
+                    "Rufisque"
+                ]
+            },
+            {
+                "name": "Thies",
+                "cities": [
+                    "Thies",
+                    "Mbour",
+                    "Tivaouane"
+                ]
+            },
+            {
+                "name": "Saint-Louis",
+                "cities": [
+                    "Saint-Louis",
+                    "Richard Toll"
+                ]
+            },
+            {
+                "name": "Ziguinchor",
+                "cities": [
+                    "Ziguinchor",
+                    "Bignona"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Ivory Coast",
+        "code": "CI",
+        "states": [
+            {
+                "name": "Abidjan",
+                "cities": [
+                    "Abidjan",
+                    "Cocody",
+                    "Yopougon",
+                    "Marcory",
+                    "Plateau"
+                ]
+            },
+            {
+                "name": "Yamoussoukro",
+                "cities": [
+                    "Yamoussoukro"
+                ]
+            },
+            {
+                "name": "Bouake",
+                "cities": [
+                    "Bouake"
+                ]
+            },
+            {
+                "name": "San Pedro",
+                "cities": [
+                    "San Pedro"
+                ]
+            },
+            {
+                "name": "Daloa",
+                "cities": [
+                    "Daloa"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Germany",
+        "code": "DE",
+        "states": [
+            {
+                "name": "Berlin",
+                "cities": [
+                    "Berlin"
+                ]
+            },
+            {
+                "name": "Bavaria",
+                "cities": [
+                    "Munich",
+                    "Nuremberg",
+                    "Augsburg",
+                    "Regensburg"
+                ]
+            },
+            {
+                "name": "North Rhine-Westphalia",
+                "cities": [
+                    "Cologne",
+                    "Dusseldorf",
+                    "Dortmund",
+                    "Essen",
+                    "Bonn"
+                ]
+            },
+            {
+                "name": "Baden-Wurttemberg",
+                "cities": [
+                    "Stuttgart",
+                    "Mannheim",
+                    "Karlsruhe",
+                    "Freiburg"
+                ]
+            },
+            {
+                "name": "Hesse",
+                "cities": [
+                    "Frankfurt",
+                    "Wiesbaden",
+                    "Kassel",
+                    "Darmstadt"
+                ]
+            },
+            {
+                "name": "Hamburg",
+                "cities": [
+                    "Hamburg"
+                ]
+            },
+            {
+                "name": "Saxony",
+                "cities": [
+                    "Dresden",
+                    "Leipzig",
+                    "Chemnitz"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "France",
+        "code": "FR",
+        "states": [
+            {
+                "name": "Ile-de-France",
+                "cities": [
+                    "Paris",
+                    "Versailles",
+                    "Boulogne-Billancourt"
+                ]
+            },
+            {
+                "name": "Provence-Alpes-Cote d Azur",
+                "cities": [
+                    "Marseille",
+                    "Nice",
+                    "Toulon",
+                    "Aix-en-Provence"
+                ]
+            },
+            {
+                "name": "Auvergne-Rhone-Alpes",
+                "cities": [
+                    "Lyon",
+                    "Grenoble",
+                    "Saint-Etienne"
+                ]
+            },
+            {
+                "name": "Nouvelle-Aquitaine",
+                "cities": [
+                    "Bordeaux",
+                    "Limoges",
+                    "Poitiers"
+                ]
+            },
+            {
+                "name": "Occitanie",
+                "cities": [
+                    "Toulouse",
+                    "Montpellier",
+                    "Nimes"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Spain",
+        "code": "ES",
+        "states": [
+            {
+                "name": "Madrid",
+                "cities": [
+                    "Madrid",
+                    "Alcala de Henares",
+                    "Getafe"
+                ]
+            },
+            {
+                "name": "Catalonia",
+                "cities": [
+                    "Barcelona",
+                    "Girona",
+                    "Tarragona"
+                ]
+            },
+            {
+                "name": "Andalusia",
+                "cities": [
+                    "Seville",
+                    "Malaga",
+                    "Granada",
+                    "Cordoba"
+                ]
+            },
+            {
+                "name": "Valencia",
+                "cities": [
+                    "Valencia",
+                    "Alicante",
+                    "Elche"
+                ]
+            },
+            {
+                "name": "Basque Country",
+                "cities": [
+                    "Bilbao",
+                    "San Sebastian",
+                    "Vitoria-Gasteiz"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Italy",
+        "code": "IT",
+        "states": [
+            {
+                "name": "Lazio",
+                "cities": [
+                    "Rome",
+                    "Latina",
+                    "Frosinone"
+                ]
+            },
+            {
+                "name": "Lombardy",
+                "cities": [
+                    "Milan",
+                    "Bergamo",
+                    "Brescia",
+                    "Como"
+                ]
+            },
+            {
+                "name": "Campania",
+                "cities": [
+                    "Naples",
+                    "Salerno",
+                    "Caserta"
+                ]
+            },
+            {
+                "name": "Veneto",
+                "cities": [
+                    "Venice",
+                    "Verona",
+                    "Padua"
+                ]
+            },
+            {
+                "name": "Tuscany",
+                "cities": [
+                    "Florence",
+                    "Pisa",
+                    "Siena",
+                    "Livorno"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Brazil",
+        "code": "BR",
+        "states": [
+            {
+                "name": "Sao Paulo",
+                "cities": [
+                    "Sao Paulo",
+                    "Campinas",
+                    "Santos",
+                    "Guarulhos"
+                ]
+            },
+            {
+                "name": "Rio de Janeiro",
+                "cities": [
+                    "Rio de Janeiro",
+                    "Niteroi",
+                    "Petropolis"
+                ]
+            },
+            {
+                "name": "Minas Gerais",
+                "cities": [
+                    "Belo Horizonte",
+                    "Uberlandia",
+                    "Juiz de Fora"
+                ]
+            },
+            {
+                "name": "Bahia",
+                "cities": [
+                    "Salvador",
+                    "Feira de Santana",
+                    "Vitoria da Conquista"
+                ]
+            },
+            {
+                "name": "Parana",
+                "cities": [
+                    "Curitiba",
+                    "Londrina",
+                    "Maringa"
+                ]
+            },
+            {
+                "name": "Rio Grande do Sul",
+                "cities": [
+                    "Porto Alegre",
+                    "Caxias do Sul",
+                    "Pelotas"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Mexico",
+        "code": "MX",
+        "states": [
+            {
+                "name": "Mexico City",
+                "cities": [
+                    "Mexico City"
+                ]
+            },
+            {
+                "name": "Jalisco",
+                "cities": [
+                    "Guadalajara",
+                    "Zapopan",
+                    "Tlaquepaque"
+                ]
+            },
+            {
+                "name": "Nuevo Leon",
+                "cities": [
+                    "Monterrey",
+                    "San Pedro Garza Garcia",
+                    "San Nicolas"
+                ]
+            },
+            {
+                "name": "Quintana Roo",
+                "cities": [
+                    "Cancun",
+                    "Playa del Carmen",
+                    "Tulum"
+                ]
+            },
+            {
+                "name": "Yucatan",
+                "cities": [
+                    "Merida",
+                    "Valladolid"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "China",
+        "code": "CN",
+        "states": [
+            {
+                "name": "Beijing",
+                "cities": [
+                    "Beijing"
+                ]
+            },
+            {
+                "name": "Shanghai",
+                "cities": [
+                    "Shanghai"
+                ]
+            },
+            {
+                "name": "Guangdong",
+                "cities": [
+                    "Guangzhou",
+                    "Shenzhen",
+                    "Dongguan",
+                    "Foshan"
+                ]
+            },
+            {
+                "name": "Zhejiang",
+                "cities": [
+                    "Hangzhou",
+                    "Ningbo",
+                    "Wenzhou"
+                ]
+            },
+            {
+                "name": "Jiangsu",
+                "cities": [
+                    "Nanjing",
+                    "Suzhou",
+                    "Wuxi"
+                ]
+            },
+            {
+                "name": "Sichuan",
+                "cities": [
+                    "Chengdu",
+                    "Mianyang",
+                    "Leshan"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Japan",
+        "code": "JP",
+        "states": [
+            {
+                "name": "Tokyo",
+                "cities": [
+                    "Tokyo",
+                    "Shibuya",
+                    "Shinjuku",
+                    "Minato"
+                ]
+            },
+            {
+                "name": "Osaka",
+                "cities": [
+                    "Osaka",
+                    "Sakai",
+                    "Higashiosaka"
+                ]
+            },
+            {
+                "name": "Kanagawa",
+                "cities": [
+                    "Yokohama",
+                    "Kawasaki",
+                    "Sagamihara"
+                ]
+            },
+            {
+                "name": "Aichi",
+                "cities": [
+                    "Nagoya",
+                    "Toyota",
+                    "Okazaki"
+                ]
+            },
+            {
+                "name": "Hokkaido",
+                "cities": [
+                    "Sapporo",
+                    "Asahikawa",
+                    "Hakodate"
+                ]
+            },
+            {
+                "name": "Fukuoka",
+                "cities": [
+                    "Fukuoka",
+                    "Kitakyushu",
+                    "Kurume"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Singapore",
+        "code": "SG",
+        "states": [
+            {
+                "name": "Central Region",
+                "cities": [
+                    "Downtown Core",
+                    "Orchard",
+                    "Marina Bay",
+                    "Bukit Merah"
+                ]
+            },
+            {
+                "name": "East Region",
+                "cities": [
+                    "Tampines",
+                    "Bedok",
+                    "Pasir Ris",
+                    "Changi"
+                ]
+            },
+            {
+                "name": "West Region",
+                "cities": [
+                    "Jurong East",
+                    "Jurong West",
+                    "Clementi",
+                    "Bukit Batok"
+                ]
+            },
+            {
+                "name": "North Region",
+                "cities": [
+                    "Woodlands",
+                    "Yishun",
+                    "Sembawang"
+                ]
+            },
+            {
+                "name": "North East Region",
+                "cities": [
+                    "Sengkang",
+                    "Punggol",
+                    "Hougang",
+                    "Serangoon"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Saudi Arabia",
+        "code": "SA",
+        "states": [
+            {
+                "name": "Riyadh",
+                "cities": [
+                    "Riyadh"
+                ]
+            },
+            {
+                "name": "Mecca",
+                "cities": [
+                    "Mecca",
+                    "Jeddah",
+                    "Taif"
+                ]
+            },
+            {
+                "name": "Eastern Province",
+                "cities": [
+                    "Dammam",
+                    "Dhahran",
+                    "Al Khobar",
+                    "Jubail"
+                ]
+            },
+            {
+                "name": "Medina",
+                "cities": [
+                    "Medina",
+                    "Yanbu"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Turkey",
+        "code": "TR",
+        "states": [
+            {
+                "name": "Istanbul",
+                "cities": [
+                    "Istanbul",
+                    "Kadikoy",
+                    "Besiktas",
+                    "Uskudar",
+                    "Beyoglu"
+                ]
+            },
+            {
+                "name": "Ankara",
+                "cities": [
+                    "Ankara",
+                    "Cankaya",
+                    "Kecioren"
+                ]
+            },
+            {
+                "name": "Izmir",
+                "cities": [
+                    "Izmir",
+                    "Bornova",
+                    "Karsiyaka"
+                ]
+            },
+            {
+                "name": "Antalya",
+                "cities": [
+                    "Antalya",
+                    "Alanya",
+                    "Kemer"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Ireland",
+        "code": "IE",
+        "states": [
+            {
+                "name": "Leinster",
+                "cities": [
+                    "Dublin",
+                    "Kilkenny",
+                    "Drogheda",
+                    "Dundalk"
+                ]
+            },
+            {
+                "name": "Munster",
+                "cities": [
+                    "Cork",
+                    "Limerick",
+                    "Waterford",
+                    "Tralee"
+                ]
+            },
+            {
+                "name": "Connacht",
+                "cities": [
+                    "Galway",
+                    "Sligo",
+                    "Castlebar"
+                ]
+            },
+            {
+                "name": "Ulster",
+                "cities": [
+                    "Letterkenny",
+                    "Donegal Town",
+                    "Monaghan"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Netherlands",
+        "code": "NL",
+        "states": [
+            {
+                "name": "North Holland",
+                "cities": [
+                    "Amsterdam",
+                    "Haarlem",
+                    "Zaandam"
+                ]
+            },
+            {
+                "name": "South Holland",
+                "cities": [
+                    "Rotterdam",
+                    "The Hague",
+                    "Leiden",
+                    "Delft"
+                ]
+            },
+            {
+                "name": "Utrecht",
+                "cities": [
+                    "Utrecht",
+                    "Amersfoort"
+                ]
+            },
+            {
+                "name": "North Brabant",
+                "cities": [
+                    "Eindhoven",
+                    "Tilburg",
+                    "Breda"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Poland",
+        "code": "PL",
+        "states": [
+            {
+                "name": "Masovia",
+                "cities": [
+                    "Warsaw",
+                    "Radom",
+                    "Plock"
+                ]
+            },
+            {
+                "name": "Lesser Poland",
+                "cities": [
+                    "Krakow",
+                    "Tarnow",
+                    "Nowy Sacz"
+                ]
+            },
+            {
+                "name": "Greater Poland",
+                "cities": [
+                    "Poznan",
+                    "Kalisz",
+                    "Konin"
+                ]
+            },
+            {
+                "name": "Silesia",
+                "cities": [
+                    "Katowice",
+                    "Gliwice",
+                    "Zabrze"
+                ]
+            },
+            {
+                "name": "Lower Silesia",
+                "cities": [
+                    "Wroclaw",
+                    "Legnica",
+                    "Walbrzych"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Sweden",
+        "code": "SE",
+        "states": [
+            {
+                "name": "Stockholm",
+                "cities": [
+                    "Stockholm",
+                    "Solna",
+                    "Sundbyberg"
+                ]
+            },
+            {
+                "name": "Vastra Gotaland",
+                "cities": [
+                    "Gothenburg",
+                    "Boras",
+                    "Trollhattan"
+                ]
+            },
+            {
+                "name": "Skane",
+                "cities": [
+                    "Malmo",
+                    "Helsingborg",
+                    "Lund"
+                ]
+            },
+            {
+                "name": "Uppsala",
+                "cities": [
+                    "Uppsala"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Norway",
+        "code": "NO",
+        "states": [
+            {
+                "name": "Oslo",
+                "cities": [
+                    "Oslo"
+                ]
+            },
+            {
+                "name": "Vestland",
+                "cities": [
+                    "Bergen",
+                    "Haugesund"
+                ]
+            },
+            {
+                "name": "Rogaland",
+                "cities": [
+                    "Stavanger",
+                    "Sandnes"
+                ]
+            },
+            {
+                "name": "Trondelag",
+                "cities": [
+                    "Trondheim",
+                    "Steinkjer"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "New Zealand",
+        "code": "NZ",
+        "states": [
+            {
+                "name": "Auckland",
+                "cities": [
+                    "Auckland City",
+                    "North Shore",
+                    "Manukau",
+                    "Waitakere"
+                ]
+            },
+            {
+                "name": "Wellington",
+                "cities": [
+                    "Wellington",
+                    "Lower Hutt",
+                    "Upper Hutt",
+                    "Porirua"
+                ]
+            },
+            {
+                "name": "Canterbury",
+                "cities": [
+                    "Christchurch",
+                    "Timaru",
+                    "Ashburton"
+                ]
+            },
+            {
+                "name": "Waikato",
+                "cities": [
+                    "Hamilton",
+                    "Tauranga",
+                    "Rotorua"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Philippines",
+        "code": "PH",
+        "states": [
+            {
+                "name": "Metro Manila",
+                "cities": [
+                    "Manila",
+                    "Quezon City",
+                    "Makati",
+                    "Taguig",
+                    "Pasig"
+                ]
+            },
+            {
+                "name": "Cebu",
+                "cities": [
+                    "Cebu City",
+                    "Mandaue",
+                    "Lapu-Lapu"
+                ]
+            },
+            {
+                "name": "Davao",
+                "cities": [
+                    "Davao City",
+                    "Tagum",
+                    "Panabo"
+                ]
+            },
+            {
+                "name": "Calabarzon",
+                "cities": [
+                    "Antipolo",
+                    "Bacoor",
+                    "Dasmarinas",
+                    "Lucena"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Malaysia",
+        "code": "MY",
+        "states": [
+            {
+                "name": "Kuala Lumpur",
+                "cities": [
+                    "Kuala Lumpur"
+                ]
+            },
+            {
+                "name": "Selangor",
+                "cities": [
+                    "Shah Alam",
+                    "Petaling Jaya",
+                    "Subang Jaya",
+                    "Klang"
+                ]
+            },
+            {
+                "name": "Penang",
+                "cities": [
+                    "George Town",
+                    "Butterworth",
+                    "Bayan Lepas"
+                ]
+            },
+            {
+                "name": "Johor",
+                "cities": [
+                    "Johor Bahru",
+                    "Iskandar Puteri",
+                    "Batu Pahat"
+                ]
+            },
+            {
+                "name": "Sabah",
+                "cities": [
+                    "Kota Kinabalu",
+                    "Sandakan",
+                    "Tawau"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Indonesia",
+        "code": "ID",
+        "states": [
+            {
+                "name": "Jakarta",
+                "cities": [
+                    "Central Jakarta",
+                    "South Jakarta",
+                    "North Jakarta",
+                    "East Jakarta",
+                    "West Jakarta"
+                ]
+            },
+            {
+                "name": "West Java",
+                "cities": [
+                    "Bandung",
+                    "Bekasi",
+                    "Depok",
+                    "Bogor"
+                ]
+            },
+            {
+                "name": "East Java",
+                "cities": [
+                    "Surabaya",
+                    "Malang",
+                    "Sidoarjo"
+                ]
+            },
+            {
+                "name": "Bali",
+                "cities": [
+                    "Denpasar",
+                    "Ubud",
+                    "Seminyak",
+                    "Kuta"
+                ]
+            },
+            {
+                "name": "Central Java",
+                "cities": [
+                    "Semarang",
+                    "Solo",
+                    "Yogyakarta"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Thailand",
+        "code": "TH",
+        "states": [
+            {
+                "name": "Bangkok",
+                "cities": [
+                    "Bangkok",
+                    "Sukhumvit",
+                    "Silom",
+                    "Sathorn"
+                ]
+            },
+            {
+                "name": "Chiang Mai",
+                "cities": [
+                    "Chiang Mai City",
+                    "San Kamphaeng"
+                ]
+            },
+            {
+                "name": "Phuket",
+                "cities": [
+                    "Phuket Town",
+                    "Patong",
+                    "Kata"
+                ]
+            },
+            {
+                "name": "Chonburi",
+                "cities": [
+                    "Pattaya",
+                    "Sri Racha",
+                    "Chonburi City"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "South Korea",
+        "code": "KR",
+        "states": [
+            {
+                "name": "Seoul",
+                "cities": [
+                    "Seoul",
+                    "Gangnam",
+                    "Mapo",
+                    "Itaewon"
+                ]
+            },
+            {
+                "name": "Busan",
+                "cities": [
+                    "Busan",
+                    "Haeundae",
+                    "Seoguipo"
+                ]
+            },
+            {
+                "name": "Incheon",
+                "cities": [
+                    "Incheon",
+                    "Songdo"
+                ]
+            },
+            {
+                "name": "Gyeonggi",
+                "cities": [
+                    "Suwon",
+                    "Seongnam",
+                    "Goyang",
+                    "Yongin"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Colombia",
+        "code": "CO",
+        "states": [
+            {
+                "name": "Bogota",
+                "cities": [
+                    "Bogota"
+                ]
+            },
+            {
+                "name": "Antioquia",
+                "cities": [
+                    "Medellin",
+                    "Envigado",
+                    "Bello"
+                ]
+            },
+            {
+                "name": "Valle del Cauca",
+                "cities": [
+                    "Cali",
+                    "Buenaventura"
+                ]
+            },
+            {
+                "name": "Atlantico",
+                "cities": [
+                    "Barranquilla",
+                    "Soledad"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Argentina",
+        "code": "AR",
+        "states": [
+            {
+                "name": "Buenos Aires",
+                "cities": [
+                    "Buenos Aires",
+                    "La Plata",
+                    "Mar del Plata"
+                ]
+            },
+            {
+                "name": "Cordoba",
+                "cities": [
+                    "Cordoba",
+                    "Villa Carlos Paz"
+                ]
+            },
+            {
+                "name": "Santa Fe",
+                "cities": [
+                    "Rosario",
+                    "Santa Fe City"
+                ]
+            },
+            {
+                "name": "Mendoza",
+                "cities": [
+                    "Mendoza"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Chile",
+        "code": "CL",
+        "states": [
+            {
+                "name": "Santiago Metropolitan",
+                "cities": [
+                    "Santiago",
+                    "Providencia",
+                    "Las Condes"
+                ]
+            },
+            {
+                "name": "Valparaiso",
+                "cities": [
+                    "Valparaiso",
+                    "Vina del Mar"
+                ]
+            },
+            {
+                "name": "Biobio",
+                "cities": [
+                    "Concepcion",
+                    "Talcahuano"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Peru",
+        "code": "PE",
+        "states": [
+            {
+                "name": "Lima",
+                "cities": [
+                    "Lima",
+                    "Miraflores",
+                    "San Isidro",
+                    "Barranco"
+                ]
+            },
+            {
+                "name": "Cusco",
+                "cities": [
+                    "Cusco City",
+                    "Ollantaytambo"
+                ]
+            },
+            {
+                "name": "Arequipa",
+                "cities": [
+                    "Arequipa City"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Pakistan",
+        "code": "PK",
+        "states": [
+            {
+                "name": "Punjab",
+                "cities": [
+                    "Lahore",
+                    "Faisalabad",
+                    "Rawalpindi",
+                    "Multan"
+                ]
+            },
+            {
+                "name": "Sindh",
+                "cities": [
+                    "Karachi",
+                    "Hyderabad",
+                    "Sukkur"
+                ]
+            },
+            {
+                "name": "Islamabad Capital Territory",
+                "cities": [
+                    "Islamabad"
+                ]
+            },
+            {
+                "name": "Khyber Pakhtunkhwa",
+                "cities": [
+                    "Peshawar",
+                    "Abbottabad",
+                    "Mardan"
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Bangladesh",
+        "code": "BD",
+        "states": [
+            {
+                "name": "Dhaka Division",
+                "cities": [
+                    "Dhaka",
+                    "Gazipur",
+                    "Narayanganj"
+                ]
+            },
+            {
+                "name": "Chittagong Division",
+                "cities": [
+                    "Chittagong",
+                    "Comilla",
+                    "Coxs Bazar"
+                ]
+            },
+            {
+                "name": "Rajshahi Division",
+                "cities": [
+                    "Rajshahi",
+                    "Bogra"
+                ]
+            },
+            {
+                "name": "Sylhet Division",
+                "cities": [
+                    "Sylhet"
+                ]
+            }
+        ]
+    }
+]

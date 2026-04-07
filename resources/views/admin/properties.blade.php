@@ -75,7 +75,8 @@
                     <hr>
                     <div class="stats">
                         <i class="fa fa-arrow-up text-success"></i>
-                        {{ round(($stats['occupied_apartments'] / max($stats['occupied_apartments'] + $stats['vacant_apartments'], 1)) * 100, 1) }}% occupancy
+                        {{ round(($stats['occupied_apartments'] / max($stats['occupied_apartments'] +
+                        $stats['vacant_apartments'], 1)) * 100, 1) }}% occupancy
                     </div>
                 </div>
             </div>
@@ -114,13 +115,14 @@
                     <div class="row">
                         <div class="col-5 col-md-4">
                             <div class="icon-big text-center icon-warning">
-                                <i class="nc-icon nc-chart-pie-35 text-primary"></i>
+                                <i class="nc-icon nc-chart-pie-36 text-primary"></i>
                             </div>
                         </div>
                         <div class="col-7 col-md-8">
                             <div class="numbers">
                                 <p class="card-category">Total Units</p>
-                                <p class="card-title">{{ number_format($stats['occupied_apartments'] + $stats['vacant_apartments']) }}</p>
+                                <p class="card-title">{{ number_format($stats['occupied_apartments'] +
+                                    $stats['vacant_apartments']) }}</p>
                             </div>
                         </div>
                     </div>
@@ -141,7 +143,8 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title"><i class="nc-icon nc-chart-bar-32"></i> Property Distribution by Location</h5>
+                    <h5 class="card-title"><i class="nc-icon nc-chart-bar-32"></i> Property Distribution by Location
+                    </h5>
                     <p class="card-category">Top 10 locations with most properties</p>
                 </div>
                 <div class="card-body">
@@ -162,9 +165,9 @@
                 <div class="card-footer">
                     <div class="legend">
                         @if(isset($stats['properties_by_category']))
-                            @foreach($stats['properties_by_category'] as $category => $count)
-                                <i class="fa fa-circle text-primary"></i> {{ ucfirst($category) }} ({{ $count }})
-                            @endforeach
+                        @foreach($stats['properties_by_category'] as $category => $count)
+                        <i class="fa fa-circle text-primary"></i> {{ ucfirst($category) }} ({{ $count }})
+                        @endforeach
                         @endif
                     </div>
                 </div>
@@ -224,15 +227,16 @@
                     <!-- Search and Filter -->
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <input type="text" class="form-control" id="propertySearch" placeholder="Search properties...">
+                            <input type="text" class="form-control" id="propertySearch"
+                                placeholder="Search properties...">
                         </div>
                         <div class="col-md-3">
                             <select class="form-control" id="locationFilter">
                                 <option value="">All Locations</option>
                                 @if(isset($stats['properties_by_location']))
-                                    @foreach($stats['properties_by_location'] as $location => $count)
-                                        <option value="{{ $location }}">{{ $location }} ({{ $count }})</option>
-                                    @endforeach
+                                @foreach($stats['properties_by_location'] as $location => $count)
+                                <option value="{{ $location }}">{{ $location }} ({{ $count }})</option>
+                                @endforeach
                                 @endif
                             </select>
                         </div>
@@ -240,9 +244,9 @@
                             <select class="form-control" id="categoryFilter">
                                 <option value="">All Categories</option>
                                 @if(isset($stats['properties_by_category']))
-                                    @foreach($stats['properties_by_category'] as $category => $count)
-                                        <option value="{{ $category }}">{{ ucfirst($category) }} ({{ $count }})</option>
-                                    @endforeach
+                                @foreach($stats['properties_by_category'] as $category => $count)
+                                <option value="{{ $category }}">{{ ucfirst($category) }} ({{ $count }})</option>
+                                @endforeach
                                 @endif
                             </select>
                         </div>
@@ -271,71 +275,82 @@
                             </thead>
                             <tbody>
                                 @foreach($properties as $property)
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" class="property-checkbox" value="{{ $property->property_id }}">
-                                        </td>
-                                        <td>
-                                            <div class="property-info">
-                                                <strong>{{ $property->title ?? 'Property #' . $property->property_id }}</strong>
-                                                <br>
-                                                <small class="text-muted">ID: {{ $property->property_id }}</small>
-                                                @if($property->price)
-                                                    <br><small class="text-success">₦{{ number_format($property->price) }}</small>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td>
-                                            @if($property->user)
-                                                <strong>{{ $property->user->first_name }} {{ $property->user->last_name }}</strong>
-                                                <br>
-                                                <small class="text-muted">{{ $property->user->email_address }}</small>
-                                            @else
-                                                <span class="text-muted">No owner</span>
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="property-checkbox"
+                                            value="{{ $property->property_id }}">
+                                    </td>
+                                    <td>
+                                        <div class="property-info">
+                                            <strong>{{ $property->title ?? 'Property #' . $property->property_id
+                                                }}</strong>
+                                            <br>
+                                            <small class="text-muted">ID: {{ $property->property_id }}</small>
+                                            @if($property->price)
+                                            <br><small class="text-success">₦{{ number_format($property->price)
+                                                }}</small>
                                             @endif
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-info">{{ $property->location ?? $property->state }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-primary">{{ ucfirst($property->category ?? 'General') }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-secondary">{{ $property->apartments_count ?? 0 }}</span>
-                                        </td>
-                                        <td>
-                                            @php
-                                                $total = $property->apartments_count ?? 0;
-                                                $occupied = $property->apartments->where('occupied', true)->count();
-                                                $occupancyRate = $total > 0 ? round(($occupied / $total) * 100) : 0;
-                                            @endphp
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: <?= $occupancyRate ?>%">
-                                                    {{ $occupancyRate }}%
-                                                </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if($property->user)
+                                        <strong>{{ $property->user->first_name }} {{ $property->user->last_name
+                                            }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ $property->user->email_address }}</small>
+                                        @else
+                                        <span class="text-muted">No owner</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">{{ $property->location ?? $property->state
+                                            }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-primary">{{ ucfirst($property->category ?? 'General')
+                                            }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-secondary">{{ $property->apartments_count ?? 0
+                                            }}</span>
+                                    </td>
+                                    <td>
+                                        @php
+                                        $total = $property->apartments_count ?? 0;
+                                        $occupied = $property->apartments->where('occupied', true)->count();
+                                        $occupancyRate = $total > 0 ? round(($occupied / $total) * 100) : 0;
+                                        @endphp
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-success" role="progressbar"
+                                                style="width: <?= $occupancyRate ?>%">
+                                                {{ $occupancyRate }}%
                                             </div>
-                                            <small>{{ $occupied }}/{{ $total }}</small>
-                                        </td>
-                                        <td>
-                                            <small>{{ $property->created_at->format('M d, Y') }}</small>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-success">Active</span>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="/dashboard/property/{{ $property->property_id }}" class="btn btn-sm btn-info" title="View">
-                                                    <i class="fa fa-eye"></i>
-                                                </a>
-                                                <a href="/dashboard/property/{{ $property->property_id }}/edit" class="btn btn-sm btn-warning" title="Edit">
-                                                    <i class="fa fa-edit"></i>
-                                                </a>
-                                                <button class="btn btn-sm btn-danger" onclick="deleteProperty({{ $property->property_id }})" title="Delete">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                        </div>
+                                        <small>{{ $occupied }}/{{ $total }}</small>
+                                    </td>
+                                    <td>
+                                        <small>{{ $property->created_at->format('M d, Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-success">Active</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="/dashboard/property/{{ $property->property_id }}"
+                                                class="btn btn-sm btn-info" title="View">
+                                                <i class="fa fa-eye"></i>
+                                            </a>
+                                            <a href="/dashboard/property/{{ $property->property_id }}/edit"
+                                                class="btn btn-sm btn-warning" title="Edit">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-danger"
+                                                onclick="deleteProperty({{ $property->property_id }})" title="Delete">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -355,23 +370,23 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Location Chart
-const locationCtx = document.getElementById('locationChart').getContext('2d');
-new Chart(locationCtx, {
-    type: 'bar',
-    data: {
-        labels: {!! json_encode(array_keys($stats['properties_by_location']->toArray() ?? [])) !!},
-        datasets: [{
-            label: 'Properties',
-            data: {!! json_encode(array_values($stats['properties_by_location']->toArray() ?? [])) !!},
-            backgroundColor: '#28a745',
-            borderColor: '#28a745',
-            borderWidth: 1
+    // Location Chart
+    const locationCtx = document.getElementById('locationChart').getContext('2d');
+    new Chart(locationCtx, {
+        type: 'bar',
+        data: {
+            labels: {!! json_encode(array_keys($stats['properties_by_location'] -> toArray() ?? []))!!},
+    datasets: [{
+        label: 'Properties',
+        data: {!! json_encode(array_values($stats['properties_by_location'] -> toArray() ?? [])) !!},
+        backgroundColor: '#28a745',
+        borderColor: '#28a745',
+        borderWidth: 1
         }]
     },
     options: {
         responsive: true,
-        plugins: {
+            plugins: {
             legend: {
                 display: false
             }
@@ -384,28 +399,28 @@ new Chart(locationCtx, {
     }
 });
 
-// Category Chart
-const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-new Chart(categoryCtx, {
-    type: 'doughnut',
-    data: {
-        labels: {!! json_encode(array_keys($stats['properties_by_category']->toArray() ?? [])) !!},
-        datasets: [{
-            data: {!! json_encode(array_values($stats['properties_by_category']->toArray() ?? [])) !!},
-            backgroundColor: [
-                '#28a745',
-                '#fbc658',
-                '#ef8157',
-                '#6bd098',
-                '#e14eca'
-            ],
-            borderWidth: 0
+    // Category Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {!! json_encode(array_keys($stats['properties_by_category'] -> toArray() ?? []))!!},
+    datasets: [{
+        data: {!! json_encode(array_values($stats['properties_by_category'] -> toArray() ?? [])) !!},
+        backgroundColor: [
+        '#28a745',
+        '#fbc658',
+        '#ef8157',
+        '#6bd098',
+        '#e14eca'
+    ],
+        borderWidth: 0
         }]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
+            maintainAspectRatio: false,
+                plugins: {
             legend: {
                 display: false
             }
@@ -413,107 +428,107 @@ new Chart(categoryCtx, {
     }
 });
 
-// Management Functions
-function bulkAction(action) {
-    const checkedBoxes = document.querySelectorAll('.property-checkbox:checked');
-    if (checkedBoxes.length === 0) {
-        alert('Please select properties first');
-        return;
-    }
-    
-    const propertyIds = Array.from(checkedBoxes).map(box => box.value);
-    showNotification(`${action} action will be implemented for ${propertyIds.length} properties`, 'info');
-}
-
-function exportProperties() {
-    showNotification('Property export feature will be available soon!', 'info');
-}
-
-function generateReport() {
-    showNotification('Report generation feature will be available soon!', 'info');
-}
-
-function deleteProperty(propId) {
-    if (confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
-        showNotification('Delete functionality will be implemented', 'warning');
-    }
-}
-
-function applyFilters() {
-    const search = document.getElementById('propertySearch').value.toLowerCase();
-    const location = document.getElementById('locationFilter').value.toLowerCase();
-    const category = document.getElementById('categoryFilter').value.toLowerCase();
-    
-    const rows = document.querySelectorAll('tbody tr');
-    
-    rows.forEach(row => {
-        const propertyText = row.cells[1].textContent.toLowerCase();
-        const propertyLocation = row.cells[3].textContent.toLowerCase();
-        const propertyCategory = row.cells[4].textContent.toLowerCase();
-        
-        const matchesSearch = !search || propertyText.includes(search);
-        const matchesLocation = !location || propertyLocation.includes(location);
-        const matchesCategory = !category || propertyCategory.includes(category);
-        
-        if (matchesSearch && matchesLocation && matchesCategory) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
+    // Management Functions
+    function bulkAction(action) {
+        const checkedBoxes = document.querySelectorAll('.property-checkbox:checked');
+        if (checkedBoxes.length === 0) {
+            alert('Please select properties first');
+            return;
         }
+
+        const propertyIds = Array.from(checkedBoxes).map(box => box.value);
+        showNotification(`${action} action will be implemented for ${propertyIds.length} properties`, 'info');
+    }
+
+    function exportProperties() {
+        showNotification('Property export feature will be available soon!', 'info');
+    }
+
+    function generateReport() {
+        showNotification('Report generation feature will be available soon!', 'info');
+    }
+
+    function deleteProperty(propId) {
+        if (confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
+            showNotification('Delete functionality will be implemented', 'warning');
+        }
+    }
+
+    function applyFilters() {
+        const search = document.getElementById('propertySearch').value.toLowerCase();
+        const location = document.getElementById('locationFilter').value.toLowerCase();
+        const category = document.getElementById('categoryFilter').value.toLowerCase();
+
+        const rows = document.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+            const propertyText = row.cells[1].textContent.toLowerCase();
+            const propertyLocation = row.cells[3].textContent.toLowerCase();
+            const propertyCategory = row.cells[4].textContent.toLowerCase();
+
+            const matchesSearch = !search || propertyText.includes(search);
+            const matchesLocation = !location || propertyLocation.includes(location);
+            const matchesCategory = !category || propertyCategory.includes(category);
+
+            if (matchesSearch && matchesLocation && matchesCategory) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // Select All functionality
+    document.getElementById('selectAll').addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('.property-checkbox');
+        checkboxes.forEach(checkbox => checkbox.checked = this.checked);
     });
-}
 
-// Select All functionality
-document.getElementById('selectAll').addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.property-checkbox');
-    checkboxes.forEach(checkbox => checkbox.checked = this.checked);
-});
-
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    notification.innerHTML = `
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
         ${message}
         <button type="button" class="close" data-dismiss="alert">
             <span>&times;</span>
         </button>
     `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification && notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
-    }, 3000);
-}
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            if (notification && notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
 </script>
 
 <style>
-.progress {
-    background-color: #f4f3ef;
-}
+    .progress {
+        background-color: #f4f3ef;
+    }
 
-.property-info strong {
-    display: block;
-    margin-bottom: 2px;
-}
+    .property-info strong {
+        display: block;
+        margin-bottom: 2px;
+    }
 
-.card-stats:hover {
-    transform: translateY(-2px);
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
+    .card-stats:hover {
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
 
-.btn:hover {
-    transform: translateY(-1px);
-    transition: all 0.2s ease;
-}
+    .btn:hover {
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
+    }
 
-.table td {
-    vertical-align: middle;
-}
+    .table td {
+        vertical-align: middle;
+    }
 </style>
 
 @endsection
@@ -523,12 +538,12 @@ function showNotification(message, type = 'info') {
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
 <script>
-$(document).ready(function() {
-    $('#properties-table').DataTable({
-        "order": [[0, "desc"]], // Sort by ID column
-        "pageLength": 25,
-        "responsive": true
+    $(document).ready(function () {
+        $('#properties-table').DataTable({
+            "order": [[0, "desc"]], // Sort by ID column
+            "pageLength": 25,
+            "responsive": true
+        });
     });
-});
 </script>
 @endpush

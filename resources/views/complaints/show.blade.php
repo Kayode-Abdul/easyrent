@@ -240,7 +240,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h5 class="card-title mb-0">
-                            <i class="nc-icon nc-settings-tool-66"></i> Actions
+                            <i class="nc-icon nc-settings-gear-65"></i> Actions
                         </h5>
                     </div>
                     <div class="card-body">
@@ -303,7 +303,7 @@
                             <div class="alert alert-info py-2 px-3">
                                 <small><i class="nc-icon nc-delivery-fast"></i> Artisan request active</small>
                                 <br>
-                                <a href="{{ route('complaints.artisan.tasks.show', $complaint->artisanTask) }}"
+                                <a href="{{ route('artisan.tasks.show', $complaint->artisanTask) }}"
                                     class="btn btn-link btn-sm p-0 text-white">View Task Details</a>
                             </div>
                         </div>
