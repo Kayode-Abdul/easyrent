@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('apartment_id');
             $table->decimal('amount', 12, 2);
             $table->integer('duration')->comment('Duration in months');
-            $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
+            $table->enum('status', ['pending', 'completed', 'success', 'failed'])->default('pending');
             $table->enum('payment_method', ['card', 'bank_transfer', 'ussd'])->nullable();
             $table->string('payment_reference')->nullable();
             $table->json('payment_meta')->nullable();

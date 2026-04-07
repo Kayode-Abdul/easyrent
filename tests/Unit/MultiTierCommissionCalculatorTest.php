@@ -13,6 +13,7 @@ use App\Models\CommissionPayment;
 use App\Models\Payment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
+use Exception;
 
 class MultiTierCommissionCalculatorTest extends TestCase
 {
@@ -134,7 +135,7 @@ class MultiTierCommissionCalculatorTest extends TestCase
             ['amount' => 40.0, 'percentage' => 1.0]
         ];
 
-        $isValid = $this->calculator->validateCommissionTotal($splits);
+        $isValid = $this->calculator->validateCommissionTotal($splits, 100.0);
 
         $this->assertTrue($isValid);
     }
@@ -148,7 +149,7 @@ class MultiTierCommissionCalculatorTest extends TestCase
             ['amount' => 60.0, 'percentage' => 1.5]
         ];
 
-        $isValid = $this->calculator->validateCommissionTotal($splits);
+        $isValid = $this->calculator->validateCommissionTotal($splits, 100.0);
 
         $this->assertFalse($isValid);
     }
@@ -158,6 +159,7 @@ class MultiTierCommissionCalculatorTest extends TestCase
     {
         // Create a payment record
         $payment = Payment::create([
+            'transaction_id' => 'TXN_' . uniqid(),
             'tenant_id' => 2001,
             'landlord_id' => 2002,
             'apartment_id' => 1,
@@ -198,6 +200,7 @@ class MultiTierCommissionCalculatorTest extends TestCase
     {
         // Create a payment record
         $payment = Payment::create([
+            'transaction_id' => 'TXN_' . uniqid(),
             'tenant_id' => 2001,
             'landlord_id' => 2002,
             'apartment_id' => 1,

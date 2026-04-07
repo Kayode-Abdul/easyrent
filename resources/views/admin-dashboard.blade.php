@@ -45,7 +45,7 @@
         <!-- System Overview Header -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card bg-gradient-primary text-white">
+                <div class="card bg-gradient text-white">
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-8">
@@ -955,11 +955,11 @@
             datasets: [{
                 label: 'Monthly Revenue ($)',
                 data: {!! json_encode($chartData['revenue_trend']['data'] ?? [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) !!},
-                borderColor: '#51cbce',
+                borderColor: '#28a745',
                 backgroundColor: 'rgba(81, 203, 206, 0.1)',
                 tension: 0.4,
                 fill: true,
-                pointBackgroundColor: '#51cbce',
+                pointBackgroundColor: '#28a745',
                 pointBorderColor: '#ffffff',
                 pointBorderWidth: 2,
                 pointRadius: 5
@@ -1021,7 +1021,7 @@
                     {{ $stats['users_by_type']['admins'] ?? 0 }}
                 ],
                 backgroundColor: [
-                    '#51cbce',
+                    '#28a745',
                     '#fbc658',
                     '#ef8157'
                 ],
@@ -1172,7 +1172,7 @@ input:checked + .slider:before {
 }
 
 .alert-gradient-primary {
-    background: linear-gradient(45deg, #51cbce, #6bd098);
+    background: linear-gradient(45deg, #28a745, #6bd098);
     color: white;
     border: none;
 }
@@ -1261,8 +1261,8 @@ input:checked + .slider:before {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.bg-gradient-primary {
-    background: linear-gradient(45deg, #51cbce, #6bd098) !important;
+.bg-gradient {
+    background: linear-gradient(45deg, #28a745, #6bd098) !important;
 }
 
 @keyframes pulse {

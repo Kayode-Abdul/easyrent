@@ -101,28 +101,22 @@
                                 @php
                                     $now = now();
                                     if ($apartment->tenant_id && $apartment->duration) {
-                                        $daysUntilExpiry = $apartment->range_end ? now()->diffInDays($apartment->range_end, false) : null;
-                                        $status = match(true) {
-                                            $now > $apartment->range_end => 'expired',
-                                            $now < $apartment->range_start => 'upcoming',
-                                            $daysUntilExpiry <= 30 => 'expiring-soon',
-                                            default => 'active'
-                                        };
-                                        $statusClass = match($status) {
-                                            'expired' => 'warning',
-                                            'upcoming' => 'info',
-                                            'expiring-soon' => 'warning',
-                                            'active' => 'success'
-                                        };
+                                        $enhancedStatus = $apartment->getEnhancedRentStatus();
+                                        $status = $enhancedStatus['status'];
+                                        $statusClass = $enhancedStatus['status_class'];
+                                        $statusMessage = $enhancedStatus['message'];
                                         $iconClass = match($status) {
-                                            'expired' => 'exclamation-circle',
+                                            'overdue' => 'exclamation-circle',
                                             'upcoming' => 'clock-o',
-                                            'expiring-soon' => 'exclamation-triangle',
-                                            'active' => 'check-square'
+                                            'due-soon' => 'exclamation-triangle',
+                                            'active' => 'check-square',
+                                            'vacant' => 'times-circle',
+                                            default => 'question-circle'
                                         };
                                     } else {
                                         $status = 'vacant';
                                         $statusClass = 'danger';
+                                        $statusMessage = 'No tenant assigned';
                                         $iconClass = 'times-circle';
                                     }
                                 @endphp
@@ -132,7 +126,7 @@
                         <div class="col-7 col-md-8">
                             <div class="numbers">
                                 <p class="card-category">Status</p>
-                                <p class="card-title">{{ ucfirst($status) }}</p>
+                                <p class="card-title">{{ $statusMessage }}</p>
                             </div>
                         </div>
                     </div>
@@ -163,7 +157,7 @@
                             <p class="card-category">Complete information about this apartment</p>
                         </div>
                         <div class="btn-group">
-                            <a href="{{ url('/dashboard/property/'.$apartment->property->prop_id) }}" class="btn btn-primary btn-sm">
+                            <a href="{{ url('/dashboard/property/'.$apartment->property->property_id) }}" class="btn btn-primary btn-sm">
                                 <i class="fa fa-arrow-left"></i> Back to Property
                             </a>
                             <button type="button" class="btn btn-warning btn-sm" onclick="editApartment('{{ $apartment->apartment_id }}')">
@@ -206,7 +200,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Duration</label>
-                                <p class="form-control-static">{{ $apartment->duration ? $apartment->duration.' months' : 'N/A' }}</p>
+                                <p class="form-control-static">{{ $apartment->getDurationDisplay() }}</p>
                             </div>
                             <div class="form-group">
                                 <label>Status</label>
@@ -280,7 +274,7 @@
                 <div id="apartmentMessage"></div>
                 <form id="apartmentForm" class="p-3">
                     @csrf
-                    <input type="hidden" name="propertyId" value="{{ $apartment->property->prop_id }}">
+                    <input type="hidden" name="propertyId" value="{{ $apartment->property->property_id }}">
                     <div class="table-responsive">
                         <table id="apartmentTable" class="table">
                             <thead>

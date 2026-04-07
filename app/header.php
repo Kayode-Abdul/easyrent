@@ -118,7 +118,7 @@
                     </div>
                 </a>
                 <a href="/" class="simple-text logo-normal">
-                    Easy Rent
+                    Easy Rentiiii
                 </a>
             </div>
             <div class="sidebar-wrapper">

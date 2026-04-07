@@ -442,7 +442,7 @@ function initializeCharts(reportType) {
                 datasets: [{
                     label: 'Monthly Revenue ($)',
                     data: {!! json_encode(array_values($revenue_report['revenue_by_month']->toArray() ?? [])) !!},
-                    borderColor: '#51cbce',
+                    borderColor: '#28a745',
                     backgroundColor: 'rgba(81, 203, 206, 0.1)',
                     tension: 0.4,
                     fill: true
@@ -477,7 +477,7 @@ function initializeCharts(reportType) {
                 datasets: [{
                     label: 'New Users',
                     data: [12, 19, 23, 25, 32, 40],
-                    borderColor: '#51cbce',
+                    borderColor: '#28a745',
                     tension: 0.4
                 }]
             },
@@ -499,7 +499,7 @@ function initializeCharts(reportType) {
                 labels: {!! json_encode(array_keys($user_report['signup_sources'] ?? [])) !!},
                 datasets: [{
                     data: {!! json_encode(array_values($user_report['signup_sources'] ?? [])) !!},
-                    backgroundColor: ['#51cbce', '#fbc658', '#ef8157', '#6bd098']
+                    backgroundColor: ['#28a745', '#fbc658', '#ef8157', '#6bd098']
                 }]
             },
             options: {
@@ -517,7 +517,7 @@ function initializeCharts(reportType) {
                 datasets: [{
                     label: 'Properties',
                     data: {!! json_encode(array_values($property_report['top_locations']->toArray() ?? [])) !!},
-                    backgroundColor: '#51cbce'
+                    backgroundColor: '#28a745'
                 }]
             },
             options: {
@@ -602,7 +602,7 @@ document.addEventListener('DOMContentLoaded', function() {
 .report-card:hover, .report-card.active {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    border-color: #51cbce;
+    border-color: #28a745;
 }
 
 .metric-card {

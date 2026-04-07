@@ -235,4 +235,14 @@ class EmailCenterController extends Controller
         // For demo purposes, we'll just log it
         Log::info("Email scheduled for {$scheduleDate}: Subject: {$subject}, Recipients: {$recipients->count()}");
     }
+
+    /**
+     * SendTest method
+     * TODO: Implement this method
+     */
+    public function sendTest(Request $request)
+    {
+        // TODO: Implement sendTest functionality
+        return back()->with('error', 'Method not implemented yet');
+    }
 }

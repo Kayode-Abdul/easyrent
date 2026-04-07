@@ -1,0 +1,290 @@
+/**
+ * Premium Mobile UI Enhancements for EasyRent
+ * Respects brand colors: #007bff (primary), #3e8189 (accent)
+ */
+
+/* ========================================
+   MOBILE NAVIGATION ENHANCEMENTS
+   ======================================== */
+
+@media (max-width: 991px) {
+    /* Fix Mobile Header Layout */
+    .navbar {
+        padding: 16px 0 !important;
+    }
+
+    .navbar .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 15px;
+    }
+
+    .navbar-brand {
+        margin: 0 !important;
+        padding: 0 !important;
+        flex: 1;
+        font-size: 20px !important;
+    }
+
+    .navbar-toggler {
+        margin: 0 !important;
+        padding: 8px !important;
+        order: 2;
+    }
+
+    /* Premium Mobile Menu Overlay */
+    .navbar-collapse {
+        position: fixed !important;
+        top: 0;
+        right: -100%;
+        width: 85%;
+        max-width: 320px;
+        height: 100vh;
+        background: #ffffff !important;
+        box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
+        transition: right 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        z-index: 9999;
+        overflow-y: auto;
+        padding: 0;
+    }
+
+    .navbar-collapse.show {
+        right: 0 !important;
+    }
+
+    /* Mobile Menu Backdrop */
+    .navbar-collapse.show::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+        z-index: -1;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Mobile Menu Header */
+    .navbar-collapse .navbar-nav {
+        padding: 80px 0 30px 0;
+        margin: 0;
+    }
+
+    /* Premium Mobile Menu Items */
+    .navbar-collapse .nav-item {
+        margin: 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        transform: translateX(100px);
+        opacity: 0;
+        animation: slideInRight 0.4s ease forwards;
+    }
+
+    .navbar-collapse.show .nav-item:nth-child(1) { animation-delay: 0.1s; }
+    .navbar-collapse.show .nav-item:nth-child(2) { animation-delay: 0.15s; }
+    .navbar-collapse.show .nav-item:nth-child(3) { animation-delay: 0.2s; }
+    .navbar-collapse.show .nav-item:nth-child(4) { animation-delay: 0.25s; }
+    .navbar-collapse.show .nav-item:nth-child(5) { animation-delay: 0.3s; }
+    .navbar-collapse.show .nav-item:nth-child(6) { animation-delay: 0.35s; }
+
+    @keyframes slideInRight {
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .navbar-collapse .nav-link {
+        padding: 18px 30px !important;
+        font-size: 16px;
+        font-weight: 500;
+        color: #000000 !important;
+        background: #ffffff !important;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .navbar-collapse .nav-link::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 0;
+        background: linear-gradient(180deg, #007bff 0%, #3e8189 100%);
+        transition: height 0.3s ease;
+        border-radius: 0 4px 4px 0;
+    }
+
+    .navbar-collapse .nav-link:hover,
+    .navbar-collapse .nav-link.active {
+        background: linear-gradient(90deg, rgba(0, 123, 255, 0.08) 0%, transparent 100%) !important;
+        color: #007bff !important;
+        padding-left: 35px !important;
+    }
+
+    .navbar-collapse .nav-link:hover::before,
+    .navbar-collapse .nav-link.active::before {
+        height: 60%;
+    }
+
+    /* Add icons to menu items */
+    .navbar-collapse .nav-link::after {
+        content: '›';
+        font-size: 24px;
+        color: #007bff;
+        opacity: 0;
+        transform: translateX(-10px);
+        transition: all 0.3s ease;
+    }
+
+    .navbar-collapse .nav-link:hover::after {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* Premium Hamburger Menu */
+    .navbar-toggler {
+        border: none !important;
+        padding: 8px;
+        background: rgba(0, 123, 255, 0.1) !important;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 10000;
+    }
+
+    .navbar-toggler:focus {
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2) !important;
+        outline: none;
+    }
+
+    .navbar-toggler:hover {
+        background: rgba(0, 123, 255, 0.15) !important;
+        transform: scale(1.05);
+    }
+
+    .navbar-toggler-icon {
+        width: 24px;
+        height: 20px;
+        position: relative;
+        transition: all 0.3s ease;
+        background-image: none !important;
+    }
+
+    /* Animated Hamburger to X */
+    .navbar-toggler-icon::before,
+    .navbar-toggler-icon::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 3px;
+        background: #007bff;
+        border-radius: 3px;
+        transition: all 0.3s ease;
+        left: 0;
+    }
+
+    .navbar-toggler-icon::before {
+        top: 0;
+    }
+
+    .navbar-toggler-icon::after {
+        bottom: 0;
+    }
+
+    /* Middle bar */
+    .navbar-toggler-icon {
+        background: #007bff;
+        height: 3px;
+        border-radius: 3px;
+    }
+
+    .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
+        background: transparent;
+    }
+
+    .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::before {
+        transform: rotate(45deg);
+        top: 50%;
+        margin-top: -1.5px;
+    }
+
+    .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::after {
+        transform: rotate(-45deg);
+        bottom: 50%;
+        margin-bottom: -1.5px;
+    }
+
+    /* Mobile Logo Enhancement */
+    .navbar-brand {
+        font-weight: 700;
+        color: #007bff !important;
+        transition: all 0.3s ease;
+    }
+
+    .navbar-brand:hover {
+        transform: scale(1.05);
+    }
+
+    /* Mobile Close Button */
+    .navbar-collapse::after {
+        content: '×';
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        background: rgba(0, 123, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: #007bff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 300;
+    }
+
+    .navbar-collapse::after:hover {
+        background: rgba(0, 123, 255, 0.2);
+        transform: rotate(90deg);
+    }
+}
+
+/* ========================================
+   DARK MODE MOBILE ENHANCEMENTS
+   ======================================== */
+
+@media (max-width: 991px) {
+    html[data-chrome-dark="true"] .navbar-collapse {
+        background: #1a1a1a !important;
+    }
+
+    html[data-chrome-dark="true"] .navbar-collapse .nav-link {
+        color: #ffffff !important;
+        background: #1a1a1a !important;
+    }
+
+    html[data-chrome-dark="true"] .navbar-collapse .nav-link:hover,
+    html[data-chrome-dark="true"] .navbar-collapse .nav-link.active {
+        background: linear-gradient(90deg, rgba(0, 123, 255, 0.15) 0%, transparent 100%) !important;
+        color: #007bff !important;
+    }
+
+    html[data-chrome-dark="true"] .navbar-collapse .nav-item {
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+}

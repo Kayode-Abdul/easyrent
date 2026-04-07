@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hero Background Debug</title>
+    <link rel="stylesheet" href="assets/css/hero-dark-fix.css">
+    <link rel="stylesheet" href="assets/css/chrome-dark-mode.css">
+    <script src="assets/js/chrome-dark-mode.js"></script>
+    <style>
+        /* Debug styles */
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 9999;
+        }
+        
+        .hero-wrap {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .test-content {
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+        
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info">
+        <div>Dark Mode: <span id="dark-status">Off</span></div>
+        <div>Background Image: <span id="bg-status">Checking...</span></div>
+        <div>Filter Applied: <span id="filter-status">None</span></div>
+    </div>
+
+    <div class="hero-wrap ftco-degree-bg" style="background-image: url('assets/images/bg_1.jpg');" data-stellar-background-ratio="0.5">
+        <div class="overlay"></div>
+        <div class="test-content">
+            <h1>Hero Section Test</h1>
+            <p>This is a test to check if the background image is visible in dark mode</p>
+            <button onclick="toggleDarkMode()" style="padding: 10px 20px; margin: 10px; cursor: pointer;">Toggle Dark Mode</button>
+        </div>
+    </div>
+
+    <script>
+        function updateDebugInfo() {
+            const html = document.documentElement;
+            const heroWrap = document.querySelector('.hero-wrap');
+            
+            // Check dark mode status
+            const isDark = html.getAttribute('data-chrome-dark') === 'true';
+            document.getElementById('dark-status').textContent = isDark ? 'On' : 'Off';
+            
+            // Check background image
+            const bgImage = window.getComputedStyle(heroWrap).backgroundImage;
+            document.getElementById('bg-status').textContent = bgImage !== 'none' ? 'Visible' : 'Missing';
+            
+            // Check filter
+            const filter = window.getComputedStyle(heroWrap).filter;
+            document.getElementById('filter-status').textContent = filter !== 'none' ? filter : 'None';
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-chrome-dark') === 'true';
+            html.setAttribute('data-chrome-dark', isDark ? 'false' : 'true');
+            updateDebugInfo();
+        }
+
+        // Update debug info every second
+        setInterval(updateDebugInfo, 1000);
+        updateDebugInfo();
+
+        // Check if image loads
+        const img = new Image();
+        img.onload = function() {
+            console.log('Background image loaded successfully');
+        };
+        img.onerror = function() {
+            console.error('Background image failed to load');
+        };
+        img.src = 'assets/images/bg_1.jpg';
+    </script>
+</body>
+</html>

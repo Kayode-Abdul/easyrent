@@ -1,0 +1,188 @@
+/* Custom CSS fixes for UI issues */
+
+/* Loader animation improvements */
+#ftco-loader {
+  z-index: 9999; /* Ensure loader is above all content */
+}
+
+#ftco-loader.show {
+  transition: opacity 0.3s ease-out, visibility 0s linear 0s;
+}
+/* Pagination */
+
+/* Pagination Container */
+nav[role="navigation"] {
+  margin-top: 20px;
+}
+.sidebar .logo a.logo-normal img {
+  height: 40px;
+}
+/* Pagination Links */
+.relative.inline-flex {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  margin: 0 2px;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  color: #51cbce;
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 30px;
+  transition: all 0.15s ease-in-out;
+}
+/* Avatar */
+.avatar img.img-circle {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar .username {
+  font-size: 14px;
+}
+/* Active Page */
+[aria-current="page"] span {
+  background-color: #51cbce !important;
+  color: #fff !important;
+  border-color: #51cbce !important;
+}
+
+.card-title {
+  font-size: medium;
+  font-weight: bold;
+}
+.numbers>.card-title {
+  font-size: medium;
+  font-weight: normal;
+}
+/* Hover State */
+.relative.inline-flex:hover {
+  color: #fff;
+  background-color: #51cbce;
+  border-color: #51cbce;
+  text-decoration: none;
+}
+
+/* Previous/Next Buttons */
+.rounded-l-md, .rounded-r-md {
+  padding: 0.5rem;
+}
+
+/* Disabled State */
+.cursor-default {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+/* SVG Icons */
+.w-5.h-5 {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Results Text */
+.text-sm.text-gray-700 {
+  color: #66615b;
+  font-size: 0.875rem;
+}
+
+/* Hide Mobile Navigation on Desktop */
+@media (min-width: 640px) {
+  .sm\:hidden {
+      display: none;
+  }
+}
+
+/* Show Desktop Navigation on Desktop */
+@media (min-width: 640px) {
+  .hidden.sm\:flex-1 {
+    display: inline;
+    font-weight: bold;
+  }
+}
+/* Fix inconsistent button styling */
+.btn-primary {
+  background-color: #51cbce !important;
+  border-color: #51cbce !important;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #3db9bd !important;
+  border-color: #3db9bd !important;
+}
+
+/* Improve responsive design */
+@media (max-width: 767.98px) {
+  .navbar-brand {
+    font-size: 18px;
+  }
+  
+  .property-wrap .text {
+    padding: 15px;
+  }
+  
+  .table-responsive {
+    overflow-x: auto;
+  }
+  
+  .card-body {
+    padding: 15px;
+  }
+  .card-title {
+    font-size: medium;
+  }
+}
+
+/* Fix form styling */
+.form-control:focus {
+  border-color: #51cbce;
+  box-shadow: 0 0 0 0.2rem rgba(81, 203, 206, 0.25);
+}
+
+/* Fix table styling */
+.table th {
+  background-color: #f8f9fa;
+}
+
+/* Fix footer styling */
+#footer {
+  padding-top: 30px;
+}
+
+/* Fix login/register form */
+.contact-form {
+  border-radius: 5px;
+}
+
+/* Fix dashboard cards */
+.card-stats .card-body {
+  padding: 15px;
+}
+
+.card-stats .icon-big {
+  font-size: 3em;
+  min-height: 64px;
+}
+
+/* Fix property listing */
+.property-wrap {
+  margin-bottom: 30px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+/* Fix navigation active state */
+.navbar-nav .nav-item.active .nav-link {
+  color: #51cbce !important;
+  font-weight: bold;
+}

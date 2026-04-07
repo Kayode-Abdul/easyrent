@@ -1,4 +1,6 @@
-@extends('layout')
+@extends('layouts.admin')
+
+@section('title', 'Regional Manager Details')
 
 @section('content')
 <div class="content">

@@ -42,7 +42,7 @@ try {
         foreach($assignedProperties as $prop) {
             $agent = DB::table('users')->where('user_id', $prop->agent_id)->first();
             $agentName = $agent ? "{$agent->first_name} {$agent->last_name}" : "Unknown";
-            echo "   - Property {$prop->prop_id}: {$prop->address} → Agent: {$agentName} (ID: {$prop->agent_id})\n";
+            echo "   - Property {$prop->property_id}: {$prop->address} → Agent: {$agentName} (ID: {$prop->agent_id})\n";
         }
         echo "\n";
     }

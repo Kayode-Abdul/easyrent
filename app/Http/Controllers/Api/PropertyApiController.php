@@ -48,7 +48,7 @@ class PropertyApiController extends Controller
     public function show($id): JsonResponse
     {
         $property = Property::with(['owner:user_id,first_name,last_name,email,phone', 'apartments.tenant:user_id,first_name,last_name'])
-            ->where('prop_id', $id)
+            ->where('property_id', $id)
             ->first();
 
         if (!$property) {
@@ -119,11 +119,11 @@ class PropertyApiController extends Controller
             // Generate unique property ID
             do {
                 $propId = mt_rand(1000000, 9999999);
-            } while (Property::where('prop_id', $propId)->exists());
+            } while (Property::where('property_id', $propId)->exists());
 
             $property = Property::create([
                 'user_id' => $request->user_id,
-                'prop_id' => $propId,
+                'property_id' => $propId,
                 'prop_type' => $request->prop_type,
                 'address' => $request->address,
                 'state' => $request->state,
@@ -151,7 +151,7 @@ class PropertyApiController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        $property = Property::where('prop_id', $id)->first();
+        $property = Property::where('property_id', $id)->first();
 
         if (!$property) {
             return response()->json([
@@ -192,7 +192,7 @@ class PropertyApiController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $property = Property::where('prop_id', $id)->first();
+        $property = Property::where('property_id', $id)->first();
 
         if (!$property) {
             return response()->json([

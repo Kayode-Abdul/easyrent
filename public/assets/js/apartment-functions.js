@@ -27,9 +27,23 @@ function addApartmentRow() {
             </div>
             <div class="form-group">
                 <label>Tenant ID (optional)</label>
-                <input type="text" class="form-control"
+                <input type="text" class="form-control tenant-id-input"
                     placeholder="Enter tenant ID"
                     name="tenantId[]">
+                <small class="form-text text-muted">
+                    <span class="tenant-name-display" style="display: none;">
+                        <i class="fa fa-user text-success"></i> 
+                        <strong class="tenant-name-text"></strong>
+                    </span>
+                    <span class="tenant-not-found" style="display: none; color: #dc3545;">
+                        <i class="fa fa-exclamation-circle"></i> 
+                        User not found
+                    </span>
+                    <span class="tenant-loading" style="display: none; color: #6c757d;">
+                        <i class="fa fa-spinner fa-spin"></i> 
+                        Looking up user...
+                    </span>
+                </small>
             </div>
             <div class="form-group">
                 <label>Lease Duration</label>
@@ -184,4 +198,94 @@ function confirmDeleteApartment(apartmentId) {
             form.submit();
         }
     });
+}
+
+
+/**
+ * Initialize tenant ID lookup functionality
+ * This function sets up event listeners for tenant ID inputs to fetch and display tenant names
+ */
+function initializeTenantLookup() {
+    // Use event delegation to handle dynamically added tenant ID inputs
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.classList.contains('tenant-id-input')) {
+            handleTenantIdInput(e.target);
+        }
+    });
+}
+
+/**
+ * Handle tenant ID input and lookup
+ * @param {HTMLElement} input - The tenant ID input element
+ */
+let tenantLookupTimeouts = new Map();
+
+function handleTenantIdInput(input) {
+    const tenantId = input.value.trim();
+    const formGroup = input.closest('.form-group');
+    const nameDisplay = formGroup.querySelector('.tenant-name-display');
+    const nameText = formGroup.querySelector('.tenant-name-text');
+    const notFound = formGroup.querySelector('.tenant-not-found');
+    const loading = formGroup.querySelector('.tenant-loading');
+    
+    // Clear previous timeout for this input
+    if (tenantLookupTimeouts.has(input)) {
+        clearTimeout(tenantLookupTimeouts.get(input));
+    }
+    
+    // Hide all status messages
+    if (nameDisplay) nameDisplay.style.display = 'none';
+    if (notFound) notFound.style.display = 'none';
+    if (loading) loading.style.display = 'none';
+    
+    // If empty, don't lookup
+    if (!tenantId) {
+        return;
+    }
+    
+    // Show loading indicator
+    if (loading) loading.style.display = 'inline';
+    
+    // Debounce the lookup (wait 500ms after user stops typing)
+    const timeout = setTimeout(function() {
+        // Make AJAX request to lookup user
+        fetch('/api/user/lookup/' + tenantId, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (loading) loading.style.display = 'none';
+            
+            if (data.success && data.user) {
+                // Display user name
+                const fullName = data.user.first_name + ' ' + data.user.last_name;
+                const email = data.user.email;
+                if (nameText) {
+                    nameText.innerHTML = fullName + ' <small class="text-muted">(' + email + ')</small>';
+                }
+                if (nameDisplay) nameDisplay.style.display = 'inline';
+            } else {
+                // User not found
+                if (notFound) notFound.style.display = 'inline';
+            }
+        })
+        .catch(error => {
+            console.error('Tenant lookup error:', error);
+            if (loading) loading.style.display = 'none';
+            if (notFound) notFound.style.display = 'inline';
+        });
+    }, 500);
+    
+    tenantLookupTimeouts.set(input, timeout);
+}
+
+// Initialize tenant lookup when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTenantLookup);
+} else {
+    initializeTenantLookup();
 }

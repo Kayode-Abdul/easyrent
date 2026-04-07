@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
  
 class UserController extends Controller
 {
@@ -201,7 +202,8 @@ class UserController extends Controller
     public function blog(Request $request){
         $logged_in = session('loggedIn') ? 1 : 0;
         
-        $blog = DB::select('select * from blog WHERE hide IS NULL');
+        // Use the Blog model instead of raw SQL
+        $blog = \App\Models\Blog::published()->recent()->get();
      
         return view('blog', ["logged_in"=>$logged_in, 'blog'=>$blog]);
    }
@@ -295,7 +297,7 @@ class UserController extends Controller
         $canRemove = false;
         $propertyId = $request->input('property_id');
         if ($propertyId && auth()->check()) {
-            $property = \App\Models\Property::where('prop_id', $propertyId)->first();
+            $property = \App\Models\Property::where('property_id', $propertyId)->first();
             if ($property && $property->user_id == auth()->user()->user_id && $property->agent_id == $agent->user_id) {
                 $canRemove = true;
             }
@@ -429,5 +431,54 @@ class UserController extends Controller
         ]);
 
         return back()->with('success', 'Profile updated successfully!');
+    }
+
+
+   
+ /**
+     * Lookup user by ID for tenant validation
+     * Returns basic user information (name, email) for display purposes
+     */
+    public function lookup($userId): JsonResponse
+    {
+        try {
+            $user = User::where('user_id', $userId)
+                ->select('user_id', 'first_name', 'last_name', 'email', 'role')
+                ->first();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found'
+                ], 404);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'user_id' => $user->user_id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'email' => $user->email,
+                    'role' => $user->role
+                ]
+            ]);
+        } catch (\Exception $e) {
+           Log::error('User lookup failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while looking up the user'
+            ], 500);
+        }
+    }
+
+    /**
+     * Users method
+     * TODO: Implement this method
+     */
+    public function users()
+    {
+        // TODO: Implement users functionality
+        return view('users.index');
     }
 }

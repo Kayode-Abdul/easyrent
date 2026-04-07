@@ -9,6 +9,7 @@ use App\Models\Referral;
 use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class FraudDetectionServiceTest extends TestCase
 {
@@ -20,6 +21,21 @@ class FraudDetectionServiceTest extends TestCase
     {
         parent::setUp();
         $this->fraudService = new FraudDetectionService();
+        $this->seedStandardRoles();
+    }
+
+    protected function seedStandardRoles()
+    {
+        // Seed the standard roles with the IDs expected by the system
+        DB::table('roles')->insert([
+            ['id' => 1, 'name' => 'admin', 'display_name' => 'Administrator', 'description' => 'Administrator role', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 2, 'name' => 'landlord', 'display_name' => 'Landlord', 'description' => 'Landlord role', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 3, 'name' => 'marketer', 'display_name' => 'Marketer', 'description' => 'Marketer role', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 4, 'name' => 'tenant', 'display_name' => 'Tenant', 'description' => 'Tenant role', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 5, 'name' => 'regional_manager', 'display_name' => 'Regional Manager', 'description' => 'Regional Manager role', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 6, 'name' => 'property_manager', 'display_name' => 'Property Manager', 'description' => 'Property Manager role', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 9, 'name' => 'super_marketer', 'display_name' => 'Super Marketer', 'description' => 'Super Marketer role', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+        ]);
     }
 
     /** @test */
@@ -105,13 +121,10 @@ class FraudDetectionServiceTest extends TestCase
         $referrer = User::factory()->create(['user_id' => 1001]);
         $referred = User::factory()->create(['user_id' => 1002]);
 
-        // Create roles
-        $marketerRole = Role::create(['id' => 3, 'name' => 'marketer']);
-        $landlordRole = Role::create(['id' => 2, 'name' => 'landlord']);
-
-        // Assign roles
-        $referrer->roles()->attach($marketerRole);
-        $referred->roles()->attach($landlordRole);
+        // Assign roles using the role_user pivot table
+        // The service expects: Role 3 = Marketer, Role 2 = Landlord
+        $referrer->roles()->attach(3); // Marketer role
+        $referred->roles()->attach(2); // Landlord role
 
         // Create valid referral
         $referral = Referral::create([

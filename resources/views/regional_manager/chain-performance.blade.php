@@ -141,39 +141,42 @@
                             <td>{{ $chain->created_at->format('M d, Y') }}</td>
                             <td>
                                 @if($chain->superMarketer)
-                                    <small>{{ $chain->superMarketer->first_name }} {{ $chain->superMarketer->last_name }}</small>
+                                <small>{{ $chain->superMarketer->first_name }} {{ $chain->superMarketer->last_name
+                                    }}</small>
                                 @else
-                                    <span class="text-muted">-</span>
+                                <span class="text-muted">-</span>
                                 @endif
                             </td>
                             <td>
                                 @if($chain->marketer)
-                                    <small>{{ $chain->marketer->first_name }} {{ $chain->marketer->last_name }}</small>
+                                <small>{{ $chain->marketer->first_name }} {{ $chain->marketer->last_name }}</small>
                                 @else
-                                    <span class="text-muted">-</span>
+                                <span class="text-muted">-</span>
                                 @endif
                             </td>
                             <td>
                                 @if($chain->landlord)
-                                    <small>{{ $chain->landlord->first_name }} {{ $chain->landlord->last_name }}</small>
+                                <small>{{ $chain->landlord->first_name }} {{ $chain->landlord->last_name }}</small>
                                 @else
-                                    <span class="text-muted">-</span>
+                                <span class="text-muted">-</span>
                                 @endif
                             </td>
                             <td>
-                                <span class="badge badge-info">{{ $chain->getTierCount() }} Tier{{ $chain->getTierCount() > 1 ? 's' : '' }}</span>
+                                <span class="badge badge-info">{{ $chain->getTierCount() }} Tier{{
+                                    $chain->getTierCount() > 1 ? 's' : '' }}</span>
                             </td>
                             <td>
-                                <span class="badge badge-{{ $chain->status == 'active' ? 'success' : ($chain->status == 'completed' ? 'primary' : 'danger') }}">
+                                <span
+                                    class="badge badge-{{ $chain->status == 'active' ? 'success' : ($chain->status == 'completed' ? 'primary' : 'danger') }}">
                                     {{ ucfirst($chain->status) }}
                                 </span>
                             </td>
                             <td>{{ $chain->region ?? 'N/A' }}</td>
                             <td>
                                 @if($chain->total_commission_percentage)
-                                    {{ number_format($chain->total_commission_percentage, 2) }}%
+                                {{ number_format($chain->total_commission_percentage, 2) }}%
                                 @else
-                                    <span class="text-muted">-</span>
+                                <span class="text-muted">-</span>
                                 @endif
                             </td>
                         </tr>
@@ -199,31 +202,31 @@
 <!-- Chart.js Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Tier Distribution Chart
-    const tierCtx = document.getElementById('tierDistributionChart').getContext('2d');
-    new Chart(tierCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['1-Tier Chains', '2-Tier Chains', '3-Tier Chains'],
-            datasets: [{
-                data: [
-                    {{ $metrics['tier_distribution']['1_tier'] }},
-                    {{ $metrics['tier_distribution']['2_tier'] }},
+    document.addEventListener('DOMContentLoaded', function () {
+        // Tier Distribution Chart
+        const tierCtx = document.getElementById('tierDistributionChart').getContext('2d');
+        new Chart(tierCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['1-Tier Chains', '2-Tier Chains', '3-Tier Chains'],
+                datasets: [{
+                    data: [
+                        {{ $metrics['tier_distribution']['1_tier'] }},
+                {{ $metrics['tier_distribution']['2_tier'] }},
                     {{ $metrics['tier_distribution']['3_tier'] }}
                 ],
-                backgroundColor: ['#28a745', '#007bff', '#ffc107'],
-                borderWidth: 2
+        backgroundColor: ['#28a745', '#007bff', '#ffc107'],
+        borderWidth: 2
             }]
         },
         options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
             }
         }
+    }
     });
 });
 </script>

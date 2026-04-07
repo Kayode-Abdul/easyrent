@@ -127,6 +127,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Mobile API Keys
+    |--------------------------------------------------------------------------
+    |
+    | These keys are used for mobile app authentication via the API.
+    | Set these in your .env file for security.
+    |
+    */
+
+    'mobile_api_key' => env('MOBILE_API_KEY', 'easyrent_mobile_2024'),
+    'admin_api_key' => env('ADMIN_API_KEY', 'easyrent_admin_2024'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Maintenance Mode Driver
     |--------------------------------------------------------------------------
     |
@@ -194,6 +207,9 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\SessionServiceProvider::class,
+        App\Providers\PaymentCalculationServiceProvider::class,
+        App\Providers\EnhancedRentalCalculationServiceProvider::class,
 
     ],
 

@@ -54,7 +54,7 @@ try {
     if ($unassignedProperties->count() > 0) {
         echo "Sample unassigned properties:\n";
         foreach ($unassignedProperties->take(5) as $prop) {
-            echo "- Property {$prop->prop_id}: {$prop->address}\n";
+            echo "- Property {$prop->property_id}: {$prop->address}\n";
         }
         echo "\n";
     }
@@ -68,10 +68,10 @@ try {
         $propertiesToAssign = $unassignedProperties->take(3);
         foreach ($propertiesToAssign as $prop) {
             DB::table('properties')
-                ->where('prop_id', $prop->prop_id)
+                ->where('property_id', $prop->property_id)
                 ->update(['agent_id' => $propertyManager->user_id]);
             
-            echo "✓ Assigned property {$prop->prop_id} ({$prop->address})\n";
+            echo "✓ Assigned property {$prop->property_id} ({$prop->address})\n";
         }
         echo "\n";
     }

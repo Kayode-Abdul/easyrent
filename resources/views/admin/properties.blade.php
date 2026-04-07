@@ -254,7 +254,7 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <table class="table table-striped datatable" id="properties-table">
                             <thead class="text-primary">
                                 <th>
                                     <input type="checkbox" id="selectAll">
@@ -273,13 +273,13 @@
                                 @foreach($properties as $property)
                                     <tr>
                                         <td>
-                                            <input type="checkbox" class="property-checkbox" value="{{ $property->prop_id }}">
+                                            <input type="checkbox" class="property-checkbox" value="{{ $property->property_id }}">
                                         </td>
                                         <td>
                                             <div class="property-info">
-                                                <strong>{{ $property->title ?? 'Property #' . $property->prop_id }}</strong>
+                                                <strong>{{ $property->title ?? 'Property #' . $property->property_id }}</strong>
                                                 <br>
-                                                <small class="text-muted">ID: {{ $property->prop_id }}</small>
+                                                <small class="text-muted">ID: {{ $property->property_id }}</small>
                                                 @if($property->price)
                                                     <br><small class="text-success">₦{{ number_format($property->price) }}</small>
                                                 @endif
@@ -324,13 +324,13 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a href="/dashboard/property/{{ $property->prop_id }}" class="btn btn-sm btn-info" title="View">
+                                                <a href="/dashboard/property/{{ $property->property_id }}" class="btn btn-sm btn-info" title="View">
                                                     <i class="fa fa-eye"></i>
                                                 </a>
-                                                <a href="/dashboard/property/{{ $property->prop_id }}/edit" class="btn btn-sm btn-warning" title="Edit">
+                                                <a href="/dashboard/property/{{ $property->property_id }}/edit" class="btn btn-sm btn-warning" title="Edit">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
-                                                <button class="btn btn-sm btn-danger" onclick="deleteProperty({{ $property->prop_id }})" title="Delete">
+                                                <button class="btn btn-sm btn-danger" onclick="deleteProperty({{ $property->property_id }})" title="Delete">
                                                     <i class="fa fa-trash"></i>
                                                 </button>
                                             </div>
@@ -364,8 +364,8 @@ new Chart(locationCtx, {
         datasets: [{
             label: 'Properties',
             data: {!! json_encode(array_values($stats['properties_by_location']->toArray() ?? [])) !!},
-            backgroundColor: '#51cbce',
-            borderColor: '#51cbce',
+            backgroundColor: '#28a745',
+            borderColor: '#28a745',
             borderWidth: 1
         }]
     },
@@ -393,7 +393,7 @@ new Chart(categoryCtx, {
         datasets: [{
             data: {!! json_encode(array_values($stats['properties_by_category']->toArray() ?? [])) !!},
             backgroundColor: [
-                '#51cbce',
+                '#28a745',
                 '#fbc658',
                 '#ef8157',
                 '#6bd098',
@@ -517,3 +517,18 @@ function showNotification(message, type = 'info') {
 </style>
 
 @endsection
+
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#properties-table').DataTable({
+        "order": [[0, "desc"]], // Sort by ID column
+        "pageLength": 25,
+        "responsive": true
+    });
+});
+</script>
+@endpush

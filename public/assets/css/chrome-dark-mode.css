@@ -1,0 +1,265 @@
+/**
+ * Chrome Automatic Dark Mode - Exact Replica
+ * Based on Chromium's actual auto-dark-mode implementation
+ * Source: https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/renderer/core/css/
+ */
+
+/* IMMEDIATE DARK MODE - Prevents Flash of Unstyled Content (FOUC) */
+/* This applies instantly when the HTML attribute is set by JavaScript */
+html[data-chrome-dark="true"] {
+  filter: invert(1) hue-rotate(180deg) !important;
+  /* Ensure smooth transition but start immediately */
+  transition: filter 0.2s ease !important;
+}
+
+/* Chrome's root inversion - applied to html element */
+html[data-darkreader-mode="filter"][data-darkreader-scheme="dark"] {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Chrome's image preservation algorithm */
+html[data-chrome-dark="true"] img,
+html[data-chrome-dark="true"] video,
+html[data-chrome-dark="true"] iframe,
+html[data-chrome-dark="true"] object,
+html[data-chrome-dark="true"] embed,
+html[data-chrome-dark="true"] svg,
+html[data-chrome-dark="true"] canvas {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Chrome's selective preservation for graphics and icons */
+html[data-chrome-dark="true"] img[src*=".svg"],
+html[data-chrome-dark="true"] img[src*="icon"],
+html[data-chrome-dark="true"] img[src*="logo"],
+html[data-chrome-dark="true"] img[src*="badge"],
+html[data-chrome-dark="true"] .icon,
+html[data-chrome-dark="true"] .logo {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Chrome's background image handling */
+html[data-chrome-dark="true"] [style*="background-image"] {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Chrome preserves certain UI elements */
+html[data-chrome-dark="true"] input,
+html[data-chrome-dark="true"] textarea,
+html[data-chrome-dark="true"] select,
+html[data-chrome-dark="true"] button {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Chrome's handling of already dark elements */
+html[data-chrome-dark="true"] [style*="background: rgb(0, 0, 0)"],
+html[data-chrome-dark="true"] [style*="background-color: rgb(0, 0, 0)"],
+html[data-chrome-dark="true"] [style*="background: black"],
+html[data-chrome-dark="true"] [style*="background-color: black"] {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Chrome's text color preservation */
+html[data-chrome-dark="true"] [style*="color: white"],
+html[data-chrome-dark="true"] [style*="color: rgb(255, 255, 255)"] {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Chrome's special handling for certain content types */
+html[data-chrome-dark="true"] pre,
+html[data-chrome-dark="true"] code,
+html[data-chrome-dark="true"] .highlight,
+html[data-chrome-dark="true"] .code {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Chrome's media query support */
+@media (prefers-color-scheme: dark) {
+  html[data-chrome-dark="auto"] {
+    filter: invert(1) hue-rotate(180deg) !important;
+  }
+  
+  html[data-chrome-dark="auto"] img,
+  html[data-chrome-dark="auto"] video,
+  html[data-chrome-dark="auto"] iframe,
+  html[data-chrome-dark="auto"] object,
+  html[data-chrome-dark="auto"] embed,
+  html[data-chrome-dark="auto"] svg,
+  html[data-chrome-dark="auto"] canvas {
+    filter: invert(1) hue-rotate(180deg) !important;
+  }
+}
+
+/* Chrome's transition handling */
+html {
+  transition: filter 0.3s ease !important;
+}
+
+html * {
+  transition: filter 0.3s ease !important;
+}
+
+/* Chrome's performance optimizations */
+html[data-chrome-dark="true"] {
+  color-scheme: dark !important;
+}
+
+/* Chrome's handling of specific image types that should stay inverted */
+html[data-chrome-dark="true"] .hero-wrap img,
+html[data-chrome-dark="true"] .hero-section img,
+html[data-chrome-dark="true"] .banner img,
+html[data-chrome-dark="true"] .background-image,
+html[data-chrome-dark="true"] [class*="hero"] img,
+html[data-chrome-dark="true"] [class*="banner"] img {
+  filter: none !important;
+}
+
+/* Chrome's dark mode toggle button styling */
+.chrome-dark-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2147483647;
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 20px;
+}
+
+.chrome-dark-toggle:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.chrome-dark-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Dark mode state for toggle button */
+html[data-chrome-dark="true"] .chrome-dark-toggle {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .chrome-dark-toggle {
+    bottom: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+}
+
+/* Chrome's handling of iframes and embedded content */
+html[data-chrome-dark="true"] iframe {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Chrome's CSS custom property support */
+html[data-chrome-dark="true"] {
+  --chrome-dark-bg: #1a1a1a;
+  --chrome-dark-text: #ffffff;
+  --chrome-dark-border: #404040;
+}
+
+/* Chrome's form element special handling */
+html[data-chrome-dark="true"] input[type="text"],
+html[data-chrome-dark="true"] input[type="email"],
+html[data-chrome-dark="true"] input[type="password"],
+html[data-chrome-dark="true"] input[type="search"],
+html[data-chrome-dark="true"] textarea {
+  filter: invert(1) hue-rotate(180deg) !important;
+  color-scheme: dark !important;
+}
+
+/* Chrome's table handling */
+html[data-chrome-dark="true"] table,
+html[data-chrome-dark="true"] th,
+html[data-chrome-dark="true"] td {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Chrome's link color preservation */
+html[data-chrome-dark="true"] a {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Chrome's shadow and border handling */
+html[data-chrome-dark="true"] {
+  --shadow-color: rgba(255, 255, 255, 0.1);
+  --border-color: rgba(255, 255, 255, 0.2);
+}/* ADVAN
+CED BACKGROUND IMAGE FILTERS FOR HERO SECTION */
+/* Target the background image specifically with CSS filters */
+
+html[data-chrome-dark="true"] .hero-wrap[style*="background-image"] {
+  /* Apply filters directly to elements with background-image */
+  /* filter: brightness(0.3) contrast(1.6) saturate(0.5) blur(0.5px) sepia(0.2) hue-rotate(20deg) !important; */
+  position: relative;
+}
+
+/* Create a pseudo-element to apply additional filters to background */
+/* html[data-chrome-dark="true"] .hero-wrap[style*="background-image"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  filter: brightness(0.2) contrast(2) saturate(0.3) grayscale(0.3) !important; 
+  z-index: -1;
+}*/
+
+/* Specific targeting for ftco-degree-bg class */
+html[data-chrome-dark="true"] .hero-wrap.ftco-degree-bg {
+  /* Multiple filter layers for maximum effect */
+  /* filter: brightness(0.25) contrast(1.8) saturate(0.4) sepia(0.25) hue-rotate(15deg) blur(0.3px) !important; */
+  background-blend-mode: multiply !important;
+  background-attachment: fixed !important;
+}
+
+/* Advanced CSS filter using backdrop-filter for modern browsers */
+html[data-chrome-dark="true"] .hero-wrap .overlay {
+  /* backdrop-filter: brightness(0.4) contrast(1.5) saturate(0.6) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 10, 25, 0.7) 30%,
+    rgba(0, 0, 0, 0.9) 100%
+  ) !important; */
+}
+
+/* Target background images using attribute selectors */
+/* html[data-chrome-dark="true"] div[style*="background-image: url('assets/images/bg_1.jpg')"] {
+  filter: brightness(0.2) contrast(2.2) saturate(0.3) sepia(0.3) hue-rotate(25deg) !important;
+} */
+
+/* CSS custom property approach for dynamic background filtering */
+html[data-chrome-dark="true"] .hero-wrap {
+  --bg-filter: brightness(0.25) contrast(1.9) saturate(0.4) sepia(0.2) hue-rotate(18deg);
+  filter: var(--bg-filter) !important;
+}
+
+/* Enhanced vignette effect specifically for background */
+/* html[data-chrome-dark="true"] .hero-wrap::after {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 25%,
+    rgba(0, 0, 0, 0.3) 60%,
+    rgba(0, 0, 0, 0.8) 100%
+  ) !important;
+  mix-blend-mode: multiply !important;
+} */

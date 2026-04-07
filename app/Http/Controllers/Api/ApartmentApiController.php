@@ -16,7 +16,7 @@ class ApartmentApiController extends Controller
     {
         $perPage = min($request->get('per_page', 15), 100);
         
-        $apartments = Apartment::with(['property:id,prop_id,address,state,lga', 'tenant:user_id,first_name,last_name'])
+        $apartments = Apartment::with(['property:id,property_id,address,state,lga', 'tenant:user_id,first_name,last_name'])
             ->when($request->get('property_id'), function ($query, $propertyId) {
                 return $query->where('property_id', $propertyId);
             })
@@ -48,7 +48,7 @@ class ApartmentApiController extends Controller
     public function show($id): JsonResponse
     {
         $apartment = Apartment::with([
-                'property:id,prop_id,address,state,lga,user_id',
+                'property:id,property_id,address,state,lga,user_id',
                 'property.owner:user_id,first_name,last_name,email,phone',
                 'tenant:user_id,first_name,last_name,email,phone'
             ])
@@ -74,7 +74,7 @@ class ApartmentApiController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'property_id' => 'required|exists:properties,prop_id',
+            'property_id' => 'required|exists:properties,id',
             'apartment_type' => 'required|string|max:100',
             'user_id' => 'required|exists:users,user_id',
             'tenant_id' => 'nullable|exists:users,user_id',

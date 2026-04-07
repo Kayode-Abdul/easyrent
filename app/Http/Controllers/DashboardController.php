@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Models\Property;
 use App\Models\Apartment;
 use App\Models\Payment;
-use App\Models\Booking;
 use App\Models\Message;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -150,7 +149,7 @@ class DashboardController extends Controller
     private function getLandlordStats($userId)
     {
         return Cache::remember('landlord_stats_' . $userId, now()->addMinutes(10), function () use ($userId) {
-            $properties = Property::where('user_id', $userId)->pluck('prop_id');
+            $properties = Property::where('user_id', $userId)->pluck('property_id');
             $apartments = Apartment::whereIn('property_id', $properties);
             
             return [
@@ -160,9 +159,6 @@ class DashboardController extends Controller
                     ->where('status', 'completed')
                     ->whereMonth('created_at', Carbon::now()->month)
                     ->sum('amount'),
-                'new_bookings' => Booking::whereIn('property_id', $properties)
-                    ->where('created_at', '>=', Carbon::now()->subWeek())
-                    ->count(),
             ];
         });
     }
@@ -377,7 +373,7 @@ class DashboardController extends Controller
                 'data' => $data,
             ];
         
-            $properties = Property::where('user_id', $userId)->pluck('prop_id');
+            $properties = Property::where('user_id', $userId)->pluck('property_id');
             $apartments = Apartment::whereIn('property_id', $properties);
             
             $propertyDistribution = [
@@ -475,7 +471,7 @@ class DashboardController extends Controller
                 'title' => 'New Property Added',
                 'description' => 'Property at ' . $property->address . ', ' . $property->state,
                 'time' => $property->created_at->diffForHumans(),
-                'link' => '/properties/' . $property->prop_id,
+                'link' => '/properties/' . $property->property_id,
             ]);
         });
 
@@ -523,24 +519,7 @@ class DashboardController extends Controller
                 'description' => "Received ₦" . number_format($payment->amount, 2) . " for property rent",
                 'time' => $payment->created_at->diffForHumans(),
             ];
-        }
-
-        // Recent bookings
-        $properties = Property::where('user_id', $userId)->pluck('prop_id');
-        $recentBookings = Booking::whereIn('property_id', $properties)
-            ->latest()
-            ->take(2)
-            ->get();
-        
-        foreach ($recentBookings as $booking) {
-            $activities[] = [
-                'title' => 'New Booking',
-                'description' => "New booking received for your property",
-                'time' => $booking->created_at->diffForHumans(),
-            ];
-        }
-
-        return collect($activities)->sortByDesc('time')->take(5)->values()->all();
+        }        return collect($activities)->sortByDesc('time')->take(5)->values()->all();
     }
 
     private function getTenantActivities($userId)
@@ -630,7 +609,7 @@ class DashboardController extends Controller
     private function getLandlordDashboardData($user)
     {
         $properties = Property::where('user_id', $user->user_id)->get();
-        $propertyIds = $properties->pluck('prop_id');
+        $propertyIds = $properties->pluck('property_id');
         
         $totalProperties = $properties->count();
         $totalApartments = Apartment::whereIn('property_id', $propertyIds)->count();
@@ -659,11 +638,6 @@ class DashboardController extends Controller
             ];
         }
         
-        // Recent bookings
-        $recentBookings = Booking::whereIn('apartment_id', 
-            Apartment::whereIn('property_id', $propertyIds)->pluck('apartment_id')
-        )->latest()->take(5)->get();
-        
         return [
             'totalProperties' => $totalProperties,
             'totalApartments' => $totalApartments,
@@ -673,7 +647,6 @@ class DashboardController extends Controller
             'monthlyRevenue' => $monthlyRevenue,
             'pendingPayments' => $pendingPayments,
             'revenueTrend' => $revenueTrend,
-            'recentBookings' => $recentBookings,
             'properties' => $properties->take(5), // Latest 5 properties for quick access
         ];
     }

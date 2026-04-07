@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::table('properties', function (Blueprint $table) {
             if (!Schema::hasColumn('properties', 'status')) {
-                $table->string('status')->default('available')->after('city');
+                $table->string('status')->default('available');
             }
             if (!Schema::hasColumn('properties', 'suspension_reason')) {
                 $table->text('suspension_reason')->nullable()->after('status');

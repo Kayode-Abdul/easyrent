@@ -3,9 +3,9 @@
 <div class="content">
     <h2>Inbox</h2>
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+    <div class="alert alert-success">{{ session('success') }}</div>
     @endif
-    <table class="table">
+    <table class="table datatable" id="inbox-table">
         <thead>
             <tr>
                 <th>From</th>
@@ -15,17 +15,36 @@
             </tr>
         </thead>
         <tbody>
-        @forelse($messages as $message)
+            @forelse($messages ?? [] as $message)
             <tr>
                 <td>{{ $message->sender->username ?? 'Unknown' }}</td>
-                <td><a href="{{ route('messages.show', $message->id) }}">{{ $message->subject ?? '(No Subject)' }}</a></td>
+                <td><a href="{{ route('messages.show', $message->id) }}">{{ $message->subject ?? '(No Subject)' }}</a>
+                </td>
                 <td>{{ $message->created_at->format('d M Y H:i') }}</td>
-                <td>{!! $message->is_read ? '<span class="badge badge-success">Read</span>' : '<span class="badge badge-warning">Unread</span>' !!}</td>
+                <td>{!! $message->is_read ? '<span class="badge badge-success">Read</span>' : '<span
+                        class="badge badge-warning">Unread</span>' !!}</td>
             </tr>
-        @empty
-            <tr><td colspan="4" class="text-muted">No messages.</td></tr>
-        @endforelse
+            @empty
+            <tr>
+                <td colspan="4" class="text-muted">No messages.</td>
+            </tr>
+            @endforelse
         </tbody>
     </table>
 </div>
 @endsection
+
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#inbox-table').DataTable({
+            "order": [[3, "desc"]], // Sort by date column
+            "pageLength": 25,
+            "responsive": true
+        });
+    });
+</script>
+@endpush

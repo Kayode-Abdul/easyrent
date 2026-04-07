@@ -25,13 +25,13 @@ class RegionalRateManagerTest extends TestCase
         
         // Create admin user for rate creation
         $this->adminUser = User::factory()->create(['user_id' => 1001]);
-        $adminRole = Role::create(['id' => 1, 'name' => 'admin']);
+        $adminRole = Role::firstOrCreate(['id' => 1], ['name' => 'admin']);
         $this->adminUser->roles()->attach($adminRole);
         
         // Create other roles
-        Role::create(['id' => 3, 'name' => 'marketer']);
-        Role::create(['id' => 9, 'name' => 'super_marketer']);
-        Role::create(['id' => 5, 'name' => 'regional_manager']);
+        Role::firstOrCreate(['id' => 3], ['name' => 'marketer']);
+        Role::firstOrCreate(['id' => 9], ['name' => 'super_marketer']);
+        Role::firstOrCreate(['id' => 5], ['name' => 'regional_manager']);
     }
 
     /** @test */

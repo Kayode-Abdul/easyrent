@@ -50,7 +50,7 @@ if (!$apartment) {
 if (!$property) {
     echo "   ❌ No properties found\n";
 } else {
-    echo "   ✅ Property found: ID {$property->prop_id}\n";
+    echo "   ✅ Property found: ID {$property->property_id}\n";
 }
 
 // Step 3: Create test proforma receipt

@@ -1,0 +1,136 @@
+/* HERO SECTION DARK MODE - FINAL SOLUTION */
+
+/* Basic dark mode activation */
+html[data-chrome-dark="true"] {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Restore all images to normal */
+html[data-chrome-dark="true"] img,
+html[data-chrome-dark="true"] video,
+html[data-chrome-dark="true"] iframe,
+html[data-chrome-dark="true"] canvas,
+html[data-chrome-dark="true"] svg {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* HERO SECTION - Completely override global dark mode for hero */
+html[data-chrome-dark="true"] .hero-wrap {
+  /* Remove the global invert completely */
+
+    filter: invert(1) hue-rotate(180deg) !important;
+  position: relative;
+}
+
+/* Apply targeted dark styling to hero background */
+html[data-chrome-dark="true"] .hero-wrap.ftco-degree-bg {
+  /* Ensure background image is visible and apply dark filters */
+  background-image: url('/assets/images/bg_1.png') !important;
+  /* background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: scroll !important; */
+  /* Apply dark mode filters directly */
+  /* filter: brightness(0.4) contrast(1.3) saturate(0.7) !important; */
+}
+
+/* Enhanced dark overlay */
+html[data-chrome-dark="true"] .hero-wrap .overlay {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(20, 30, 50, 0.6) 50%,
+    rgba(0, 0, 0, 0.8) 100%
+  ) !important;
+  opacity: 1 !important;
+}
+
+/* Style text content for dark mode (no global invert applied) */
+html[data-chrome-dark="true"] .hero-wrap h1 {
+  color: #ffffff !important;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9) !important;
+}
+
+html[data-chrome-dark="true"] .hero-wrap p {
+  color: #e8e8e8 !important;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Style buttons for dark mode */
+html[data-chrome-dark="true"] .hero-wrap .btn-light {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+  border-color: #404040 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+html[data-chrome-dark="true"] .hero-wrap .btn[style*="background: rgb(239 123 98)"] {
+  background: rgb(200, 100, 80) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Style mouse scroll indicator */
+html[data-chrome-dark="true"] .hero-wrap .mouse-icon {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+html[data-chrome-dark="true"] .hero-wrap .mouse-wheel span {
+  color: #ffffff !important;
+}
+
+/* Ensure proper z-index stacking */
+html[data-chrome-dark="true"] .hero-wrap .container {
+  position: relative;
+  z-index: 10;
+}
+
+/* Fallback for different image paths */
+html[data-chrome-dark="true"] .blog-entry .text .heading a {
+  color: #ffffff !important;
+}
+
+/* Debug styles - remove in production 
+html[data-chrome-dark="true"] .hero-wrap::before {
+  content: 'Dark Mode Active';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+  z-index: 1000;
+  pointer-events: none;
+}
+*/
+/* Toggle button styling */
+.chrome-dark-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.chrome-dark-toggle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+html[data-chrome-dark="true"] .chrome-dark-toggle {
+  filter: invert(1) hue-rotate(180deg) !important;
+}

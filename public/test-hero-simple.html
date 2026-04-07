@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Hero Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .hero-wrap {
+            height: 100vh;
+            background-image: url('assets/images/bg_1.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+        
+        .toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        
+        /* Dark mode styles */
+        html[data-dark="true"] {
+            filter: invert(1) hue-rotate(180deg);
+        }
+        
+        html[data-dark="true"] .hero-wrap {
+            filter: invert(1) hue-rotate(180deg);
+        }
+        
+        html[data-dark="true"] .content {
+            filter: invert(1) hue-rotate(180deg);
+        }
+        
+        html[data-dark="true"] .toggle-btn {
+            filter: invert(1) hue-rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+    <button class="toggle-btn" onclick="toggleDark()">Toggle Dark Mode</button>
+    
+    <div class="hero-wrap">
+        <div class="overlay"></div>
+        <div class="content">
+            <h1>Hero Section Test</h1>
+            <p>Testing background image visibility in dark mode</p>
+            <p id="status">Light Mode</p>
+        </div>
+    </div>
+    
+    <script>
+        function toggleDark() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-dark') === 'true';
+            html.setAttribute('data-dark', isDark ? 'false' : 'true');
+            document.getElementById('status').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+        
+        // Test image loading
+        const img = new Image();
+        img.onload = function() {
+            console.log('✅ Background image loaded successfully');
+        };
+        img.onerror = function() {
+            console.error('❌ Background image failed to load');
+            document.querySelector('.content').innerHTML += '<br><span style="color: red;">Background image failed to load!</span>';
+        };
+        img.src = 'assets/images/bg_1.jpg';
+    </script>
+</body>
+</html>

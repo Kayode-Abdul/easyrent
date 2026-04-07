@@ -14,14 +14,32 @@ class ApartmentRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'apartmentType' => 'required|string',
-            'tenantId' => 'nullable|exists:users,user_id',
-            'duration' => 'required|in:1,3,6,12',
-            'fromDate' => 'required|date',
-            'toDate' => 'required|date|after:fromDate',
-            'price' => 'required|numeric|min:0'
-        ];
+        // Detect if this is a singular or array request
+        $isSingular = !is_array($this->input('amount'));
+        
+        if ($isSingular) {
+            // Singular field validation (from property show page)
+            return [
+                'propertyId' => 'required|exists:properties,property_id',
+                'tenantId' => 'nullable|string',
+                'fromRange' => 'required|date',
+                'toRange' => 'required|date|after:fromRange',
+                'amount' => 'required|numeric|min:0',
+                'rentalType' => 'required|in:hourly,daily,weekly,monthly,quarterly,semi_annually,yearly,bi_annually',
+                'duration' => 'nullable|numeric|min:0',
+            ];
+        } else {
+            // Array field validation (from listing page bulk creation)
+            return [
+                'propertyId' => 'required|exists:properties,property_id',
+                'tenantId.*' => 'nullable|string',
+                'fromRange.*' => 'nullable|date',
+                'toRange.*' => 'nullable|date|after:fromRange.*',
+                'amount.*' => 'required|numeric|min:0',
+                'rentalType.*' => 'required|in:hourly,daily,weekly,monthly,quarterly,semi_annually,yearly,bi_annually',
+                'duration.*' => 'nullable|numeric|min:0',
+            ];
+        }
     }
 
     public function messages(): array
@@ -29,14 +47,34 @@ class ApartmentRequest extends FormRequest
         return [
             'propertyId.required' => 'Property ID is required',
             'propertyId.exists' => 'Selected property does not exist',
-            'tenantId.required' => 'At least one apartment is required',
-            'fromRange.*.required_with' => 'Start date is required when tenant is specified',
+            
+            // Singular field messages
+            'tenantId.string' => 'Tenant ID must be a string',
+            'fromRange.required' => 'Start date is required',
+            'fromRange.date' => 'Invalid start date format',
+            'toRange.required' => 'End date is required',
+            'toRange.date' => 'Invalid end date format',
+            'toRange.after' => 'End date must be after start date',
+            'amount.required' => 'Price is required',
+            'amount.numeric' => 'Price must be a number',
+            'amount.min' => 'Price must be greater than 0',
+            'rentalType.required' => 'Rental type is required',
+            'rentalType.in' => 'Invalid rental type selected',
+            'duration.numeric' => 'Duration must be a number',
+            'duration.min' => 'Duration must be greater than 0',
+            
+            // Array field messages
+            'tenantId.*.string' => 'Tenant ID must be a string',
             'fromRange.*.date' => 'Invalid start date format',
-            'toRange.*.required_with' => 'End date is required when tenant is specified',
             'toRange.*.date' => 'Invalid end date format',
             'toRange.*.after' => 'End date must be after start date',
+            'amount.*.required' => 'Amount is required for each apartment',
             'amount.*.numeric' => 'Amount must be a number',
-            'amount.*.min' => 'Amount must be greater than 0'
+            'amount.*.min' => 'Amount must be greater than 0',
+            'rentalType.*.required' => 'Rental type is required for each apartment',
+            'rentalType.*.in' => 'Invalid rental type selected',
+            'duration.*.numeric' => 'Duration must be a number',
+            'duration.*.min' => 'Duration must be greater than 0',
         ];
     }
 }

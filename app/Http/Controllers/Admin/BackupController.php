@@ -231,4 +231,14 @@ class BackupController extends Controller
 
         return round($bytes, $precision) . ' ' . $units[$i];
     }
+
+    /**
+     * Restore method
+     * TODO: Implement this method
+     */
+    public function restore($id)
+    {
+        // TODO: Implement restore functionality
+        return back()->with('error', 'Method not implemented yet');
+    }
 }

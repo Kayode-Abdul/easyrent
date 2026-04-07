@@ -1,18 +1,19 @@
-@php $isDashboard = request()->segment(1) === 'dashboard'; @endphp
+   @php $currentSegment = request()->segment(1); 
+    $isDashboard = in_array($currentSegment, ['dashboard','admin', 'proforma', 'property-manager', 'complaints']); @endphp
 @if($isDashboard)
 <footer class="footer footer-black  footer-white ">
     <div class="container-fluid">
       <div class="row">
         <nav class="footer-nav">
           <ul>
-            <li><a href="#" target="_blank">Affiliate Tim</a></li>
+            <li><a href="#" target="_blank">Affiliate Marketer</a></li>
             <li><a href="#" target="_blank">Blog</a></li>
-            <li><a href="#" target="_blank">Licenses</a></li>
+            <li><a href="#" target="_blank">Property Manager</a></li>
           </ul>
         </nav>
         <div class="credits ml-auto">
           <span class="copyright">
-            © <script>document.write(new Date().getFullYear())</script>, made with <i class="fa fa-heart heart"></i> by Walls and Gates
+            © <script>document.write(new Date().getFullYear())</script>, made with <i class="fa fa-heart heart text-danger"></i> by Walls and Gates
           </span>
         </div>
       </div>
@@ -52,20 +53,20 @@
             <span style="display: block; width: 50px; height: 3px; background: #ff5e15; margin-top: 10px;"></span>
           </h4>
           <p style="color: #adb5bd; line-height: 1.8; margin-bottom: 20px;">
-            Find your perfect home with EasyRent. We make property rental simple, secure, and stress-free.
-          </p>
+                Manage your properties and tenants easily. We make property administration, rent collection and tenant management simple, secure, and stress-free.
+        </p>
           <div class="social-links" style="margin-top: 20px;">
             <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; margin-right: 10px; transition: all 0.3s ease;">
-              <i class="bx bxl-facebook" style="color: #ff5e15; font-size: 18px;"></i>
+              <i class="bi bi-facebook" style="color: #ff5e15; font-size: 18px;"></i>
             </a>
             <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; margin-right: 10px; transition: all 0.3s ease;">
-              <i class="bx bxl-twitter" style="color: #ff5e15; font-size: 18px;"></i>
+              <i class="bi bi-twitter-x" style="color: #ff5e15; font-size: 18px;"></i>
             </a>
             <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; margin-right: 10px; transition: all 0.3s ease;">
-              <i class="bx bxl-instagram" style="color: #ff5e15; font-size: 18px;"></i>
+              <i class="bi bi-instagram" style="color: #ff5e15; font-size: 18px;"></i>
             </a>
             <a href="#" style="display: inline-block; width: 40px; height: 40px; background: rgba(255,94,21,0.1); border-radius: 50%; text-align: center; line-height: 40px; transition: all 0.3s ease;">
-              <i class="bx bxl-linkedin" style="color: #ff5e15; font-size: 18px;"></i>
+              <i class="bi bi-linkedin" style="color: #ff5e15; font-size: 18px;"></i>
             </a>
           </div>
         </div>
@@ -78,15 +79,15 @@
           <ul style="list-style: none; padding-left: 0;">
             <li style="margin-bottom: 12px;">
               <i class="bx bx-chevron-right" style="color: #ff5e15; font-size: 18px;"></i> 
-              <a href="#hero" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">Home</a>
+              <a href="/" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">Home</a>
             </li>
             <li style="margin-bottom: 12px;">
               <i class="bx bx-chevron-right" style="color: #ff5e15; font-size: 18px;"></i> 
-              <a href="#menu" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">About</a>
+              <a href="/benefits" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">Benefit</a>
             </li>
             <li style="margin-bottom: 12px;">
               <i class="bx bx-chevron-right" style="color: #ff5e15; font-size: 18px;"></i> 
-              <a href="#events" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">Services</a>
+              <a href="/faq" style="color: #adb5bd; text-decoration: none; transition: all 0.3s ease;">FAQ</a>
             </li>
             <li style="margin-bottom: 12px;">
               <i class="bx bx-chevron-right" style="color: #ff5e15; font-size: 18px;"></i> 
@@ -127,15 +128,15 @@
           </h4>
           <div style="margin-bottom: 15px;">
             <i class="bx bx-map" style="color: #ff5e15; font-size: 20px; margin-right: 10px; float: left;"></i>
-            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">123 Rental Street, Lagos, Nigeria</p>
+            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">33 Adegoke Street, Surulere  Lagos, Nigeria</p>
           </div>
           <div style="margin-bottom: 15px;">
             <i class="bx bx-phone" style="color: #ff5e15; font-size: 20px; margin-right: 10px; float: left;"></i>
-            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">+234 123 456 7890</p>
+            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">+234 9092469137</p>
           </div>
           <div style="margin-bottom: 15px;">
             <i class="bx bx-envelope" style="color: #ff5e15; font-size: 20px; margin-right: 10px; float: left;"></i>
-            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">info@easyrent.com</p>
+            <p style="color: #adb5bd; margin-bottom: 0; margin-left: 30px;">info@easyrent.africa</p>
           </div>
         </div>
       </div>
@@ -152,7 +153,7 @@
         </div>
         <div class="col-md-6 text-md-right text-center">
           <div class="credits" style="color: #adb5bd;"> 
-            Designed with <i class="bx bx-heart" style="color: #ff5e15;"></i> by <a href="https://wandggroup.com/" style="color: #ff5e15; text-decoration: none;">Walls and Gates</a>
+            Designed by <a href="https://wandggroup.com/" style="color: #ff5e15; text-decoration: none;">Walls and Gates</a>
           </div>
         </div>
       </div>
@@ -160,7 +161,7 @@
   </div>
 </footer><!-- End Footer -->
 <!-- loader -->
-<div id="ftco-loader" class="show fullscreen"><svg class="circular" width="48px" height="48px"><circle class="path-bg" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke="#eeeeee"/><circle class="path" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke-miterlimit="10" stroke="#F96D00"/></svg></div>
+<div id="ftco-loader" class="show fullscreen"><img class="circular" width="48px" height="48px"/><circle class="path-bg" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke="#eeeeee"/><circle class="path" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke-miterlimit="10" stroke="#F96D00"/></svg></div>
 <script src="/assets/js/jquery-migrate-3.0.1.min.js"></script>
 <script src="/assets/js/popper.min.js"></script>
 <script src="/assets/js/bootstrap.min.js"></script>
@@ -178,6 +179,8 @@
 <script src="/assets/js/google-map.js"></script>
 <script src="/assets/js/main.js"></script>
 @endif
+
+  @include('components.mobile-floating-footer')
 
   <!-- SweetAlert2 (global) -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

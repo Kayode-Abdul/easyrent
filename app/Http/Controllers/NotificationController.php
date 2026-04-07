@@ -9,6 +9,7 @@ use App\Models\Property;
 use App\Models\Apartment;
 use App\Models\Message;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
@@ -173,27 +174,7 @@ class NotificationController extends Controller
     private function getLandlordNotifications($user)
     {
         $notifications = [];
-
-        // New bookings
-        $properties = Property::where('user_id', $user->user_id)->pluck('prop_id');
-        $newBookings = DB::table('bookings')
-            ->whereIn('property_id', $properties)
-            ->where('created_at', '>=', now()->subHours(24))
-            ->count();
-
-        if ($newBookings > 0) {
-            $notifications[] = [
-                'id' => 'new_bookings_' . $user->user_id . '_' . date('Y-m-d'),
-                'type' => 'booking',
-                'title' => 'New Booking Requests',
-                'message' => "You have {$newBookings} new booking request(s)",
-                'priority' => 'high',
-                'timestamp' => now()->toISOString(),
-                'read' => false,
-                'action_url' => '/dashboard/bookings',
-                'icon' => 'nc-icon nc-bookmark-2 text-primary'
-            ];
-        }
+        $properties = Property::where('user_id', $user->user_id)->pluck('property_id');
 
         // Payment notifications
         $recentPayments = Payment::where('landlord_id', $user->user_id)
@@ -525,7 +506,7 @@ class NotificationController extends Controller
 
             return true;
         } catch (\Exception $e) {
-            \Log::error('Failed to send push notification: ' . $e->getMessage());
+           Log::error('Failed to send push notification: ' . $e->getMessage());
             return false;
         }
     }

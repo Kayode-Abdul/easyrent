@@ -134,7 +134,7 @@
             datasets: [{
                 label: 'Monthly Revenue',
                 data: {!! json_encode($revenueData['values']) !!},
-                borderColor: '#51cbce',
+                borderColor: '#28a745',
                 tension: 0.1,
                 fill: false
             }]
@@ -157,7 +157,7 @@
             labels: {!! json_encode($paymentMethods['labels']) !!},
             datasets: [{
                 data: {!! json_encode($paymentMethods['values']) !!},
-                backgroundColor: ['#51cbce', '#fbc658', '#ef8157', '#6bd098'],
+                backgroundColor: ['#28a745', '#fbc658', '#ef8157', '#6bd098'],
             }]
         },
         options: {

@@ -8,9 +8,14 @@ class Referral extends Model
     protected $fillable = [
         'referrer_id',
         'referred_id',
+        'parent_referral_id',
+        'referral_level',
+        'commission_tier',
+        'regional_rate_snapshot',
         // Added enhanced tracking fields for seeding/usage
         'referral_code',
-        'status',
+        'referral_status', // Fixed: use referral_status instead of status
+        'property_id',
         'commission_amount',
         'commission_status',
         'conversion_date',
@@ -19,6 +24,10 @@ class Referral extends Model
         'ip_address',
         'user_agent',
         'tracking_data',
+        'is_flagged',
+        'fraud_indicators',
+        'fraud_checked_at',
+        'authenticity_verified',
     ];
 
     public function referrer()

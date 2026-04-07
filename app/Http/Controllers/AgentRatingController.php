@@ -14,7 +14,7 @@ class AgentRatingController extends Controller
     {
         $request->validate([
             'agent_id' => 'required|exists:users,user_id',
-            'property_id' => 'required|exists:properties,prop_id',
+            'property_id' => 'required|exists:properties,id',
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:1000',
         ]);
@@ -24,7 +24,7 @@ class AgentRatingController extends Controller
         $propertyId = $request->property_id;
 
         // Only allow if user is landlord of property or tenant of property
-        $property = Property::where('prop_id', $propertyId)->first();
+        $property = Property::where('property_id', $propertyId)->first();
         if (!$property || ($property->user_id !== $user->user_id && $property->agent_id !== $agentId)) {
             return response()->json(['success' => false, 'message' => 'You are not eligible to rate this agent for this property.'], 403);
         }

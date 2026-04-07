@@ -127,7 +127,7 @@ class FraudDetectionService
             
             // Get the next user in the chain (who referred the current user)
             $parentReferral = Referral::where('referred_id', $currentUserId)
-                ->where('status', 'active')
+                ->where('referral_status', 'active')
                 ->first();
             
             $currentUserId = $parentReferral ? $parentReferral->referrer_id : null;
@@ -147,7 +147,7 @@ class FraudDetectionService
             
             // Get users referred by current user
             $childReferrals = Referral::where('referrer_id', $currentUserId)
-                ->where('status', 'active')
+                ->where('referral_status', 'active')
                 ->get();
             
             // For simplicity, check first child (in real scenario, might need to check all branches)
@@ -236,7 +236,7 @@ class FraudDetectionService
     {
         $totalReferrals = Referral::where('referrer_id', $userId)->count();
         $successfulReferrals = Referral::where('referrer_id', $userId)
-            ->where('status', 'completed')
+            ->where('referral_status', 'completed')
             ->count();
         
         if ($totalReferrals === 0) {

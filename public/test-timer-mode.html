@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Mode Timer Test</title>
+    <link rel="stylesheet" href="assets/css/chrome-dark-mode.css">
+    <link rel="stylesheet" href="assets/css/hero-dark-fix.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .hero-section {
+            height: 300px;
+            background-image: url('assets/images/bg_1.jpg');
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .hero-section .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .status-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .status-label {
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .status-value {
+            color: #007bff;
+            font-family: monospace;
+        }
+        
+        .timer-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .current-time {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕐 Dark Mode Timer Test</h1>
+        <p>Test the automatic dark mode timer that switches at 7 PM and 7 AM.</p>
+        
+        <div class="hero-section hero-wrap ftco-degree-bg">
+            <div class="overlay"></div>
+            <div class="hero-content">
+                <h2>Hero Section</h2>
+                <p>Background image visibility test</p>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-primary" onclick="ChromeDarkMode.disable()">☀️ Always Light</button>
+            <button class="btn btn-secondary" onclick="ChromeDarkMode.enable()">🌙 Always Dark</button>
+            <button class="btn btn-success" onclick="ChromeDarkMode.timer()">🕐 Timer Mode</button>
+            <button class="btn btn-warning" onclick="ChromeDarkMode.auto()">🔄 System Auto</button>
+        </div>
+        
+        <div class="status-panel">
+            <h3>Current Status</h3>
+            <div class="status-item">
+                <span class="status-label">Current Mode:</span>
+                <span class="status-value" id="current-mode">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Timer Active:</span>
+                <span class="status-value" id="timer-active">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Should Be Dark:</span>
+                <span class="status-value" id="should-be-dark">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Current Hour:</span>
+                <span class="status-value" id="current-hour">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Next Switch:</span>
+                <span class="status-value" id="next-switch">-</span>
+            </div>
+        </div>
+        
+        <div class="timer-info">
+            <div class="current-time" id="current-time">--:--:--</div>
+            <p>🌙 Dark Mode: 7:00 PM - 7:00 AM<br>☀️ Light Mode: 7:00 AM - 7:00 PM</p>
+        </div>
+        
+        <div style="margin-top: 30px; text-align: center;">
+            <button class="btn btn-secondary" onclick="debugChromeDarkMode()">🔍 Debug Info</button>
+            <button class="btn btn-secondary" onclick="testTimerSwitch()">⚡ Test Timer Switch</button>
+        </div>
+    </div>
+    
+    <script src="assets/js/chrome-dark-mode.js"></script>
+    <script>
+        function updateStatus() {
+            document.getElementById('current-mode').textContent = ChromeDarkMode.getMode();
+            document.getElementById('timer-active').textContent = ChromeDarkMode.isTimerMode() ? 'Yes' : 'No';
+            document.getElementById('should-be-dark').textContent = shouldBeDarkByTime() ? 'Yes' : 'No';
+            document.getElementById('current-hour').textContent = new Date().getHours() + ':00';
+            
+            const nextSwitch = ChromeDarkMode.getNextSwitchTime();
+            if (nextSwitch) {
+                document.getElementById('next-switch').textContent = nextSwitch.toLocaleTimeString();
+            } else {
+                document.getElementById('next-switch').textContent = 'Not in timer mode';
+            }
+            
+            // Update current time
+            document.getElementById('current-time').textContent = new Date().toLocaleTimeString();
+        }
+        
+        function shouldBeDarkByTime() {
+            const hour = new Date().getHours();
+            return hour >= 19 || hour < 7;
+        }
+        
+        function testTimerSwitch() {
+            if (!ChromeDarkMode.isTimerMode()) {
+                alert('Please enable Timer Mode first!');
+                return;
+            }
+            
+            // Simulate time change for testing
+            const currentMode = ChromeDarkMode.getMode();
+            const newMode = currentMode === 'dark' ? 'light' : 'dark';
+            
+            if (newMode === 'dark') {
+                document.documentElement.setAttribute('data-chrome-dark', 'true');
+            } else {
+                document.documentElement.setAttribute('data-chrome-dark', 'false');
+            }
+            
+            alert(`Simulated switch to ${newMode} mode!`);
+            updateStatus();
+        }
+        
+        // Update status every second
+        setInterval(updateStatus, 1000);
+        updateStatus();
+        
+        // Listen for dark mode changes
+        window.addEventListener('chromeDarkModeChanged', updateStatus);
+    </script>
+</body>
+</html>

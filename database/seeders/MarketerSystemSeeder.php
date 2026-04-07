@@ -27,8 +27,8 @@ class MarketerSystemSeeder extends Seeder
             [
                 'first_name' => 'John',
                 'last_name' => 'Marketing',
-                'username' => 'john_marketing',
-                'email' => 'john@marketing.com',
+                'username' => 'john_marketing_pro',
+                'email' => 'john@marketingpro.com',
                 'phone' => '0701234567',
                 'commission_rate' => 5.0,
                 'marketer_status' => 'active',
@@ -36,7 +36,7 @@ class MarketerSystemSeeder extends Seeder
                     'business_name' => 'John Marketing Solutions',
                     'business_registration' => 'BN123456',
                     'address' => '123 Marketing Street, Nairobi',
-                    'kyc_status' => 'verified'
+                    'kyc_status' => 'approved'
                 ]
             ],
             [
@@ -51,7 +51,7 @@ class MarketerSystemSeeder extends Seeder
                     'business_name' => 'Property Pro Marketing',
                     'business_registration' => 'BN789012',
                     'address' => '456 Business Avenue, Mombasa',
-                    'kyc_status' => 'verified'
+                    'kyc_status' => 'approved'
                 ]
             ],
             [
@@ -72,9 +72,18 @@ class MarketerSystemSeeder extends Seeder
         ];
 
         foreach ($marketers as $index => $marketerData) {
+            // Skip if user already exists
+            if (User::where('email', $marketerData['email'])->exists()) {
+                continue;
+            }
+            // Generate unique user_id
+            do {
+                $user_id = mt_rand(200000, 999999);
+            } while (User::where('user_id', $user_id)->exists());
+            
             // Create marketer user
             $marketer = User::create([
-                'user_id' => 1000 + $index + 1, // Start from 1001
+                'user_id' => $user_id,
                 'first_name' => $marketerData['first_name'],
                 'last_name' => $marketerData['last_name'],
                 'username' => $marketerData['username'],
@@ -82,7 +91,7 @@ class MarketerSystemSeeder extends Seeder
                 'phone' => $marketerData['phone'],
                 'email_verified_at' => now(),
                 'password' => Hash::make('password123'),
-                'role' => 5, // Marketer role
+                'role' => 12, // Marketer role
                 'marketer_status' => $marketerData['marketer_status'],
                 'commission_rate' => $marketerData['commission_rate'],
                 'referral_code' => strtoupper(Str::random(8)),
@@ -93,39 +102,34 @@ class MarketerSystemSeeder extends Seeder
 
             // Create marketer profile
             MarketerProfile::create([
-                'user_id' => $marketer->id,
+                'user_id' => $marketer->user_id, // Use user_id instead of id
                 'business_name' => $marketerData['profile_data']['business_name'],
-                'business_registration' => $marketerData['profile_data']['business_registration'],
                 'business_type' => 'marketing_agency',
-                'address' => $marketerData['profile_data']['address'],
                 'website' => 'https://' . strtolower(str_replace(' ', '', $marketerData['profile_data']['business_name'])) . '.com',
-                'experience_years' => rand(2, 10),
-                'target_market' => 'landlords',
+                'years_of_experience' => rand(2, 10), // Use years_of_experience instead of experience_years
                 'marketing_channels' => json_encode(['social_media', 'referrals', 'online_advertising']),
                 'kyc_status' => $marketerData['profile_data']['kyc_status'],
                 'kyc_documents' => json_encode([
                     'id_document' => 'documents/sample_id.pdf',
                     'business_permit' => 'documents/sample_permit.pdf'
                 ]),
-                'approved_at' => $marketerData['profile_data']['kyc_status'] === 'verified' ? now() : null
+                'verified_at' => $marketerData['profile_data']['kyc_status'] === 'approved' ? now() : null // Use verified_at instead of approved_at
             ]);
 
             // Create campaigns for active marketers
             if ($marketerData['marketer_status'] === 'active') {
                 for ($i = 1; $i <= 3; $i++) {
                     ReferralCampaign::create([
-                        'marketer_id' => $marketer->id,
-                        'name' => "Campaign $i - " . $marketerData['profile_data']['business_name'],
+                        'marketer_id' => $marketer->user_id,
+                        'campaign_name' => "Campaign $i - " . $marketerData['profile_data']['business_name'],
                         'description' => "Marketing campaign $i for landlord acquisition",
                         'campaign_code' => strtoupper(Str::random(6) . $i),
-                        'campaign_type' => $i === 1 ? 'qr_code' : 'link',
                         'target_audience' => 'landlords',
-                        'budget' => rand(50000, 200000),
                         'start_date' => now()->subDays(rand(1, 30)),
                         'end_date' => now()->addDays(rand(30, 90)),
                         'status' => 'active',
-                        'clicks' => rand(50, 500),
-                        'conversions' => rand(5, 50)
+                        'clicks_count' => rand(50, 500),
+                        'conversions_count' => rand(5, 50)
                     ]);
                 }
             }
@@ -156,13 +160,28 @@ class MarketerSystemSeeder extends Seeder
             ]
         ];
 
-        $approvedMarketers = User::where('role', 5)->where('marketer_status', 'active')->get();
+        $approvedMarketers = User::where('role', 12)->where('marketer_status', 'active')->get();
         $campaigns = ReferralCampaign::all();
 
+        // Only create referrals if we have marketers and campaigns
+        if ($approvedMarketers->isEmpty() || $campaigns->isEmpty()) {
+            echo "No approved marketers or campaigns found. Skipping referral creation.\n";
+            return;
+        }
+
         foreach ($referredLandlords as $index => $landlordData) {
+            // Skip if user already exists
+            if (User::where('email', $landlordData['email'])->exists()) {
+                continue;
+            }
+            // Generate unique user_id
+            do {
+                $user_id = mt_rand(300000, 999999);
+            } while (User::where('user_id', $user_id)->exists());
+            
             // Create landlord user
             $landlord = User::create([
-                'user_id' => 2000 + $index + 1, // Start from 2001
+                'user_id' => $user_id,
                 'first_name' => $landlordData['first_name'],
                 'last_name' => $landlordData['last_name'],
                 'username' => $landlordData['username'],
@@ -170,18 +189,18 @@ class MarketerSystemSeeder extends Seeder
                 'phone' => $landlordData['phone'],
                 'email_verified_at' => now(),
                 'password' => Hash::make('password123'),
-                'role' => 2 // Landlord role
+                'role' => 13 // Landlord role
             ]);
 
             // Create referral record
             $marketer = $approvedMarketers->random();
-            $campaign = $campaigns->where('marketer_id', $marketer->id)->random();
+            $campaign = $campaigns->where('marketer_id', $marketer->user_id)->random();
             
             $referral = Referral::create([
-                'referrer_id' => $marketer->id,
-                'referred_id' => $landlord->id,
+                'referrer_id' => $marketer->user_id,
+                'referred_id' => $landlord->user_id,
                 'referral_code' => $marketer->referral_code,
-                'status' => 'completed',
+                'referral_status' => 'completed',
                 'commission_amount' => rand(5000, 15000),
                 'commission_status' => $index === 0 ? 'paid' : ($index === 1 ? 'approved' : 'pending'),
                 'campaign_id' => $campaign->id,
@@ -192,8 +211,8 @@ class MarketerSystemSeeder extends Seeder
             // Create referral reward
             ReferralReward::create([
                 'referral_id' => $referral->id,
-                'marketer_id' => $marketer->id,
-                'landlord_id' => $landlord->id,
+                'marketer_id' => $marketer->user_id,
+                'landlord_id' => $landlord->user_id,
                 'commission_amount' => $referral->commission_amount,
                 'commission_percentage' => $marketer->commission_rate,
                 'reward_type' => 'commission',
@@ -206,7 +225,7 @@ class MarketerSystemSeeder extends Seeder
             // Create commission payment for paid rewards
             if ($referral->commission_status === 'paid') {
                 CommissionPayment::create([
-                    'marketer_id' => $marketer->id,
+                    'marketer_id' => $marketer->user_id,
                     'amount' => $referral->commission_amount,
                     'payment_method' => 'bank_transfer',
                     'payment_reference' => 'PAY' . strtoupper(Str::random(8)),

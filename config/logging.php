@@ -143,12 +143,6 @@ return [
         ],
 
         'commission_audit' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/commission_audit.log'),
-            'level' => 'info',
-        ],
-
-        'commission_audit' => [
             'driver' => 'daily',
             'path' => storage_path('logs/commission_audit.log'),
             'level' => env('LOG_LEVEL', 'debug'),
@@ -160,6 +154,103 @@ return [
             'path' => storage_path('logs/commission_errors.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 60,
+        ],
+
+        // EasyRent Link Authentication System Logging Channels
+        'easyrent_invitations' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/easyrent_invitations.log'),
+            'level' => 'info',
+            'days' => 30,
+        ],
+
+        'easyrent_auth' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/easyrent_auth.log'),
+            'level' => 'info',
+            'days' => 30,
+        ],
+
+        'easyrent_payments' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/easyrent_payments.log'),
+            'level' => 'info',
+            'days' => 60,
+        ],
+
+        'easyrent_errors' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/easyrent_errors.log'),
+            'level' => 'error',
+            'days' => 90,
+        ],
+
+        'easyrent_performance' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/easyrent_performance.log'),
+            'level' => 'info',
+            'days' => 14,
+        ],
+
+        'easyrent_sessions' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/easyrent_sessions.log'),
+            'level' => 'info',
+            'days' => 7,
+        ],
+
+        'easyrent_security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/easyrent_security.log'),
+            'level' => 'warning',
+            'days' => 90,
+        ],
+
+        'easyrent_emails' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/easyrent_emails.log'),
+            'level' => 'info',
+            'days' => 30,
+        ],
+
+        'easyrent_assignments' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/easyrent_assignments.log'),
+            'level' => 'info',
+            'days' => 60,
+        ],
+
+        // Payment Calculation Service Logging Channels
+        'payment_calculations' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payment_calculations.log'),
+            'level' => 'info',
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
+        'payment_errors' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payment_errors.log'),
+            'level' => 'error',
+            'days' => 90,
+            'replace_placeholders' => true,
+        ],
+
+        'payment_audit' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payment_audit.log'),
+            'level' => 'info',
+            'days' => 60,
+            'replace_placeholders' => true,
+        ],
+
+        'payment_performance' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/payment_performance.log'),
+            'level' => 'info',
+            'days' => 14,
+            'replace_placeholders' => true,
         ],
     ],
 

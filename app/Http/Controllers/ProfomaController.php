@@ -7,10 +7,20 @@ use App\Models\User;
 use App\Models\Apartment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\JsonResponse;
+use App\Mail\MessageNotification;
+use Illuminate\Support\Facades\Log;
+use App\Services\Payment\PaymentCalculationServiceInterface;
 
 class ProfomaController extends Controller
 {
+    protected PaymentCalculationServiceInterface $paymentCalculationService;
+
+    public function __construct(PaymentCalculationServiceInterface $paymentCalculationService)
+    {
+        $this->paymentCalculationService = $paymentCalculationService;
+    }
     /**
      * Send a proforma receipt and create a notification message.
      */
@@ -34,18 +44,41 @@ class ProfomaController extends Controller
             $generator = $request->input('generator');
             $other_charges_desc = $request->input('other_charges_desc');
             $other_charges_amount = $request->input('other_charges_amount');
-            // Calculate total
-            $total = $amount 
-                + (float)($security_deposit ?: 0)
-                + (float)($water ?: 0)
-                + (float)($internet ?: 0)
-                + (float)($generator ?: 0)
-                + (float)($other_charges_amount ?: 0);
+            
+            // Use centralized payment calculation service
+            $additionalCharges = [
+                'security_deposit' => $security_deposit ?: 0,
+                'water' => $water ?: 0,
+                'internet' => $internet ?: 0,
+                'generator' => $generator ?: 0,
+                'other_charges' => $other_charges_amount ?: 0
+            ];
+            
+            $calculationResult = $this->paymentCalculationService->calculatePaymentTotalWithCharges(
+                $amount,
+                $duration,
+                $apartment->getPricingType(),
+                $additionalCharges
+            );
+            
+            if (!$calculationResult->isValid) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment calculation failed: ' . $calculationResult->errorMessage
+                ], 400);
+            }
+            
+            $total = $calculationResult->totalAmount;
+            
+            // Log calculation for audit purposes
+            $this->paymentCalculationService->logCalculationSteps($calculationResult);
 
             // Avoid creating duplicate proformas for same apartment
             $existing = ProfomaReceipt::where('apartment_id', $apartment->id)->first();
             if ($existing) {
                 $existing->status = ProfomaReceipt::STATUS_NEW; // sent and not viewed
+                // Ensure base amount is updated alongside breakdown fields
+                $existing->amount = $amount;
                 $existing->duration = $duration;
                 $existing->security_deposit = $security_deposit;
                 $existing->water = $water;
@@ -54,10 +87,20 @@ class ProfomaController extends Controller
                 $existing->other_charges_desc = $other_charges_desc;
                 $existing->other_charges_amount = $other_charges_amount;
                 $existing->total = $total;
+                // Add calculation tracking for audit purposes
+                $existing->calculation_method = $calculationResult->calculationMethod;
+                $existing->calculation_log = $calculationResult->calculationSteps;
                 $existing->save();
+                Log::info('Proforma updated', [
+                    'proforma_id' => $existing->id,
+                    'apartment_pk' => $apartment->id,
+                    'amount' => $amount,
+                    'total' => $total,
+                    'tenant_id' => $existing->tenant_id,
+                ]);
                 // Always send notification message to tenant on update
                 if ($existing->tenant_id) {
-                    Message::create([
+                    $message = Message::create([
                         'sender_id' => $user->user_id,
                         'receiver_id' => $existing->tenant_id,
                         'subject' => 'Rent Proforma',
@@ -67,6 +110,16 @@ class ProfomaController extends Controller
                             . (isset($duration) ? ("Duration: {$duration} months\n\n") : "\n")
                             . "You can  <a class=\"btn btn-primary\" href=\"" . route('proforma.view', ['id' => $existing->id]) . "\">view the proforma</a>"
                     ]);
+                    
+                    // Send email notification
+                    try {
+                        $tenant = User::where('user_id', $existing->tenant_id)->first();
+                        if ($tenant && $tenant->email) {
+                            Mail::to($tenant->email)->send(new MessageNotification($message));
+                        }
+                    } catch (\Exception $e) {
+                       Log::error('Failed to send proforma email: ' . $e->getMessage());
+                    }
                 }
                 return response()->json([
                     'success' => true,
@@ -81,7 +134,7 @@ class ProfomaController extends Controller
                 'tenant_id' => $request->tenant_id ?? $apartment->tenant_id,
                 'status' => ProfomaReceipt::STATUS_NEW,
                 'transaction_id' => $transactionId,
-                'apartment_id' => $apartment->apartment_id,
+                'apartment_id' => $apartment->id, // Use internal PK, not public apartment_id
                 'amount' => $amount,
                 'duration' => $duration,
                 'security_deposit' => $security_deposit,
@@ -91,10 +144,19 @@ class ProfomaController extends Controller
                 'other_charges_desc' => $other_charges_desc,
                 'other_charges_amount' => $other_charges_amount,
                 'total' => $total,
+                'calculation_method' => $calculationResult->calculationMethod,
+                'calculation_log' => $calculationResult->calculationSteps,
+            ]);
+            Log::info('Proforma created', [
+                'proforma_id' => $proforma->id,
+                'apartment_pk' => $apartment->id,
+                'amount' => $amount,
+                'total' => $total,
+                'tenant_id' => $proforma->tenant_id,
             ]);
             // Always send notification message to tenant on create
             if ($proforma->tenant_id) {
-                Message::create([
+                $message = Message::create([
                     'sender_id' => $user->user_id,
                     'receiver_id' => $proforma->tenant_id,
                     'subject' => 'Rent Proforma',
@@ -102,8 +164,18 @@ class ProfomaController extends Controller
                         . (optional($apartment->property)->name ? ("Property: " . $apartment->property->name . "\n") : '')
                         . (property_exists($apartment, 'name') && $apartment->name ? ("Apartment: " . $apartment->name . "\n") : '')
                         . (isset($duration) ? ("Duration: {$duration} months\n\n") : "\n")
-                        . "You can  <a  class=\"btn btn-primary\" href=\"" . route('proforma.view', ['id' => $proforma->id]) . "\">view the proforma</a>"
+                        . "You can  <a class=\"btn btn-primary\" href=\"" . route('proforma.view', ['id' => $proforma->id]) . "\">view the proforma</a>"
                 ]);
+                
+                // Send email notification
+                try {
+                    $tenant = User::where('user_id', $proforma->tenant_id)->first();
+                    if ($tenant && $tenant->email) {
+                        Mail::to($tenant->email)->send(new MessageNotification($message));
+                    }
+                } catch (\Exception $e) {
+                   Log::error('Failed to send proforma email: ' . $e->getMessage());
+                }
             }
             return response()->json([
                 'success' => true,
@@ -212,6 +284,37 @@ class ProfomaController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Proforma rejected successfully!'
+        ]);
+    }
+
+    /**
+     * Check payment status for a proforma
+     */
+    public function checkPaymentStatus($id)
+    {
+        $proforma = ProfomaReceipt::findOrFail($id);
+        $user = Auth::user();
+        
+        // Check if user has permission to view this proforma
+        if ($user->user_id !== $proforma->user_id && $user->user_id !== $proforma->tenant_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+        
+        $hasPayment = $proforma->hasSuccessfulPayment();
+        $payment = $proforma->getSuccessfulPayment();
+        
+        return response()->json([
+            'success' => true,
+            'has_payment' => $hasPayment,
+            'payment' => $payment ? [
+                'reference' => $payment->payment_reference ?? $payment->transaction_id,
+                'amount' => $payment->amount,
+                'status' => $payment->status,
+                'paid_at' => $payment->paid_at
+            ] : null
         ]);
     }
 }

@@ -121,7 +121,7 @@
                                             <select class="form-control" id="propertyFilter" name="property_id">
                                                 <option value="">All Properties</option>
                                                 @foreach($properties ?? [] as $property)
-                                                    <option value="{{ $property->prop_id }}" {{ request('property_id') == $property->prop_id ? 'selected' : '' }}>
+                                                    <option value="{{ $property->property_id }}" {{ request('property_id') == $property->property_id ? 'selected' : '' }}>
                                                         {{ $property->address }}
                                                     </option>
                                                 @endforeach

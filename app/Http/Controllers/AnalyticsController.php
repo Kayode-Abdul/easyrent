@@ -227,7 +227,7 @@ class AnalyticsController extends Controller
         // Revenue by state
         $revenueByState = DB::table('payments')
             ->join('apartments', 'payments.apartment_id', '=', 'apartments.apartment_id')
-            ->join('properties', 'apartments.property_id', '=', 'properties.prop_id')
+            ->join('properties', 'apartments.property_id', '=', 'properties.id')
             ->where('payments.status', 'completed')
             ->select('properties.state', DB::raw('SUM(payments.amount) as total_revenue'))
             ->groupBy('properties.state')
