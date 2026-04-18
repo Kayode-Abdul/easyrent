@@ -90,9 +90,9 @@
     </script>
 
     @php $currentSegment = request()->segment(1);
-    $isDashboard = in_array($currentSegment, ['dashboard','admin', 'proforma', 'property-manager', 'complaints']);
+    $isDashboard = in_array($currentSegment, ['', 'contact', 'benefits', 'faq', 'login', 'password', 'register']);
     @endphp
-    @if(!$isDashboard)
+    @if($isDashboard)
     <!-- Add CSRF Token meta tag -->
     <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:200,300,400,600,700,800,900&display=swap"
         rel="stylesheet">
@@ -231,7 +231,7 @@
 </head>
 
 <body>
-    @if(!$isDashboard)
+    @if($isDashboard)
     <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="/">
@@ -502,13 +502,8 @@
     <div class="wrapper">
         <div class="sidebar" data-color="white" data-active-color="danger">
             <div class="logo">
-                <a href="/" class="simple-text logo-mini">
-                    <div class="logo-image-small">
-                    </div>
-                </a>
                 <a href="/" class="simple-text logo-normal">
                     <img src="/assets/images/logo-small.png">
-
                 </a>
             </div>
             <div class="sidebar-wrapper">
@@ -537,6 +532,14 @@
                             <p>Billing</p>
                         </a>
                     </li>
+                    @if(auth()->check() && auth()->user()->isMarketer())
+                    <li class="{{ request()->is('marketer*') ? 'active' : '' }}">
+                        <a href="{{ route('marketer.dashboard') }}">
+                            <i class="nc-icon nc-spaceship text-success"></i>
+                            <p>Marketer Hub</p>
+                        </a>
+                    </li>
+                    @endif
                     <!-- Messages Dropdown -->
                     <li class="nav-item dropdown {{ request()->is('dashboard/messages/') ? 'active' : '' }}">
                         <a href="#" class="nav-link dropdown-toggle" id="messagesDropdown" data-toggle="collapse"
@@ -546,7 +549,7 @@
                             <i class="nc-icon nc-email-85"></i>
                             <p>Messages
                                 @php
-                                $unreadCount = Auth::user()->receivedMessages()->where('is_read', false)->count();
+                                $unreadCount = auth()->check() ? Auth::user()->receivedMessages()->where('is_read', false)->count() : 0;
                                 @endphp
                                 @if($unreadCount > 0)
                                 <span class="badge badge-danger ml-1">{{ $unreadCount }}</span>
@@ -833,6 +836,28 @@
                                         this.closest('form').submit();
                                     });
                                 }
+
+                                // Mark notifications as seen when the dropdown is opened
+                                const notifBell = document.getElementById('navbarDropdownMenuLink');
+                                if (notifBell) {
+                                    notifBell.addEventListener('click', function () {
+                                        const badge = document.getElementById('notification-badge');
+                                        if (badge) {
+                                            // Call the mark-seen endpoint
+                                            fetch('/dashboard/notifications/mark-seen', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                                    'Accept': 'application/json'
+                                                }
+                                            }).then(response => {
+                                                if (response.ok) {
+                                                    badge.style.display = 'none';
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
                             });
                         </script>
                         @if(config('app.debug'))
@@ -841,67 +866,100 @@
                             {{ Auth::user()->admin ? 'Admin' : '' }}
                         </div>
                         @endif
-                        @endif
-                        <!-- <form>
-                            <div class="input-group no-border">
-                                <input type="text" value="" class="form-control" placeholder="Search...">
-                                <div class="input-group-append">
-                                    <div class="input-group-text">
-                                        <i class="nc-icon nc-zoom-split"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </form> -->
+
                         <ul class="navbar-nav">
-                            <li class="nav-item">
-                                <a class="nav-link btn-magnify" href="javascript:;">
-                                    <i class="nc-icon nc-layout-11"></i>
-                                    <p>
-                                        <span class="d-lg-none d-md-block">Stats</span>
-                                    </p>
-                                </a>
-                            </li>
-                            <li class="nav-item btn-rotate dropdown position-relative">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink"
-                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                                    onclick="markNotificationsSeen()">
-                                    <i class="nc-icon nc-bell-55"></i>
+                             <li class="nav-item">
+                                 <a class="nav-link btn-magnify" href="javascript:;">
+                                     <i class="nc-icon nc-layout-11"></i>
+                                     <p>
+                                         <span class="d-lg-none d-md-block">Stats</span>
+                                     </p>
+                                 </a>
+                             </li>
+                             <li class="nav-item btn-rotate dropdown position-relative">
+                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink"
+                                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                     <i class="nc-icon nc-bell-55"></i>
 
-                                    @php
-                                    $unreadCount = Auth::user()->receivedMessages()->where('is_read', false)->count();
-                                    @endphp
-                                    @if($unreadCount > 0)
-                                    <span id="notification-badge"
-                                        class="badge badge-pill badge-danger ml-1 position-absolute"
-                                        style="top:3px;right:20px;z-index:10;font-size:0.7rem;">
-                                        {{ $unreadCount }}
-                                    </span>
-                                    @endif
-                                    <p>
-                                        <span class="d-lg-none d-md-block">Notifications</span>
-                                    </p>
-                                </a>
+                                     @php
+                                     $notifSummary = Auth::user()->getNotificationSummary();
+                                     @endphp
+                                     @if($notifSummary['total'] > 0)
+                                     <span id="notification-badge"
+                                         class="badge badge-pill badge-danger ml-1 position-absolute"
+                                         style="top:3px;right:20px;z-index:10;font-size:0.7rem;">
+                                         {{ $notifSummary['total'] }}
+                                     </span>
+                                     @endif
+                                     <p>
+                                         <span class="d-lg-none d-md-block">Notifications</span>
+                                     </p>
+                                 </a>
 
-                                @if(!$unreadCount > 0)
+                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink" style="min-width: 250px;">
+                                     <h6 class="dropdown-header">Notifications</h6>
+                                     <div class="dropdown-divider"></div>
+                                     
+                                     @if($notifSummary['messages'] > 0)
+                                     <a class="dropdown-item d-flex justify-content-between align-items-center" href="/dashboard/messages/inbox">
+                                         <span><i class="nc-icon nc-email-85 mr-2"></i> New Messages</span>
+                                         <span class="badge badge-primary">{{ $notifSummary['messages'] }}</span>
+                                     </a>
+                                     @endif
 
-                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                                    <a class="dropdown-item" href="#">No new notifications</a>
-                                </div>
-                                @else
-                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                                    <a class="dropdown-item" href="/dashboard/messages/inbox">view new message</a>
-                                </div>
-                                @endif
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link btn-rotate" href="/dashboard/user">
-                                    <span><i class="nc-icon nc-single-02"></i></span>
-                                    <p>
-                                        <span class=" d-md-block">{{Auth::user()->first_name}}</span>
-                                    </p>
-                                </a>
-                            </li>
+                                     @if($notifSummary['bids'] > 0)
+                                     <a class="dropdown-item d-flex justify-content-between align-items-center" href="{{ auth()->user()->isLandlord() ? route('complaints.index') : route('artisan.dashboard') }}">
+                                         <span><i class="nc-icon nc-tag-content mr-2"></i> New Bids</span>
+                                         <span class="badge badge-warning">{{ $notifSummary['bids'] }}</span>
+                                     </a>
+                                     @endif
+
+                                     @if($notifSummary['payments'] > 0)
+                                     <a class="dropdown-item d-flex justify-content-between align-items-center" href="/dashboard/payments">
+                                         <span><i class="nc-icon nc-money-coins mr-2"></i> Payment Alerts</span>
+                                         <span class="badge badge-success">{{ $notifSummary['payments'] }}</span>
+                                     </a>
+                                     @endif
+
+                                     @if($notifSummary['overdue'] > 0)
+                                     <a class="dropdown-item d-flex justify-content-between align-items-center" href="/dashboard/myproperty">
+                                         <span><i class="nc-icon nc-time-alarm mr-2"></i> Overdue Items</span>
+                                         <span class="badge badge-danger">{{ $notifSummary['overdue'] }}</span>
+                                     </a>
+                                     @endif
+
+                                     @if($notifSummary['total'] == 0)
+                                     <a class="dropdown-item text-center text-muted" href="#">No new notifications</a>
+                                     @else
+                                     <div class="dropdown-divider"></div>
+                                     <a class="dropdown-item text-center small text-primary" href="/dashboard">View Dashboard</a>
+                                     @endif
+                                 </div>
+                             </li>
+                             
+                             <li class="nav-item dropdown">
+                                 <a class="nav-link dropdown-toggle btn-rotate" href="#" id="userSettingsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                     <i class="nc-icon nc-single-02"></i>
+                                     <p>
+                                         <span class="d-md-block">{{ Auth::user()->first_name }}</span>
+                                     </p>
+                                 </a>
+                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userSettingsDropdown">
+                                     <h6 class="dropdown-header">My Account</h6>
+                                     <a class="dropdown-item" href="/dashboard/user">
+                                         <i class="nc-icon nc-single-02 mr-2"></i> My Profile
+                                     </a>
+                                     <a class="dropdown-item" href="{{ route('settings.index') }}">
+                                         <i class="nc-icon nc-settings-gear-65 mr-2"></i> Settings
+                                     </a>
+                                     <div class="dropdown-divider"></div>
+                                     <a class="dropdown-item text-danger" href="#" onclick="handleLogout('logout-form')">
+                                         <i class="nc-icon nc-spaceship mr-2"></i> Sign Out
+                                     </a>
+                                 </div>
+                             </li>
                         </ul>
+                        @endif
                     </div>
                 </div>
             </nav>

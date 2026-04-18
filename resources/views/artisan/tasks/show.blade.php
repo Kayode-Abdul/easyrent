@@ -24,8 +24,8 @@
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <h6>Expected Budget:</h6>
-                                <p class="text-primary font-weight-bold">₦{{ number_format($task->budget_min) }} - ₦{{
-                                    number_format($task->budget_max) }}</p>
+                                <p class="text-primary font-weight-bold">{{ format_money($task->budget_min) }} - {{
+                                    format_money($task->budget_max) }}</p>
                             </div>
                             <div class="col-md-6">
                                 <h6>Preferred Duration:</h6>
@@ -42,7 +42,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label>My Quote (₦)</label>
+                                        <label>My Quote (${window.currencySymbol})</label>
                                         <input type="number" name="amount" class="form-control"
                                             placeholder="Enter your price" required>
                                     </div>
@@ -95,19 +95,16 @@
                         @if(auth()->id() == $task->landlord_id || auth()->id() == $task->tenant_id ||
                         auth()->user()->admin)
                         <hr>
-                        <form action="{{ route('artisan.tasks.complete', $task) }}" method="POST" @if(auth()->id() ==
-                            $task->landlord_id || auth()->id() == $task->tenant_id || auth()->user()->admin)
-                            <hr>
-                            <form action="{{ route('artisan.tasks.complete', $task) }}" method="POST"
-                                class="mt-4 text-center">
-                                @csrf
-                                <button type="submit" class="btn btn-success p-2 w-100"
-                                    onclick="return confirm('Are you sure you want to mark this task as completed? This will execute any selected rent set-offs.')">
-                                    <i class="fa fa-check-double pe-2"></i> Mark as Completed
-                                </button>
-                            </form>
-                            @endif
-                            @endif
+                        <form action="{{ route('artisan.tasks.complete', $task) }}" method="POST"
+                            class="mt-4 text-center">
+                            @csrf
+                            <button type="submit" class="btn btn-success p-2 w-100"
+                                onclick="return confirm('Are you sure you want to mark this task as completed? This will execute any selected rent set-offs.')">
+                                <i class="fa fa-check-double pe-2"></i> Mark as Completed
+                            </button>
+                        </form>
+                        @endif
+                        @endif
                     </div>
                 </div>
 
@@ -135,7 +132,7 @@
                                                 }}</strong><br>
                                             <small class="text-muted">{{ $bid->artisan->artisanCategory->name }}</small>
                                         </td>
-                                        <td>₦{{ number_format($bid->amount) }}</td>
+                                        <td>{{ format_money($bid->amount) }}</td>
                                         <td>{{ $bid->duration }}</td>
                                         <td>{{ Str::limit($bid->proposal, 40) }}</td>
                                         <td>
@@ -188,3 +185,10 @@
                     <hr>
                     <div class="card-footer text-center">
                         <small class="text-muted">Task posted on {{ $task->created_at->format('M j, Y') }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

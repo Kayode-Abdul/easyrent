@@ -50,7 +50,7 @@
                 <h3>💰 Payment Details</h3>
                 <ul>
                     <li><span class="label">Transaction ID:</span> {{ $payment->transaction_id }}</li>
-                    <li><span class="label">Amount Received:</span> <span class="amount">₦{{ number_format($payment->amount) }}</span></li>
+                    <li><span class="label">Amount Received:</span> <span class="amount">{{ format_money($payment->amount, $payment->currency) }}</span></li>
                     <li><span class="label">Payment Date:</span> {{ $payment->paid_at->format('M d, Y H:i A') }}</li>
                     <li><span class="label">Payment Method:</span> {{ ucfirst($payment->payment_method) }}</li>
                 </ul>

@@ -80,5 +80,17 @@ class Handler extends ExceptionHandler
                 'message' => $e->getMessage()
             ], 403);
         });
+        // Handle session expiration (419 errors)
+        $this->renderable(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'Session expired',
+                    'message' => 'Your session has expired. Please refresh the page and try again.'
+                ], 419);
+            }
+
+            return redirect()->route('login')
+                ->with('warning', 'Your session has expired. Please login again.');
+        });
     }
 }

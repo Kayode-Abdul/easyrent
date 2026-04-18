@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Detail | Home-Refined</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <!-- HEADER & NAVIGATION -->
+    <header>
+      <nav class="top-nav">
+        <div class="logo">
+          <a href="index.html"><i class="fas fa-home"></i> Home-Refined</a>
+        </div>
+
+        <ul class="nav-menu">
+          <li><a href="products.html">Shop</a></li>
+          <li><a href="index.html#categories">Categories</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+        </ul>
+
+        <div class="nav-right">
+          <div class="search-container">
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search products..."
+              id="globalSearch"
+            />
+          </div>
+
+          <div class="seller-toggle">
+            <span style="font-size: 0.85rem; font-weight: 600"
+              ><i class="fas fa-shop"></i> Seller</span
+            >
+            <label class="switch">
+              <input type="checkbox" data-seller-toggle />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <button class="icon-btn" data-cart-btn title="Shopping Cart">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="badge" style="display: none">0</span>
+          </button>
+          <a href="login.html" class="btn btn-outline btn-small">
+            <i class="fas fa-sign-in-alt"></i> Sign In
+          </a>
+          <a href="signup.html" class="btn btn-primary btn-small">
+            <i class="fas fa-user-plus"></i> Sign Up
+          </a>
+        </div>
+      </nav>
+    </header>
+
+    <!-- MINI CART SIDEBAR -->
+    <div class="mini-cart">
+      <div class="mini-cart-header">
+        <h2 class="mini-cart-title">Your Cart</h2>
+        <button class="close-cart"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="mini-cart-items"></div>
+      <div class="mini-cart-summary"></div>
+      <div class="mini-cart-actions">
+        <button
+          class="btn btn-primary"
+          style="width: 100%"
+          onclick="goToCheckout()"
+        >
+          Proceed to Checkout
+        </button>
+        <button class="btn btn-outline" style="width: 100%">
+          Continue Shopping
+        </button>
+      </div>
+    </div>
+
+    <!-- PAGE CONTENT -->
+    <div class="container" style="padding: var(--spacing-xl) 0">
+      <div
+        style="
+          margin-bottom: var(--spacing-lg);
+          color: var(--text-light);
+          font-size: 0.9rem;
+        "
+      >
+        <a href="products.html"><i class="fas fa-box"></i> Products</a> /
+        <span id="breadcrumb">Product</span>
+      </div>
+
+      <!-- PRODUCT DETAIL -->
+      <div
+        style="
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: var(--spacing-xl);
+          margin-bottom: var(--spacing-xl);
+        "
+      >
+        <!-- LEFT: IMAGE -->
+        <div>
+          <div
+            style="
+              aspect-ratio: 1;
+              background: var(--light-gray);
+              border-radius: 4px;
+              overflow: hidden;
+              margin-bottom: var(--spacing-lg);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            <img
+              id="productImage"
+              src=""
+              alt="Product"
+              style="width: 100%; height: 100%; object-fit: cover"
+            />
+          </div>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: var(--spacing-sm);
+            "
+          >
+            <div
+              style="
+                aspect-ratio: 1;
+                background: var(--light-gray);
+                border-radius: 4px;
+                cursor: pointer;
+              "
+            ></div>
+            <div
+              style="
+                aspect-ratio: 1;
+                background: var(--light-gray);
+                border-radius: 4px;
+                cursor: pointer;
+              "
+            ></div>
+            <div
+              style="
+                aspect-ratio: 1;
+                background: var(--light-gray);
+                border-radius: 4px;
+                cursor: pointer;
+              "
+            ></div>
+            <div
+              style="
+                aspect-ratio: 1;
+                background: var(--light-gray);
+                border-radius: 4px;
+                cursor: pointer;
+              "
+            ></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: DETAILS -->
+        <div>
+          <div style="margin-bottom: var(--spacing-md)">
+            <div class="product-brand" id="productBrand">Brand</div>
+            <h1
+              id="productName"
+              style="
+                font-size: 2rem;
+                margin-bottom: var(--spacing-md);
+                line-height: 1.3;
+              "
+            >
+              Product Name
+            </h1>
+
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-lg);
+                margin-bottom: var(--spacing-lg);
+              "
+            >
+              <div>
+                <span class="stars" style="font-size: 1.2rem">★★★★★</span>
+                <span
+                  id="productReviews"
+                  style="
+                    color: var(--text-light);
+                    margin-left: var(--spacing-sm);
+                  "
+                  >0 reviews</span
+                >
+              </div>
+              <div
+                id="stockStatus"
+                style="
+                  padding: 6px 12px;
+                  background: var(--success);
+                  color: white;
+                  border-radius: 4px;
+                  font-weight: 600;
+                  font-size: 0.85rem;
+                "
+              >
+                In Stock
+              </div>
+            </div>
+
+            <!-- PRICING & DISCOUNT -->
+            <div
+              style="
+                display: flex;
+                align-items: baseline;
+                gap: var(--spacing-md);
+                margin-bottom: var(--spacing-lg);
+              "
+            >
+              <div id="productPrice" style="font-size: 2rem; font-weight: 700">
+                $0.00
+              </div>
+              <div
+                id="productOldPrice"
+                style="
+                  font-size: 1.1rem;
+                  text-decoration: line-through;
+                  color: var(--text-light);
+                "
+              ></div>
+              <div
+                id="savingPercent"
+                style="
+                  background: var(--error);
+                  color: white;
+                  padding: 4px 8px;
+                  border-radius: 4px;
+                  font-size: 0.85rem;
+                  font-weight: 600;
+                "
+              ></div>
+            </div>
+
+            <!-- VOLUME DISCOUNT INFO -->
+            <div
+              id="volumeDiscount"
+              style="
+                background: #fffbea;
+                padding: var(--spacing-md);
+                border-radius: 4px;
+                border-left: 4px solid var(--accent);
+                margin-bottom: var(--spacing-lg);
+                display: none;
+              "
+            >
+              <strong style="color: var(--accent)"
+                ><i class="fas fa-lightbulb"></i> Volume Discount
+                Available</strong
+              >
+              <p
+                id="volumeText"
+                style="font-size: 0.9rem; margin-top: var(--spacing-xs)"
+              ></p>
+            </div>
+          </div>
+
+          <!-- ADD TO CART SECTION -->
+          <div style="margin-bottom: var(--spacing-lg)">
+            <label
+              style="
+                display: block;
+                margin-bottom: var(--spacing-sm);
+                font-weight: 600;
+              "
+              >Quantity</label
+            >
+            <div style="display: flex; gap: var(--spacing-md)">
+              <div
+                class="cart-item-quantity"
+                style="margin: 0; width: fit-content"
+              >
+                <button class="qty-btn" id="qtyDecreaseBtn">−</button>
+                <span class="qty-display" id="quantityDisplay">1</span>
+                <button class="qty-btn" id="qtyIncreaseBtn">+</button>
+              </div>
+              <button
+                class="btn btn-primary"
+                id="addToCartBtn"
+                style="flex-grow: 1"
+              >
+                Add to Cart
+              </button>
+              <button
+                class="btn btn-outline"
+                style="flex-basis: 50px; padding: var(--spacing-sm)"
+              >
+                <i class="fas fa-heart"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- SELLER OPTIONS -->
+          <div
+            id="sellerOptions"
+            style="
+              background: var(--light-gray);
+              padding: var(--spacing-lg);
+              border-radius: 4px;
+              display: none;
+            "
+          >
+            <h3 style="font-size: 1rem; margin-bottom: var(--spacing-md)">
+              <i class="fas fa-store"></i> Seller Options
+            </h3>
+            <button
+              class="btn btn-outline"
+              style="width: 100%; margin-bottom: var(--spacing-sm)"
+            >
+              <i class="fas fa-file-invoice"></i> Request Quote
+            </button>
+            <button class="btn btn-outline" style="width: 100%">
+              <i class="fas fa-calendar"></i> Schedule Delivery
+            </button>
+            <p
+              style="
+                font-size: 0.85rem;
+                color: var(--text-light);
+                margin-top: var(--spacing-md);
+              "
+            >
+              Net-30 terms available for qualified sellers
+            </p>
+          </div>
+
+          <!-- HIGHLIGHTS -->
+          <div
+            style="
+              background: var(--light-gray);
+              padding: var(--spacing-lg);
+              border-radius: 4px;
+            "
+          >
+            <h3 style="font-size: 1rem; margin-bottom: var(--spacing-md)">
+              Key Features
+            </h3>
+            <ul
+              id="keyFeatures"
+              style="
+                list-style: none;
+                display: flex;
+                flex-direction: column;
+                gap: var(--spacing-sm);
+              "
+            >
+              <li
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: var(--spacing-sm);
+                  color: var(--text-light);
+                "
+              >
+                <span style="color: var(--accent)"
+                  ><i class="fas fa-check-circle"></i
+                ></span>
+                <span>Premium quality materials</span>
+              </li>
+              <li
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: var(--spacing-sm);
+                  color: var(--text-light);
+                "
+              >
+                <span style="color: var(--accent)"
+                  ><i class="fas fa-check-circle"></i
+                ></span>
+                <span>Professional-grade finishing</span>
+              </li>
+              <li
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: var(--spacing-sm);
+                  color: var(--text-light);
+                "
+              >
+                <span style="color: var(--accent)"
+                  ><i class="fas fa-check-circle"></i
+                ></span>
+                <span>Backed by warranty</span>
+              </li>
+              <li
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: var(--spacing-sm);
+                  color: var(--text-light);
+                "
+              >
+                <span style="color: var(--accent)"
+                  ><i class="fas fa-check-circle"></i
+                ></span>
+                <span>Free shipping on bulk orders</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPECIFICATIONS TAB -->
+      <div style="margin-bottom: var(--spacing-xl)">
+        <div
+          style="
+            display: flex;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            border-bottom: 2px solid var(--medium-gray);
+          "
+        >
+          <button
+            style="
+              padding: var(--spacing-md);
+              border: none;
+              background: none;
+              cursor: pointer;
+              border-bottom: 3px solid var(--primary);
+              font-weight: 600;
+            "
+            onclick="showTab('specs')"
+          >
+            Specifications
+          </button>
+          <button
+            style="
+              padding: var(--spacing-md);
+              border: none;
+              background: none;
+              cursor: pointer;
+              color: var(--text-light);
+            "
+            onclick="showTab('shipping')"
+          >
+            Shipping & Returns
+          </button>
+          <button
+            style="
+              padding: var(--spacing-md);
+              border: none;
+              background: none;
+              cursor: pointer;
+              color: var(--text-light);
+            "
+            onclick="showTab('reviews')"
+          >
+            Reviews
+          </button>
+        </div>
+
+        <div id="specsTab">
+          <table style="width: 100%; border-collapse: collapse">
+            <tbody id="specsTable"></tbody>
+          </table>
+        </div>
+
+        <div id="shippingTab" style="display: none">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: var(--spacing-lg);
+            "
+          >
+            <div>
+              <h3 style="margin-bottom: var(--spacing-md)">Shipping</h3>
+              <p
+                style="
+                  color: var(--text-light);
+                  margin-bottom: var(--spacing-sm);
+                  line-height: 1.6;
+                "
+              >
+                Standard shipping: 3-5 business days. Express shipping
+                available. Free shipping on orders over $500. Oversized items
+                require special handling.
+              </p>
+            </div>
+            <div>
+              <h3 style="margin-bottom: var(--spacing-md)">
+                Returns & Warranty
+              </h3>
+              <p
+                style="
+                  color: var(--text-light);
+                  margin-bottom: var(--spacing-sm);
+                  line-height: 1.6;
+                "
+              >
+                30-day return policy with no questions asked. Product
+                availability warranty included. Damaged items replaced free of
+                charge.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div id="reviewsTab" style="display: none">
+          <p
+            style="
+              color: var(--text-light);
+              text-align: center;
+              padding: var(--spacing-xl);
+            "
+          >
+            Customer reviews coming soon
+          </p>
+        </div>
+      </div>
+
+      <!-- RELATED PRODUCTS -->
+      <div>
+        <h2 style="margin-bottom: var(--spacing-lg)">Related Products</h2>
+        <div class="products-grid" id="relatedProducts"></div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer
+      style="
+        background: var(--primary);
+        color: white;
+        padding: var(--spacing-xl) var(--spacing-lg);
+        text-align: center;
+        margin-top: var(--spacing-xl);
+      "
+    >
+      <div class="container">
+        <p>&copy; 2026 Home-Refined. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="js/products.js"></script>
+    <script src="js/cart.js"></script>
+    <script>
+      let currentProduct = null;
+      let quantity = 1;
+
+      function loadProduct() {
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get("id");
+
+        if (!productId) {
+          window.location.href = "products.html";
+          return;
+        }
+
+        currentProduct = getProductById(productId);
+        if (!currentProduct) {
+          window.location.href = "products.html";
+          return;
+        }
+
+        // Update page content
+        document.getElementById("productBrand").textContent =
+          currentProduct.brand;
+        document.getElementById("productName").textContent =
+          currentProduct.name;
+        document.getElementById("productImage").src = currentProduct.image;
+        document.getElementById("productImage").alt = currentProduct.name;
+        document.getElementById("productReviews").textContent =
+          `${currentProduct.reviews} reviews`;
+        document.getElementById("productPrice").textContent =
+          `$${currentProduct.price.toFixed(2)}`;
+        document.getElementById("breadcrumb").textContent =
+          currentProduct.category;
+
+        // Stock status
+        const stockEl = document.getElementById("stockStatus");
+        if (!currentProduct.inStock) {
+          stockEl.textContent = "Out of Stock";
+          stockEl.style.background = "#999";
+          document.getElementById("addToCartBtn").disabled = true;
+        }
+
+        // Price & discount
+        if (currentProduct.originalPrice) {
+          document.getElementById("productOldPrice").textContent =
+            `$${currentProduct.originalPrice.toFixed(2)}`;
+          const discount = Math.round(
+            ((currentProduct.originalPrice - currentProduct.price) /
+              currentProduct.originalPrice) *
+              100,
+          );
+          document.getElementById("savingPercent").textContent =
+            `Save ${discount}%`;
+        }
+
+        // Volume discount
+        if (currentProduct.volume) {
+          const volumeDiv = document.getElementById("volumeDiscount");
+          volumeDiv.style.display = "block";
+          document.getElementById("volumeText").textContent =
+            `Buy ${currentProduct.volume.quantity}+ and save ${Math.round(currentProduct.volume.discount * 100)}%`;
+        }
+
+        // Specifications table
+        const specsTable = document.getElementById("specsTable");
+        if (currentProduct.specs) {
+          specsTable.innerHTML = Object.entries(currentProduct.specs)
+            .map(
+              ([key, value]) => `
+          <tr style="border-bottom: 1px solid var(--medium-gray);">
+            <td style="padding: var(--spacing-md); font-weight: 600; width: 40%; text-transform: capitalize;">${key}</td>
+            <td style="padding: var(--spacing-md); color: var(--text-dark);">${value}</td>
+          </tr>
+        `,
+            )
+            .join("");
+        }
+
+        // Related products
+        const related = getProductsByCategory(currentProduct.category)
+          .filter((p) => p.id !== productId)
+          .slice(0, 4);
+
+        const relatedContainer = document.getElementById("relatedProducts");
+        relatedContainer.innerHTML = related
+          .map(
+            (product) => `
+        <div class="product-card">
+          <div class="product-image">
+            <img src="${product.image}" alt="${product.name}">
+            <div class="product-badges">
+              ${product.inStock ? '<span class="badge-tag badge-instock">In Stock</span>' : '<span class="badge-tag" style="background: #999;">Out of Stock</span>'}
+            </div>
+          </div>
+          <div class="product-info">
+            <div class="product-brand">${product.brand}</div>
+            <div class="product-name"><a href="product-detail.html?id=${product.id}" style="color: inherit;">${product.name}</a></div>
+            <div class="product-footer">
+              <div class="product-price">$${product.price.toFixed(2)}</div>
+              <button class="quick-add-btn" data-add-to-cart data-product-id="${product.id}">+</button>
+            </div>
+          </div>
+        </div>
+      `,
+          )
+          .join("");
+
+        // Seller Options
+        if (cartManager.isSeller) {
+          document.getElementById("sellerOptions").style.display = "block";
+        }
+      }
+
+      function showTab(tab) {
+        document.getElementById("specsTab").style.display =
+          tab === "specs" ? "block" : "none";
+        document.getElementById("shippingTab").style.display =
+          tab === "shipping" ? "block" : "none";
+        document.getElementById("reviewsTab").style.display =
+          tab === "reviews" ? "block" : "none";
+      }
+
+      function updateQuantity(change) {
+        quantity = Math.max(1, quantity + change);
+        document.getElementById("quantityDisplay").textContent = quantity;
+      }
+
+      function goToCheckout() {
+        window.location.href = "checkout.html";
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Check if user is logged in
+        const userDisplayName = localStorage.getItem("userDisplayName");
+        const userBtn = document.getElementById("userBtn");
+        const authButtons = document.getElementById("authButtons");
+
+        if (userDisplayName) {
+          userBtn.style.display = "flex";
+          authButtons.style.display = "none";
+          document.getElementById("userDisplayName").textContent =
+            userDisplayName;
+
+          // Add click handler to logout
+          userBtn.addEventListener("click", logout);
+        }
+
+        loadProduct();
+
+        document
+          .getElementById("qtyDecreaseBtn")
+          .addEventListener("click", () => updateQuantity(-1));
+        document
+          .getElementById("qtyIncreaseBtn")
+          .addEventListener("click", () => updateQuantity(1));
+
+        document
+          .getElementById("addToCartBtn")
+          .addEventListener("click", () => {
+            if (currentProduct) {
+              cartManager.addToCart(currentProduct, quantity);
+              quantity = 1;
+              document.getElementById("quantityDisplay").textContent = quantity;
+            }
+          });
+      });
+
+      function logout() {
+        localStorage.removeItem("userDisplayName");
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("userAccountType");
+        window.location.href = "products.html";
+      }
+
+      document.getElementById("globalSearch").addEventListener("keyup", (e) => {
+        if (e.key === "Enter" && e.target.value.trim()) {
+          window.location.href = `products.html?search=${encodeURIComponent(e.target.value)}`;
+        }
+      });
+    </script>
+  </body>
+</html>

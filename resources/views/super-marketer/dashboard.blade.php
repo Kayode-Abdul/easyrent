@@ -27,52 +27,52 @@
 
     <!-- Statistics Cards --&gt;
     &lt;!-- Statistics Cards --&gt;
-    &lt;div class=&quot;row mb-4&quot;&gt;
-    &lt;div class=&quot;col-xl-3 col-md-6 mb-4&quot;&gt;
-    &lt;x-stat-card
-    title=&quot;Referred Marketers&quot;
-    :value=&quot;$stats['total_referred_marketers']&quot;
-    subtext=&quot;{{ $stats['active_marketers'] }} Active&quot;
-    subicon=&quot;fas fa-check-circle&quot;
-    color=&quot;primary&quot;
-    icon=&quot;fas fa-users&quot;
-    subtextClass=&quot;text-success&quot;
-    /&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;col-xl-3 col-md-6 mb-4&quot;&gt;
-    &lt;x-stat-card
-    title=&quot;Total Commission Earned&quot;
-    :value=&quot;'₦' . number_format($stats['total_commission_earned'], 2)&quot;
-    :subtext=&quot;'₦' . number_format($stats['pending_commission'], 2) . ' Pending'&quot;
-    subicon=&quot;fas fa-clock&quot;
-    color=&quot;success&quot;
-    icon=&quot;fas fa-dollar-sign&quot;
-    subtextClass=&quot;text-muted&quot;
-    /&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;col-xl-3 col-md-6 mb-4&quot;&gt;
-    &lt;x-stat-card
-    title=&quot;Active Referral Chains&quot;
-    :value=&quot;$stats['total_referral_chains']&quot;
-    subtext=&quot;Multi-tier Network&quot;
-    subicon=&quot;fas fa-link&quot;
-    color=&quot;info&quot;
-    icon=&quot;fas fa-sitemap&quot;
-    subtextClass=&quot;text-info&quot;
-    /&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;col-xl-3 col-md-6 mb-4&quot;&gt;
-    &lt;x-stat-card
-    title=&quot;This Month Commission&quot;
-    :value=&quot;'₦' . number_format($stats['this_month_commission'], 2)&quot;
-    :subtext=&quot;abs($stats['commission_growth']) . '% vs last month'&quot;
-    :subicon=&quot;'fas fa-' . ($stats['commission_growth'] &gt;= 0 ? 'arrow-up' : 'arrow-down')&quot;
-    color=&quot;warning&quot;
-    icon=&quot;fas fa-chart-line&quot;
-    :subtextClass=&quot;$stats['commission_growth'] &gt;= 0 ? 'text-success' : 'text-danger'&quot;
-    /&gt;
-    &lt;/div&gt;
-    &lt;/div&gt;
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <x-stat-card
+            title="Referred Marketers"
+            :value="$stats['total_referred_marketers']"
+            subtext="{{ $stats['active_marketers'] }} Active"
+            subicon="fas fa-check-circle"
+            color="primary"
+            icon="fas fa-users"
+            subtextClass="text-success"
+            />
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <x-stat-card
+            title="Total Commission Earned"
+            :value="format_money($stats['total_commission_earned'])"
+            :subtext="format_money($stats['pending_commission']) . ' Pending'"
+            subicon="fas fa-clock"
+            color="success"
+            icon="fas fa-dollar-sign"
+            subtextClass="text-muted"
+            />
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <x-stat-card
+            title="Active Referral Chains"
+            :value="$stats['total_referral_chains']"
+            subtext="Multi-tier Network"
+            subicon="fas fa-link"
+            color="info"
+            icon="fas fa-sitemap"
+            subtextClass="text-info"
+            />
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <x-stat-card
+            title="This Month Commission"
+            :value="format_money($stats['this_month_commission'])"
+            :subtext="abs($stats['commission_growth']) . '% vs last month'"
+            :subicon="'fas fa-' . ($stats['commission_growth'] >= 0 ? 'arrow-up' : 'arrow-down')"
+            color="warning"
+            icon="fas fa-chart-line"
+            :subtextClass="$stats['commission_growth'] >= 0 ? 'text-success' : 'text-danger'"
+            />
+        </div>
+    </div>
 
     <!-- Performance Charts and Quick Actions -->
     <div class="row mb-4">
@@ -197,9 +197,7 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="font-weight-bold">{{ $marketer->first_name }} {{ $marketer->last_name }}</div>
-                                    <div class="text-muted small">
-                                        {{ $marketer->total_referrals }} referrals • ₦{{ number_format($marketer->total_commission, 2) }}
-                                    </div>
+                                        {{ $marketer->total_referrals }} referrals • {{ format_money($marketer->total_commission) }}
                                 </div>
                                 <div class="text-end">
                                     <span class="badge bg-{{ $marketer->marketer_status === 'active' ? 'success' : 'warning' }}">
@@ -270,7 +268,7 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="text-center">
-                                <h5 class="text-success">₦{{ number_format($commissionBreakdown['super_marketer_total'], 2) }}</h5>
+                                <h5 class="text-success">{{ format_money($commissionBreakdown['super_marketer_total']) }}</h5>
                                 <p class="text-muted">Your Commission</p>
                                 <div class="progress mb-2">
                                     <div class="progress-bar bg-success" role="progressbar" 
@@ -281,7 +279,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="text-center">
-                                <h5 class="text-primary">₦{{ number_format($commissionBreakdown['marketer_total'], 2) }}</h5>
+                                <h5 class="text-primary">{{ format_money($commissionBreakdown['marketer_total']) }}</h5>
                                 <p class="text-muted">Network Commission</p>
                                 <div class="progress mb-2">
                                     <div class="progress-bar bg-primary" role="progressbar" 
@@ -292,7 +290,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="text-center">
-                                <h5 class="text-info">₦{{ number_format($commissionBreakdown['total_generated'], 2) }}</h5>
+                                <h5 class="text-info">{{ format_money($commissionBreakdown['total_generated']) }}</h5>
                                 <p class="text-muted">Total Generated</p>
                                 <div class="progress mb-2">
                                     <div class="progress-bar bg-info" role="progressbar" style="width: 100%"></div>
@@ -309,7 +307,7 @@
                                 <div class="col-md-3 mb-2">
                                     <div class="text-center">
                                         <strong>{{ $region['region'] ?? 'Unknown' }}</strong>
-                                        <div class="text-muted">₦{{ number_format($region['total'], 2) }}</div>
+                                        <div class="text-muted">{{ format_money($region['total']) }}</div>
                                     </div>
                                 </div>
                             @endforeach
@@ -384,7 +382,7 @@ const performanceChart = new Chart(ctx, {
             backgroundColor: 'rgba(54, 162, 235, 0.2)',
             tension: 0.1
         }, {
-            label: 'Commission (₦)',
+            label: 'Commission (' + window.currencySymbol + ')',
             data: @json($performanceData['commissions']),
             borderColor: 'rgb(255, 99, 132)',
             backgroundColor: 'rgba(255, 99, 132, 0.2)',

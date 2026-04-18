@@ -78,7 +78,7 @@
                         <div class="col-7 col-md-8">
                             <div class="numbers">
                                 <p class="card-category">Amount</p>
-                                <p class="card-title">{{ $apartment->amount ? '₦'.number_format($apartment->amount, 2) : 'N/A' }}</p>
+                                <p class="card-title">{{ $apartment->amount ? $apartment->getFormattedAmount() : 'N/A' }}</p>
                             </div>
                         </div>
                     </div>
@@ -182,7 +182,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Amount</label>
-                                <p class="form-control-static">{{ $apartment->amount ? '₦'.number_format($apartment->amount, 2) : 'N/A' }}</p>
+                                <p class="form-control-static">{{ $apartment->amount ? $apartment->getFormattedAmount() : 'N/A' }}</p>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -458,8 +458,9 @@
 
 <!-- Define a JavaScript variable with the property agent status before any JavaScript code -->
 <script>
-// Set property management status from server-side
+// Set property management status and currency from server-side
 var hasPropertyAgent = {{ $apartment->property->agent_id ? 'true' : 'false' }};
+var currencySymbol = "{{ $apartment->currency->symbol ?? ($apartment->property->currency->symbol ?? format_money(0)->getSymbol()) }}";
 </script>
 
 <script>
@@ -667,12 +668,12 @@ $(document).ready(function() {
             
             // Display commission information
             $('#commissionInfo').show();
-            $('#commissionAmount').text('₦' + commission.toFixed(2));
+            $('#commissionAmount').text(currencySymbol + commission.toFixed(2));
             $('#commissionRate').text((commissionRate * 100) + '%');
             
             $('#total').val((total).toFixed(2));
             // Update total after deducting commission
-            $('#proformaTotal').text('₦'+(total - commission).toFixed(2));
+            $('#proformaTotal').text(currencySymbol + (total - commission).toFixed(2));
         } else {
             // Hide commission information if property is not managed
             
@@ -681,12 +682,12 @@ $(document).ready(function() {
             
             // Display commission information
             $('#commissionInfo').show();
-            $('#commissionAmount').text('₦' + commission.toFixed(2));
+            $('#commissionAmount').text(currencySymbol + commission.toFixed(2));
             $('#commissionRate').text((commissionRate * 100) + '%');
             
             $('#total').val(total.toFixed(2));
             // Update total after deducting commission
-            $('#proformaTotal').text('₦'+(total - commission).toFixed(2));
+            $('#proformaTotal').text(currencySymbol + (total - commission).toFixed(2));
         }
     }
     $('#proformaForm input, #proformaForm textarea').on('input', calculateProformaTotal);

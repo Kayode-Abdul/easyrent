@@ -53,7 +53,8 @@ class Apartment extends Model
         'yearly_rate',
         'default_rental_type',
         'created_at',
-        'occupied'
+        'occupied',
+        'currency_id'
     ];
 
     protected $casts = [
@@ -68,7 +69,8 @@ class Apartment extends Model
         'daily_rate' => 'decimal:2',
         'weekly_rate' => 'decimal:2',
         'monthly_rate' => 'decimal:2',
-        'yearly_rate' => 'decimal:2'
+        'yearly_rate' => 'decimal:2',
+        'currency_id' => 'integer'
     ];
 
     public function property(): BelongsTo
@@ -94,6 +96,11 @@ class Apartment extends Model
     public function apartmentType(): BelongsTo
     {
         return $this->belongsTo(ApartmentType::class, 'apartment_type_id', 'id');
+    }
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class);
     }
 
     /**
@@ -144,7 +151,16 @@ class Apartment extends Model
 
     public function getFormattedAmount(): string
     {
-        return number_format($this->amount, 2);
+        $currency = $this->currency ?? ($this->property->currency ?? null);
+        return format_money($this->amount, $currency);
+    }
+
+    /**
+     * Accessor for formatted rent
+     */
+    public function getFormattedRentAttribute(): string
+    {
+        return $this->getFormattedAmount();
     }
 
     public function getStatus(): string
@@ -609,6 +625,7 @@ class Apartment extends Model
             default => ''
         };
         
-        return '₦' . number_format($rate, 2) . ' ' . $period;
+        $currency = $this->currency ?? ($this->property->currency ?? null);
+        return format_money($rate, $currency) . ' ' . $period;
     }
 }

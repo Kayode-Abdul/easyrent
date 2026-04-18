@@ -284,7 +284,7 @@
                     <ul>
                         <li>Standard commission rate: 5% of first year rent</li>
                         <li>Commission paid only for successful landlord registrations</li>
-                        <li>Minimum payout threshold: ₦10,000</li>
+                        <li>Minimum payout threshold: {{ format_money(10000) }}</li>
                         <li>Payments processed monthly</li>
                     </ul>
                     

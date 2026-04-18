@@ -11,7 +11,7 @@
                 <div class="col-md-6">
                     <label for="amount" class="form-label">Amount per Month</label>
                     <div class="input-group">
-                        <span class="input-group-text">₦</span>
+                        <span class="input-group-text">${window.currencySymbol}</span>
                         <input type="text" class="form-control" id="amount" value="{{ number_format($apartment->amount, 2) }}" readonly>
                     </div>
                 </div>
@@ -29,7 +29,7 @@
                 <div class="col-md-6">
                     <label for="total_amount" class="form-label">Total Amount</label>
                     <div class="input-group">
-                        <span class="input-group-text">₦</span>
+                        <span class="input-group-text">${window.currencySymbol}</span>
                         <input type="text" class="form-control" id="total_amount" readonly>
                     </div>
                 </div>

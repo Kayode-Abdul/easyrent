@@ -23,7 +23,7 @@
                                     </div>
                                     
                                     <div class="form-group">
-                                        <label for="amount">Rent Amount (₦) *</label>
+                                        <label for="amount">Rent Amount *</label>
                                         <input type="number" name="amount" id="amount" class="form-control" step="0.01" min="0" required>
                                     </div>
                                     

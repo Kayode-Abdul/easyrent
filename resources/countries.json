@@ -80,7 +80,7 @@
                     "Udung-Uko",
                     "Ukanafun",
                     "Uruan",
-                    "Urue-Offong\/Oruko",
+                    "Urue-Offong/Oruko",
                     "Uyo"
                 ]
             },
@@ -120,7 +120,7 @@
                     "Gamawa",
                     "Ganjuwa",
                     "Giade",
-                    "Itas\/Gadau",
+                    "Itas/Gadau",
                     "Jama'are",
                     "Katagum",
                     "Kirfi",
@@ -137,7 +137,7 @@
                 "name": "Bayelsa",
                 "cities": [
                     "Ekeremor",
-                    "Kolokuma\/Opokuma",
+                    "Kolokuma/Opokuma",
                     "Nembe",
                     "Ogbia",
                     "Sagbama",
@@ -175,7 +175,7 @@
             {
                 "name": "Borno",
                 "cities": [
-                    "Askira\/Uba",
+                    "Askira/Uba",
                     "Bama",
                     "Bayo",
                     "Biu",
@@ -188,7 +188,7 @@
                     "Hawul",
                     "Jere",
                     "Kaga",
-                    "Kala\/Balge",
+                    "Kala/Balge",
                     "Konduga",
                     "Kukawa",
                     "Kwaya Kusar",
@@ -307,8 +307,8 @@
                     "Ikere",
                     "Ikole",
                     "Ilejemeje",
-                    "Irepodun\/Ifelodun",
-                    "Ise\/Orun",
+                    "Irepodun/Ifelodun",
+                    "Ise/Orun",
                     "Moba",
                     "Oye"
                 ]
@@ -356,7 +356,7 @@
                     "Kwami",
                     "Nafada",
                     "Shongom",
-                    "Yamaltu\/Deba"
+                    "Yamaltu/Deba"
                 ]
             },
             {
@@ -367,7 +367,7 @@
                     "Ezinihitte",
                     "Ideato North",
                     "Ideato South",
-                    "Ihitte\/Uboma",
+                    "Ihitte/Uboma",
                     "Ikeduru",
                     "Isiala Mbano",
                     "Isu",
@@ -378,7 +378,7 @@
                     "Nwangele",
                     "Obowo",
                     "Oguta",
-                    "Ohaji\/Egbema",
+                    "Ohaji/Egbema",
                     "Okigwe",
                     "Orlu",
                     "Orsu",
@@ -548,13 +548,13 @@
                     "Gwandu",
                     "Jega",
                     "Kalgo",
-                    "Koko\/Besse",
+                    "Koko/Besse",
                     "Maiyama",
                     "Ngaski",
                     "Sakaba",
                     "Shanga",
                     "Suru",
-                    "Wasagu\/Danko",
+                    "Wasagu/Danko",
                     "Yauri",
                     "Zuru"
                 ]
@@ -570,12 +570,12 @@
                     "Idah",
                     "Igalamela Odolu",
                     "Ijumu",
-                    "Kabba\/Bunu",
+                    "Kabba/Bunu",
                     "Kogi",
                     "Lokoja",
                     "Mopa Muro",
                     "Ofu",
-                    "Ogori\/Magongo",
+                    "Ogori/Magongo",
                     "Okehi",
                     "Okene",
                     "Olamaboro",
@@ -678,7 +678,7 @@
                 "name": "Ogun",
                 "cities": [
                     "Abeokuta South",
-                    "Ado-Odo\/Ota",
+                    "Ado-Odo/Ota",
                     "Egbado North",
                     "Egbado South",
                     "Ewekoro",
@@ -710,7 +710,7 @@
                     "Idanre",
                     "Ifedore",
                     "Ilaje",
-                    "Ile Oluji\/Okeigbo",
+                    "Ile Oluji/Okeigbo",
                     "Irele",
                     "Odigbo",
                     "Okitipupa",
@@ -828,12 +828,12 @@
                     "Gokana",
                     "Ikwerre",
                     "Khana",
-                    "Obio\/Akpor",
-                    "Ogba\/Egbema\/Ndoni",
-                    "Ogu\/Bolo",
+                    "Obio/Akpor",
+                    "Ogba/Egbema/Ndoni",
+                    "Ogu/Bolo",
                     "Okrika",
                     "Omuma",
-                    "Opobo\/Nkoro",
+                    "Opobo/Nkoro",
                     "Oyigbo",
                     "Port Harcourt",
                     "Tai"
@@ -911,7 +911,7 @@
                 "name": "Zamfara",
                 "cities": [
                     "Bakura",
-                    "Birnin Magaji\/Kiyaw",
+                    "Birnin Magaji/Kiyaw",
                     "Bukkuyum",
                     "Bungudu",
                     "Gummi",
@@ -925,7 +925,8 @@
                     "Zurmi"
                 ]
             }
-        ]
+        ],
+        "currency_code": "NGN"
     },
     {
         "name": "Ghana",
@@ -1081,7 +1082,8 @@
                     "Enchi"
                 ]
             }
-        ]
+        ],
+        "currency_code": "GHS"
     },
     {
         "name": "Kenya",
@@ -1199,7 +1201,8 @@
                     "Msambweni"
                 ]
             }
-        ]
+        ],
+        "currency_code": "KES"
     },
     {
         "name": "South Africa",
@@ -1292,7 +1295,8 @@
                     "Springbok"
                 ]
             }
-        ]
+        ],
+        "currency_code": "ZAR"
     },
     {
         "name": "United Kingdom",
@@ -1342,7 +1346,8 @@
                     "Newry"
                 ]
             }
-        ]
+        ],
+        "currency_code": "GBP"
     },
     {
         "name": "United States",
@@ -1771,7 +1776,8 @@
                     "Washington D.C."
                 ]
             }
-        ]
+        ],
+        "currency_code": "USD"
     },
     {
         "name": "Canada",
@@ -2204,7 +2210,8 @@
                     "Sangmelima"
                 ]
             }
-        ]
+        ],
+        "currency_code": "XAF"
     },
     {
         "name": "Tanzania",
@@ -2250,7 +2257,8 @@
                     "Stone Town"
                 ]
             }
-        ]
+        ],
+        "currency_code": "TZS"
     },
     {
         "name": "Uganda",
@@ -2292,7 +2300,8 @@
                     "Moroto"
                 ]
             }
-        ]
+        ],
+        "currency_code": "UGX"
     },
     {
         "name": "Rwanda",
@@ -2339,7 +2348,8 @@
                     "Nyanza"
                 ]
             }
-        ]
+        ],
+        "currency_code": "RWF"
     },
     {
         "name": "Ethiopia",
@@ -2388,7 +2398,8 @@
                     "Wolaita Sodo"
                 ]
             }
-        ]
+        ],
+        "currency_code": "ETB"
     },
     {
         "name": "Egypt",
@@ -2448,7 +2459,8 @@
                     "Aswan"
                 ]
             }
-        ]
+        ],
+        "currency_code": "EGP"
     },
     {
         "name": "Morocco",
@@ -2495,7 +2507,8 @@
                     "Chefchaouen"
                 ]
             }
-        ]
+        ],
+        "currency_code": "MAD"
     },
     {
         "name": "Senegal",
@@ -2532,7 +2545,8 @@
                     "Bignona"
                 ]
             }
-        ]
+        ],
+        "currency_code": "XOF"
     },
     {
         "name": "Ivory Coast",
@@ -2572,7 +2586,8 @@
                     "Daloa"
                 ]
             }
-        ]
+        ],
+        "currency_code": "XOF"
     },
     {
         "name": "Germany",
@@ -2635,7 +2650,8 @@
                     "Chemnitz"
                 ]
             }
-        ]
+        ],
+        "currency_code": "EUR"
     },
     {
         "name": "France",
@@ -2682,7 +2698,8 @@
                     "Nimes"
                 ]
             }
-        ]
+        ],
+        "currency_code": "EUR"
     },
     {
         "name": "Spain",
@@ -2729,7 +2746,8 @@
                     "Vitoria-Gasteiz"
                 ]
             }
-        ]
+        ],
+        "currency_code": "EUR"
     },
     {
         "name": "Italy",
@@ -2777,7 +2795,8 @@
                     "Livorno"
                 ]
             }
-        ]
+        ],
+        "currency_code": "EUR"
     },
     {
         "name": "Brazil",
@@ -3185,7 +3204,8 @@
                     "Breda"
                 ]
             }
-        ]
+        ],
+        "currency_code": "EUR"
     },
     {
         "name": "Poland",

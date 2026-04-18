@@ -93,7 +93,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">Total Earnings</h6>
-                            <h3 class="mb-0">₦{{ number_format($stats['total_commission'] ?? 0, 0) }}</h3>
+                            <h3 class="mb-0">{{ format_money($stats['total_commission'] ?? 0) }}</h3>
                             <small class="opacity-75">Paid commissions</small>
                         </div>
                         <div class="align-self-center">
@@ -109,7 +109,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <h6 class="card-title">Pending Commission</h6>
-                            <h3 class="mb-0">₦{{ number_format($stats['pending_commission'] ?? 0, 0) }}</h3>
+                            <h3 class="mb-0">{{ format_money($stats['pending_commission'] ?? 0) }}</h3>
                             <small class="opacity-75">Awaiting payment</small>
                         </div>
                         <div class="align-self-center">
@@ -315,7 +315,7 @@
                                     @foreach($recentPayments->take(5) as $payment)
                                     <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
                                         <div>
-                                            <div class="fw-medium">₦{{ number_format($payment->amount, 0) }}</div>
+                                            <div class="fw-medium">{{ format_money($payment->amount) }}</div>
                                             <small class="text-muted">{{ $payment->created_at->format('M d, Y') }}</small>
                                         </div>
                                         <div class="text-end">
@@ -606,6 +606,10 @@
 }
 </style>
 <script>
+function formatCurrencyJS(amount) {
+    const symbol = window.currencySymbol || '₦';
+    return symbol + new Intl.NumberFormat().format(amount);
+}
 
 
 function copyReferralLink() {
@@ -678,11 +682,11 @@ function viewSuperMarketerDetails() {
                                                             <small class="text-muted">Successful</small>
                                                         </div>
                                                         <div class="col-6 mt-3">
-                                                            <div class="h4 text-info">₦${stats.total_commission.toLocaleString()}</div>
+                                                            <div class="h4 text-info">${formatCurrencyJS(stats.total_commission)}</div>
                                                             <small class="text-muted">Total Earned</small>
                                                         </div>
                                                         <div class="col-6 mt-3">
-                                                            <div class="h4 text-warning">₦${stats.pending_commission.toLocaleString()}</div>
+                                                            <div class="h4 text-warning">${formatCurrencyJS(stats.pending_commission)}</div>
                                                             <small class="text-muted">Pending</small>
                                                         </div>
                                                     </div>
@@ -864,7 +868,7 @@ function updateRecentCommissions(commissions) {
             html += `
                 <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
                     <div>
-                        <div class="fw-medium">₦${commission.amount.toLocaleString()}</div>
+                        <div class="fw-medium">${formatCurrencyJS(commission.amount)}</div>
                         <small class="text-muted">${commission.date}</small>
                     </div>
                     <div class="text-end">
@@ -955,10 +959,10 @@ function renderPerformanceComparison(data) {
                 </div>
             </div>
             <div class="col-6 mb-3">
-                <div class="fw-bold text-info">₦${myStats.commission_earned.toLocaleString()}</div>
+                <div class="fw-bold text-info">${formatCurrencyJS(myStats.commission_earned)}</div>
                 <div class="small text-muted">Commission</div>
                 <div class="small ${myStats.commission_earned >= avgStats.commission_earned ? 'text-success' : 'text-warning'}">
-                    ${myStats.commission_earned >= avgStats.commission_earned ? '↑' : '↓'} Avg: ₦${avgStats.commission_earned.toLocaleString()}
+                    ${myStats.commission_earned >= avgStats.commission_earned ? '↑' : '↓'} Avg: ${formatCurrencyJS(avgStats.commission_earned)}
                 </div>
             </div>
             <div class="col-6 mb-3">
@@ -1031,7 +1035,7 @@ $(document).ready(function() {
             };
         } else {
             chart.data.datasets[0] = {
-                label: 'Commissions (₦)',
+                label: 'Commissions',
                 data: performanceData.commissions,
                 borderColor: '#28a745',
                 backgroundColor: 'rgba(40, 167, 69, 0.1)',

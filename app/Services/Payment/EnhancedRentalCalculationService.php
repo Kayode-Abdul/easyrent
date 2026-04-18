@@ -124,7 +124,7 @@ class EnhancedRentalCalculationService
                 $options[$type] = [
                     'type' => $type,
                     'rate' => $rate,
-                    'formatted_rate' => '₦' . number_format($rate, 2),
+                    'formatted_rate' => format_money($rate, $apartment->currency),
                     'period' => $this->getPeriodLabel($type),
                     'available' => true
                 ];
@@ -135,7 +135,7 @@ class EnhancedRentalCalculationService
                     $options[$type] = [
                         'type' => $type,
                         'rate' => $convertedRate,
-                        'formatted_rate' => '₦' . number_format($convertedRate, 2),
+                        'formatted_rate' => format_money($convertedRate, $apartment->currency),
                         'period' => $this->getPeriodLabel($type),
                         'available' => true,
                         'converted' => true

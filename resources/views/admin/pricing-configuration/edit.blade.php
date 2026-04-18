@@ -113,7 +113,7 @@
                     </div>
                     <div class="col-md-6">
                         <h5><i class="fa fa-money-bill me-2"></i>Current Settings</h5>
-                        <p class="mb-1"><strong>Current Amount:</strong> ₦{{ number_format($apartment->amount, 2) }}</p>
+                        <p class="mb-1"><strong>Current Amount:</strong> {{ format_money($apartment->amount, ($apartment->property->currency->code ?? null)) }}</p>
                         <p class="mb-1"><strong>Current Type:</strong>
                             <span
                                 class="badge bg-{{ $apartment->getPricingType() == 'total' ? 'success' : 'primary' }}">
@@ -143,7 +143,7 @@
                     <div class="mb-4">
                         <label for="amount" class="form-label">Base Amount <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <span class="input-group-text">₦</span>
+                            <span class="input-group-text">{{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}</span>
                             <input type="number" class="form-control @error('amount') is-invalid @enderror" id="amount"
                                 name="amount" value="{{ old('amount', $apartment->amount) }}" step="0.01" min="0"
                                 required>
@@ -175,7 +175,7 @@
                                     </p>
                                     <small class="text-success">
                                         <i class="fa fa-info-circle"></i>
-                                        Example: ₦500,000 for any rental duration
+                                        Example: {{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}500,000 for any rental duration
                                     </small>
                                 </div>
                             </div>
@@ -198,7 +198,7 @@
                                     </p>
                                     <small class="text-primary">
                                         <i class="fa fa-info-circle"></i>
-                                        Example: ₦50,000/month × 12 months = ₦600,000
+                                        Example: {{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}50,000/month × 12 months = {{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}600,000
                                     </small>
                                 </div>
                             </div>
@@ -228,7 +228,7 @@
                             <div class="col-md-6">
                                 <label for="config_base_amount" class="form-label">Override Base Amount</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">₦</span>
+                                            <span class="input-group-text">{{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}</span>
                                     <input type="number"
                                         class="form-control @error('price_configuration.base_amount') is-invalid @enderror"
                                         id="config_base_amount" name="price_configuration[base_amount]"
@@ -359,6 +359,9 @@
 
 @push('scripts')
 <script>
+    // Current currency symbol
+    const currencySymbol = '{{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}';
+
     // Select pricing type
     function selectPricingType(type) {
         // Remove selected class from all options
@@ -412,7 +415,7 @@
                 <div class="calculation-result">
                     <div class="row mb-2">
                         <div class="col-6"><strong>Base Amount:</strong></div>
-                        <div class="col-6">₦${parseFloat(calc.base_amount).toLocaleString()}</div>
+                        <div class="col-6">${currencySymbol}${parseFloat(calc.base_amount).toLocaleString()}</div>
                     </div>
                     <div class="row mb-2">
                         <div class="col-6"><strong>Duration:</strong></div>
@@ -429,7 +432,7 @@
                     <hr>
                     <div class="row">
                         <div class="col-6"><strong>Total Amount:</strong></div>
-                        <div class="col-6"><strong class="text-success">₦${parseFloat(calc.total_amount).toLocaleString()}</strong></div>
+                        <div class="col-6"><strong class="text-success">${currencySymbol}${parseFloat(calc.total_amount).toLocaleString()}</strong></div>
                     </div>
                 </div>
             `;

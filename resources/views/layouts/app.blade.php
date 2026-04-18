@@ -201,8 +201,10 @@
     <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
     
-    <!-- Global CSRF setup for AJAX -->
+    <!-- Global CSRF setup and Currency configuration -->
     <script>
+        window.currencySymbol = '₦'; // Default fallback
+        
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -223,7 +225,7 @@
                                 <div class="col-md-6">
                                     <h6>Payment Information</h6>
                                     <table class="table table-sm">
-                                        <tr><td><strong>Amount:</strong></td><td>₦${parseFloat(response.payment.amount).toLocaleString()}</td></tr>
+                                        <tr><td><strong>Amount:</strong></td><td>${window.currencySymbol}${parseFloat(response.payment.amount).toLocaleString()}</td></tr>
                                         <tr><td><strong>Property:</strong></td><td>${response.payment.property_address || 'N/A'}</td></tr>
                                         <tr><td><strong>Apartment:</strong></td><td>${response.payment.apartment_type || 'N/A'}</td></tr>
                                         <tr><td><strong>Tenant:</strong></td><td>${response.payment.tenant_name || 'N/A'}</td></tr>
@@ -233,9 +235,9 @@
                                 <div class="col-md-6">
                                     <h6>Commission Summary</h6>
                                     <table class="table table-sm">
-                                        <tr><td><strong>Total Commission:</strong></td><td class="text-warning">₦${parseFloat(response.commission_breakdown.total_commission || 0).toLocaleString()}</td></tr>
+                                        <tr><td><strong>Total Commission:</strong></td><td class="text-warning">${window.currencySymbol}${parseFloat(response.commission_breakdown.total_commission || 0).toLocaleString()}</td></tr>
                                         <tr><td><strong>Commission %:</strong></td><td>${parseFloat(response.commission_breakdown.commission_percentage || 0).toFixed(2)}%</td></tr>
-                                        <tr><td><strong>Net Amount:</strong></td><td class="text-success">₦${parseFloat(response.commission_breakdown.net_amount || response.payment.amount).toLocaleString()}</td></tr>
+                                        <tr><td><strong>Net Amount:</strong></td><td class="text-success">${window.currencySymbol}${parseFloat(response.commission_breakdown.net_amount || response.payment.amount).toLocaleString()}</td></tr>
                                     </table>
                                 </div>
                             </div>
@@ -263,7 +265,7 @@
                                     <tr>
                                         <td>${item.tier.replace('_', ' ').toUpperCase()}</td>
                                         <td>${item.recipient ? item.recipient.name : 'N/A'}</td>
-                                        <td>₦${parseFloat(item.amount).toLocaleString()}</td>
+                                        <td>${window.currencySymbol}${parseFloat(item.amount).toLocaleString()}</td>
                                         <td>${parseFloat(item.percentage).toFixed(2)}%</td>
                                     </tr>
                                 `;

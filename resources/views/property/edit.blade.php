@@ -73,6 +73,16 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
+                                    <label for="currency">Currency *</label>
+                                    <select name="currency_id" id="currency" class="form-control" required>
+                                        @foreach ($currencies as $currency)
+                                        <option value="{{ $currency->id }}" {{ $property->currency_id == $currency->id ? 'selected' : '' }}>
+                                            {{ $currency->name }} ({{ $currency->symbol }})
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
                                     <label for="states">State</label>
                                     <select name="state" id="states" class="form-control" onchange="getCities()"
                                         required>

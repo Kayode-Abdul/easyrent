@@ -32,8 +32,7 @@
                                 <li><strong>Property:</strong> {{ $invitation->apartment->property->prop_name }}</li>
                                 <li><strong>Type:</strong> {{ $invitation->apartment->apartment_type }}</li>
                                 <li><strong>Location:</strong> {{ $invitation->apartment->property->prop_address }}</li>
-                                <li><strong>Monthly Rent:</strong> ₦{{ number_format($invitation->apartment->amount) }}
-                                </li>
+                                <li><strong>Monthly Rent:</strong> {{ format_money($invitation->apartment->amount, ($invitation->apartment->property->currency->code ?? null)) }}</li>
                             </ul>
                         </div>
                         <div class="col-md-6">
@@ -52,8 +51,7 @@
                                 </li>
                                 <li><strong>Move-in Date:</strong> {{
                                     \Carbon\Carbon::parse($invitation->move_in_date)->format('M d, Y') }}</li>
-                                <li><strong>Total Amount:</strong> <span class="text-success fw-bold">₦{{
-                                        number_format($invitation->total_amount) }}</span></li>
+                                <li><strong>Total Amount:</strong> <span class="text-success fw-bold">{{ format_money($invitation->total_amount, ($invitation->apartment->property->currency->code ?? null)) }}</span></li>
                             </ul>
                         </div>
                     </div>
@@ -135,8 +133,7 @@
                                             Monthly Rent:
                                             @endif
                                         </span>
-                                        <span id="rate_amount">₦{{ number_format($invitation->apartment->amount)
-                                            }}</span>
+                                        <span id="rate_amount">{{ format_money($invitation->apartment->amount, ($invitation->apartment->property->currency->code ?? null)) }}</span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>Duration:</span>
@@ -169,22 +166,20 @@
                                         style="background: rgba(0,123,255,0.05); border-radius: 6px; border-left: 3px solid #007bff;">
                                         <small class="text-muted d-block mb-1">Calculation:</small>
                                         <small class="d-flex justify-content-between" id="calculation_details">
-                                            <span>₦{{ number_format($invitation->apartment->amount) }} × {{
+                                            <span>{{ $invitation->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}{{ number_format($invitation->apartment->amount) }} × {{
                                                 $invitation->lease_duration }} months</span>
-                                            <span>= ₦{{ number_format($invitation->total_amount) }}</span>
+                                            <span>= {{ $invitation->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}{{ number_format($invitation->total_amount) }}</span>
                                         </small>
                                     </div>
 
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>Subtotal:</span>
-                                        <span id="subtotal_amount">₦{{ number_format($invitation->total_amount)
-                                            }}</span>
+                                        <span id="subtotal_amount">{{ format_money($invitation->total_amount, ($invitation->apartment->property->currency->code ?? null)) }}</span>
                                     </div>
                                     <hr>
                                     <div class="d-flex justify-content-between">
                                         <span class="fw-bold text-success">Total Amount:</span>
-                                        <span class="fw-bold text-success fs-5" id="total_amount">₦{{
-                                            number_format($invitation->total_amount) }}</span>
+                                        <span class="fw-bold text-success fs-5" id="total_amount">{{ format_money($invitation->total_amount, ($invitation->apartment->property->currency->code ?? null)) }}</span>
                                     </div>
                                 </div>
                                 <div class="col-md-4 text-center">
@@ -277,8 +272,8 @@
                     <div class="d-grid mb-3">
                         <button type="button" class="btn btn-success btn-lg py-3" id="proceedPaymentBtn"
                             onclick="initiatePayment()" style="border-radius: 12px; font-weight: 600; font-size: 18px;">
-                            <i class="fas fa-lock me-2"></i>Pay ₦<span id="btn_total_amount">{{
-                                number_format($invitation->total_amount) }}</span> Securely
+                            <i class="fas fa-lock me-2"></i>Pay <span id="btn_total_amount_wrapper">{{ $invitation->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}<span id="btn_total_amount">{{
+                                number_format($invitation->total_amount) }}</span></span> Securely
                         </button>
                     </div>
 
@@ -575,7 +570,7 @@
                 email = guestEmail;
             }
 
-            const currency = 'NGN';
+            const currency = @json($invitation->apartment->property->currency->code ?? 'NGN');
             const metadata = {
                 invitation_token: @json($invitation -> invitation_token),
                 apartment_id: @json($invitation -> apartment_id),
@@ -693,7 +688,7 @@
                 email = guestEmail;
             }
 
-            const currency = 'NGN';
+            const currency = @json($invitation->apartment->property->currency->code ?? 'NGN');
             const metadata = {
                 invitation_token: @json($invitation -> invitation_token),
                 apartment_id: @json($invitation -> apartment_id),
@@ -871,7 +866,7 @@
 
     function resetPaymentButton(paymentBtn) {
         paymentBtn.disabled = false;
-        paymentBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Pay ₦{{ number_format($invitation->total_amount) }} Securely';
+        paymentBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Pay <span id="btn_total_amount_wrapper">' + currencySymbol + '<span id="btn_total_amount">{{ number_format($invitation->total_amount) }}</span></span> Securely';
     }
 
     // Enhanced payment method selection
@@ -932,6 +927,9 @@
 
         termsCheckbox.addEventListener('change', updateButtonState);
         updateButtonState(); // Initial state
+
+        // Currency symbol
+        const currencySymbol = "{{ $invitation->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}";
 
         // Enhanced rental calculation functionality
         const durationTypeSelect = document.getElementById('duration_type');
@@ -1068,14 +1066,14 @@
         function updatePaymentSummary(calculation) {
             // Update all the display elements
             document.getElementById('rate_label').textContent = `${capitalizeFirst(calculation.duration_type.replace('_', ' '))} Rate:`;
-            document.getElementById('rate_amount').textContent = `₦${formatNumber(calculation.total_amount / calculation.quantity)}`;
+            document.getElementById('rate_amount').textContent = currencySymbol + formatNumber(calculation.total_amount / calculation.quantity);
             document.getElementById('duration_display').textContent = `${calculation.quantity} ${calculation.duration_type.replace('_', ' ')}`;
             document.getElementById('pricing_type_display').innerHTML = `Enhanced Calculation <small class="text-muted">(${calculation.calculation_method})</small>`;
 
             // Update calculation breakdown
             const breakdownElement = document.getElementById('calculation_details');
             breakdownElement.innerHTML = `
-            <span>₦${formatNumber(calculation.total_amount / calculation.quantity)} × ${calculation.quantity} ${calculation.duration_type.replace('_', ' ')}</span>
+            <span>${currencySymbol}${formatNumber(calculation.total_amount / calculation.quantity)} × ${calculation.quantity} ${calculation.duration_type.replace('_', ' ')}</span>
             <span>= ${calculation.formatted_amount}</span>
         `;
 

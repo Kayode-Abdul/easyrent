@@ -147,7 +147,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="card-title">₦{{ number_format($commissionMetrics['total_commissions'], 2) }}</h4>
+                            <h4 class="card-title">{{ format_money($commissionMetrics['total_commissions']) }}</h4>
                             <p class="card-text">Total Commissions</p>
                         </div>
                         <div class="align-self-center">
@@ -252,7 +252,7 @@
                             <p class="text-muted">Conversion Rate</p>
                         </div>
                         <div class="col-6">
-                            <h3 class="text-success">₦{{ number_format($chainEffectiveness['average_commission_per_chain'], 2) }}</h3>
+                            <h3 class="text-success">{{ format_money($chainEffectiveness['average_commission_per_chain']) }}</h3>
                             <p class="text-muted">Avg Commission per Chain</p>
                         </div>
                     </div>
@@ -297,8 +297,8 @@
                                 <tr>
                                     <td><strong>{{ $region->region ?: 'Unknown' }}</strong></td>
                                     <td>{{ number_format($region->total_payments) }}</td>
-                                    <td>₦{{ number_format($region->total_amount, 2) }}</td>
-                                    <td>₦{{ number_format($region->avg_amount, 2) }}</td>
+                                    <td>{{ format_money($region->total_amount) }}</td>
+                                    <td>{{ format_money($region->avg_amount) }}</td>
                                     <td>
                                         <span class="badge bg-{{ $region->success_rate >= 90 ? 'success' : ($region->success_rate >= 70 ? 'warning' : 'danger') }}">
                                             {{ $region->success_rate }}%
@@ -349,7 +349,7 @@
                                     <td>{{ $chain->superMarketer->name ?? 'N/A' }}</td>
                                     <td>{{ $chain->marketer->name ?? 'N/A' }}</td>
                                     <td>{{ $chain->landlord->name ?? 'N/A' }}</td>
-                                    <td>₦{{ number_format($chain->commission_payments_sum_amount ?? 0, 2) }}</td>
+                                    <td>{{ format_money($chain->commission_payments_sum_amount ?? 0) }}</td>
                                     <td>
                                         <span class="badge bg-{{ $chain->status === 'active' ? 'success' : 'secondary' }}">
                                             {{ ucfirst($chain->status) }}

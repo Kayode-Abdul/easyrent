@@ -112,7 +112,7 @@
                                             </label>
                                             <div class="rate-input-group mt-2" style="{{ in_array('hourly', $supportedTypes) ? '' : 'display: none;' }}">
                                                 <div class="input-group">
-                                                    <span class="input-group-text">₦</span>
+                                                    <span class="input-group-text">{{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}</span>
                                                     <input type="number" class="form-control" name="hourly_rate" 
                                                            placeholder="Hourly rate" step="0.01" min="0"
                                                            value="{{ $allRates['hourly'] ?? '' }}">
@@ -130,7 +130,7 @@
                                             </label>
                                             <div class="rate-input-group mt-2" style="{{ in_array('daily', $supportedTypes) ? '' : 'display: none;' }}">
                                                 <div class="input-group">
-                                                    <span class="input-group-text">₦</span>
+                                                    <span class="input-group-text">{{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}</span>
                                                     <input type="number" class="form-control" name="daily_rate" 
                                                            placeholder="Daily rate" step="0.01" min="0"
                                                            value="{{ $allRates['daily'] ?? '' }}">
@@ -148,7 +148,7 @@
                                             </label>
                                             <div class="rate-input-group mt-2" style="{{ in_array('weekly', $supportedTypes) ? '' : 'display: none;' }}">
                                                 <div class="input-group">
-                                                    <span class="input-group-text">₦</span>
+                                                    <span class="input-group-text">{{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}</span>
                                                     <input type="number" class="form-control" name="weekly_rate" 
                                                            placeholder="Weekly rate" step="0.01" min="0"
                                                            value="{{ $allRates['weekly'] ?? '' }}">
@@ -166,7 +166,7 @@
                                             </label>
                                             <div class="rate-input-group mt-2" style="{{ in_array('monthly', $supportedTypes) ? '' : 'display: none;' }}">
                                                 <div class="input-group">
-                                                    <span class="input-group-text">₦</span>
+                                                    <span class="input-group-text">{{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}</span>
                                                     <input type="number" class="form-control" name="monthly_rate" 
                                                            placeholder="Monthly rate" step="0.01" min="0"
                                                            value="{{ $allRates['monthly'] ?? $apartment->amount }}">
@@ -184,7 +184,7 @@
                                             </label>
                                             <div class="rate-input-group mt-2" style="{{ in_array('yearly', $supportedTypes) ? '' : 'display: none;' }}">
                                                 <div class="input-group">
-                                                    <span class="input-group-text">₦</span>
+                                                    <span class="input-group-text">{{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}</span>
                                                     <input type="number" class="form-control" name="yearly_rate" 
                                                            placeholder="Yearly rate" step="0.01" min="0"
                                                            value="{{ $allRates['yearly'] ?? '' }}">
@@ -203,7 +203,7 @@
                                             </label>
                                             <div class="rate-input-group mt-2" style="{{ in_array('quarterly', $supportedTypes) ? '' : 'display: none;' }}">
                                                 <div class="input-group">
-                                                    <span class="input-group-text">₦</span>
+                                                    <span class="input-group-text">{{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}</span>
                                                     <input type="number" class="form-control" name="quarterly_rate" 
                                                            placeholder="Quarterly rate (auto-calculated from monthly)" step="0.01" min="0" readonly
                                                            value="{{ isset($allRates['quarterly']) ? $allRates['quarterly'] : (isset($allRates['monthly']) ? $allRates['monthly'] * 3 : '') }}">
@@ -222,7 +222,7 @@
                                             </label>
                                             <div class="rate-input-group mt-2" style="{{ in_array('semi_annually', $supportedTypes) ? '' : 'display: none;' }}">
                                                 <div class="input-group">
-                                                    <span class="input-group-text">₦</span>
+                                                    <span class="input-group-text">{{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}</span>
                                                     <input type="number" class="form-control" name="semi_annually_rate" 
                                                            placeholder="Semi-annual rate (auto-calculated from monthly)" step="0.01" min="0" readonly
                                                            value="{{ isset($allRates['semi_annually']) ? $allRates['semi_annually'] : (isset($allRates['monthly']) ? $allRates['monthly'] * 6 : '') }}">
@@ -241,7 +241,7 @@
                                             </label>
                                             <div class="rate-input-group mt-2" style="{{ in_array('bi_annually', $supportedTypes) ? '' : 'display: none;' }}">
                                                 <div class="input-group">
-                                                    <span class="input-group-text">₦</span>
+                                                    <span class="input-group-text">{{ $apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}</span>
                                                     <input type="number" class="form-control" name="bi_annually_rate" 
                                                            placeholder="Bi-annual rate (auto-calculated from monthly)" step="0.01" min="0" readonly
                                                            value="{{ isset($allRates['bi_annually']) ? $allRates['bi_annually'] : (isset($allRates['monthly']) ? $allRates['monthly'] * 24 : '') }}">

@@ -416,14 +416,14 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group text-left">
-                                <label>Min Budget (₦)</label>
+                                <label>Min Budget ({{ $complaint->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }})</label>
                                 <input type="number" name="budget_min" class="form-control" placeholder="e.g. 5000"
                                     required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group text-left">
-                                <label>Max Budget (₦)</label>
+                                <label>Max Budget ({{ $complaint->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }})</label>
                                 <input type="number" name="budget_max" class="form-control" placeholder="e.g. 15000"
                                     required>
                             </div>

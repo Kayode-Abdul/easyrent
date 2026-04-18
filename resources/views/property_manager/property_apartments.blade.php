@@ -176,7 +176,7 @@
                                     <td>
                                         @if($apartment->amount)
                                         <div>
-                                            <strong>₦{{ number_format($apartment->amount, 2) }}</strong><br>
+                                            <strong>{{ format_money($apartment->amount, ($property->currency->code ?? null)) }}</strong><br>
                                             <small class="text-muted">Monthly Rent</small>
                                         </div>
                                         @else

@@ -177,22 +177,26 @@ class NotificationController extends Controller
         $properties = Property::where('user_id', $user->user_id)->pluck('property_id');
 
         // Payment notifications
-        $recentPayments = Payment::where('landlord_id', $user->user_id)
+        $recentPaymentsQuery = Payment::where('landlord_id', $user->user_id)
             ->where('status', 'completed')
-            ->where('created_at', '>=', now()->subHours(24))
-            ->count();
+            ->where('created_at', '>=', now()->subHours(24));
 
-        if ($recentPayments > 0) {
-            $totalAmount = Payment::where('landlord_id', $user->user_id)
-                ->where('status', 'completed')
-                ->where('created_at', '>=', now()->subHours(24))
-                ->sum('amount');
+        $recentPaymentsCount = $recentPaymentsQuery->count();
+
+        if ($recentPaymentsCount > 0) {
+            $amountsByCurrency = $recentPaymentsQuery->with('currency')
+                ->get()
+                ->groupBy('currency_id')
+                ->map(function($group) {
+                    return format_money($group->sum('amount'), $group->first()->currency);
+                })
+                ->implode(', ');
 
             $notifications[] = [
                 'id' => 'payments_received_' . $user->user_id . '_' . date('Y-m-d'),
                 'type' => 'payment',
                 'title' => 'Payments Received',
-                'message' => "You received ₦" . number_format($totalAmount, 2) . " from {$recentPayments} payment(s)",
+                'message' => "You received {$amountsByCurrency} from {$recentPaymentsCount} payment(s)",
                 'priority' => 'medium',
                 'timestamp' => now()->toISOString(),
                 'read' => false,

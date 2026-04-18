@@ -14,10 +14,13 @@ class PropertyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'propertyType' => 'required|integer|between:1,4',
+            'propertyType' => 'required|integer|between:1,10',
             'address' => 'required|string|max:255',
-            'state' => 'required|string|max:100',
-            'city' => 'required|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'city' => 'nullable|string|max:100',
+            'state_id' => 'required|exists:states,id',
+            'lga_id' => 'required|exists:lgas,id',
+            'currency_id' => 'nullable|exists:currencies,id',
             'aboveOne' => 'nullable|boolean',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120'

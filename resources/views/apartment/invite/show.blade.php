@@ -76,7 +76,7 @@
                                     </li>
                                     <li class="mb-2">
                                         <strong>{{ $apartment->getPricingType() === 'total' ? 'Total Price' : 'Monthly Rent' }}:</strong> 
-                                        <span class="text-success fw-bold">₦{{ number_format($apartment->amount) }}</span>
+                                        <span class="text-success fw-bold">{{ format_money($apartment->amount, ($property->currency->code ?? null)) }}</span>
                                         @if($apartment->getPricingType() === 'total')
                                             <small class="text-muted">(Total for entire lease)</small>
                                         @endif
@@ -278,7 +278,7 @@
                                                         Monthly Price:
                                                     @endif
                                                 </span>
-                                                <span class="fw-bold">₦{{ number_format($apartment->amount) }}</span>
+                                                <span class="fw-bold">{{ format_money($apartment->amount, ($property->currency->code ?? null)) }}</span>
                                             </div>
                                             @if(isset($proformaData['pricing_type']))
                                             <div class="d-flex justify-content-between mb-2">
@@ -317,7 +317,7 @@
                                             <div class="calculation-breakdown mt-2 p-2" style="background: rgba(0,123,255,0.05); border-radius: 6px; border-left: 3px solid #007bff;">
                                                 <small class="text-muted d-block mb-1">Calculation Breakdown:</small>
                                                 <small class="d-flex justify-content-between">
-                                                    <span>₦{{ number_format($apartment->amount) }} × <span id="calc-duration">12</span> months</span>
+                                                    <span>{{ $property->currency->symbol ?? format_money(0)->getSymbol() }}{{ number_format($apartment->amount) }} × <span id="calc-duration">12</span> months</span>
                                                     <span>=</span>
                                                 </small>
                                             </div>
@@ -326,7 +326,7 @@
                                             <hr class="my-3">
                                             <div class="d-flex justify-content-between">
                                                 <span class="fw-bold text-success fs-6">Total Amount:</span>
-                                                <span id="total-amount" class="fw-bold text-success fs-4">₦{{ number_format($proformaData['total_amount'] ?? ($apartment->amount * 12)) }}</span>
+                                                <span id="total-amount" class="fw-bold text-success fs-4">{{ format_money($proformaData['total_amount'] ?? ($apartment->amount * 12), ($property->currency->code ?? null)) }}</span>
                                             </div>
                                             
                                             <!-- Error display area -->
@@ -404,7 +404,7 @@
                                                     Monthly Price:
                                                 @endif
                                             </span>
-                                            <span class="fw-bold text-success">₦{{ number_format($apartment->amount) }}</span>
+                                            <span class="fw-bold text-success">{{ format_money($apartment->amount, ($property->currency->code ?? null)) }}</span>
                                         </div>
                                         <div class="d-flex justify-content-between">
                                             <span class="text-muted">Location:</span>
@@ -599,6 +599,8 @@
 <script>
 // Duration mapping for proper display
 const durationNames = @json($durationOptions);
+// Currency symbol
+const currencySymbol = "{{ $property->currency->symbol ?? format_money(0)->getSymbol() }}";
 
 // Calculation display and error handling functions
 function updateCalculationDisplay(duration, isUnauthenticated = false) {
@@ -647,7 +649,7 @@ function updateCalculationDisplay(duration, isUnauthenticated = false) {
             const durationName = durationNames[durationInt] || durationInt + ' months';
             durationDisplay.textContent = durationName;
         }
-        if (totalAmountEl) totalAmountEl.textContent = '₦' + calculatedTotal.toLocaleString();
+        if (totalAmountEl) totalAmountEl.textContent = currencySymbol + calculatedTotal.toLocaleString();
         if (calcDurationEl) calcDurationEl.textContent = durationInt;
         
         // Hide any previous errors

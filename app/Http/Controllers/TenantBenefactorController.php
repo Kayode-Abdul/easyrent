@@ -176,7 +176,7 @@ class TenantBenefactorController extends Controller
         }
 
         $paymentLink = route('benefactor.payment.show', $invitation->invitation_token);
-        $amount = '₦' . number_format($invitation->amount, 2);
+        $amount = format_money($invitation->amount, $invitation->proforma->currency ?? null);
         $tenantName = $tenant->first_name . ' ' . $tenant->last_name;
         
         // Get property details

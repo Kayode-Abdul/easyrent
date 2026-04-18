@@ -22,7 +22,11 @@
                                     </div>
                                 </div>
                                 <div class="col-7 text-right">
-                                    <h3 class="info-title">₦{{ number_format($totalRevenue, 2) }}</h3>
+                                    @forelse($totalRevenueByCurrency ?? [] as $code => $stat)
+                                        <h3 class="info-title">{{ format_money($stat['amount'], $stat['symbol']) }}</h3>
+                                    @empty
+                                        <h3 class="info-title">{{ format_money(0) }}</h3>
+                                    @endforelse
                                     <h6 class="stats-title">Total Revenue</h6>
                                 </div>
                             </div>
@@ -64,7 +68,11 @@
                                     </div>
                                 </div>
                                 <div class="col-7 text-right">
-                                    <h3 class="info-title">₦{{ number_format($monthlyAverage, 2) }}</h3>
+                                    @forelse($monthlyAverageByCurrency ?? [] as $code => $stat)
+                                        <h3 class="info-title">{{ format_money($stat['amount'], $stat['symbol']) }}</h3>
+                                    @empty
+                                        <h3 class="info-title">{{ format_money(0) }}</h3>
+                                    @endforelse
                                     <h6 class="stats-title">Monthly Average</h6>
                                 </div>
                             </div>

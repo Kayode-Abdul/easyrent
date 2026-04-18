@@ -102,7 +102,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title">Total Commission Paid</h6>
-                            <h3 class="mb-0">₦{{ number_format($stats['total_commission_paid'], 0) }}</h3>
+                            <h3 class="mb-0">{{ format_money($stats['total_commission_paid']) }}</h3>
                             <small class="opacity-75">Lifetime payments</small>
                         </div>
                         <div class="align-self-center">
@@ -118,7 +118,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title">Pending Commission</h6>
-                            <h3 class="mb-0">₦{{ number_format($stats['pending_commission'], 0) }}</h3>
+                            <h3 class="mb-0">{{ format_money($stats['pending_commission']) }}</h3>
                             <small class="opacity-75">Awaiting approval</small>
                         </div>
                         <div class="align-self-center">
@@ -265,7 +265,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <span class="fw-bold text-success">₦{{ number_format($reward->amount, 0) }}</span>
+                                                <span class="fw-bold text-success">{{ format_money($reward->amount) }}</span>
                                             </td>
                                             <td>
                                                 <span class="badge bg-info">{{ ucfirst($reward->reward_type) }}</span>

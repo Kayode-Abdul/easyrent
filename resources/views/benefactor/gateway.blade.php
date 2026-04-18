@@ -33,7 +33,7 @@
                                     @endif
                                 </div>
                                 <div class="col-md-6 text-right">
-                                    <h2 class="text-success">₦{{ number_format($payment->amount, 2) }}</h2>
+                                    <h2 class="text-success">{{ format_money($payment->amount, ($payment->currency->code ?? null)) }}</h2>
                                     <p class="text-muted">Total Amount</p>
                                 </div>
                             </div>
@@ -64,7 +64,7 @@
                                         <p class="mb-1"><strong>Bank Name:</strong> [Your Bank Name]</p>
                                         <p class="mb-1"><strong>Account Number:</strong> [Your Account Number]</p>
                                         <p class="mb-1"><strong>Account Name:</strong> [Your Account Name]</p>
-                                        <p class="mb-1"><strong>Amount:</strong> ₦{{ number_format($payment->amount, 2) }}</p>
+                                        <p class="mb-1"><strong>Amount:</strong> {{ format_money($payment->amount, ($payment->currency->code ?? null)) }}</p>
                                         <p class="mb-0"><strong>Reference:</strong> {{ $payment->id }}</p>
                                         <hr>
                                         <small class="text-muted">
@@ -113,7 +113,7 @@ document.getElementById('paystackBtn').addEventListener('click', function() {
         key: paystackKey,
         email: '{{ $payment->benefactor->email }}',
         amount: {{ $payment->amount * 100 }}, // Amount in kobo
-        currency: 'NGN',
+        currency: '{{ $payment->currency->code ?? 'NGN' }}',
         ref: 'BEN-{{ $payment->id }}-' + Math.floor((Math.random() * 1000000000) + 1),
         metadata: {
             payment_id: {{ $payment->id }},

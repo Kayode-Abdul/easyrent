@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Property;
 use App\Models\Apartment;
 use App\Models\User;
+use App\Models\Currency;
+use App\Models\Payment;
+use App\Models\State;
+use App\Models\Lga;
 use App\Http\Requests\PropertyRequest;
 use App\Http\Requests\ApartmentRequest;
 use App\Http\Requests\SingleApartmentRequest;
@@ -12,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -33,10 +38,9 @@ class PropertyController extends Controller
     public function add(PropertyRequest $request): \Illuminate\View\View|JsonResponse
     {
         if (!$request->isMethod('post')) {
-            $countries = json_decode(File::get(resource_path('/countries.json')), true);
-            // Keep $location for backward compatibility with the listing blade view
-            $location = $countries[0]['states'] ?? [];
-            return view('listing', compact('countries', 'location'));
+            $states = State::where('country_name', 'Nigeria')->with('lgas')->get();
+            $currencies = Currency::where('is_active', true)->get();
+            return view('listing', compact('states', 'currencies'));
         }
         try {
             // Check if user is logged in
@@ -57,9 +61,14 @@ class PropertyController extends Controller
                 'country' => $request->country ?? 'Nigeria',
                 'state' => $request->state,
                 'lga' => $request->city,
+                'country_name' => $request->country ?? 'Nigeria',
+                'state_id' => $request->state_id,
+                'lga_id' => $request->lga_id,
                 'no_of_apartment' => $request->noOfApartment ?? null,
                 'size_value' => $request->size_value ?? null,
                 'size_unit' => $request->size_unit ?? null,
+                'currency_id' => $request->currency_id ?? null,
+                'status' => 'pending',
                 'created_at' => now()
             ]);
 
@@ -191,6 +200,7 @@ class PropertyController extends Controller
                 $amounts = $request->amount ?? [];
                 $rentalTypes = $request->rentalType ?? [];
                 $durations = $request->duration ?? [];
+                $currencyIds = $request->currency_id ?? [];
             }
             
             // Ensure we have at least one apartment to create
@@ -239,6 +249,7 @@ class PropertyController extends Controller
                     'weekly_rate' => $rentalConfig['weekly_rate'],
                     'monthly_rate' => $rentalConfig['monthly_rate'],
                     'yearly_rate' => $rentalConfig['yearly_rate'],
+                    'currency_id' => $currencyIds[$i] ?? $property->currency_id,
                 ]);
                 
                 // Create proforma receipt if tenant is assigned
@@ -250,6 +261,7 @@ class PropertyController extends Controller
                         'transaction_id' => $transactionId,
                         'apartment_id' => $transactionId,
                         'duration' => $apartment->duration,
+                        'currency_id' => $apartment->currency_id,
                     ]);
                 }
                 
@@ -327,6 +339,7 @@ class PropertyController extends Controller
                 'weekly_rate' => $rentalConfig['weekly_rate'],
                 'monthly_rate' => $rentalConfig['monthly_rate'],
                 'yearly_rate' => $rentalConfig['yearly_rate'],
+                'currency_id' => $request->currency_id ?? $property->currency_id,
             ]);
             
             // Create proforma receipt if tenant is assigned
@@ -338,6 +351,7 @@ class PropertyController extends Controller
                     'transaction_id' => $apartmentId,
                     'apartment_id' => $apartmentId,
                     'duration' => $apartment->duration,
+                    'currency_id' => $apartment->currency_id,
                 ]);
             }
             
@@ -508,6 +522,49 @@ class PropertyController extends Controller
 
             $myApartment = $query->paginate(10)->withQueryString();
         }
+
+        // Calculate statistics grouped by currency
+        $totalPaidByCurrency = [];
+        $totalCommissionByCurrency = [];
+
+        if ($mode === 'landlord') {
+            $landlordPayments = Payment::where('landlord_id', $userId)
+                ->where('status', 'completed')
+                ->with('currency')
+                ->get();
+
+            $totalPaidByCurrency = $landlordPayments->groupBy('currency_id')->map(function ($payments) {
+                return [
+                    'amount' => $payments->sum('amount'),
+                    'symbol' => $payments->first()->currency->symbol ?? format_money(0)->getSymbol(),
+                    'code' => $payments->first()->currency->code ?? 'NGN'
+                ];
+            });
+            
+            // Commission calculation (simplified for now, using the transparency logic if needed)
+            // For a robust version, we'd iterate through each payment's commission breakdown.
+            $totalCommissionByCurrency = $landlordPayments->groupBy('currency_id')->map(function ($payments) {
+                // This is a placeholder logic - in a real app, we'd fetch actual commission deductions
+                return [
+                    'amount' => 0, // We can fill this if there's a reliable way to get commission from payment
+                    'symbol' => $payments->first()->currency->symbol ?? format_money(0)->getSymbol()
+                ];
+            });
+        } elseif ($mode === 'tenant') {
+            $tenantPayments = Payment::where('tenant_id', $userId)
+                ->where('status', 'completed')
+                ->with('currency')
+                ->get();
+
+            $totalPaidByCurrency = $tenantPayments->groupBy('currency_id')->map(function ($payments) {
+                return [
+                    'amount' => $payments->sum('amount'),
+                    'symbol' => $payments->first()->currency->symbol ?? format_money(0)->getSymbol(),
+                    'code' => $payments->first()->currency->code ?? 'NGN'
+                ];
+            });
+        }
+
         $countries = json_decode(File::get(resource_path('/countries.json')), true);
         $locations = $countries[0]['states'] ?? [];
         
@@ -516,8 +573,9 @@ class PropertyController extends Controller
         if ($mode === 'landlord') {
             $commissionData = $this->getCommissionTransparencyData($userId);
         }
+        $currencies = Currency::where('is_active', true)->get();
         
-        return view('myProperty', compact('myProperties', 'myApartment', 'locations', 'countries', 'mode', 'hasProperties', 'commissionData'));
+        return view('myProperty', compact('myProperties', 'myApartment', 'locations', 'countries', 'mode', 'hasProperties', 'commissionData', 'currencies', 'totalPaidByCurrency', 'totalCommissionByCurrency'));
     }
 
     private function generateUniquePropertyId(): int
@@ -747,6 +805,7 @@ class PropertyController extends Controller
                 'property_address' => $payment->property?->address,
                 'apartment_type' => $payment->apartment?->apartment_type,
                 'tenant_name' => $payment->tenant ? $payment->tenant->first_name . ' ' . $payment->tenant->last_name : 'N/A',
+                'currency_symbol' => $payment->currency->symbol ?? ($payment->apartment->property->currency->symbol ?? '₦'),
                 'payment_date' => $payment->created_at->format('Y-m-d H:i:s')
             ],
             'commission_breakdown' => $commissionBreakdown
@@ -792,25 +851,34 @@ class PropertyController extends Controller
 
         // Calculate commission breakdowns for all payments
         $commissionBreakdowns = [];
-        $totalRevenue = 0;
-        $totalCommission = 0;
+        $revenueStats = []; // Map of code => [amount, symbol]
 
         foreach ($payments as $payment) {
             $breakdown = $this->calculateCommissionBreakdown($payment);
             $commissionBreakdowns[$payment->id] = $breakdown;
             
-            $totalRevenue += $payment->amount;
-            $totalCommission += $breakdown['total_commission'] ?? 0;
+            $code = $payment->currency->code ?? 'NGN';
+            $symbol = $payment->currency->symbol ?? '₦';
+
+            if (!isset($revenueStats[$code])) {
+                $revenueStats[$code] = [
+                    'revenue' => 0,
+                    'commission' => 0,
+                    'net' => 0,
+                    'symbol' => $symbol
+                ];
+            }
+
+            $revenueStats[$code]['revenue'] += $payment->amount;
+            $revenueStats[$code]['commission'] += $breakdown['total_commission'] ?? 0;
+            $revenueStats[$code]['net'] += ($payment->amount - ($breakdown['total_commission'] ?? 0));
         }
 
-        $netIncome = $totalRevenue - $totalCommission;
-        $avgCommissionPercentage = $totalRevenue > 0 ? ($totalCommission / $totalRevenue) * 100 : 0;
-
         $summary = [
-            'total_revenue' => $totalRevenue,
-            'total_commission' => $totalCommission,
-            'net_income' => $netIncome,
-            'avg_commission_percentage' => $avgCommissionPercentage
+            'stats' => $revenueStats,
+            'avg_commission_percentage' => $payments->count() > 0 ? ($payments->sum(function($p) use ($commissionBreakdowns) {
+                return $commissionBreakdowns[$p->id]['total_commission'] ?? 0;
+            }) / ($payments->sum('amount') ?: 1)) * 100 : 0
         ];
 
         return view('landlord.commission-transparency', compact(
@@ -1273,7 +1341,8 @@ class PropertyController extends Controller
         $property = Property::where('property_id', $propId)->firstOrFail();
         $countries = json_decode(File::get(resource_path('/countries.json')), true);
         $locations = $countries[0]['states'] ?? [];
-        return view('property.edit', compact('property', 'locations', 'countries'));
+        $currencies = Currency::where('is_active', true)->get();
+        return view('property.edit', compact('property', 'countries', 'locations', 'currencies'));
     }
 
     public function update(Request $request, string $propId): JsonResponse
@@ -1286,7 +1355,11 @@ class PropertyController extends Controller
                 'country' => $request->country ?? $property->country ?? 'Nigeria',
                 'state' => $request->state,
                 'lga' => $request->city,
-                'no_of_apartment' => $request->noOfApartment
+                'country_name' => $request->country ?? $property->country ?? 'Nigeria',
+                'state_id' => $request->state_id,
+                'lga_id' => $request->lga_id,
+                'no_of_apartment' => $request->noOfApartment,
+                'currency_id' => $request->currency_id
             ]);
             return response()->json([
                 'success' => true,
@@ -1305,7 +1378,17 @@ class PropertyController extends Controller
     {
         try {
             $property = Property::where('property_id', $propId)->firstOrFail();
+            
+            // Security check: Only owner or admin can delete
+            if ($property->user_id !== auth()->id() && !auth()->user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'messages' => 'Unauthorized: You do not own this property.'
+                ], 403);
+            }
+
             $property->delete();
+            
             return response()->json([
                 'success' => true,
                 'messages' => 'Property deleted successfully!'
@@ -1366,24 +1449,21 @@ class PropertyController extends Controller
         if (!$user) {
             return response()->json(['success' => false, 'count' => 0]);
         }
-        // Profoma notifications: status 2, 1, or 0 (for this user as tenant or owner)
-        $profomaCount = \App\Models\ProfomaReceipt::where(function($q) use ($user) {
-            $q->where('tenant_id', $user->user_id)
-              ->orWhere('user_id', $user->user_id);
-        })->whereIn('status', [0, 1, 2])->count();
-        // Placeholder for messages and other notifications
-        $messageCount = 0; // TODO: implement message notification count
-        $total = $profomaCount + $messageCount;
+
+        $summary = $user->getNotificationSummary();
+
         return response()->json([
             'success' => true,
-            'profoma' => $profomaCount,
-            'messages' => $messageCount,
-            'total' => $total
+            'profoma' => $summary['payments'], // Map payments specifically for backward compatibility if needed
+            'messages' => $summary['messages'],
+            'bids' => $summary['bids'],
+            'overdue' => $summary['overdue'],
+            'total' => $summary['total']
         ]);
     }
 
     /**
-     * Mark notifications as seen (set profoma status 2/1/0 to 1 for this user as tenant or owner).
+     * Mark notifications as seen (sets is_read = true for relevant items).
      */
     public function markNotificationsSeen(Request $request): JsonResponse
     {
@@ -1391,13 +1471,25 @@ class PropertyController extends Controller
         if (!$user) {
             return response()->json(['success' => false]);
         }
-        // Mark all profoma receipts for this user (tenant or owner) with status 2 or 0 as viewed (status 1)
+
+        // 1. Mark Payments as read
+        \App\Models\Payment::where(function($q) use ($user) {
+            $q->where('landlord_id', $user->user_id)
+              ->orWhere('tenant_id', $user->user_id);
+        })->where('is_read', false)->update(['is_read' => true]);
+
+        // 2. Mark Artisan Bids as read (for initiator or landlord)
+        \App\Models\ArtisanBid::whereHas('task', function($q) use ($user) {
+            $q->where('tenant_id', $user->user_id)
+              ->orWhere('landlord_id', $user->user_id);
+        })->where('is_read', false)->update(['is_read' => true]);
+
+        // 3. Mark Profoma Receipts as seen (for compatibility with existing logic)
         \App\Models\ProfomaReceipt::where(function($q) use ($user) {
             $q->where('tenant_id', $user->user_id)
               ->orWhere('user_id', $user->user_id);
-        })->whereIn('status', [0,2])
-          ->update(['status' => 1]);
-        // You can add similar logic for messages in the future
+        })->whereIn('status', [0, 2])->update(['status' => 1]);
+
         return response()->json(['success' => true]);
     }
 
@@ -1405,13 +1497,49 @@ class PropertyController extends Controller
      * AJAXDestroy method
      * TODO: Implement this method
      */
-    public function ajaxDestroy(Request $request)
+    public function ajaxDestroy(string $propId): JsonResponse
     {
-        // TODO: Implement ajaxDestroy functionality
-        return response()->json([
-            'success' => false,
-            'message' => 'Method not implemented yet'
-        ]);
+        try {
+            $property = Property::where('property_id', $propId)->first();
+            
+            if (!$property) {
+                return response()->json([
+                    'success' => false,
+                    'messages' => 'Property not found.'
+                ], 404);
+            }
+            
+            if ($property->user_id !== auth()->id() && !auth()->user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'messages' => 'Unauthorized: You do not have permission to delete this property.'
+                ], 403);
+            }
+
+            $hasActiveLeases = $property->apartments()->where('occupied', true)->exists();
+            if ($hasActiveLeases) {
+                return response()->json([
+                    'success' => false,
+                    'messages' => 'Cannot delete property with active tenancies. Please terminate leases first.'
+                ], 400);
+            }
+
+            DB::transaction(function() use ($property) {
+                $property->apartments()->delete();
+                $property->delete();
+            });
+            
+            return response()->json([
+                'success' => true,
+                'messages' => 'Property deleted successfully!'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Property Delete Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'messages' => 'Failed to delete property: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -1420,16 +1548,19 @@ class PropertyController extends Controller
     public function getLocationData(Request $request): JsonResponse
     {
         $countryName = $request->input('country', 'Nigeria');
-        $countries = json_decode(File::get(resource_path('/countries.json')), true);
+        
+        $states = State::where('country_name', $countryName)
+            ->with(['lgas' => function($query) {
+                $query->select('id', 'name', 'state_id');
+            }])
+            ->get(['id', 'name']);
 
+        $countries = json_decode(File::get(resource_path('/countries.json')), true);
         $country = collect($countries)->firstWhere('name', $countryName);
 
-        if (!$country) {
-            return response()->json(['states' => []]);
-        }
-
         return response()->json([
-            'states' => $country['states'] ?? []
+            'states' => $states,
+            'currency_code' => $country['currency_code'] ?? null
         ]);
     }
 }

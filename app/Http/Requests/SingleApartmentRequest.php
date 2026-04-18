@@ -23,6 +23,7 @@ class SingleApartmentRequest extends FormRequest
             'toRange' => 'required|date|after:fromRange',
             'amount' => 'required|numeric|min:0',
             'rentalType' => 'required|in:hourly,daily,weekly,monthly,quarterly,semi_annually,yearly,bi_annually',
+            'currency_id' => 'nullable|exists:currencies,id',
         ];
     }
 

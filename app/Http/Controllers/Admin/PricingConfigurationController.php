@@ -215,6 +215,7 @@ class PricingConfigurationController extends Controller
                 'apartment' => [
                     'id' => $apartment->apartment_id,
                     'property_name' => $apartment->property->property_name ?? 'Unknown Property',
+                    'currency_symbol' => $apartment->property->currency->symbol ?? '₦',
                 ]
             ]);
             
@@ -415,6 +416,7 @@ class PricingConfigurationController extends Controller
                     'amount' => $apartment->amount,
                     'pricing_type' => $apartment->getPricingType(),
                     'price_configuration' => $apartment->price_configuration,
+                    'currency_symbol' => $apartment->property->currency->symbol ?? '₦',
                 ]
             ]);
             

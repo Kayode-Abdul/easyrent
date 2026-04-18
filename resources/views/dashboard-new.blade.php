@@ -126,7 +126,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Monthly Revenue</p>
-                                    <p class="card-title">₦{{ number_format($monthlyRevenue, 0) }}</p>
+                                    <p class="card-title">{{ format_money($monthlyRevenue) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -229,7 +229,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Monthly Revenue</p>
-                                    <p class="card-title">₦{{ number_format($monthlyRevenue, 0) }}</p>
+                                    <p class="card-title">{{ format_money($monthlyRevenue) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -281,7 +281,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Total Paid</p>
-                                    <p class="card-title">₦{{ number_format($totalPaid, 0) }}</p>
+                                    <p class="card-title">{{ format_money($totalPaid) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -432,7 +432,7 @@
                             @if($nextPaymentDue)
                             <div class="alert alert-warning">
                                 <strong>Next Payment Due:</strong><br>
-                                ₦{{ number_format($nextPaymentDue->amount) }}<br>
+                                {{ format_money($nextPaymentDue->amount) }}<br>
                                 <small>Due: {{ $nextPaymentDue->due_date->format('M d, Y') }}</small>
                             </div>
                             @endif
@@ -525,7 +525,7 @@
             data: {
                 labels: {!! json_encode(collect($revenueTrend ?? []) -> pluck('month'))!!},
         datasets: [{
-            label: 'Revenue (₦)',
+            label: 'Revenue (' + window.currencySymbol + ')',
             data: {!! json_encode(collect($revenueTrend ?? []) -> pluck('revenue')) !!},
             borderColor: '#28a745',
             backgroundColor: 'rgba(81, 203, 206, 0.1)',
@@ -545,7 +545,7 @@
                     beginAtZero: true,
                         ticks: {
                         callback: function(value) {
-                            return '₦' + value.toLocaleString();
+                            return window.currencySymbol + value.toLocaleString();
                         }
                     }
                 }
@@ -559,7 +559,7 @@
             data: {
                 labels: {!! json_encode(collect($paymentHistory ?? []) -> pluck('month'))!!},
         datasets: [{
-            label: 'Payments (₦)',
+            label: 'Payments (' + window.currencySymbol + ')',
             data: {!! json_encode(collect($paymentHistory ?? []) -> pluck('amount')) !!},
             backgroundColor: 'rgba(81, 203, 206, 0.8)',
             borderColor: '#28a745',
@@ -578,7 +578,7 @@
                     beginAtZero: true,
                         ticks: {
                         callback: function(value) {
-                            return '₦' + value.toLocaleString();
+                            return window.currencySymbol + value.toLocaleString();
                         }
                     }
                 }

@@ -218,8 +218,13 @@
                         </div>
                         <div class="col-7 col-md-8">
                             <div class="numbers">
-                                <p class="card-category">Monthly Revenue</p>
-                                <p class="card-title">₦{{ number_format($propertyStats['monthly_revenue'], 0) }}</p>
+                                @if(isset($propertyStats['monthly_revenue']) && is_array($propertyStats['monthly_revenue']))
+                                    @foreach($propertyStats['monthly_revenue'] as $code => $data)
+                                        <p class="card-title" style="font-size: 1.1rem; margin-bottom:0;">{{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
+                                    @endforeach
+                                @else
+                                    <p class="card-title">{{ format_money(0) }}</p>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -238,8 +243,13 @@
                         </div>
                         <div class="col-7 col-md-8">
                             <div class="numbers">
-                                <p class="card-category">Total Revenue</p>
-                                <p class="card-title">₦{{ number_format($propertyStats['total_revenue'], 0) }}</p>
+                                @if(isset($propertyStats['total_revenue']) && is_array($propertyStats['total_revenue']))
+                                    @foreach($propertyStats['total_revenue'] as $code => $data)
+                                        <p class="card-title" style="font-size: 1.1rem; margin-bottom:0;">{{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
+                                    @endforeach
+                                @else
+                                    <p class="card-title">{{ format_money(0) }}</p>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -295,7 +305,7 @@
                                         <span class="text-muted">Vacant</span>
                                         @endif
                                     </td>
-                                    <td>₦{{ number_format($apartment->amount ?? 0, 2) }}</td>
+                                    <td>{{ $apartment->getFormattedAmount() }}</td>
                                     <td>
                                         @if($apartment->occupied)
                                         <span class="badge badge-success">Occupied</span>
@@ -346,7 +356,7 @@
                         class="payment-item mb-3 p-2 border-left border-{{ $payment->status === 'completed' ? 'success' : ($payment->status === 'pending' ? 'warning' : 'danger') }}">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <strong>₦{{ number_format($payment->amount, 2) }}</strong><br>
+                                <strong>{{ format_money($payment->amount, ($payment->currency->code ?? null)) }}</strong><br>
                                 <small class="text-muted">
                                     {{ $payment->apartment->apartment_id ?? 'N/A' }}
                                     @if($payment->tenant)

@@ -51,9 +51,7 @@
                                             <div class="col-7">
                                                 <div class="numbers">
                                                     <p class="card-category">Total Paid</p>
-                                                    <p class="card-title">₦{{ number_format(isset($payments) ?
-                                                        $payments->where('status', 'completed')->sum('amount') : 0, 2)
-                                                        }}</p>
+                                                    <p class="card-title">{{ format_money(isset($payments) ? $payments->where('status', 'completed')->sum('amount') : 0) }}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -152,7 +150,7 @@
                                                     <tr>
                                                         <td>{{ $recurring->tenant->first_name }} {{
                                                             $recurring->tenant->last_name }}</td>
-                                                        <td>₦{{ number_format($recurring->amount, 2) }}</td>
+                                                        <td>{{ format_money($recurring->amount) }}</td>
                                                         <td><span class="badge badge-info">{{
                                                                 ucfirst($recurring->frequency) }}</span></td>
                                                         <td>
@@ -289,7 +287,7 @@
                                                     <tr>
                                                         <td>{{ $paused->tenant->first_name }} {{
                                                             $paused->tenant->last_name }}</td>
-                                                        <td>₦{{ number_format($paused->amount, 2) }}</td>
+                                                        <td>{{ format_money($paused->amount) }}</td>
                                                         <td><span class="badge badge-info">{{
                                                                 ucfirst($paused->frequency) }}</span></td>
                                                         <td>{{ $paused->paused_at->format('M d, Y') }}</td>
@@ -352,7 +350,7 @@
                                                         <td>{{ $payment->payment_reference }}</td>
                                                         <td>{{ $payment->tenant->first_name }} {{
                                                             $payment->tenant->last_name }}</td>
-                                                        <td>₦{{ number_format($payment->amount, 2) }}</td>
+                                                        <td>{{ format_money($payment->amount) }}</td>
                                                         <td>
                                                             @if($payment->isRecurring())
                                                             <span class="badge badge-info">Recurring</span>

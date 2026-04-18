@@ -294,7 +294,7 @@ function updatePreview() {
         <div class="small">
             <div class="d-flex justify-content-between mb-1">
                 <span><strong>Total Commission:</strong></span>
-                <span><strong>₦${totalCommission.toLocaleString()}</strong></span>
+                <span><strong>${window.currencySymbol}${totalCommission.toLocaleString()}</strong></span>
             </div>
     `;
     
@@ -302,7 +302,7 @@ function updatePreview() {
         html += `
             <div class="d-flex justify-content-between">
                 <span>Super Marketer:</span>
-                <span>₦${superMarketerCommission.toLocaleString()}</span>
+                <span>${window.currencySymbol}${superMarketerCommission.toLocaleString()}</span>
             </div>
         `;
     }
@@ -310,7 +310,7 @@ function updatePreview() {
     html += `
             <div class="d-flex justify-content-between">
                 <span>Marketer:</span>
-                <span>₦${marketerCommission.toLocaleString()}</span>
+                <span>${window.currencySymbol}${marketerCommission.toLocaleString()}</span>
             </div>
     `;
     
@@ -318,7 +318,7 @@ function updatePreview() {
         html += `
             <div class="d-flex justify-content-between">
                 <span>Regional Manager:</span>
-                <span>₦${regionalManagerCommission.toLocaleString()}</span>
+                <span>${window.currencySymbol}${regionalManagerCommission.toLocaleString()}</span>
             </div>
         `;
     }
@@ -326,7 +326,7 @@ function updatePreview() {
     html += `
             <div class="d-flex justify-content-between">
                 <span>Company:</span>
-                <span>₦${companyCommission.toLocaleString()}</span>
+                <span>${window.currencySymbol}${companyCommission.toLocaleString()}</span>
             </div>
         </div>
     `;

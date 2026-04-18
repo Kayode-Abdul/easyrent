@@ -28,10 +28,13 @@ class CheckApproved
             return response()->view('pending-approval');
         }
 
-        // Check Marketer status
+        // Check Marketer status - Relaxed to allow pending marketers to see dashboard
         if ($user->isMarketer() && session('dashboard_mode') === 'marketer' && $user->marketer_status === 'pending') {
-            return response()->view('pending-approval');
+            // Allow access even if pending, or you could return $next($request) here explicitly
+            // For now, we just remove the block.
+            return $next($request);
         }
+
 
         return $next($request);
     }

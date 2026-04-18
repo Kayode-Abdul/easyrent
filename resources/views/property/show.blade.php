@@ -395,7 +395,7 @@ $types = [
                                         }}</td>
                                     <td>{{ $apartment->range_end ? $apartment->range_end->format('M d, Y') : 'N/A' }}
                                     </td>
-                                    <td>₦{{ number_format($apartment->amount ?? 0) }}</td>
+                                    <td>{{ $apartment->getFormattedAmount() }}</td>
                                     <td>
                                         <span class="badge bg-{{ $statusClass }} text-white px-2 py-1">
                                             {{ $enhancedStatus['message'] }}
@@ -570,7 +570,7 @@ $types = [
                             <label>Price</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text">₦</span>
+                                    <span class="input-group-text">{{ $property->currency->symbol ?? format_money(0)->getSymbol() }}</span>
                                 </div>
                                 <input type="text" class="form-control" name="amount" id="apartmentPriceInput"
                                     placeholder="Enter rental price" required>

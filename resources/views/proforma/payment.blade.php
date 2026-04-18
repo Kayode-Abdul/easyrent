@@ -12,7 +12,7 @@
                     <div class="alert alert-info">
                         <p><strong>Property:</strong> {{ $proforma->apartment->property->name ?? 'Property' }}</p>
                         <p><strong>Apartment:</strong> {{ $proforma->apartment->name ?? 'Apartment' }}</p>
-                        <p><strong>Amount:</strong> ₦{{ number_format($proforma->total, 2) }}</p>
+                        <p><strong>Amount:</strong> {{ format_money($proforma->total, $proforma->currency) }}</p>
                         <p><strong>Invoice Number:</strong> {{ $proforma->transaction_id }}</p>
                         @if(isset($proforma->status))
                         <p><strong>Status:</strong>
@@ -31,7 +31,7 @@
                         <input type="hidden" name="amount" value="{{ $proforma->total * 100 }}"> {{-- Amount in kobo
                         --}}
                         <input type="hidden" name="quantity" value="1">
-                        <input type="hidden" name="currency" value="NGN">
+                        <input type="hidden" name="currency" value="{{ $proforma->currency->code ?? 'NGN' }}">
                         <input type="hidden" name="metadata" value="{{ json_encode([
                                 'proforma_id' => $proforma->id,
                                 'tenant_id' => $proforma->tenant_id,

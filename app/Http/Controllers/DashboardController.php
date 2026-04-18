@@ -48,10 +48,14 @@ class DashboardController extends Controller
 
         // Mode-based redirects/views
         // 1. Admin Mode wins if active
+        // Activity Pagination Setup
+        $activityPage = request()->get('page', 1);
+
+        // 1. Admin Mode wins if active
         if ($isAdmin && session('admin_dashboard_mode') === 'admin') {
             $stats = $this->getAdminStats();
             $chartData = $this->getAdminChartData();
-            $recentActivities = $this->getAdminActivities();
+            $recentActivities = $this->getAdminActivities($activityPage);
             return view('admin-dashboard', compact('stats', 'chartData', 'recentActivities', 'user'));
         }
 
@@ -60,10 +64,13 @@ class DashboardController extends Controller
             return redirect()->route('artisan.dashboard');
         }
 
-        // 3. Property Manager Mode wins if active
-        if ($user->isAgent() && session('dashboard_mode') === 'property_manager') {
-            return redirect()->route('property-manager.dashboard');
+        // 3. Marketer Mode wins if active
+        if ($user->isMarketer() && session('dashboard_mode') === 'marketer') {
+            return redirect()->route('marketer.dashboard');
         }
+
+        // 4. Property Manager Mode wins if active
+
 
         // Fallback: Personal Dashboard (Landlord/Tenant view)
         $stats = [];
@@ -74,15 +81,38 @@ class DashboardController extends Controller
         if ($user->isLandlord()) {
             $stats = $this->getLandlordStats($userId);
             $chartData = $this->getLandlordChartData($userId);
-            $recentActivities = $this->getLandlordActivities($userId);
+            $recentActivities = $this->getLandlordActivities($userId, $activityPage);
         }
         else {
             $stats = $this->getTenantStats($userId);
             $chartData = $this->getTenantChartData($userId);
-            $recentActivities = $this->getTenantActivities($userId);
+            $recentActivities = $this->getTenantActivities($userId, $activityPage);
         }
 
-        return view('dash', compact('stats', 'chartData', 'recentActivities', 'greeting'));
+        // Referral stats for the widget
+        $referralData = $this->getReferralDashboardData($user);
+        $hasReferrals = $referralData['has_referrals'];
+
+        return view('dash', compact('stats', 'chartData', 'recentActivities', 'greeting', 'hasReferrals', 'referralData'));
+    }
+
+    /**
+     * Get basic referral data for the dashboard widget
+     */
+    private function getReferralDashboardData($user)
+    {
+        return Cache::remember('user_referral_data_' . $user->user_id, now()->addMinutes(10), function () use ($user) {
+            $referralsCount = $user->referrals()->count();
+            
+            return [
+                'has_referrals' => $referralsCount > 0,
+                'total_referrals' => $referralsCount,
+                'pending_commissions' => $user->referralRewards()->where('status', 'approved')->sum('amount'),
+                'total_earned' => $user->referralRewards()->where('status', 'paid')->sum('amount'),
+                'referral_link' => $user->getReferralLink(),
+                'referral_code' => $user->referral_code
+            ];
+        });
     }
 
     private function getGreeting()
@@ -99,7 +129,13 @@ class DashboardController extends Controller
                 // Basic Stats
                 'total_users' => User::count(),
                 'total_properties' => Property::count(),
-                'total_revenue' => Payment::whereIn('status', ['completed', 'success'])->sum('amount'),
+                'total_revenue_by_currency' => Payment::whereIn('status', ['completed', 'success'])
+                    ->select('currency_id', DB::raw('SUM(amount) as total'))
+                    ->groupBy('currency_id')
+                    ->with('currency')
+                    ->get()
+                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->toArray(),
                 'pending_payments' => Payment::where('status', 'pending')->count(),
 
                 // User Management Stats
@@ -121,9 +157,30 @@ class DashboardController extends Controller
                 'total_apartments' => Apartment::count(),
 
                 // Financial Overview
-                'revenue_today' => Payment::where('status', 'completed')->whereDate('created_at', Carbon::today())->sum('amount'),
-                'revenue_this_month' => Payment::where('status', 'completed')->whereMonth('created_at', Carbon::now()->month)->sum('amount'),
-                'revenue_last_month' => Payment::where('status', 'completed')->whereMonth('created_at', Carbon::now()->subMonth()->month)->sum('amount'),
+                'revenue_today_by_currency' => Payment::where('status', 'completed')
+                    ->whereDate('created_at', Carbon::today())
+                    ->select('currency_id', DB::raw('SUM(amount) as total'))
+                    ->groupBy('currency_id')
+                    ->with('currency')
+                    ->get()
+                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->toArray(),
+                'revenue_this_month_by_currency' => Payment::where('status', 'completed')
+                    ->whereMonth('created_at', Carbon::now()->month)
+                    ->select('currency_id', DB::raw('SUM(amount) as total'))
+                    ->groupBy('currency_id')
+                    ->with('currency')
+                    ->get()
+                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->toArray(),
+                'revenue_last_month_by_currency' => Payment::where('status', 'completed')
+                    ->whereMonth('created_at', Carbon::now()->subMonth()->month)
+                    ->select('currency_id', DB::raw('SUM(amount) as total'))
+                    ->groupBy('currency_id')
+                    ->with('currency')
+                    ->get()
+                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->toArray(),
                 'failed_payments' => Payment::where('status', 'failed')->count(),
                 'average_transaction_value' => Payment::where('status', 'completed')->avg('amount'),
 
@@ -158,10 +215,15 @@ class DashboardController extends Controller
             return [
                 'my_properties' => $properties->count(),
                 'occupied_apartments' => $apartments->where('occupied', true)->count(),
-                'monthly_revenue' => Payment::where('landlord_id', $userId)
-                ->where('status', 'completed')
-                ->whereMonth('created_at', Carbon::now()->month)
-                ->sum('amount'),
+                'monthly_revenue_by_currency' => Payment::where('landlord_id', $userId)
+                    ->where('status', 'completed')
+                    ->whereMonth('created_at', Carbon::now()->month)
+                    ->select('currency_id', DB::raw('SUM(amount) as total'))
+                    ->groupBy('currency_id')
+                    ->with('currency')
+                    ->get()
+                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->toArray(),
             ];
         });
     }
@@ -171,10 +233,15 @@ class DashboardController extends Controller
         return Cache::remember('tenant_stats_' . $userId, now()->addMinutes(10), function () use ($userId) {
             return [
                 'my_rentals' => Apartment::where('tenant_id', $userId)->where('occupied', true)->count(),
-                'payments_this_month' => Payment::where('tenant_id', $userId)
-                ->where('status', 'completed')
-                ->whereMonth('created_at', Carbon::now()->month)
-                ->sum('amount'),
+                'payments_this_month_by_currency' => Payment::where('tenant_id', $userId)
+                    ->where('status', 'completed')
+                    ->whereMonth('created_at', Carbon::now()->month)
+                    ->select('currency_id', DB::raw('SUM(amount) as total'))
+                    ->groupBy('currency_id')
+                    ->with('currency')
+                    ->get()
+                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->toArray(),
                 'my_pending_payments' => Payment::where('tenant_id', $userId)
                 ->where('status', 'pending')
                 ->count(),
@@ -233,7 +300,7 @@ class DashboardController extends Controller
         $newUsersThisMonth = User::whereMonth('created_at', Carbon::now()->month)->count();
         $marketingSpend = 5000; // Placeholder - would come from marketing data
 
-        return $newUsersThisMonth > 0 ? '$' . round($marketingSpend / $newUsersThisMonth, 2) : '$0';
+        return format_money($marketingSpend / ($newUsersThisMonth ?: 1));
     }
 
     private function calculateLTV()
@@ -244,7 +311,7 @@ class DashboardController extends Controller
             ->avg('amount') ?? 0;
         $avgLifespan = 12; // months - would be calculated from user data
 
-        return '$' . round($avgMonthlyRevenue * $avgLifespan, 2);
+        return format_money($avgMonthlyRevenue * $avgLifespan);
     }
 
     private function getAdminChartData()
@@ -448,12 +515,12 @@ class DashboardController extends Controller
         });
     }
 
-    private function getAdminActivities()
+    private function getAdminActivities($page = 1, $perPage = 10)
     {
         $activities = collect();
 
         // Recent user registrations
-        User::latest()->limit(5)->get()->each(function ($user) use ($activities) {
+        User::latest()->take(50)->get()->each(function ($user) use ($activities) {
             $userType = $user->admin == 1 ? 'admin' : ($user->role == 2 ? 'landlord' : ($user->role == 3 ? 'tenant' : 'agent'));
             $activities->push([
                 'type' => 'user_registration',
@@ -461,105 +528,128 @@ class DashboardController extends Controller
                 'color' => 'text-success',
                 'title' => 'New User Registration',
                 'description' => $user->first_name . ' ' . $user->last_name . ' joined as ' . $userType,
-                'time' => $user->created_at->diffForHumans(),
+                'time' => $user->created_at,
+                'time_for_humans' => $user->created_at->diffForHumans(),
                 'link' => '/admin/users',
             ]);
         });
 
         // Recent property additions
-        Property::latest()->limit(5)->get()->each(function ($property) use ($activities) {
+        Property::latest()->take(50)->get()->each(function ($property) use ($activities) {
             $activities->push([
                 'type' => 'property_added',
                 'icon' => 'nc-icon nc-istanbul',
                 'color' => 'text-info',
                 'title' => 'New Property Added',
                 'description' => 'Property at ' . $property->address . ', ' . $property->state,
-                'time' => $property->created_at->diffForHumans(),
+                'time' => $property->created_at,
+                'time_for_humans' => $property->created_at->diffForHumans(),
                 'link' => '/properties/' . $property->property_id,
             ]);
         });
 
         // Recent payments
-        Payment::where('status', 'completed')->latest()->limit(5)->get()->each(function ($payment) use ($activities) {
+        Payment::where('status', 'completed')->with('currency')->latest()->take(50)->get()->each(function ($payment) use ($activities) {
+            $currencySymbol = $payment->currency->symbol ?? '₦';
             $activities->push([
                 'type' => 'payment_completed',
                 'icon' => 'nc-icon nc-money-coins',
                 'color' => 'text-success',
                 'title' => 'Payment Completed',
-                'description' => 'Payment of $' . number_format($payment->amount, 2) . ' received',
-                'time' => $payment->created_at->diffForHumans(),
+                'description' => 'Payment of ' . $currencySymbol . number_format($payment->amount, 2) . ' received',
+                'time' => $payment->created_at,
+                'time_for_humans' => $payment->created_at->diffForHumans(),
                 'link' => '/payments/' . $payment->id,
             ]);
         });
 
-        // System alerts
-        $activities->push([
-            'type' => 'system_alert',
-            'icon' => 'nc-icon nc-bell-55',
-            'color' => 'text-warning',
-            'title' => 'System Alert',
-            'description' => 'Database backup completed successfully',
-            'time' => '2 hours ago',
-            'link' => '/admin/system-health',
-        ]);
-
-        return $activities->sortByDesc('time')->take(20)->values();
+        $sortedActivities = $activities->sortByDesc('time')->values();
+        
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $sortedActivities->forPage($page, $perPage),
+            $sortedActivities->count(),
+            $perPage,
+            $page,
+            ['path' => url()->current(), 'query' => request()->query()]
+        );
     }
 
-    private function getLandlordActivities($userId)
+    private function getLandlordActivities($userId, $page = 1, $perPage = 5)
     {
-        $activities = [];
+        $activities = collect();
 
         // Recent payments for this landlord
-        $recentPayments = Payment::where('landlord_id', $userId)
+        Payment::where('landlord_id', $userId)
             ->where('status', 'completed')
             ->latest()
-            ->take(3)
-            ->get();
+            ->take(20)
+            ->get()
+            ->each(function ($payment) use ($activities) {
+                $currencySymbol = $payment->currency->symbol ?? '₦';
+                $activities->push([
+                    'title' => 'Payment Received',
+                    'description' => "Received {$currencySymbol}" . number_format($payment->amount, 2) . " for property rent",
+                    'time' => $payment->created_at,
+                    'time_for_humans' => $payment->created_at->diffForHumans(),
+                    'link' => '/payments/' . $payment->id,
+                ]);
+            });
 
-        foreach ($recentPayments as $payment) {
-            $activities[] = [
-                'title' => 'Payment Received',
-                'description' => "Received ₦" . number_format($payment->amount, 2) . " for property rent",
-                'time' => $payment->created_at->diffForHumans(),
-            ];
-        }
-        return collect($activities)->sortByDesc('time')->take(5)->values()->all();
+        $sortedActivities = $activities->sortByDesc('time')->values();
+
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $sortedActivities->forPage($page, $perPage),
+            $sortedActivities->count(),
+            $perPage,
+            $page,
+            ['path' => url()->current(), 'query' => request()->query()]
+        );
     }
 
-    private function getTenantActivities($userId)
+    private function getTenantActivities($userId, $page = 1, $perPage = 5)
     {
-        $activities = [];
+        $activities = collect();
 
         // Recent payments by this tenant
-        $recentPayments = Payment::where('tenant_id', $userId)
+        Payment::where('tenant_id', $userId)
             ->latest()
-            ->take(3)
-            ->get();
-
-        foreach ($recentPayments as $payment) {
-            $activities[] = [
-                'title' => 'Payment Made',
-                'description' => "Made payment of ₦" . number_format($payment->amount, 2) . " - Status: {$payment->status}",
-                'time' => $payment->created_at->diffForHumans(),
-            ];
-        }
+            ->take(20)
+            ->get()
+            ->each(function ($payment) use ($activities) {
+                $currencySymbol = $payment->currency->symbol ?? '₦';
+                $activities->push([
+                    'title' => 'Payment Made',
+                    'description' => "Made payment of {$currencySymbol}" . number_format($payment->amount, 2) . " - Status: {$payment->status}",
+                    'time' => $payment->created_at,
+                    'time_for_humans' => $payment->created_at->diffForHumans(),
+                    'link' => '/payments/' . $payment->id,
+                ]);
+            });
 
         // Recent messages
-        $recentMessages = Message::where('receiver_id', $userId)
+        Message::where('receiver_id', $userId)
             ->latest()
-            ->take(2)
-            ->get();
+            ->take(10)
+            ->get()
+            ->each(function ($message) use ($activities) {
+                $activities->push([
+                    'title' => 'New Message',
+                    'description' => "Received message: " . substr($message->body ?? $message->message, 0, 50) . "...",
+                    'time' => $message->created_at,
+                    'time_for_humans' => $message->created_at->diffForHumans(),
+                    'link' => '/messages',
+                ]);
+            });
 
-        foreach ($recentMessages as $message) {
-            $activities[] = [
-                'title' => 'New Message',
-                'description' => "Received message: " . substr($message->body ?? $message->message, 0, 50) . "...",
-                'time' => $message->created_at->diffForHumans(),
-            ];
-        }
+        $sortedActivities = $activities->sortByDesc('time')->values();
 
-        return collect($activities)->sortByDesc('time')->take(5)->values()->all();
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $sortedActivities->forPage($page, $perPage),
+            $sortedActivities->count(),
+            $perPage,
+            $page,
+            ['path' => url()->current(), 'query' => request()->query()]
+        );
     }
 
     /**
@@ -801,7 +891,7 @@ class DashboardController extends Controller
      */
     private function getCompanyCommissionRevenue($period = 'total')
     {
-        $query = Payment::where('status', 'completed');
+        $query = Payment::where('status', 'completed')->with('currency');
 
         switch ($period) {
             case 'today':
@@ -817,20 +907,28 @@ class DashboardController extends Controller
                 break;
             case 'total':
             default:
-                // No additional filter for total
                 break;
         }
 
         $payments = $query->get();
-        $totalCommission = 0;
+        $commissionsByCurrency = [];
 
         foreach ($payments as $payment) {
-            // Calculate commission based on property management status and hierarchy
+            $currencyCode = $payment->currency->code ?? 'NGN';
+            $currencySymbol = $payment->currency->symbol ?? '₦';
+            
+            if (!isset($commissionsByCurrency[$currencyCode])) {
+                $commissionsByCurrency[$currencyCode] = [
+                    'amount' => 0,
+                    'symbol' => $currencySymbol
+                ];
+            }
+
             $commissionAmount = $this->calculatePaymentCommission($payment);
-            $totalCommission += $commissionAmount['company_commission'];
+            $commissionsByCurrency[$currencyCode]['amount'] += $commissionAmount['company_commission'];
         }
 
-        return $totalCommission;
+        return $commissionsByCurrency;
     }
 
     /**
@@ -934,6 +1032,7 @@ class DashboardController extends Controller
         $lastMonthPayments = Payment::where('status', 'completed')
             ->whereMonth('created_at', $lastMonth->month)
             ->whereYear('created_at', $lastMonth->year)
+            ->with('currency')
             ->get();
 
         $thisMonthBreakdown = $this->calculateTotalCommissionBreakdown($thisMonthPayments);
@@ -942,14 +1041,7 @@ class DashboardController extends Controller
         return [
             'this_month' => $thisMonthBreakdown,
             'last_month' => $lastMonthBreakdown,
-            'growth' => [
-                'company_commission' => $lastMonthBreakdown['company_commission'] > 0
-                ? (($thisMonthBreakdown['company_commission'] - $lastMonthBreakdown['company_commission']) / $lastMonthBreakdown['company_commission']) * 100
-                : 0,
-                'total_commission' => $lastMonthBreakdown['total_commission'] > 0
-                ? (($thisMonthBreakdown['total_commission'] - $lastMonthBreakdown['total_commission']) / $lastMonthBreakdown['total_commission']) * 100
-                : 0
-            ]
+            // Growth is trickier now with currencies, skipping for now or should be per currency
         ];
     }
 
@@ -958,28 +1050,37 @@ class DashboardController extends Controller
      */
     private function calculateTotalCommissionBreakdown($payments)
     {
-        $breakdown = [
-            'super_marketer_commission' => 0,
-            'marketer_commission' => 0,
-            'regional_manager_commission' => 0,
-            'company_commission' => 0,
-            'total_commission' => 0,
-            'total_rent' => 0,
-            'payment_count' => $payments->count()
-        ];
+        $breakdownByCurrency = [];
 
         foreach ($payments as $payment) {
+            $currencyCode = $payment->currency->code ?? 'NGN';
+            $currencySymbol = $payment->currency->symbol ?? '₦';
+
+            if (!isset($breakdownByCurrency[$currencyCode])) {
+                $breakdownByCurrency[$currencyCode] = [
+                    'super_marketer_commission' => 0,
+                    'marketer_commission' => 0,
+                    'regional_manager_commission' => 0,
+                    'company_commission' => 0,
+                    'total_commission' => 0,
+                    'total_rent' => 0,
+                    'payment_count' => 0,
+                    'symbol' => $currencySymbol
+                ];
+            }
+
             $paymentCommission = $this->calculatePaymentCommission($payment);
 
-            $breakdown['super_marketer_commission'] += $paymentCommission['super_marketer_commission'];
-            $breakdown['marketer_commission'] += $paymentCommission['marketer_commission'];
-            $breakdown['regional_manager_commission'] += $paymentCommission['regional_manager_commission'];
-            $breakdown['company_commission'] += $paymentCommission['company_commission'];
-            $breakdown['total_commission'] += $paymentCommission['total_commission'];
-            $breakdown['total_rent'] += $payment->amount;
+            $breakdownByCurrency[$currencyCode]['super_marketer_commission'] += $paymentCommission['super_marketer_commission'];
+            $breakdownByCurrency[$currencyCode]['marketer_commission'] += $paymentCommission['marketer_commission'];
+            $breakdownByCurrency[$currencyCode]['regional_manager_commission'] += $paymentCommission['regional_manager_commission'];
+            $breakdownByCurrency[$currencyCode]['company_commission'] += $paymentCommission['company_commission'];
+            $breakdownByCurrency[$currencyCode]['total_commission'] += $paymentCommission['total_commission'];
+            $breakdownByCurrency[$currencyCode]['total_rent'] += $payment->amount;
+            $breakdownByCurrency[$currencyCode]['payment_count']++;
         }
 
-        return $breakdown;
+        return $breakdownByCurrency;
     }
 
     /**

@@ -25,7 +25,7 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <strong>Amount Paid:</strong><br>
-                                <span class="text-success font-weight-bold">₦{{ number_format($payment->amount, 2) }}</span>
+                                <span class="text-success font-weight-bold">{{ format_money($payment->amount, $payment->currency) }}</span>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <strong>Duration:</strong><br>
@@ -49,7 +49,7 @@
                             </div>
                             <div class="col-md-6 mb-2">
                                 <strong>Monthly Rent:</strong><br>
-                                ₦{{ number_format($payment->apartment->amount, 2) }}
+                                {{ $payment->apartment->getFormattedAmount() }}
                             </div>
                             @if($payment->apartment->property)
                             <div class="col-12 mb-2">

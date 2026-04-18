@@ -13,9 +13,9 @@ Great news! You have received a rent payment from **{{ $payment->tenant->first_n
 - Duration: {{ $payment->duration }} {{ Str::plural('Month', $payment->duration) }}
 
 **Financial Breakdown:**
-- Gross Amount: ₦{{ number_format($payment->amount, 2) }}
-- Platform Fee (2.5%): ₦{{ number_format($commissionAmount, 2) }}
-- **Net Amount to You: ₦{{ number_format($netAmount, 2) }}**
+- Gross Amount: {{ format_money($payment->amount, $payment->currency) }}
+- Platform Fee (2.5%): {{ format_money($commissionAmount, $payment->currency) }}
+- **Net Amount to You: {{ format_money($netAmount, $payment->currency) }}**
 
 **Transaction Details:**
 - Transaction ID: {{ $payment->transaction_id }}

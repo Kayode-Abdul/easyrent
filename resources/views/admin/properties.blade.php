@@ -287,8 +287,7 @@
                                             <br>
                                             <small class="text-muted">ID: {{ $property->property_id }}</small>
                                             @if($property->price)
-                                            <br><small class="text-success">₦{{ number_format($property->price)
-                                                }}</small>
+                                            <br><small class="text-success">{{ format_money($property->price, ($property->currency->code ?? null)) }}</small>
                                             @endif
                                         </div>
                                     </td>

@@ -97,7 +97,7 @@
                         <div class="col-md-4">
                             <label class="form-label">Commission Calculator</label>
                             <div class="input-group">
-                                <span class="input-group-text">₦</span>
+                                <span class="input-group-text">${window.currencySymbol}</span>
                                 <input type="number" class="form-control" id="calculatorRent" placeholder="Enter rent amount" value="100000">
                                 <button class="btn btn-outline-info" onclick="calculateForRegion()">
                                     <i class="fas fa-calculator"></i>
@@ -492,9 +492,9 @@ function calculateForRegion() {
             const company = parseFloat(document.querySelector('[name="unmanaged_without_company_rate"]').value) || 0;
             
             breakdown = `
-                <div>Marketer: ₦${((rentAmount * marketer) / 100).toLocaleString()}</div>
-                <div>Regional Mgr: ₦${((rentAmount * regional) / 100).toLocaleString()}</div>
-                <div>Company: ₦${((rentAmount * company) / 100).toLocaleString()}</div>
+                <div>Marketer: ${window.currencySymbol}${((rentAmount * marketer) / 100).toLocaleString()}</div>
+                <div>Regional Mgr: ${window.currencySymbol}${((rentAmount * regional) / 100).toLocaleString()}</div>
+                <div>Company: ${window.currencySymbol}${((rentAmount * company) / 100).toLocaleString()}</div>
             `;
             total = marketer + regional + company;
         } else if (scenario.prefix === 'unmanaged_with') {
@@ -504,10 +504,10 @@ function calculateForRegion() {
             const company = parseFloat(document.querySelector('[name="unmanaged_with_company_rate"]').value) || 0;
             
             breakdown = `
-                <div>Super Marketer: ₦${((rentAmount * super_m) / 100).toLocaleString()}</div>
-                <div>Marketer: ₦${((rentAmount * marketer) / 100).toLocaleString()}</div>
-                <div>Regional Mgr: ₦${((rentAmount * regional) / 100).toLocaleString()}</div>
-                <div>Company: ₦${((rentAmount * company) / 100).toLocaleString()}</div>
+                <div>Super Marketer: ${window.currencySymbol}${((rentAmount * super_m) / 100).toLocaleString()}</div>
+                <div>Marketer: ${window.currencySymbol}${((rentAmount * marketer) / 100).toLocaleString()}</div>
+                <div>Regional Mgr: ${window.currencySymbol}${((rentAmount * regional) / 100).toLocaleString()}</div>
+                <div>Company: ${window.currencySymbol}${((rentAmount * company) / 100).toLocaleString()}</div>
             `;
             total = super_m + marketer + regional + company;
         } else if (scenario.prefix === 'managed_without') {
@@ -516,9 +516,9 @@ function calculateForRegion() {
             const company = parseFloat(document.querySelector('[name="managed_without_company_rate"]').value) || 0;
             
             breakdown = `
-                <div>Marketer: ₦${((rentAmount * marketer) / 100).toLocaleString()}</div>
-                <div>Regional Mgr: ₦${((rentAmount * regional) / 100).toLocaleString()}</div>
-                <div>Company: ₦${((rentAmount * company) / 100).toLocaleString()}</div>
+                <div>Marketer: ${window.currencySymbol}${((rentAmount * marketer) / 100).toLocaleString()}</div>
+                <div>Regional Mgr: ${window.currencySymbol}${((rentAmount * regional) / 100).toLocaleString()}</div>
+                <div>Company: ${window.currencySymbol}${((rentAmount * company) / 100).toLocaleString()}</div>
             `;
             total = marketer + regional + company;
         } else if (scenario.prefix === 'managed_with') {
@@ -528,10 +528,10 @@ function calculateForRegion() {
             const company = parseFloat(document.querySelector('[name="managed_with_company_rate"]').value) || 0;
             
             breakdown = `
-                <div>Super Marketer: ₦${((rentAmount * super_m) / 100).toLocaleString()}</div>
-                <div>Marketer: ₦${((rentAmount * marketer) / 100).toLocaleString()}</div>
-                <div>Regional Mgr: ₦${((rentAmount * regional) / 100).toLocaleString()}</div>
-                <div>Company: ₦${((rentAmount * company) / 100).toLocaleString()}</div>
+                <div>Super Marketer: ${window.currencySymbol}${((rentAmount * super_m) / 100).toLocaleString()}</div>
+                <div>Marketer: ${window.currencySymbol}${((rentAmount * marketer) / 100).toLocaleString()}</div>
+                <div>Regional Mgr: ${window.currencySymbol}${((rentAmount * regional) / 100).toLocaleString()}</div>
+                <div>Company: ${window.currencySymbol}${((rentAmount * company) / 100).toLocaleString()}</div>
             `;
             total = super_m + marketer + regional + company;
         }
@@ -543,7 +543,7 @@ function calculateForRegion() {
                         <small class="fw-bold">${scenario.name}</small>
                     </div>
                     <div class="card-body">
-                        <div class="h5 text-primary">₦${((rentAmount * total) / 100).toLocaleString()}</div>
+                        <div class="h5 text-primary">${window.currencySymbol}${((rentAmount * total) / 100).toLocaleString()}</div>
                         <div class="small text-muted">${breakdown}</div>
                         <div class="small"><strong>Total: ${total.toFixed(3)}%</strong></div>
                     </div>

@@ -24,7 +24,7 @@
             
             <div class="info-box">
                 <p><strong>Payment Details:</strong></p>
-                <p>Amount: ₦{{ number_format($payment->amount, 2) }}</p>
+                <p>Amount: {{ format_money($payment->amount, $payment->currency) }}</p>
                 <p>Frequency: {{ ucfirst($payment->frequency) }}</p>
                 <p>Paused on: {{ $payment->paused_at->format('M d, Y') }}</p>
             </div>

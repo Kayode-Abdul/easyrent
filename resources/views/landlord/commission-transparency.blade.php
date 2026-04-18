@@ -36,7 +36,11 @@
                                         <div class="col-7 col-md-8">
                                             <div class="numbers">
                                                 <p class="card-category">Total Revenue</p>
-                                                <p class="card-title">₦{{ number_format($summary['total_revenue'] ?? 0, 2) }}</p>
+                                                @forelse($summary['stats'] ?? [] as $code => $stat)
+                                                    <p class="card-title">{{ format_money($stat['revenue'], $stat['symbol']) }}</p>
+                                                @empty
+                                                    <p class="card-title">{{ format_money(0) }}</p>
+                                                @endforelse
                                             </div>
                                         </div>
                                     </div>
@@ -55,7 +59,11 @@
                                         <div class="col-7 col-md-8">
                                             <div class="numbers">
                                                 <p class="card-category">Total Commission</p>
-                                                <p class="card-title">₦{{ number_format($summary['total_commission'] ?? 0, 2) }}</p>
+                                                @forelse($summary['stats'] ?? [] as $code => $stat)
+                                                    <p class="card-title">{{ format_money($stat['commission'], $stat['symbol']) }}</p>
+                                                @empty
+                                                    <p class="card-title">{{ format_money(0) }}</p>
+                                                @endforelse
                                             </div>
                                         </div>
                                     </div>
@@ -74,7 +82,11 @@
                                         <div class="col-7 col-md-8">
                                             <div class="numbers">
                                                 <p class="card-category">Net Income</p>
-                                                <p class="card-title">₦{{ number_format($summary['net_income'] ?? 0, 2) }}</p>
+                                                @forelse($summary['stats'] ?? [] as $code => $stat)
+                                                    <p class="card-title">{{ format_money($stat['net'], $stat['symbol']) }}</p>
+                                                @empty
+                                                    <p class="card-title">{{ format_money(0) }}</p>
+                                                @endforelse
                                             </div>
                                         </div>
                                     </div>
@@ -174,20 +186,20 @@
                                             </div>
                                         </td>
                                         <td>{{ $payment->tenant ? $payment->tenant->first_name . ' ' . $payment->tenant->last_name : 'N/A' }}</td>
-                                        <td>₦{{ number_format($payment->amount, 2) }}</td>
+                                        <td>{{ format_money($payment->amount, $payment->currency) }}</td>
                                         <td>
                                             @if($breakdown && !empty($breakdown['breakdown']))
                                                 <div class="commission-breakdown">
                                                     @foreach($breakdown['breakdown'] as $tier)
                                                         <div class="d-flex justify-content-between">
                                                             <span class="badge badge-info">{{ ucfirst(str_replace('_', ' ', $tier['tier'])) }}</span>
-                                                            <span>₦{{ number_format($tier['amount'], 2) }}</span>
+                                                            <span>{{ format_money($tier['amount'], $payment->currency) }}</span>
                                                         </div>
                                                     @endforeach
                                                     <hr class="my-1">
                                                     <div class="d-flex justify-content-between">
                                                         <strong>Total:</strong>
-                                                        <strong>₦{{ number_format($totalCommission, 2) }}</strong>
+                                                        <strong>{{ format_money($totalCommission, $payment->currency) }}</strong>
                                                     </div>
                                                 </div>
                                             @else
@@ -195,7 +207,7 @@
                                             @endif
                                         </td>
                                         <td class="text-success">
-                                            <strong>₦{{ number_format($netAmount, 2) }}</strong>
+                                            <strong>{{ format_money($netAmount, $payment->currency) }}</strong>
                                         </td>
                                         <td>
                                             <div class="btn-group">
@@ -319,7 +331,7 @@ function verifyTransaction(paymentId) {
                             <h6>Payment Details</h6>
                             <table class="table table-sm">
                                 <tr><td><strong>Payment ID:</strong></td><td>${response.payment.id}</td></tr>
-                                <tr><td><strong>Amount:</strong></td><td>₦${parseFloat(response.payment.amount).toLocaleString()}</td></tr>
+                                <tr><td><strong>Amount:</strong></td><td>${response.payment.currency_symbol}${parseFloat(response.payment.amount).toLocaleString()}</td></tr>
                                 <tr><td><strong>Property:</strong></td><td>${response.payment.property_address || 'N/A'}</td></tr>
                                 <tr><td><strong>Date:</strong></td><td>${response.payment.payment_date}</td></tr>
                             </table>
@@ -327,9 +339,9 @@ function verifyTransaction(paymentId) {
                         <div class="col-md-6">
                             <h6>Commission Calculation</h6>
                             <table class="table table-sm">
-                                <tr><td><strong>Total Commission:</strong></td><td class="text-warning">₦${parseFloat(response.commission_breakdown.total_commission || 0).toLocaleString()}</td></tr>
+                                <tr><td><strong>Total Commission:</strong></td><td class="text-warning">${response.payment.currency_symbol}${parseFloat(response.commission_breakdown.total_commission || 0).toLocaleString()}</td></tr>
                                 <tr><td><strong>Commission Rate:</strong></td><td>${parseFloat(response.commission_breakdown.commission_percentage || 0).toFixed(2)}%</td></tr>
-                                <tr><td><strong>Your Net Amount:</strong></td><td class="text-success">₦${parseFloat(response.commission_breakdown.net_amount || response.payment.amount).toLocaleString()}</td></tr>
+                                <tr><td><strong>Your Net Amount:</strong></td><td class="text-success">${response.payment.currency_symbol}${parseFloat(response.commission_breakdown.net_amount || response.payment.amount).toLocaleString()}</td></tr>
                             </table>
                         </div>
                     </div>
@@ -357,7 +369,7 @@ function verifyTransaction(paymentId) {
                             <tr>
                                 <td><span class="badge badge-primary">${item.tier.replace('_', ' ').toUpperCase()}</span></td>
                                 <td>${item.recipient ? item.recipient.name : 'System'}</td>
-                                <td>₦${parseFloat(item.amount).toLocaleString()}</td>
+                                <td>${response.payment.currency_symbol}${parseFloat(item.amount).toLocaleString()}</td>
                                 <td>${parseFloat(item.percentage).toFixed(2)}%</td>
                             </tr>
                         `;

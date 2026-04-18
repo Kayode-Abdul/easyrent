@@ -39,7 +39,7 @@
                         <li style="margin: 8px 0;"><span style="font-weight: bold; color: #555;">Property:</span> {{ $invitation->apartment->property->prop_name }}</li>
                         <li style="margin: 8px 0;"><span style="font-weight: bold; color: #555;">Address:</span> {{ $invitation->apartment->property->prop_address }}</li>
                         <li style="margin: 8px 0;"><span style="font-weight: bold; color: #555;">Apartment Type:</span> {{ $invitation->apartment->apartment_type }}</li>
-                        <li style="margin: 8px 0;"><span style="font-weight: bold; color: #555;">Monthly Rent:</span> ₦{{ number_format($invitation->apartment->amount) }}</li>
+                        <li style="margin: 8px 0;"><span style="font-weight: bold; color: #555;">Monthly Rent:</span> {{ $invitation->apartment->getFormattedAmount() }}</li>
                     </ul>
                 </div>
                 

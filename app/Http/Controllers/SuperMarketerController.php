@@ -401,7 +401,7 @@ class SuperMarketerController extends Controller
             ->map(function ($payment) {
                 return [
                     'type' => 'commission_payment',
-                    'message' => "Commission payment of ₦" . number_format($payment->amount, 2) . " received",
+                    'message' => "Commission payment of " . format_money($payment->amount) . " received",
                     'date' => $payment->created_at,
                     'data' => $payment
                 ];

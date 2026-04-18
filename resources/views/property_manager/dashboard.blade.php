@@ -127,8 +127,13 @@
                         </div>
                         <div class="col-7 col-md-8">
                             <div class="numbers">
-                                <p class="card-category">Monthly Revenue</p>
-                                <p class="card-title">₦{{ number_format($stats['monthly_revenue'], 0) }}</p>
+                                @if(isset($stats['monthly_revenue']) && is_array($stats['monthly_revenue']))
+                                    @foreach($stats['monthly_revenue'] as $code => $data)
+                                        <p class="card-title" style="font-size: 1.1rem; margin-bottom:0;">{{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
+                                    @endforeach
+                                @else
+                                    <p class="card-title">{{ format_money(0) }}</p>
+                                @endif
                             </div>
                         </div>
                     </div>

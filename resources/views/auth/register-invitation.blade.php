@@ -274,8 +274,7 @@
                                 <i class="fas fa-home fa-2x text-primary me-3"></i>
                                 <div>
                                     <h6 class="mb-1 text-primary">{{ $invitation->apartment->property->prop_name }}</h6>
-                                    <small class="text-muted">{{ $invitation->apartment->apartment_type }} • ₦{{
-                                        number_format($invitation->apartment->amount) }}/month</small>
+                                    <small class="text-muted">{{ $invitation->apartment->apartment_type }} • {{ $invitation->apartment->getFormattedAmount() }}/month</small>
                                 </div>
                             </div>
                             <div class="alert alert-success mb-0">

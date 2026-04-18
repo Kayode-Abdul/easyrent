@@ -17,6 +17,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\SettingsController;
 
 /*
  |--------------------------------------------------------------------------
@@ -174,7 +175,7 @@ Route::get('/api/session-status', function () {
 
 // Protected User Profile routes
 Route::middleware(['auth'])->group(function () {
-    Route::put('/user/{id}', [UserController::class , 'update']);
+    Route::put('/user/{id}', [UserController::class , 'update'])->name('user.update');
     Route::post('/user/{id}', [UserController::class , 'update']);
     Route::get('/dashboard/users/profile/{id}', [UserController::class , 'show'])->name('users.profile');
     Route::post('/dashboard/users/profile/{id}', [UserController::class , 'show'])->name('users.profile.update');
@@ -205,6 +206,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/messages/compose', [MessageController::class , 'compose'])->name('messages.compose');
     Route::post('/dashboard/messages/send', [MessageController::class , 'send'])->name('messages.send');
     Route::get('/dashboard/messages/{id}', [MessageController::class , 'show'])->name('messages.show');
+    
+    // Settings Hub Routes
+    Route::get('/dashboard/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/dashboard/settings/payouts', [SettingsController::class, 'updatePayouts'])->name('settings.payouts.update');
+    Route::post('/dashboard/settings/security', [SettingsController::class, 'updateSecurity'])->name('settings.security.update');
+    Route::post('/dashboard/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
 
     // User lookup API for tenant ID validation
     Route::get('/api/user/lookup/{userId}', [UserController::class , 'lookup'])->name('user.lookup');
@@ -212,6 +219,7 @@ Route::middleware(['auth'])->group(function () {
     // Payment routes
     Route::get('/dashboard/payments', [PaymentController::class , 'index'])->name('payments.index');
     Route::get('/dashboard/payments/analytics', [PaymentController::class , 'analytics'])->name('payments.analytics');
+    Route::get('/dashboard/payments/{transactionId}/receipt/download', [App\Http\Controllers\PaymentReceiptController::class, 'download'])->name('payment.receipt.download');
 
     // Enhanced rental calculation routes
     Route::post('/api/payment/calculate-rental', [PaymentController::class , 'calculateEnhancedRentalPayment'])->name('payment.calculate.rental');

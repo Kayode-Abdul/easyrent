@@ -5,7 +5,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class RegionalScope extends Model
 {
-    protected $fillable = ['user_id', 'scope_type', 'scope_value'];
+    protected $fillable = [
+        'user_id',
+        'scope_type',
+        'scope_value',
+        'country_name',
+        'state_id',
+        'lga_id'
+    ];
 
     public function manager()
     {

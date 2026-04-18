@@ -429,7 +429,7 @@ class PaymentController extends Controller
                         'data' => [
                             'status' => 'success',
                             'reference' => $transactionReference,
-                            'amount' => 100000, // 1000 NGN in kobo
+                            'amount' => 100000, // 1000 UNT in kobo/cents
                             'metadata' => [
                                 'proforma_id' => 1,
                                 'custom_fields' => [
@@ -585,7 +585,7 @@ class PaymentController extends Controller
                         'invitation_token' => $invitationToken,
                         'transaction_type' => $metadata['transaction_type'] ?? 'apartment_invitation_payment',
                         'payment_source' => 'paystack_callback',
-                        'paystack_amount_kobo' => ($amount * 100) ?? null,
+                        'paystack_amount_base_units' => ($amount * 100) ?? null,
                         'paystack_data' => [
                             'channel' => $channel ?? null,
                             'gateway_response' => ($paymentData['gateway_response'] ?? $paymentData['processor_response'] ?? null) ?? null,
@@ -650,7 +650,7 @@ class PaymentController extends Controller
                     'invitation_token' => $invitationToken,
                     'transaction_type' => $metadata['transaction_type'] ?? 'apartment_invitation_payment',
                     'payment_source' => 'paystack_callback',
-                    'paystack_amount_kobo' => ($amount * 100) ?? null,
+                    'paystack_amount_base_units' => ($amount * 100) ?? null,
                     'paystack_data' => [
                         'channel' => $channel ?? null,
                         'gateway_response' => ($paymentData['gateway_response'] ?? $paymentData['processor_response'] ?? null) ?? null,
@@ -1070,9 +1070,9 @@ class PaymentController extends Controller
                 "You have received a rent payment from %s %s.\n\n" .
                 "Property: %s\n" .
                 "Apartment: %s\n" .
-                "Gross Amount: ₦%s\n" .
-                "Platform Fee (2.5%%): ₦%s\n" .
-                "Net Amount: ₦%s\n\n" .
+                "Gross Amount: " . format_money($payment->amount, $payment->apartment->currency)->getSymbol() . "%s\n" .
+                "Platform Fee (2.5%%): " . format_money($commissionAmount, $payment->apartment->currency)->getSymbol() . "%s\n" .
+                "Net Amount: " . format_money($netAmount, $payment->apartment->currency)->getSymbol() . "%s\n\n" .
                 "Transaction ID: %s\n" .
                 "Payment Date: %s\n" .
                 "Duration: %d %s",
@@ -1092,7 +1092,7 @@ class PaymentController extends Controller
             \App\Models\Message::create([
                 'sender_id' => 0, // System message
                 'receiver_id' => $payment->landlord_id,
-                'subject' => 'Payment Received - ₦' . number_format($netAmount, 2),
+                'subject' => 'Payment Received - ' . format_money($netAmount, $payment->apartment->currency)->getSymbol() . number_format($netAmount, 2),
                 'body' => $messageBody,
                 'is_read' => false,
             ]);
@@ -1157,27 +1157,23 @@ class PaymentController extends Controller
     /**
      * Download payment receipt
      */
-    public function downloadReceipt($transactionId)
+    public function downloadReceipt($id)
     {
         try {
-            $payment = Payment::where('transaction_id', $transactionId)
-                ->with(['tenant', 'landlord', 'apartment'])
-                ->firstOrFail();
+            $payment = Payment::with(['tenant', 'landlord', 'apartment.property', 'currency'])
+                ->findOrFail($id);
 
             // Check if user is authorized to view this receipt
             if (auth()->user()->user_id !== $payment->tenant_id &&
-            auth()->user()->user_id !== $payment->landlord_id) {
+                auth()->user()->user_id !== $payment->landlord_id &&
+                !auth()->user()->isAdmin()) {
                 abort(403);
             }
 
             $filename = 'receipt_' . $payment->transaction_id . '.pdf';
-            if (!Storage::exists('receipts/' . $filename)) {
-                // Generate new receipt if it doesn't exist
-                $pdf = Pdf::loadView('payments.receipt', compact('payment'));
-                Storage::put('receipts/' . $filename, $pdf->output());
-            }
-
-            return Storage::download('receipts/' . $filename);
+            $pdf = Pdf::loadView('payments.receipt_pdf', compact('payment'));
+            
+            return $pdf->download($filename);
         }
         catch (\Exception $e) {
             Log::error('Receipt download failed: ' . $e->getMessage());
@@ -1260,60 +1256,79 @@ class PaymentController extends Controller
 
     public function analytics()
     {
-        $totalRevenue = Payment::where('status', 'completed')->sum('amount');
-        $totalTransactions = Payment::where('status', 'completed')->count();
-        $monthlyAverage = Payment::where('status', 'completed')
-            ->whereYear('created_at', Carbon::now()->year)
-            ->avg('amount') ?? 0;
+        $payments = Payment::where('status', 'completed')->with('currency')->get();
+        
+        $totalRevenueByCurrency = $payments->groupBy('currency_id')->map(function ($group) {
+            return [
+                'amount' => $group->sum('amount'),
+                'symbol' => $group->first()->currency->symbol ?? '₦',
+                'code' => $group->first()->currency->code ?? 'NGN'
+            ];
+        });
+
+        $totalTransactions = $payments->count();
+        
+        $currentYearPayments = $payments->filter(function($p) {
+            return $p->created_at->year == Carbon::now()->year;
+        });
+
+        $monthlyAverageByCurrency = $currentYearPayments->groupBy('currency_id')->map(function ($group) {
+            return [
+                'amount' => $group->avg('amount') ?? 0,
+                'symbol' => $group->first()->currency->symbol ?? '₦',
+                'code' => $group->first()->currency->code ?? 'NGN'
+            ];
+        });
+
         $pendingPayments = Payment::where('status', 'pending')->count();
 
-        // Get monthly revenue data for the past year
-        $revenueData = Payment::where('status', 'completed')
+        // Get monthly revenue data (grouped by currency for more accuracy in future, but for now we'll stick to NGN or most common for the chart to avoid breaking it)
+        $revenueDataRaw = Payment::where('status', 'completed')
             ->whereBetween('created_at', [Carbon::now()->subYear(), Carbon::now()])
             ->select(
-            DB::raw('SUM(amount) as total'),
-            DB::raw('MONTH(created_at) as month'),
-            DB::raw('YEAR(created_at) as year')
-        )
-            ->groupBy(DB::raw('YEAR(created_at)'), DB::raw('MONTH(created_at)'))
+                DB::raw('SUM(amount) as total'),
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('YEAR(created_at) as year'),
+                'currency_id'
+            )
+            ->groupBy(DB::raw('YEAR(created_at)'), DB::raw('MONTH(created_at)'), 'currency_id')
             ->orderBy(DB::raw('YEAR(created_at)'))
             ->orderBy(DB::raw('MONTH(created_at)'))
             ->get();
 
-        // Format revenue data for the chart
+        // For the chart, we'll pick the most common currency or just NGN for now as a baseline
+        $chartCurrencyId = $revenueDataRaw->groupBy('currency_id')->sortByDesc->count()->keys()->first();
+        
         $labels = [];
         $values = [];
         $start = Carbon::now()->subYear();
         for ($i = 0; $i < 12; $i++) {
             $month = $start->copy()->addMonths($i);
             $labels[] = $month->format('M Y');
-            $monthData = $revenueData->where('month', $month->month)
+            $monthData = $revenueDataRaw->where('month', $month->month)
                 ->where('year', $month->year)
+                ->where('currency_id', $chartCurrencyId)
                 ->first();
             $values[] = $monthData ? $monthData->total : 0;
         }
 
-        // Get payment methods distribution
         $paymentMethods = Payment::where('status', 'completed')
             ->select('payment_method', DB::raw('COUNT(*) as count'))
             ->groupBy('payment_method')
             ->get();
 
-        $methodLabels = $paymentMethods->pluck('payment_method')->toArray();
-        $methodValues = $paymentMethods->pluck('count')->toArray();
-
         return view('payments.analytics', [
-            'totalRevenue' => $totalRevenue,
+            'totalRevenueByCurrency' => $totalRevenueByCurrency,
             'totalTransactions' => $totalTransactions,
-            'monthlyAverage' => $monthlyAverage,
+            'monthlyAverageByCurrency' => $monthlyAverageByCurrency,
             'pendingPayments' => $pendingPayments,
             'revenueData' => [
                 'labels' => $labels,
                 'values' => $values,
             ],
             'paymentMethods' => [
-                'labels' => $methodLabels,
-                'values' => $methodValues,
+                'labels' => $paymentMethods->pluck('payment_method')->toArray(),
+                'values' => $paymentMethods->pluck('count')->toArray(),
             ],
         ]);
     }
@@ -1527,7 +1542,7 @@ class PaymentController extends Controller
                 return [
                     'valid' => false,
                     'error' => sprintf(
-                    'Payment amount mismatch. Expected: ₦%s, Requested: ₦%s',
+                    'Payment amount mismatch. Expected: ' . format_money($expectedAmount, $apartment->currency)->getSymbol() . '%s, Requested: ' . format_money($requestedAmount, $apartment->currency)->getSymbol() . '%s',
                     number_format($expectedAmount, 2),
                     number_format($requestedAmount, 2)
                 ),
@@ -1600,7 +1615,7 @@ class PaymentController extends Controller
                 return [
                     'valid' => false,
                     'error' => sprintf(
-                    'Enhanced payment amount mismatch. Expected: ₦%s, Requested: ₦%s',
+                    'Enhanced payment amount mismatch. Expected: ' . format_money($result->totalAmount, $apartment->currency)->getSymbol() . '%s, Requested: ' . format_money($requestedAmount, $apartment->currency)->getSymbol() . '%s',
                     number_format($result->totalAmount, 2),
                     number_format($requestedAmount, 2)
                 ),
@@ -1681,7 +1696,7 @@ class PaymentController extends Controller
                 return [
                     'valid' => false,
                     'error' => sprintf(
-                    'Payment amount mismatch. Expected: ₦%s, Requested: ₦%s',
+                    'Payment amount mismatch. Expected: ' . format_money($expectedAmount, $apartment->currency)->getSymbol() . '%s, Requested: ' . format_money($requestedAmountNaira, $apartment->currency)->getSymbol() . '%s',
                     number_format($expectedAmount, 2),
                     number_format($requestedAmountNaira, 2)
                 ),
@@ -1821,7 +1836,7 @@ class PaymentController extends Controller
                 'error' => null,
                 'audit_matches' => $auditMatches,
                 'audit_note' => $auditMatches ? 'Payment matches current calculation' : sprintf(
-                'Payment differs from current calculation. Paid: ₦%s, Current calc: ₦%s (Diff: ₦%s)',
+                'Payment differs from current calculation. Paid: ' . format_money($actualAmount, $apartment->currency)->getSymbol() . '%s, Current calc: ' . format_money($currentExpectedAmount, $apartment->currency)->getSymbol() . '%s (Diff: ' . format_money($difference, $apartment->currency)->getSymbol() . '%s)',
                 number_format($actualAmount, 2),
                 number_format($currentExpectedAmount, 2),
                 number_format($difference, 2)
@@ -2004,7 +2019,7 @@ class PaymentController extends Controller
                 'success' => true,
                 'calculation' => [
                     'total_amount' => $result->totalAmount,
-                    'formatted_amount' => '₦' . number_format($result->totalAmount, 2),
+                    'formatted_amount' => format_money($result->totalAmount, $apartment->currency)->getSymbol() . number_format($result->totalAmount, 2),
                     'calculation_method' => $result->calculationMethod,
                     'calculation_steps' => $result->calculationSteps,
                     'duration_type' => $request->duration_type,

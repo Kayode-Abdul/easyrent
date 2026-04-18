@@ -22,7 +22,7 @@
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                     <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Amount:</strong></td>
-                    <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">₦{{ number_format($invitation->amount, 2) }}</td>
+                    <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">{{ format_money($invitation->amount, $invitation->proforma->apartment->currency ?? null) }}</td>
                 </tr>
                 <tr>
                     <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Tenant:</strong></td>

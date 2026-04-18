@@ -96,9 +96,9 @@
                                                 {{ Str::limit($bid->task->complaint->title, 30) }}
                                             </a>
                                         </td>
-                                        <td>₦{{ number_format($bid->task->budget_min) }} - ₦{{
-                                            number_format($bid->task->budget_max) }}</td>
-                                        <td>₦{{ number_format($bid->amount) }}</td>
+                                        <td>{{ format_money($bid->task->budget_min) }} - {{
+                                            format_money($bid->task->budget_max) }}</td>
+                                        <td>{{ format_money($bid->amount) }}</td>
                                         <td>
                                             <span
                                                 class="badge badge-{{ $bid->status == 'accepted' ? 'success' : ($bid->status == 'rejected' ? 'danger' : 'warning') }}">
@@ -140,9 +140,9 @@
                                                 <small class="text-muted">{{ Str::limit($task->description, 50)
                                                     }}</small>
                                                 <div class="mt-2">
-                                                    <span class="badge badge-info badge-pill">₦{{
-                                                        number_format($task->budget_min) }} - ₦{{
-                                                        number_format($task->budget_max) }}</span>
+                                                    <span class="badge badge-info badge-pill">{{
+                                                        format_money($task->budget_min) }} - {{
+                                                        format_money($task->budget_max) }}</span>
                                                 </div>
                                             </div>
                                         </td>

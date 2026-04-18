@@ -143,8 +143,8 @@ class PaymentApiController extends Controller
             if ($isMobileClient) {
                 $responseData['mobile_features'] = [
                     'formatted_display_amounts' => [
-                        'total_amount' => '₦' . number_format($result->totalAmount, 2),
-                        'base_rent' => '₦' . number_format($apartmentPrice, 2)
+                        'total_amount' => format_money($result->totalAmount)->getSymbol() . number_format($result->totalAmount, 2),
+                        'base_rent' => format_money($apartmentPrice)->getSymbol() . number_format($apartmentPrice, 2)
                     ],
                     'calculation_summary' => [
                         'method_description' => $this->getCalculationMethodDescription($result->calculationMethod),
@@ -304,10 +304,10 @@ class PaymentApiController extends Controller
             if ($isMobileClient) {
                 $responseData['mobile_features'] = [
                     'formatted_display_amounts' => [
-                        'total_amount' => '₦' . number_format($result->totalAmount, 2),
-                        'base_rent' => '₦' . number_format($apartmentPrice, 2),
+                        'total_amount' => format_money($result->totalAmount, $apartment->currency)->getSymbol() . number_format($result->totalAmount, 2),
+                        'base_rent' => format_money($apartmentPrice, $apartment->currency)->getSymbol() . number_format($apartmentPrice, 2),
                         'monthly_equivalent' => $pricingType === 'total' && $rentalDuration > 0 
-                            ? '₦' . number_format($result->totalAmount / $rentalDuration, 2) . '/month'
+                            ? format_money($result->totalAmount / $rentalDuration, $apartment->currency)->getSymbol() . number_format($result->totalAmount / $rentalDuration, 2) . '/month'
                             : null
                     ],
                     'calculation_breakdown' => [

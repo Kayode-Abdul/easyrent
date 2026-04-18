@@ -13,7 +13,7 @@
                 <th>Title</th>
                 <th>Owner</th>
                 <th>State</th>
-                <th>LGA</th>
+                <th>City/L.G.A</th>
                 <th>Created</th>
                 <th>Actions</th>
             </tr>

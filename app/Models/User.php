@@ -9,6 +9,8 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Payment;
+use App\Models\ArtisanBid;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -48,18 +50,17 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'marketer_status',
         'commission_rate',
+        'artisan_bio',
+        'city',
+        'two_factor_enabled',
+        'notification_preferences',
         'bank_account_name',
         'bank_account_number',
         'bank_name',
         'bvn',
-        'referral_code',
-        'photo',
-        'registration_source',
-        'referred_by',
-        'artisan_category_id',
-        'is_artisan_verified',
-        'artisan_bio',
-        'city'
+        'country_name',
+        'state_id',
+        'lga_id'
     ];
 
     /**
@@ -80,6 +81,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'notification_preferences' => 'array',
+        'two_factor_enabled' => 'boolean',
     ];
 
     public function managedProperties()
@@ -192,6 +195,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sentMessages()
     {
         return $this->hasMany(Message::class , 'sender_id', 'user_id');
+    }
+
+    public function payments()
+    {
+        // Combined payments (either as landlord or tenant)
+        return $this->hasMany(Payment::class, 'landlord_id', 'user_id')
+                    ->orWhere('tenant_id', $this->user_id);
     }
 
     public function getReferralLink()
@@ -1210,5 +1220,81 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return $stats;
+    }
+
+    /**
+     * Get unread notification summary for dashboard header
+     */
+    public function getNotificationSummary(): array
+    {
+        $summary = [
+            'messages' => 0,
+            'bids' => 0,
+            'payments' => 0,
+            'overdue' => 0,
+            'total' => 0
+        ];
+
+        // 1. Messages
+        if (\Illuminate\Support\Facades\Schema::hasTable('messages')) {
+            $summary['messages'] = $this->receivedMessages()->where('is_read', false)->count();
+        }
+
+        // 2. Payments (Unread completed payments)
+        if (\Illuminate\Support\Facades\Schema::hasTable('payments') && \Illuminate\Support\Facades\Schema::hasColumn('payments', 'is_read')) {
+            $summary['payments'] = \App\Models\Payment::query()
+                ->where(function ($q) {
+                    $q->where('landlord_id', $this->user_id)
+                        ->orWhere('tenant_id', $this->user_id);
+                })
+                ->where('status', \App\Models\Payment::STATUS_COMPLETED)
+                ->where('is_read', false)
+                ->count();
+        }
+
+        // 3. Artisan Bids & Tasks
+        $hasBidsTable = \Illuminate\Support\Facades\Schema::hasTable('artisan_bids');
+        $hasTasksTable = \Illuminate\Support\Facades\Schema::hasTable('artisan_tasks');
+        $hasIsReadBids = $hasBidsTable && \Illuminate\Support\Facades\Schema::hasColumn('artisan_bids', 'is_read');
+
+        if ($hasBidsTable && $hasTasksTable && $hasIsReadBids) {
+            // New Bids for the Initiator (Tenant)
+            $summary['bids'] += \App\Models\ArtisanBid::whereHas('task', function ($q) {
+                $q->where('tenant_id', $this->user_id);
+            })->where('is_read', false)->count();
+
+            if ($this->isLandlord()) {
+                // New Bids for the Initiator (Landlord directly)
+                $summary['bids'] += \App\Models\ArtisanBid::whereHas('task', function ($q) {
+                    $q->whereNull('tenant_id')->where('landlord_id', $this->user_id);
+                })->where('is_read', false)->count();
+
+                // Assignment Updates for Landlords (Tenant accepted a bid)
+                $summary['bids'] += \App\Models\ArtisanBid::where('status', 'accepted')
+                    ->whereHas('task', function ($q) {
+                        $q->where('landlord_id', $this->user_id)->whereNotNull('tenant_id');
+                    })->where('is_read', false)->count();
+            }
+
+            // Unread bid updates (For Artisans)
+            if ($this->isArtisan()) {
+                $summary['bids'] += $this->artisanBids()->whereIn('status', ['accepted', 'rejected'])->where('is_read', false)->count();
+            }
+        }
+
+        // 4. Overdue logic
+        if (\Illuminate\Support\Facades\Schema::hasTable('apartments')) {
+            if ($this->isLandlord()) {
+                $summary['overdue'] = $this->apartments()->where('range_end', '<', now())->count();
+            }
+
+            if ($this->isTenant()) {
+                $summary['overdue'] += $this->tenantLeases()->where('range_end', '<', now())->count();
+            }
+        }
+
+        $summary['total'] = $summary['messages'] + $summary['bids'] + $summary['payments'] + $summary['overdue'];
+
+        return $summary;
     }
 }

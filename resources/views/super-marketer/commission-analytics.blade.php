@@ -77,9 +77,7 @@
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                 Your Commission
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                ₦{{ number_format($commissionByTier['super_marketer'], 2) }}
-                            </div>
+                                {{ format_money($commissionByTier['super_marketer']) }}
                             <div class="text-xs {{ $comparison['growth_percentage'] >= 0 ? 'text-success' : 'text-danger' }}">
                                 <i class="fas fa-{{ $comparison['growth_percentage'] >= 0 ? 'arrow-up' : 'arrow-down' }}"></i>
                                 {{ abs($comparison['growth_percentage']) }}% vs previous period
@@ -101,9 +99,7 @@
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                 Network Commission
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                ₦{{ number_format($commissionByTier['marketer'], 2) }}
-                            </div>
+                                {{ format_money($commissionByTier['marketer']) }}
                             <div class="text-xs text-muted">
                                 Earned by your marketers
                             </div>
@@ -124,9 +120,7 @@
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                 Total Generated
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                ₦{{ number_format($commissionByTier['super_marketer'] + $commissionByTier['marketer'], 2) }}
-                            </div>
+                                {{ format_money($commissionByTier['super_marketer'] + $commissionByTier['marketer']) }}
                             <div class="text-xs text-info">
                                 Network total
                             </div>
@@ -147,9 +141,7 @@
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                 Previous Period
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                ₦{{ number_format($comparison['previous_period'], 2) }}
-                            </div>
+                                {{ format_money($comparison['previous_period']) }}
                             <div class="text-xs text-muted">
                                 For comparison
                             </div>
@@ -217,7 +209,7 @@
                                     @foreach($regionalBreakdown as $region)
                                         <tr>
                                             <td class="font-weight-bold">{{ $region['region'] ?? 'Unknown' }}</td>
-                                            <td>₦{{ number_format($region['total'], 2) }}</td>
+                                            <td>{{ format_money($region['total']) }}</td>
                                             <td>
                                                 @php
                                                     $percentage = $totalRegional > 0 ? ($region['total'] / $totalRegional) * 100 : 0;
@@ -303,9 +295,9 @@
                                     @endphp
                                     <tr>
                                         <td class="font-weight-bold">{{ $trend['month'] }}</td>
-                                        <td>₦{{ number_format($trend['amount'], 2) }}</td>
-                                        <td>₦{{ number_format($networkAmount, 2) }}</td>
-                                        <td class="font-weight-bold">₦{{ number_format($total, 2) }}</td>
+                                        <td>{{ format_money($trend['amount']) }}</td>
+                                        <td>{{ format_money($networkAmount) }}</td>
+                                        <td class="font-weight-bold">{{ format_money($total) }}</td>
                                         <td>
                                             <span class="badge bg-{{ $growth >= 0 ? 'success' : 'danger' }}">
                                                 {{ $growth >= 0 ? '+' : '' }}{{ round($growth, 1) }}%
@@ -324,6 +316,9 @@
 </div>
 
 @push('scripts')
+<script>
+// window.currencySymbol is initialized in layout
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Commission Trends Chart
@@ -333,7 +328,7 @@ const commissionTrendsChart = new Chart(trendsCtx, {
     data: {
         labels: @json(collect($commissionTrends)->pluck('month')),
         datasets: [{
-            label: 'Your Commission (₦)',
+            label: 'Your Commission (' + window.currencySymbol + ')',
             data: @json(collect($commissionTrends)->pluck('amount')),
             borderColor: 'rgb(28, 200, 138)',
             backgroundColor: 'rgba(28, 200, 138, 0.1)',
@@ -349,7 +344,7 @@ const commissionTrendsChart = new Chart(trendsCtx, {
                 beginAtZero: true,
                 ticks: {
                     callback: function(value, index, values) {
-                        return '₦' + value.toLocaleString();
+                        return window.currencySymbol + value.toLocaleString();
                     }
                 }
             }
@@ -358,7 +353,7 @@ const commissionTrendsChart = new Chart(trendsCtx, {
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        return context.dataset.label + ': ₦' + context.parsed.y.toLocaleString();
+                        return context.dataset.label + ': ' + window.currencySymbol + context.parsed.y.toLocaleString();
                     }
                 }
             }
@@ -391,7 +386,7 @@ const commissionDistributionChart = new Chart(distributionCtx, {
                     label: function(context) {
                         const total = context.dataset.data.reduce((a, b) => a + b, 0);
                         const percentage = ((context.parsed / total) * 100).toFixed(1);
-                        return context.label + ': ₦' + context.parsed.toLocaleString() + ' (' + percentage + '%)';
+                        return context.label + ': ' + window.currencySymbol + context.parsed.toLocaleString() + ' (' + percentage + '%)';
                     }
                 }
             }
@@ -440,7 +435,7 @@ function exportTable() {
     rows.forEach(row => {
         const cells = Array.from(row.querySelectorAll('td')).map(td => {
             // Clean up the cell content (remove currency symbols, etc.)
-            return td.textContent.replace(/[₦,]/g, '').trim();
+            return td.textContent.replace(new RegExp(window.currencySymbol, 'g'), '').replace(/,/g, '').trim();
         });
         csv.push(cells.join(','));
     });

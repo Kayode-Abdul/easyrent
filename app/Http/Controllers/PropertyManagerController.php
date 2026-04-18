@@ -267,12 +267,25 @@ class PropertyManagerController extends Controller
             ->where('occupied', true)
             ->count();
         
-        $monthlyRevenue = Payment::whereHas('apartment', function($query) use ($managedPropertyIds) {
+        $payments = Payment::whereHas('apartment', function($query) use ($managedPropertyIds) {
                 $query->whereIn('property_id', $managedPropertyIds);
             })
             ->where('status', 'completed')
             ->whereMonth('created_at', now()->month)
-            ->sum('amount');
+            ->with('currency')
+            ->get();
+
+        $monthlyRevenueByCurrency = [];
+        foreach ($payments as $payment) {
+            $code = $payment->currency->code ?? 'NGN';
+            if (!isset($monthlyRevenueByCurrency[$code])) {
+                $monthlyRevenueByCurrency[$code] = [
+                    'amount' => 0,
+                    'symbol' => $payment->currency->symbol ?? format_money(0)->getSymbol()
+                ];
+            }
+            $monthlyRevenueByCurrency[$code]['amount'] += $payment->amount;
+        }
 
         $pendingPayments = Payment::whereHas('apartment', function($query) use ($managedPropertyIds) {
                 $query->whereIn('property_id', $managedPropertyIds);
@@ -286,7 +299,7 @@ class PropertyManagerController extends Controller
             'occupied_apartments' => $occupiedApartments,
             'vacant_apartments' => $totalApartments - $occupiedApartments,
             'occupancy_rate' => $totalApartments > 0 ? round(($occupiedApartments / $totalApartments) * 100, 1) : 0,
-            'monthly_revenue' => $monthlyRevenue,
+            'monthly_revenue' => $monthlyRevenueByCurrency,
             'pending_payments' => $pendingPayments,
         ];
     }
@@ -310,10 +323,11 @@ class PropertyManagerController extends Controller
             ->get();
 
         foreach ($recentPayments as $payment) {
+            $currencySymbol = $payment->currency->symbol ?? format_money(0)->getSymbol();
             $activities->push([
                 'type' => 'payment',
                 'title' => 'Payment ' . ucfirst($payment->status),
-                'description' => "₦" . number_format($payment->amount, 2) . " for " . ($payment->apartment->property->address ?? 'Property'),
+                'description' => $currencySymbol . number_format($payment->amount, 2) . " for " . ($payment->apartment->property->address ?? 'Property'),
                 'time' => $payment->created_at ? $payment->created_at->diffForHumans() : 'Unknown time',
                 'icon' => 'nc-icon nc-money-coins',
                 'color' => $payment->status === 'completed' ? 'text-success' : 'text-warning'
@@ -353,26 +367,40 @@ class PropertyManagerController extends Controller
             ->where('occupied', true)
             ->count();
         
-        $monthlyRevenue = Payment::whereHas('apartment', function($query) use ($propertyId) {
+        $payments = Payment::whereHas('apartment', function($query) use ($propertyId) {
                 $query->where('property_id', $propertyId);
             })
             ->where('status', 'completed')
-            ->whereMonth('created_at', now()->month)
-            ->sum('amount');
+            ->with('currency')
+            ->get();
 
-        $totalRevenue = Payment::whereHas('apartment', function($query) use ($propertyId) {
-                $query->where('property_id', $propertyId);
-            })
-            ->where('status', 'completed')
-            ->sum('amount');
+        $monthlyRevenueByCurrency = [];
+        $totalRevenueByCurrency = [];
+
+        foreach ($payments as $payment) {
+            $code = $payment->currency->code ?? 'NGN';
+            $symbol = $payment->currency->symbol ?? format_money(0)->getSymbol();
+            
+            if (!isset($totalRevenueByCurrency[$code])) {
+                $totalRevenueByCurrency[$code] = ['amount' => 0, 'symbol' => $symbol];
+            }
+            $totalRevenueByCurrency[$code]['amount'] += $payment->amount;
+
+            if ($payment->created_at && $payment->created_at->isCurrentMonth()) {
+                if (!isset($monthlyRevenueByCurrency[$code])) {
+                    $monthlyRevenueByCurrency[$code] = ['amount' => 0, 'symbol' => $symbol];
+                }
+                $monthlyRevenueByCurrency[$code]['amount'] += $payment->amount;
+            }
+        }
 
         return [
             'total_apartments' => $totalApartments,
             'occupied_apartments' => $occupiedApartments,
             'vacant_apartments' => $totalApartments - $occupiedApartments,
             'occupancy_rate' => $totalApartments > 0 ? round(($occupiedApartments / $totalApartments) * 100, 1) : 0,
-            'monthly_revenue' => $monthlyRevenue,
-            'total_revenue' => $totalRevenue,
+            'monthly_revenue' => $monthlyRevenueByCurrency,
+            'total_revenue' => $totalRevenueByCurrency,
         ];
     }
 

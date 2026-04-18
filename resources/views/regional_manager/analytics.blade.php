@@ -74,17 +74,17 @@
                 <div class="card-body">
                     <div class="row text-center">
                         <div class="col-12 mb-3">
-                            <h4 class="text-primary">₦{{ number_format($commissionBreakdown['total_amount'], 2) }}</h4>
-                            <small class="text-muted">Total Commissions</small>
+                            <h4 class="text-primary">{{ format_money($commissionBreakdown['total_amount']) }}</h4>
+                            <small class="text-muted">Total Commissions ({{ format_money(0)->getSymbol() }})</small>
                         </div>
                         <div class="col-6">
                             <h5>{{ $commissionBreakdown['total_count'] }}</h5>
                             <small class="text-muted">Total Payments</small>
                         </div>
                         <div class="col-6">
-                            <h5>₦{{ number_format($commissionBreakdown['total_count'] > 0 ?
-                                $commissionBreakdown['total_amount'] / $commissionBreakdown['total_count'] : 0, 2) }}
-                            </h5>
+                             <h5>{{ format_money($commissionBreakdown['total_count'] > 0 ?
+                                 $commissionBreakdown['total_amount'] / $commissionBreakdown['total_count'] : 0) }}
+                             </h5>
                             <small class="text-muted">Avg Payment</small>
                         </div>
                     </div>
@@ -161,8 +161,8 @@
                                 @foreach($regionalComparison as $region => $data)
                                 <tr>
                                     <td><small>{{ $region }}</small></td>
-                                    <td><small>₦{{ number_format($data['total_commissions'], 0) }}</small></td>
-                                    <td><small>₦{{ number_format($data['avg_commission'], 0) }}</small></td>
+                                    <td><small>{{ format_money($data['total_commissions']) }}</small></td>
+                                    <td><small>{{ format_money($data['avg_commission']) }}</small></td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -197,7 +197,7 @@
                                         <small>{{ $performer['user']->first_name ?? 'N/A' }} {{
                                             $performer['user']->last_name ?? '' }}</small>
                                     </td>
-                                    <td><small>₦{{ number_format($performer['total_commissions'], 0) }}</small></td>
+                                    <td><small>{{ format_money($performer['total_commissions']) }}</small></td>
                                 </tr>
                                 @empty
                                 <tr>
@@ -231,7 +231,7 @@
                                         <small>{{ $performer['user']->first_name ?? 'N/A' }} {{
                                             $performer['user']->last_name ?? '' }}</small>
                                     </td>
-                                    <td><small>₦{{ number_format($performer['total_commissions'], 0) }}</small></td>
+                                    <td><small>{{ format_money($performer['total_commissions']) }}</small></td>
                                 </tr>
                                 @empty
                                 <tr>
@@ -265,7 +265,7 @@
                                         <small>{{ $performer['user']->first_name ?? 'N/A' }} {{
                                             $performer['user']->last_name ?? '' }}</small>
                                     </td>
-                                    <td><small>₦{{ number_format($performer['total_commissions'], 0) }}</small></td>
+                                    <td><small>{{ format_money($performer['total_commissions']) }}</small></td>
                                 </tr>
                                 @empty
                                 <tr>
@@ -311,6 +311,20 @@
         plugins: {
             legend: {
                 position: 'bottom'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed !== null) {
+                            label += (window.currencySymbol || '₦') + new Intl.NumberFormat().format(context.parsed);
+                        }
+                        return label;
+                    }
+                }
             }
         }
     }
@@ -336,7 +350,21 @@
         responsive: true,
         scales: {
             y: {
-                beginAtZero: true
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return (window.currencySymbol || '₦') + new Intl.NumberFormat().format(value);
+                    }
+                }
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': ' + (window.currencySymbol || '₦') + new Intl.NumberFormat().format(context.parsed.y);
+                    }
+                }
             }
         }
     }
@@ -388,7 +416,21 @@
         responsive: true,
         scales: {
             y: {
-                beginAtZero: true
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return (window.currencySymbol || '₦') + new Intl.NumberFormat().format(value);
+                    }
+                }
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': ' + (window.currencySymbol || '₦') + new Intl.NumberFormat().format(context.parsed.y);
+                    }
+                }
             }
         }
     }
@@ -419,7 +461,21 @@
         responsive: true,
         scales: {
             y: {
-                beginAtZero: true
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return (window.currencySymbol || '₦') + new Intl.NumberFormat().format(value);
+                    }
+                }
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': ' + (window.currencySymbol || '₦') + new Intl.NumberFormat().format(context.parsed.y);
+                    }
+                }
             }
         }
     }

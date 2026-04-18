@@ -39,7 +39,7 @@
                 <h3>💳 Payment Details</h3>
                 <ul>
                     <li><span class="label">Transaction ID:</span> {{ $payment->transaction_id }}</li>
-                    <li><span class="label">Amount Received:</span> <span class="amount">₦{{ number_format($payment->amount) }}</span></li>
+                    <li><span class="label">Amount Received:</span> <span class="amount">{{ format_money($payment->amount, $payment->currency) }}</span></li>
                     <li><span class="label">Payment Date:</span> {{ $payment->created_at->format('M d, Y \a\t g:i A') }}</li>
                     <li><span class="label">Payment Method:</span> {{ ucfirst($payment->payment_method ?? 'Online Payment') }}</li>
                     <li><span class="label">Status:</span> <span style="color: #28a745; font-weight: bold;">Completed</span></li>
@@ -52,7 +52,7 @@
                     <li><span class="label">Property:</span> {{ $property->prop_name }}</li>
                     <li><span class="label">Address:</span> {{ $property->prop_address }}</li>
                     <li><span class="label">Apartment Type:</span> {{ $apartment->apartment_type }}</li>
-                    <li><span class="label">Monthly Rent:</span> ₦{{ number_format($apartment->amount) }}</li>
+                    <li><span class="label">Monthly Rent:</span> {{ $apartment->getFormattedAmount() }}</li>
                 </ul>
             </div>
             

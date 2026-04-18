@@ -58,8 +58,8 @@
         <div class="col-md-3">
             <div class="card text-center border-left-warning">
                 <div class="card-body">
-                    <h4 class="text-warning">₦{{ number_format($metrics['avg_commission_per_chain'], 2) }}</h4>
-                    <small class="text-muted">Avg Commission/Chain</small>
+                    <h4 class="text-warning">{{ format_money($metrics['avg_commission_per_chain']) }}</h4>
+                    <small class="text-muted">Avg Commission/Chain ({{ format_money(0)->getSymbol() }})</small>
                 </div>
             </div>
         </div>

@@ -21,7 +21,7 @@
                                 </div>
                                 <div class="col-md-6 text-right">
                                     <p><strong>Amount Paid:</strong></p>
-                                    <h3 class="text-success">₦{{ number_format($payment->amount, 2) }}</h3>
+                                    <h3 class="text-success">{{ format_money($payment->amount, ($payment->currency->code ?? null)) }}</h3>
                                 </div>
                             </div>
                             
