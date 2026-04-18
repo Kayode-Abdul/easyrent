@@ -220,9 +220,9 @@
                                 </div>
                             </div>
                             @elseif($field === 'amount')
-                            <span class="old-value">₦{{ number_format($oldValue, 2) }}</span>
+                            <span class="old-value">{{ format_money($oldValue) }}</span>
                             →
-                            <span class="new-value">₦{{ number_format($newValue, 2) }}</span>
+                            <span class="new-value">{{ format_money($newValue) }}</span>
                             @else
                             <span class="old-value">{{ $oldValue ?? 'Not set' }}</span>
                             →

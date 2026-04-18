@@ -16,12 +16,12 @@
     <div class="container-fluid mb-3">
         <div class="d-flex justify-content-end align-items-center">
             <div>
-                <span class="switch-label-left">Admin Dashboard</span>
+                <span class="switch-label-left">Personal Dashboard</span>
                 <label class="switch mb-0">
-                    <input type="checkbox" id="adminDashboardSwitch">
+                    <input type="checkbox" id="adminDashboardSwitch" {{ session('admin_dashboard_mode') === 'admin' ? 'checked' : '' }}>
                     <span class="slider"></span>
                 </label>
-                <span class="switch-label">Personal Dashboard</span>
+                <span class="switch-label">Admin Dashboard</span>
             </div>
         </div>
     </div>
@@ -29,19 +29,20 @@
     <!-- Role-based greeting -->
     <div class="row mb-3">
         <div class="col-md-12">
-            <div class="alert alert-gradient-primary">
+            <div class="alert page-header-custom">
                 <h4><i class="nc-icon nc-spaceship"></i> Super Admin Dashboard</h4>
                 <p>{{ $greeting ?? 'Complete system overview and management console.' }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Role Switcher -->
-    @include('role_switcher')
+    <!-- Role Switcher 
+    include('role_switcher')
+    -->
 
     <!-- Super Admin Dashboard -->
     @if(auth()->user()->admin == 1 || auth()->user()->role == 7)
-        
+
         <!-- System Overview Header -->
         <div class="row mb-4">
             <div class="col-12">
@@ -50,15 +51,27 @@
                         <div class="row">
                             <div class="col-md-8">
                                 <h3><i class="nc-icon nc-chart-bar-32"></i> System Performance Overview</h3>
-                                <p class="mb-0">Platform Uptime: <strong>{{ $stats['platform_uptime'] ?? '99.9%' }}</strong> | Active Sessions: <strong>{{ $stats['active_sessions'] ?? 0 }}</strong> | Database Size: <strong>{{ $stats['database_size'] ?? 'Unknown' }}</strong></p>
+                                <p class="mb-0">Platform Uptime: <strong>{{ $stats['platform_uptime'] ?? '99.9%' }}</strong>
+                                    | Active Sessions: <strong>{{ $stats['active_sessions'] ?? 0 }}</strong> | Database
+                                    Size: <strong>{{ $stats['database_size'] ?? 'Unknown' }}</strong></p>
                             </div>
                             <div class="col-md-4 text-right">
-                                <h4>₦{{ number_format($stats['company_commission_total'] ?? 0, 0) }}</h4>
+                                @if(isset($stats['company_commission_total']) && is_array($stats['company_commission_total']))
+                                    @foreach($stats['company_commission_total'] as $code => $data)
+                                        <h4 class="mb-0">{{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</h4>
+                                    @endforeach
+                                @else
+                                    <h4>{{ format_money(0) }}</h4>
+                                @endif
                                 <small>EasyRent Total Commission</small>
                                 <div class="mt-2">
-                                    <span class="badge badge-success">
-                                        ₦{{ number_format($stats['company_commission_this_month'] ?? 0, 0) }} this month
-                                    </span>
+                                    @if(isset($stats['company_commission_this_month']) && is_array($stats['company_commission_this_month']))
+                                        @foreach($stats['company_commission_this_month'] as $code => $data)
+                                            <span class="badge badge-success">
+                                                {{ $data['symbol'] }}{{ number_format($data['amount'], 0) }} this month
+                                            </span>
+                                        @endforeach
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -73,7 +86,7 @@
                 <h4 class="text-primary"><i class="nc-icon nc-chart-pie-36"></i> Key Performance Indicators</h4>
             </div>
         </div>
-        
+
         <!-- Primary KPIs Row -->
         <div class="row">
             <div class="col-lg-3 col-md-6 col-sm-6">
@@ -142,7 +155,14 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Revenue Today</p>
-                                    <p class="card-title">${{ number_format($stats['revenue_today'] ?? 0, 2) }}</p>
+                                    @if(isset($stats['revenue_today_by_currency']) && is_array($stats['revenue_today_by_currency']))
+                                        @foreach($stats['revenue_today_by_currency'] as $code => $data)
+                                            <p class="card-title" style="font-size: 1.1rem; margin-bottom: 0;">
+                                                {{ $data['symbol'] }}{{ number_format($data['amount'], 2) }}</p>
+                                        @endforeach
+                                    @else
+                                        <p class="card-title">{{ format_money(0) }}</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -151,7 +171,8 @@
                         <hr>
                         <div class="stats">
                             <i class="fa fa-calendar text-success"></i>
-                            +{{ number_format((($stats['revenue_today'] ?? 0) / (($stats['revenue_last_month'] ?? 1) ?: 1)) * 100, 1) }}% vs yesterday
+                            +{{ number_format((($stats['revenue_today'] ?? 0) / (($stats['revenue_last_month'] ?? 1) ?: 1))
+            * 100, 1) }}% vs yesterday
                         </div>
                     </div>
                 </div>
@@ -169,7 +190,8 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Issues Pending</p>
-                                    <p class="card-title">{{ ($stats['pending_payments'] ?? 0) + ($stats['failed_payments'] ?? 0) }}</p>
+                                    <p class="card-title">{{ ($stats['pending_payments'] ?? 0) + ($stats['failed_payments']
+            ?? 0) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -188,10 +210,10 @@
         <!-- Business Intelligence Row -->
         <div class="row mb-4">
             <div class="col-12">
-                <h4 class="text-success"><i class="nc-icon nc-chart-pie-35"></i> Business Intelligence</h4>
+                <h4 class="text-success"><i class="nc-icon nc-chart-pie-36"></i> Business Intelligence</h4>
             </div>
         </div>
-        
+
         <div class="row">
             <div class="col-lg-3 col-md-6 col-sm-6">
                 <div class="card card-stats">
@@ -199,7 +221,7 @@
                         <div class="row">
                             <div class="col-5 col-md-4">
                                 <div class="icon-big text-center icon-warning">
-                                    <i class="nc-icon nc-chart-pie-35 text-success"></i>
+                                    <i class="nc-icon nc-chart-pie-36 text-success"></i>
                                 </div>
                             </div>
                             <div class="col-7 col-md-8">
@@ -259,7 +281,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Customer CAC</p>
-                                    <p class="card-title">{{ $stats['customer_acquisition_cost'] ?? '$0' }}</p>
+                                    <p class="card-title">{{ $stats['customer_acquisition_cost'] ?? format_money(0) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -286,7 +308,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Lifetime Value</p>
-                                    <p class="card-title">{{ $stats['lifetime_value'] ?? '$0' }}</p>
+                                    <p class="card-title">{{ $stats['lifetime_value'] ?? format_money(0) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -308,7 +330,7 @@
                 <h4 class="text-primary"><i class="nc-icon nc-money-coins"></i> Company Commission Revenue</h4>
             </div>
         </div>
-        
+
         <div class="row">
             <div class="col-lg-3 col-md-6 col-sm-6">
                 <div class="card card-stats">
@@ -322,7 +344,14 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Commission Today</p>
-                                    <p class="card-title">₦{{ number_format($stats['company_commission_today'] ?? 0, 0) }}</p>
+                                    @if(isset($stats['company_commission_today']) && is_array($stats['company_commission_today']))
+                                        @foreach($stats['company_commission_today'] as $code => $data)
+                                            <p class="card-title" style="font-size: 1.1rem; margin-bottom: 0;">
+                                                {{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
+                                        @endforeach
+                                    @else
+                                        <p class="card-title">{{ format_money(0) }}</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -349,7 +378,14 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Commission This Month</p>
-                                    <p class="card-title">₦{{ number_format($stats['company_commission_this_month'] ?? 0, 0) }}</p>
+                                    @if(isset($stats['company_commission_this_month']) && is_array($stats['company_commission_this_month']))
+                                        @foreach($stats['company_commission_this_month'] as $code => $data)
+                                            <p class="card-title" style="font-size: 1.1rem; margin-bottom: 0;">
+                                                {{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
+                                        @endforeach
+                                    @else
+                                        <p class="card-title">{{ format_money(0) }}</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -359,7 +395,8 @@
                         <div class="stats">
                             <i class="fa fa-arrow-up text-success"></i>
                             @if(isset($stats['commission_breakdown']['growth']['company_commission']))
-                                {{ number_format($stats['commission_breakdown']['growth']['company_commission'], 1) }}% vs last month
+                                {{ number_format($stats['commission_breakdown']['growth']['company_commission'], 1) }}% vs last
+                                month
                             @else
                                 Monthly earnings
                             @endif
@@ -380,7 +417,14 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Total Commission</p>
-                                    <p class="card-title">₦{{ number_format($stats['company_commission_total'] ?? 0, 0) }}</p>
+                                    @if(isset($stats['company_commission_total']) && is_array($stats['company_commission_total']))
+                                        @foreach($stats['company_commission_total'] as $code => $data)
+                                            <p class="card-title" style="font-size: 1.1rem; margin-bottom: 0;">
+                                                {{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
+                                        @endforeach
+                                    @else
+                                        <p class="card-title">{{ format_money(0) }}</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -408,11 +452,18 @@
                                 <div class="numbers">
                                     <p class="card-category">Commission Rate</p>
                                     <p class="card-title">
-                                        @if(isset($stats['commission_breakdown']['this_month']['total_rent']) && $stats['commission_breakdown']['this_month']['total_rent'] > 0)
-                                            {{ number_format(($stats['commission_breakdown']['this_month']['company_commission'] / $stats['commission_breakdown']['this_month']['total_rent']) * 100, 2) }}%
+                                        @if(isset($stats['commission_breakdown']['this_month']) && is_array($stats['commission_breakdown']['this_month']))
+                                            @foreach($stats['commission_breakdown']['this_month'] as $code => $bd)
+                                                @if($bd['total_rent'] > 0)
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>{{ $code }}:</span>
+                                                        <span>{{ number_format(($bd['company_commission'] / $bd['total_rent']) * 100, 2) }}%</span>
+                                                    </div>
+                                                @endif
+                                            @endforeach
                                         @else
-                                            3.25%
-                                        @endif
+                                        3.25%
+                                    @endif
                                     </p>
                                 </div>
                             </div>
@@ -422,7 +473,8 @@
                         <hr>
                         <div class="stats">
                             <i class="fa fa-cog text-primary"></i>
-                            <a href="{{ route('admin.commission-management.regional-manager') }}" class="text-primary">Manage Rates</a>
+                            <a href="{{ route('admin.commission-management.regional-manager') }}"
+                                class="text-primary">Manage Rates</a>
                         </div>
                     </div>
                 </div>
@@ -430,129 +482,127 @@
         </div>
 
         <!-- Commission Breakdown Detail -->
-        @if(isset($stats['commission_breakdown']))
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">
-                            <i class="nc-icon nc-chart-pie-35 text-primary"></i>
-                            Commission Breakdown - This Month
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="table-responsive">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Role</th>
-                                                <th>Commission Amount</th>
-                                                <th>Percentage of Total Rent</th>
-                                                <th>Growth vs Last Month</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr class="table-success">
-                                                <td><strong><i class="fa fa-building me-2"></i>Company (EasyRent)</strong></td>
-                                                <td><strong>₦{{ number_format($stats['commission_breakdown']['this_month']['company_commission'] ?? 0, 0) }}</strong></td>
-                                                <td>
-                                                    @if($stats['commission_breakdown']['this_month']['total_rent'] > 0)
-                                                        {{ number_format(($stats['commission_breakdown']['this_month']['company_commission'] / $stats['commission_breakdown']['this_month']['total_rent']) * 100, 2) }}%
-                                                    @else
-                                                        0%
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <span class="badge {{ $stats['commission_breakdown']['growth']['company_commission'] >= 0 ? 'bg-success' : 'bg-danger' }}">
-                                                        {{ number_format($stats['commission_breakdown']['growth']['company_commission'] ?? 0, 1) }}%
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td><i class="fa fa-users me-2"></i>Super Marketers</td>
-                                                <td>₦{{ number_format($stats['commission_breakdown']['this_month']['super_marketer_commission'] ?? 0, 0) }}</td>
-                                                <td>
-                                                    @if($stats['commission_breakdown']['this_month']['total_rent'] > 0)
-                                                        {{ number_format(($stats['commission_breakdown']['this_month']['super_marketer_commission'] / $stats['commission_breakdown']['this_month']['total_rent']) * 100, 2) }}%
-                                                    @else
-                                                        0%
-                                                    @endif
-                                                </td>
-                                                <td>-</td>
-                                            </tr>
-                                            <tr>
-                                                <td><i class="fa fa-user me-2"></i>Marketers</td>
-                                                <td>₦{{ number_format($stats['commission_breakdown']['this_month']['marketer_commission'] ?? 0, 0) }}</td>
-                                                <td>
-                                                    @if($stats['commission_breakdown']['this_month']['total_rent'] > 0)
-                                                        {{ number_format(($stats['commission_breakdown']['this_month']['marketer_commission'] / $stats['commission_breakdown']['this_month']['total_rent']) * 100, 2) }}%
-                                                    @else
-                                                        0%
-                                                    @endif
-                                                </td>
-                                                <td>-</td>
-                                            </tr>
-                                            <tr>
-                                                <td><i class="fa fa-map-marker me-2"></i>Regional Managers</td>
-                                                <td>₦{{ number_format($stats['commission_breakdown']['this_month']['regional_manager_commission'] ?? 0, 0) }}</td>
-                                                <td>
-                                                    @if($stats['commission_breakdown']['this_month']['total_rent'] > 0)
-                                                        {{ number_format(($stats['commission_breakdown']['this_month']['regional_manager_commission'] / $stats['commission_breakdown']['this_month']['total_rent']) * 100, 2) }}%
-                                                    @else
-                                                        0%
-                                                    @endif
-                                                </td>
-                                                <td>-</td>
-                                            </tr>
-                                        </tbody>
-                                        <tfoot class="table-light">
-                                            <tr>
-                                                <th>Total Commission</th>
-                                                <th>₦{{ number_format($stats['commission_breakdown']['this_month']['total_commission'] ?? 0, 0) }}</th>
-                                                <th>
-                                                    @if($stats['commission_breakdown']['this_month']['total_rent'] > 0)
-                                                        {{ number_format(($stats['commission_breakdown']['this_month']['total_commission'] / $stats['commission_breakdown']['this_month']['total_rent']) * 100, 2) }}%
-                                                    @else
-                                                        0%
-                                                    @endif
-                                                </th>
-                                                <th>
-                                                    <span class="badge {{ $stats['commission_breakdown']['growth']['total_commission'] >= 0 ? 'bg-success' : 'bg-danger' }}">
-                                                        {{ number_format($stats['commission_breakdown']['growth']['total_commission'] ?? 0, 1) }}%
-                                                    </span>
-                                                </th>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
+        @if(isset($stats['commission_breakdown']['this_month']) && is_array($stats['commission_breakdown']['this_month']))
+            @foreach($stats['commission_breakdown']['this_month'] as $currencyCode => $breakdown)
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    <i class="nc-icon nc-chart-pie-36 text-primary"></i>
+                                    Commission Breakdown - {{ $currencyCode }} (This Month)
+                                </h5>
                             </div>
-                            <div class="col-md-4">
-                                <div class="text-center">
-                                    <h3 class="text-success">₦{{ number_format($stats['commission_breakdown']['this_month']['company_commission'] ?? 0, 0) }}</h3>
-                                    <p class="text-muted">Company Revenue This Month</p>
-                                    <div class="progress mb-3">
-                                        @php
-                                            $companyPercentage = $stats['commission_breakdown']['this_month']['total_commission'] > 0 
-                                                ? ($stats['commission_breakdown']['this_month']['company_commission'] / $stats['commission_breakdown']['this_month']['total_commission']) * 100 
-                                                : 0;
-                                        @endphp
-                                        <div class="progress-bar bg-success" style="width: {{ $companyPercentage }}%"></div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Role</th>
+                                                        <th>Commission Amount</th>
+                                                        <th>Percentage of Total Rent</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr class="table-success">
+                                                        <td><strong><i class="fa fa-building me-2"></i>Company (EasyRent)</strong>
+                                                        </td>
+                                                        <td><strong>{{ $breakdown['symbol'] }}{{ number_format($breakdown['company_commission'], 0) }}</strong>
+                                                        </td>
+                                                        <td>
+                                                            @if($breakdown['total_rent'] > 0)
+                                                                {{ number_format(($breakdown['company_commission'] / $breakdown['total_rent']) * 100, 2) }}%
+                                                            @else
+                                                                0%
+                                                            @endif
+                                                        </td>
+                                                        <td><span class="badge bg-success">Active</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><i class="fa fa-users me-2"></i>Super Marketers</td>
+                                                        <td>{{ $breakdown['symbol'] }}{{ number_format($breakdown['super_marketer_commission'], 0) }}
+                                                        </td>
+                                                        <td>
+                                                            @if($breakdown['total_rent'] > 0)
+                                                                {{ number_format(($breakdown['super_marketer_commission'] / $breakdown['total_rent']) * 100, 2) }}%
+                                                            @else
+                                                                0%
+                                                            @endif
+                                                        </td>
+                                                        <td>-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><i class="fa fa-user me-2"></i>Marketers</td>
+                                                        <td>{{ $breakdown['symbol'] }}{{ number_format($breakdown['marketer_commission'], 0) }}
+                                                        </td>
+                                                        <td>
+                                                            @if($breakdown['total_rent'] > 0)
+                                                                {{ number_format(($breakdown['marketer_commission'] / $breakdown['total_rent']) * 100, 2) }}%
+                                                            @else
+                                                                0%
+                                                            @endif
+                                                        </td>
+                                                        <td>-</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><i class="fa fa-map-marker me-2"></i>Regional Managers</td>
+                                                        <td>{{ $breakdown['symbol'] }}{{ number_format($breakdown['regional_manager_commission'], 0) }}
+                                                        </td>
+                                                        <td>
+                                                            @if($breakdown['total_rent'] > 0)
+                                                                {{ number_format(($breakdown['regional_manager_commission'] / $breakdown['total_rent']) * 100, 2) }}%
+                                                            @else
+                                                                0%
+                                                            @endif
+                                                        </td>
+                                                        <td>-</td>
+                                                    </tr>
+                                                </tbody>
+                                                <tfoot class="table-light">
+                                                    <tr>
+                                                        <th>Total Commission</th>
+                                                        <th>{{ $breakdown['symbol'] }}{{ number_format($breakdown['total_commission'], 0) }}
+                                                        </th>
+                                                        <th>
+                                                            @if($breakdown['total_rent'] > 0)
+                                                                {{ number_format(($breakdown['total_commission'] / $breakdown['total_rent']) * 100, 2) }}%
+                                                            @else
+                                                                0%
+                                                            @endif
+                                                        </th>
+                                                        <th>-</th>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
                                     </div>
-                                    <small class="text-muted">{{ number_format($companyPercentage, 1) }}% of total commission</small>
-                                    <div class="mt-3">
-                                        <a href="{{ route('admin.commission-management.regional-manager') }}" class="btn btn-primary btn-sm">
-                                            <i class="fa fa-cog me-1"></i>Manage Commission Rates
-                                        </a>
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <h3 class="text-success">
+                                                {{ $breakdown['symbol'] }}{{ number_format($breakdown['company_commission'], 0) }}
+                                            </h3>
+                                            <p class="text-muted">Company Revenue ({{ $currencyCode }})</p>
+                                            <div class="progress mb-3">
+                                                @php
+                                                    $companyPercentage = $breakdown['total_commission'] > 0
+                                                        ? ($breakdown['company_commission'] / $breakdown['total_commission']) * 100
+                                                        : 0;
+                                                @endphp
+                                                <div class="progress-bar bg-success" style="width: {{ $companyPercentage }}%"></div>
+                                            </div>
+                                            <small class="text-muted">{{ number_format($companyPercentage, 1) }}% of total
+                                                commission</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            @endforeach
         @endif
 
         <!-- System Health Monitoring -->
@@ -561,7 +611,7 @@
                 <h4 class="text-warning"><i class="nc-icon nc-settings-gear-65"></i> System Health & Monitoring</h4>
             </div>
         </div>
-        
+
         <div class="row">
             <div class="col-lg-3 col-md-6 col-sm-6">
                 <div class="card card-stats">
@@ -596,7 +646,7 @@
                         <div class="row">
                             <div class="col-5 col-md-4">
                                 <div class="icon-big text-center icon-warning">
-                                    <i class="nc-icon nc-database text-info"></i>
+                                    <i class="nc-icon nc-tile-56 text-info"></i>
                                 </div>
                             </div>
                             <div class="col-7 col-md-8">
@@ -623,7 +673,7 @@
                         <div class="row">
                             <div class="col-5 col-md-4">
                                 <div class="icon-big text-center icon-warning">
-                                    <i class="nc-icon nc-folder-17 text-warning"></i>
+                                    <i class="nc-icon nc-box text-warning"></i>
                                 </div>
                             </div>
                             <div class="col-7 col-md-8">
@@ -678,7 +728,7 @@
                 <h4 class="text-danger"><i class="nc-icon nc-tap-01"></i> Super Admin Management Panel</h4>
             </div>
         </div>
-        
+
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
@@ -696,7 +746,8 @@
                                 </a>
                             </div>
                             <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
-                                <a href="{{ route('admin.properties') }}" class="btn btn-success btn-block btn-admin-action">
+                                <a href="{{ route('admin.properties') }}"
+                                    class="btn btn-success btn-block btn-admin-action">
                                     <i class="nc-icon nc-istanbul"></i><br>
                                     <strong>Property Oversight</strong><br>
                                     <small>Monitor properties</small>
@@ -717,7 +768,8 @@
                                 </a>
                             </div>
                             <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
-                                <a href="{{ route('admin.system-health') }}" class="btn btn-info btn-block btn-admin-action">
+                                <a href="{{ route('admin.system-health') }}"
+                                    class="btn btn-info btn-block btn-admin-action">
                                     <i class="nc-icon nc-settings-gear-65"></i><br>
                                     <strong>System Health</strong><br>
                                     <small>Server monitoring</small>
@@ -731,7 +783,7 @@
                                 </a>
                             </div>
                         </div>
-                        
+
                         <!-- Second Row of Actions -->
                         <div class="row mt-3">
                             <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
@@ -742,35 +794,40 @@
                                 </a>
                             </div>
                             <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
-                                <a href="{{ route('admin.backup') }}" class="btn btn-outline-danger btn-block btn-admin-action">
-                                    <i class="nc-icon nc-refresh-02"></i><br>
+                                <a href="{{ route('admin.backup') }}"
+                                    class="btn btn-outline-danger btn-block btn-admin-action">
+                                    <i class="nc-icon nc-refresh-69"></i><br>
                                     <strong>Backup & Restore</strong><br>
                                     <small>Data management</small>
                                 </a>
                             </div>
                             <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
-                                <a href="{{ route('admin.security') }}" class="btn btn-outline-warning btn-block btn-admin-action">
+                                <a href="{{ route('admin.security') }}"
+                                    class="btn btn-outline-warning btn-block btn-admin-action">
                                     <i class="nc-icon nc-lock-circle-open"></i><br>
                                     <strong>Security Center</strong><br>
                                     <small>Access control</small>
                                 </a>
                             </div>
                             <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
-                                <a href="#" class="btn btn-outline-info btn-block btn-admin-action" data-action="maintenance" onclick="toggleMaintenance()">
+                                <a href="#" class="btn btn-outline-info btn-block btn-admin-action"
+                                    data-action="maintenance" onclick="toggleMaintenance()">
                                     <i class="nc-icon nc-settings"></i><br>
                                     <strong>Maintenance Mode</strong><br>
                                     <small>System updates</small>
                                 </a>
                             </div>
                             <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
-                                <a href="{{ route('admin.email-center') }}" class="btn btn-outline-success btn-block btn-admin-action">
+                                <a href="{{ route('admin.email-center') }}"
+                                    class="btn btn-outline-success btn-block btn-admin-action">
                                     <i class="nc-icon nc-email-85"></i><br>
                                     <strong>Email Center</strong><br>
                                     <small>Bulk messaging</small>
                                 </a>
                             </div>
                             <div class="col-lg-2 col-md-3 col-sm-4 mb-3">
-                                <a href="{{ route('admin.api-management') }}" class="btn btn-outline-primary btn-block btn-admin-action">
+                                <a href="{{ route('admin.api-management') }}"
+                                    class="btn btn-outline-primary btn-block btn-admin-action">
                                     <i class="nc-icon nc-atom"></i><br>
                                     <strong>API Management</strong><br>
                                     <small>External integrations</small>
@@ -817,8 +874,10 @@
                     </div>
                     <div class="card-footer">
                         <div class="legend">
-                            <i class="fa fa-circle text-primary"></i> Landlords ({{ $stats['users_by_type']['landlords'] ?? 0 }})
-                            <i class="fa fa-circle text-warning"></i> Tenants ({{ $stats['users_by_type']['tenants'] ?? 0 }})
+                            <i class="fa fa-circle text-primary"></i> Landlords ({{ $stats['users_by_type']['landlords'] ??
+            0 }})
+                            <i class="fa fa-circle text-warning"></i> Tenants ({{ $stats['users_by_type']['tenants'] ?? 0
+                            }})
                             <i class="fa fa-circle text-danger"></i> Admins ({{ $stats['users_by_type']['admins'] ?? 0 }})
                         </div>
                         <hr>
@@ -844,18 +903,23 @@
                                 @foreach($recentActivities as $activity)
                                     <div class="timeline-item">
                                         <div class="timeline-marker">
-                                            <i class="{{ $activity['icon'] ?? 'nc-icon nc-time-alarm' }} {{ $activity['color'] ?? 'text-info' }}"></i>
+                                            <i
+                                                class="{{ $activity['icon'] ?? 'nc-icon nc-time-alarm' }} {{ $activity['color'] ?? 'text-info' }}"></i>
                                         </div>
                                         <div class="timeline-content">
                                             <h6 class="timeline-title">{{ $activity['title'] }}</h6>
                                             <p class="timeline-description">{{ $activity['description'] }}</p>
                                             <small class="text-muted">{{ $activity['time'] }}</small>
                                             @if(isset($activity['link']))
-                                                <a href="{{ $activity['link'] }}" class="btn btn-sm btn-outline-info ml-2">View Details</a>
+                                                <a href="{{ $activity['link'] }}" class="btn btn-sm btn-outline-info ml-2">View
+                                                    Details</a>
                                             @endif
                                         </div>
                                     </div>
                                 @endforeach
+                            </div>
+                            <div class="mt-3 d-flex justify-content-center dashboard-pagination">
+                                {{ $recentActivities->links() }}
                             </div>
                         @else
                             <div class="text-center text-muted py-5">
@@ -879,21 +943,21 @@
                             <strong><i class="fa fa-check"></i> System Healthy</strong><br>
                             All services are running normally
                         </div>
-                        
+
                         @if(($stats['pending_payments'] ?? 0) > 10)
-                        <div class="alert alert-warning">
-                            <strong><i class="fa fa-exclamation-triangle"></i> Payment Alert</strong><br>
-                            {{ $stats['pending_payments'] }} pending payments need attention
-                        </div>
+                            <div class="alert alert-warning">
+                                <strong><i class="fa fa-exclamation-triangle"></i> Payment Alert</strong><br>
+                                {{ $stats['pending_payments'] }} pending payments need attention
+                            </div>
                         @endif
-                        
+
                         @if(($stats['failed_payments'] ?? 0) > 5)
-                        <div class="alert alert-danger">
-                            <strong><i class="fa fa-times"></i> Failed Payments</strong><br>
-                            {{ $stats['failed_payments'] }} failed payments detected
-                        </div>
+                            <div class="alert alert-danger">
+                                <strong><i class="fa fa-times"></i> Failed Payments</strong><br>
+                                {{ $stats['failed_payments'] }} failed payments detected
+                            </div>
                         @endif
-                        
+
                         <div class="alert alert-info">
                             <strong><i class="fa fa-info-circle"></i> Backup Status</strong><br>
                             Last backup: 2 hours ago
@@ -901,7 +965,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Quick Stats Mini Cards -->
                 <div class="row">
                     <div class="col-6 mb-2">
@@ -923,7 +987,7 @@
                     <div class="col-6 mb-2">
                         <div class="card mini-stat">
                             <div class="card-body text-center">
-                                <h6>${{ number_format(($stats['average_transaction_value'] ?? 0), 0) }}</h6>
+                                <h6>{{ format_money($stats['average_transaction_value'] ?? 0) }}</h6>
                                 <small>Avg. Transaction</small>
                             </div>
                         </div>
@@ -945,336 +1009,358 @@
 
 <!-- Chart.js Scripts for Super Admin -->
 <script>
-@if(auth()->user()->admin == 1 || auth()->user()->role == 1)
-    // Admin Revenue Chart with enhanced styling
-    const adminRevenueCtx = document.getElementById('adminRevenueChart').getContext('2d');
-    new Chart(adminRevenueCtx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode($chartData['revenue_trend']['labels'] ?? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']) !!},
-            datasets: [{
-                label: 'Monthly Revenue ($)',
-                data: {!! json_encode($chartData['revenue_trend']['data'] ?? [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) !!},
-                borderColor: '#28a745',
-                backgroundColor: 'rgba(81, 203, 206, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#28a745',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2,
-                pointRadius: 5
-            }, {
-                label: 'User Growth',
-                data: {!! json_encode($chartData['user_growth']['data'] ?? [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) !!},
-                borderColor: '#fbc658',
-                backgroundColor: 'rgba(251, 198, 88, 0.1)',
-                tension: 0.4,
-                fill: false,
-                yAxisID: 'y1'
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                }
+    @if (auth()->user()->admin == 1 || auth()->user()->role == 1)
+        // Admin Revenue Chart with enhanced styling
+        const adminRevenueCtx = document.getElementById('adminRevenueChart').getContext('2d');
+        new Chart(adminRevenueCtx, {
+            type: 'line',
+            data: {
+                labels: {!! json_encode($chartData['revenue_trend']['labels'] ?? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])!!},
+                datasets: [{
+                    label: 'Monthly Revenue (' + window.currencySymbol + ')',
+                    data: {!! json_encode($chartData['revenue_trend']['data'] ?? [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) !!},
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(81, 203, 206, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#28a745',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5
+                }, {
+                    label: 'User Growth',
+                    data: {!! json_encode($chartData['user_growth']['data'] ?? [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) !!},
+                    borderColor: '#fbc658',
+                    backgroundColor: 'rgba(251, 198, 88, 0.1)',
+                    tension: 0.4,
+                    fill: false,
+                    yAxisID: 'y1'
+                }]
             },
-            interaction: {
-                intersect: false,
-            },
-            scales: {
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '$' + new Intl.NumberFormat().format(value);
-                        }
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
                     }
                 },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    beginAtZero: true,
-                    grid: {
-                        drawOnChartArea: false,
+                interaction: {
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                return window.currencySymbol + new Intl.NumberFormat().format(value);
+                            }
+                        }
                     },
-                }
-            }
-        }
-    });
-
-    // Admin User Distribution Chart
-    const adminUserCtx = document.getElementById('adminUserChart').getContext('2d');
-    new Chart(adminUserCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Landlords', 'Tenants', 'Admins'],
-            datasets: [{
-                data: [
-                    {{ $stats['users_by_type']['landlords'] ?? 0 }},
-                    {{ $stats['users_by_type']['tenants'] ?? 0 }},
-                    {{ $stats['users_by_type']['admins'] ?? 0 }}
-                ],
-                backgroundColor: [
-                    '#28a745',
-                    '#fbc658',
-                    '#ef8157'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-
-    // Admin Action Click Handlers
-    document.querySelectorAll('.btn-admin-action').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const action = this.dataset.action;
-            
-            // Show loading state
-            const originalContent = this.innerHTML;
-            this.innerHTML = '<i class="fa fa-spinner fa-spin"></i><br>Loading...';
-            this.disabled = true;
-            
-            // Simulate action (replace with actual implementation)
-            setTimeout(() => {
-                this.innerHTML = originalContent;
-                this.disabled = false;
-                
-                // Show notification
-                showNotification(action + ' feature will be available soon!', 'info');
-            }, 1000);
-        });
-    });
-
-    function showNotification(message, type = 'info') {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-        notification.innerHTML = `
-            ${message}
-            <button type="button" class="close" data-dismiss="alert">
-                <span>&times;</span>
-            </button>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Auto remove after 3 seconds
-        setTimeout(() => {
-            if (notification && notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 3000);
-    }
-@endif
-
-// Admin Dashboard Toggle
-$(function() {
-    $('#adminDashboardSwitch').on('change', function() {
-        var mode = this.checked ? 'personal' : 'admin';
-        var $switch = $(this);
-        $switch.prop('disabled', true); // Prevent double clicks
-        
-        console.log('Admin toggle clicked, switching to mode:', mode);
-        
-        $.ajax({
-            url: '/dashboard/switch-admin-mode',
-            method: 'POST',
-            data: { mode: mode },
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(res) {
-                console.log('Success response:', res);
-                if(res.success) {
-                    if (mode === 'personal') {
-                        // Redirect to personal dashboard
-                        window.location.href = '/dashboard';
-                    } else {
-                        // Reload admin dashboard
-                        location.reload();
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        beginAtZero: true,
+                        grid: {
+                            drawOnChartArea: false,
+                        },
                     }
-                } else {
-                    $switch.prop('disabled', false);
-                    alert('Failed to switch admin mode: ' + (res.message || 'Unknown error'));
                 }
-            },
-            error: function(xhr, status, error) {
-                console.log('Error response:', xhr.responseText);
-                console.log('Status:', status, 'Error:', error);
-                $switch.prop('disabled', false);
-                alert('Error switching admin mode. Please check console for details.');
             }
         });
+
+        // Admin User Distribution Chart
+        const adminUserCtx = document.getElementById('adminUserChart').getContext('2d');
+        new Chart(adminUserCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Landlords', 'Tenants', 'Admins'],
+                datasets: [{
+                    data: [
+                        {{ $stats['users_by_type']['landlords'] ?? 0 }},
+                {{ $stats['users_by_type']['tenants'] ?? 0 }},
+                        {{ $stats['users_by_type']['admins'] ?? 0 }}
+                    ],
+                    backgroundColor: [
+                        '#28a745',
+                        '#fbc658',
+                        '#ef8157'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Admin Action Click Handlers
+        document.querySelectorAll('.btn-admin-action').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const action = this.dataset.action;
+
+                // Show loading state
+                const originalContent = this.innerHTML;
+                this.innerHTML = '<i class="fa fa-spinner fa-spin"></i><br>Loading...';
+                this.disabled = true;
+
+                // Simulate action (replace with actual implementation)
+                setTimeout(() => {
+                    this.innerHTML = originalContent;
+                    this.disabled = false;
+
+                    // Show notification
+                    showNotification(action + ' feature will be available soon!', 'info');
+                }, 1000);
+            });
+        });
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (notification && notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+    @endif
+</script>
+
+<!-- Admin Dashboard Toggle - Separate script to prevent chart errors from breaking toggle -->
+<script>
+    // Admin Dashboard Toggle
+    $(function () {
+        $('#adminDashboardSwitch').on('change', function () {
+            var mode = this.checked ? 'admin' : 'personal';
+            var $switch = $(this);
+            $switch.prop('disabled', true); // Prevent double clicks
+
+            console.log('Admin toggle clicked, switching to mode:', mode);
+
+            $.ajax({
+                url: '/dashboard/switch-admin-mode',
+                method: 'POST',
+                data: { mode: mode },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function (res) {
+                    console.log('Success response:', res);
+                    if (res.success) {
+                        if (mode === 'personal') {
+                            // Redirect to personal dashboard
+                            window.location.href = '/dashboard';
+                        } else {
+                            // Reload admin dashboard
+                            location.reload();
+                        }
+                    } else {
+                        $switch.prop('disabled', false);
+                        alert('Failed to switch admin mode: ' + (res.message || 'Unknown error'));
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log('Error response:', xhr.responseText);
+                    console.log('Status:', status, 'Error:', error);
+                    $switch.prop('disabled', false);
+                    alert('Error switching admin mode. Please check console for details.');
+                }
+            });
+        });
     });
-});
 </script>
 
 <style>
-/* Modern switch toggle for admin */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 34px;
-}
-.switch input {display:none;}
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 34px;
-}
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-input:checked + .slider {
-  background-color: #007bff;
-}
-input:checked + .slider:before {
-  transform: translateX(26px);
-}
-.switch-label {
-  margin-left: 12px;
-  font-weight: bold;
-  vertical-align: middle;
-}
-.switch-label-left {
-  margin-right: 12px;
-  font-weight: bold;
-  vertical-align: middle;
-}
+    /* Modern switch toggle for admin */ /* Modern switch toggle */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
 
-.alert-gradient-primary {
-    background: linear-gradient(45deg, #28a745, #6bd098);
-    color: white;
-    border: none;
-}
+        .switch input {
+            display: none;
+        }
 
-.btn-admin-action {
-    height: 100px;
-    white-space: normal;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    transition: all 0.3s ease;
-}
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
 
-.btn-admin-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 15px;
+            width: 15px;
+            left: -4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+    input:checked+.slider {
+        background-color: #007bff;
+    }
 
-.timeline {
-    position: relative;
-    padding-left: 30px;
-}
+    input:checked+.slider:before {
+        transform: translateX(26px);
+    }
 
-.timeline-item {
-    position: relative;
-    margin-bottom: 25px;
-    padding-bottom: 10px;
-}
+    .switch-label {
+        margin-left: 12px;
+        font-weight: bold;
+        vertical-align: middle;
+    }
 
-.timeline-marker {
-    position: absolute;
-    left: -40px;
-    top: 5px;
-    width: 20px;
-    height: 20px;
-    background-color: #f4f3ef;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-}
+    .switch-label-left {
+        margin-right: 12px;
+        font-weight: bold;
+        vertical-align: middle;
+    }
 
-.timeline-item:before {
-    content: '';
-    position: absolute;
-    left: -31px;
-    top: 25px;
-    bottom: -15px;
-    width: 2px;
-    background-color: #e3e3e3;
-}
+    .alert-gradient-primary {
+        background: linear-gradient(45deg, #28a745, #6bd098);
+        color: white;
+        border: none;
+    }
 
-.timeline-item:last-child:before {
-    display: none;
-}
+    .btn-admin-action {
+        height: 100px;
+        white-space: normal;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
 
-.timeline-title {
-    margin-bottom: 5px;
-    color: #333;
-    font-weight: 600;
-}
+    .btn-admin-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
 
-.timeline-description {
-    margin-bottom: 8px;
-    color: #666;
-    font-size: 0.9em;
-    line-height: 1.4;
-}
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
 
-.mini-stat {
-    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
-    border: none;
-    transition: all 0.3s ease;
-}
+    .timeline-item {
+        position: relative;
+        margin-bottom: 25px;
+        padding-bottom: 10px;
+    }
 
-.mini-stat:hover {
-    transform: scale(1.05);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
+    .timeline-marker {
+        position: absolute;
+        left: -40px;
+        top: 5px;
+        width: 20px;
+        height: 20px;
+        background-color: #f4f3ef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+    }
 
-.card-stats:hover {
-    transform: translateY(-2px);
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
+    .timeline-item:before {
+        content: '';
+        position: absolute;
+        left: -31px;
+        top: 25px;
+        bottom: -15px;
+        width: 2px;
+        background-color: #e3e3e3;
+    }
 
-.bg-gradient {
-    background: linear-gradient(45deg, #28a745, #6bd098) !important;
-}
+    .timeline-item:last-child:before {
+        display: none;
+    }
 
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
+    .timeline-title {
+        margin-bottom: 5px;
+        color: #333;
+        font-weight: 600;
+    }
 
-.card-stats .numbers .card-title {
-    font-weight: 700;
-    animation: pulse 2s infinite;
-}
+    .timeline-description {
+        margin-bottom: 8px;
+        color: #666;
+        font-size: 0.9em;
+        line-height: 1.4;
+    }
+
+    .mini-stat {
+        background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .mini-stat:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-stats:hover {
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .bg-gradient {
+        background: linear-gradient(45deg, #28a745, #6bd098) !important;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .card-stats .numbers .card-title {
+        font-weight: 700;
+        animation: pulse 2s infinite;
+    }
 </style>
 
 @include('footer')

@@ -27,7 +27,7 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <strong>Amount:</strong> ₦{{ number_format($payment_details['amount'] ?? 0) }}
+                                    <strong>Amount:</strong> {{ format_money($payment_details['amount'] ?? 0, ($payment_details['currency'] ?? null)) }}
                                 </div>
                                 <div class="col-md-6">
                                     <strong>Reference:</strong> {{ $payment_details['reference'] ?? 'N/A' }}

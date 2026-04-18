@@ -256,7 +256,7 @@
                         <div class="row">
                             <div class="col-md-6 pr-1">
                                 <div class="form-group">
-                                    <label>L.G.A</label>
+                                    <label>City/L.G.A</label>
                                     <input type="text" class="form-control" name="lga" value="{{ auth()->user()->lga }}">
                                 </div>
                             </div>

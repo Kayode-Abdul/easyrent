@@ -27,9 +27,8 @@
                                             {{ Str::limit($task->description, 100) }}
                                         </p>
                                         <div class="text-center mt-3">
-                                            <span class="badge badge-warning">Budget: ₦{{
-                                                number_format($task->budget_min) }} - ₦{{
-                                                number_format($task->budget_max) }}</span>
+                                            <span class="badge badge-warning">Budget: {{ format_money($task->budget_min) }} - {{
+                                                format_money($task->budget_max) }}</span>
                                             <span class="badge badge-info">{{ $task->duration }}</span>
                                         </div>
                                     </div>

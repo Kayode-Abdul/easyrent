@@ -1,391 +1,399 @@
 @include('header')
 
 <style>
-    .navbar {
-        display: none;
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+    :root {
+        --primary-gradient: linear-gradient(135deg, #3e8189 0%, #51cbce 100%);
+        --accent-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --text-primary: #1e293b;
+        --text-muted: #64748b;
     }
 
+    body {
+        font-family: 'Outfit', sans-serif;
+        background: #f8fafc;
+        overflow-x: hidden;
+    }
+
+    .navbar,
     footer {
-        display: none;
-
+        display: none !important;
     }
 
-    .pt-pad {
-        margin-top: 0;
-        margin-bottom: 0;
-        padding-top: 90px;
-        padding-bottom: 90px;
+    .auth-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('{{ asset(' auth_background_premium_1772325387793.png') }}');
+        background-size: cover;
+        background-position: center;
+        filter: brightness(0.6);
+        z-index: -1;
     }
 
-    .auth-container {
+    .auth-bg::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+    }
+
+    .auth-wrapper {
         min-height: 100vh;
-        background: linear-gradient(45deg, #17a2b8, #6bd098) !important;
         display: flex;
         align-items: center;
-        padding: 2rem 0;
-    }
-
-    .auth-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-
-    .auth-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-    }
-
-    .auth-header {
-        color: white;
+        justify-content: center;
         padding: 2rem;
-        /* background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%) ; */
+    }
+
+    .auth-card-premium {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 30px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        width: 100%;
+        max-width: 450px;
+        padding: 3rem;
+        animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .brand-logo {
         text-align: center;
-        border: none;
+        margin-bottom: 2rem;
     }
 
-    .auth-header h2 {
-        margin: 0;
-        font-weight: 600;
-        font-size: 1.8rem;
+    .brand-logo img {
+        width: 100px;
+        filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
     }
 
-    .auth-body {
-        padding: 2.5rem;
+    .auth-title {
+        color: var(--text-primary);
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        text-align: center;
+        letter-spacing: -0.025em;
     }
 
-    .form-floating {
+    .auth-subtitle {
+        color: var(--text-muted);
+        text-align: center;
+        margin-bottom: 2.5rem;
+        font-size: 1.1rem;
+    }
+
+    .input-group-premium {
+        position: relative;
         margin-bottom: 1.5rem;
     }
 
-    .form-floating>.form-control {
-        border: 2px solid #e9ecef;
-        border-radius: 12px;
-        padding: 1rem 0.75rem;
-        height: auto;
-        transition: all 0.3s ease;
-    }
-
-    .form-floating>.form-control:focus {
-        border-color: #28a745;
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-    }
-
-    .form-floating>label {
-        color: #6c757d;
-        font-weight: 500;
-    }
-
-    .btn-auth {
-        background: linear-gradient(45deg, #17a2b8, #6bd098) !important;
-        border: none;
-        border-radius: 12px;
-        padding: 0.875rem 2rem;
+    .input-group-premium label {
+        display: block;
+        font-size: 0.875rem;
         font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        padding-left: 0.5rem;
+    }
+
+    .input-group-premium .form-control {
+        background: rgba(255, 255, 255, 0.5);
+        border: 1.5px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 0.8rem 1.25rem;
         font-size: 1rem;
-        color: white;
-        width: 100%;
+        color: var(--text-primary);
         transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        height: auto !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
 
-    .btn-auth:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    .input-group-premium .form-control:focus {
+        background: white;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        outline: none;
     }
 
-    .form-check {
-        margin: 1.5rem 0;
+    .password-toggle {
+        position: absolute;
+        right: 1.25rem;
+        bottom: 0.8rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: color 0.3s;
+        background: none;
+        border: none;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .form-check-input:checked {
-        background-color: #28a745;
-        border-color: #28a745;
+    .password-toggle:hover {
+        color: var(--text-primary);
     }
 
-    .auth-links {
-        text-align: center;
-        margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 1px solid #e9ecef;
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        font-size: 0.875rem;
     }
 
-    .auth-links a {
-        color: #28a745;
+    .custom-checkbox {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .custom-checkbox input {
+        display: none;
+    }
+
+    .checkmark {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #cbd5e1;
+        border-radius: 6px;
+        margin-right: 10px;
+        position: relative;
+        transition: all 0.2s;
+    }
+
+    .custom-checkbox input:checked+.checkmark {
+        background: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .custom-checkbox input:checked+.checkmark::after {
+        content: '\2713';
+        position: absolute;
+        color: white;
+        font-size: 12px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .forgot-pass {
+        color: #3b82f6;
         text-decoration: none;
         font-weight: 500;
-        transition: all 0.3s ease;
+        transition: color 0.3s;
     }
 
-    .auth-links a:hover {
-        color: #ffc107;
+    .forgot-pass:hover {
+        color: #2563eb;
         text-decoration: underline;
     }
 
-    .alert-modern {
+    .btn-premium {
+        background: var(--primary-gradient);
+        color: white;
         border: none;
-        border-radius: 12px;
-        padding: 1rem 1.5rem;
+        border-radius: 16px;
+        padding: 1rem;
+        width: 100%;
+        font-weight: 600;
+        font-size: 1.125rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        filter: brightness(1.1);
+    }
+
+    .btn-premium:active {
+        transform: translateY(0);
+    }
+
+    .auth-footer {
+        margin-top: 2.5rem;
+        text-align: center;
+        font-size: 0.95rem;
+        color: var(--text-muted);
+    }
+
+    .auth-footer a {
+        color: #3b82f6;
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+    .auth-footer a:hover {
+        color: #2563eb;
+        text-decoration: underline;
+    }
+
+    .alert-premium {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        padding: 1rem;
+        border-radius: 16px;
         margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .invalid-feedback-premium {
+        color: #dc2626;
+        font-size: 0.75rem;
+        margin-top: 0.375rem;
+        padding-left: 0.5rem;
         font-weight: 500;
     }
 
-    .alert-success {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        color: white;
-    }
-
-    .alert-danger {
-        background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
-        color: white;
-    }
-
-    @media (max-width: 768px) {
-        .auth-container {
-            padding: 1rem;
+    @media (max-width: 480px) {
+        .auth-card-premium {
+            padding: 2rem;
+            border-radius: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.95);
         }
 
-        .auth-body {
-            padding: 1.5rem;
-        }
-
-        .auth-header {
-            padding: 1.5rem;
+        .auth-wrapper {
+            padding: 0;
         }
     }
 </style>
 
-<div class="pt-pad">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <!-- Logo above card -->
-                <div class="text-center mb-4">
-                    <a href="/"><img src="/assets/images/logo-small.png" alt="EasyRent Logo" style="width:80px;"></a>
+<div class="auth-bg"></div>
 
+<div class="auth-wrapper">
+    <div class="auth-card-premium">
+        <div class="brand-logo">
+            <a href="/"><img src="/assets/images/logo-small.png" alt="EasyRent Logo"></a>
+        </div>
+
+        <h1 class="auth-title">Welcome Back</h1>
+        <p class="auth-subtitle">Sign in to manage your spaces.</p>
+
+        @if (session('status'))
+        <div class="alert-premium">
+            <i class="fas fa-check-circle"></i>
+            {{ session('status') }}
+        </div>
+        @endif
+
+        @if (session('error'))
+        <div class="alert-premium" style="background: #fee2e2; color: #991b1b; border-color: #fecaca;">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ session('error') }}
+        </div>
+        @endif
+
+        <form method="POST" action="{{ route('login') }}">
+            @csrf
+
+            <div class="input-group-premium">
+                <label for="email">Email Address</label>
+                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email"
+                    value="{{ old('email') }}" required autocomplete="email" autofocus placeholder="Enter your email">
+                @error('email')
+                <div class="invalid-feedback-premium">
+                    {{ $message }}
                 </div>
-
-                <div class="auth-card">
-                    <div class="auth-header">
-                        <!-- <h2><i class="fas fa-sign-in-alt me-2"></i>Welcome Back</h2>
-                        <p class="mb-0 mt-2 opacity-90">Sign in to your account</p> -->
-                    </div>
-
-                    <div class="auth-body">
-                        <div id="toast-container" class="modern-toast-container"></div>
-
-                        <form method="POST" action="{{ route('login') }}">
-                            @csrf
-
-                            <div class="mb-3">
-                                <label for="email" class="form-label"><i class="fas fa-envelope me-2"></i>Email
-                                    Address</label>
-                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror"
-                                    name="email" value="{{ old('email') }}" required autocomplete="email" autofocus
-                                    placeholder="johndoe@email.com">
-                                @error('email')
-                                <div class="invalid-feedback">
-                                    <strong>{{ $message }}</strong>
-                                </div>
-                                @enderror
-                            </div>
-
-                            <div class="mb-3 position-relative">
-                                <label for="password" class="form-label"><i
-                                        class="fas fa-lock me-2"></i>Password</label>
-                                <input id="password" type="password"
-                                    class="form-control @error('password') is-invalid @enderror" name="password"
-                                    required autocomplete="current-password" placeholder="Password">
-                                <button type="button" class="password-toggle-btn"
-                                    onclick="togglePasswordVisibility('password')">
-                                    <i class="bi bi-eye-slash" id="password-toggle-icon"></i>
-                                </button>
-                                @error('password')
-                                <div class="invalid-feedback">
-                                    <strong>{{ $message }}</strong>
-                                </div>
-                                @enderror
-                            </div>
-
-                            <div class="form-check">
-                                <!--input class="form-check-input" type="checkbox" name="remember" id="remember" -->
-                                <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : ''
-                                    }}>
-                                <label class="form-check-label" for="remember">
-                                    Remember Me
-                                </label>
-                            </div>
-
-                            <button type="submit" class="btn btn-auth">
-                                <i class="fas fa-sign-in-alt me-2"></i>Sign In
-                            </button>
-                        </form>
-
-                        <div class="auth-links">
-                            @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}">
-                                <i class="fas fa-key me-1"></i>Forgot Your Password?
-                            </a>
-                            @endif
-                            <div class="mt-3">
-                                <span class="text-muted">Don't have an account?</span>
-                                <a href="{{ route('register') }}" class="ms-1">
-                                    <i class="fas fa-user-plus me-1"></i>Sign Up
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                @enderror
             </div>
+
+            <div class="input-group-premium">
+                <label for="password">Password</label>
+                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror"
+                    name="password" required autocomplete="current-password" placeholder="••••••••">
+                <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password')">
+                    <i class="far fa-eye-slash" id="password-toggle-icon"></i>
+                </button>
+                @error('password')
+                <div class="invalid-feedback-premium">
+                    {{ $message }}
+                </div>
+                @enderror
+            </div>
+
+            <div class="form-options">
+                <label class="custom-checkbox">
+                    <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                    <div class="checkmark"></div>
+                    <span>Remember Me</span>
+                </label>
+
+                @if (Route::has('password.request'))
+                <a href="{{ route('password.request') }}" class="forgot-pass">Forgot Password?</a>
+                @endif
+            </div>
+
+            <button type="submit" class="btn-premium">
+                Sign In <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account?
+            <a href="{{ route('register') }}">Create an account</a>
         </div>
     </div>
 </div>
 
-<style>
-    .password-toggle-btn {
-        position: absolute !important;
-        right: 15px !important;
-        top: 38px !important;
-        background: none !important;
-        border: none !important;
-        color: #6c757d !important;
-        cursor: pointer !important;
-        padding: 8px !important;
-        z-index: 1000 !important;
-        transition: color 0.3s ease !important;
-        font-size: 16px !important;
-        width: auto !important;
-        height: auto !important;
-        display: block !important;
-        line-height: 1 !important;
-    }
-
-    .password-toggle-btn:hover {
-        color: #28a745 !important;
-    }
-
-    .password-toggle-btn:focus {
-        outline: none !important;
-        color: #28a745 !important;
-    }
-
-    .form-label {
-        font-weight: 500;
-        color: #495057;
-        margin-bottom: 0.5rem;
-    }
-
-    /* Debug styles to make sure button is visible */
-    .password-toggle-btn {
-        /* background-color: rgba(255, 0, 0, 0.1) !important; Temporary red background for debugging */
-        /*border: 1px solid red !important;  Temporary red border for debugging */
-        min-width: 30px !important;
-        min-height: 30px !important;
-    }
-
-    /* Ensure the parent container allows absolute positioning */
-    .form-floating {
-        position: relative !important;
-    }
-</style>
-
 <script>
-    // Password visibility toggle function
     function togglePasswordVisibility(fieldId) {
-        console.log('Toggle called for:', fieldId);
         const passwordField = document.getElementById(fieldId);
         const toggleIcon = document.getElementById(fieldId + '-toggle-icon');
-
-        console.log('Password field:', passwordField);
-        console.log('Toggle icon:', toggleIcon);
-
-        if (!passwordField || !toggleIcon) {
-            console.error('Elements not found');
-            return;
-        }
 
         if (passwordField.type === 'password') {
             passwordField.type = 'text';
             toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.remove('far');
             toggleIcon.classList.add('fa-eye');
-            console.log('Password shown');
+            toggleIcon.classList.add('fas');
         } else {
             passwordField.type = 'password';
             toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.remove('fas');
             toggleIcon.classList.add('fa-eye-slash');
-            console.log('Password hidden');
+            toggleIcon.classList.add('far');
         }
     }
-
-    // Show session messages as modern toasts and handle redirects
-    document.addEventListener('DOMContentLoaded', function () {
-
-        // const navBar = document.getElementsByTagName('nav')[0];
-        // navBar.hide();
-        console.log("Dom loaded");
-
-        // Check if password toggle button exists
-        const toggleBtn = document.querySelector('.password-toggle-btn');
-        console.log('Toggle button found:', toggleBtn);
-
-        // Check if password field exists
-        const passwordField = document.getElementById('password');
-        console.log('Password field found:', passwordField);
-
-        // If button doesn't exist, create it manually
-        if (passwordField && !toggleBtn) {
-            console.log('Creating toggle button manually');
-            const parent = passwordField.parentElement;
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'password-toggle-btn';
-            button.onclick = () => togglePasswordVisibility('password');
-            button.innerHTML = '<i class="fas fa-eye-slash" id="password-toggle-icon"></i>';
-            parent.appendChild(button);
-            console.log('Toggle button created');
-        }
-        @if (session('status'))
-            showToast("{{ session('status') }}", 'success');
-        @endif
-        @if (session('message'))
-            showToast("{{ session('message') }}", 'success');
-        @endif
-        @if (session('error'))
-            showToast("{{ session('error') }}", 'error');
-        @endif
-
-        // Check for session expiry parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('expired') === '1') {
-            showToast('Your session has expired. Please login again.', 'warning');
-        }
-
-        // Handle form submission and redirect after login
-        const loginForm = document.querySelector('form[action*="login"]');
-        if (loginForm) {
-            loginForm.addEventListener('submit', function () {
-                // Store current redirect URL if it exists in sessionStorage
-                const redirectUrl = sessionStorage.getItem('redirect_after_login');
-                if (redirectUrl) {
-                    // Add redirect URL as hidden input
-                    const redirectInput = document.createElement('input');
-                    redirectInput.type = 'hidden';
-                    redirectInput.name = 'redirect_to';
-                    redirectInput.value = redirectUrl;
-                    this.appendChild(redirectInput);
-
-                    // Clear from sessionStorage
-                    sessionStorage.removeItem('redirect_after_login');
-                }
-            });
-        }
-    });
 </script>
 
-@include('footer')
+<script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>

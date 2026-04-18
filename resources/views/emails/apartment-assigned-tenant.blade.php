@@ -40,11 +40,11 @@
                     <li><span class="label">Property:</span> {{ $property->prop_name }}</li>
                     <li><span class="label">Address:</span> {{ $property->prop_address }}</li>
                     <li><span class="label">Apartment Type:</span> {{ $apartment->apartment_type }}</li>
-                    <li><span class="label">Monthly Rent:</span> ₦{{ number_format($apartment->amount) }}</li>
+                    <li><span class="label">Monthly Rent:</span> {{ $apartment->getFormattedAmount() }}</li>
                     <li><span class="label">Move-in Date:</span> {{ $invitation->move_in_date->format('M d, Y') }}</li>
                     <li><span class="label">Lease Duration:</span> {{ $invitation->lease_duration }} months</li>
                     <li><span class="label">Lease End Date:</span> {{ $invitation->move_in_date->addMonths($invitation->lease_duration)->format('M d, Y') }}</li>
-                    <li><span class="label">Total Paid:</span> <span class="amount">₦{{ number_format($payment->amount) }}</span></li>
+                    <li><span class="label">Total Paid:</span> <span class="amount">{{ format_money($payment->amount, $payment->currency) }}</span></li>
                 </ul>
             </div>
             

@@ -37,7 +37,7 @@
                                         <li><strong>Property:</strong> {{ $invitation->apartment->property->prop_name }}</li>
                                         <li><strong>Type:</strong> {{ $invitation->apartment->apartment_type }}</li>
                                         <li><strong>Location:</strong> {{ $invitation->apartment->property->prop_address }}</li>
-                                        <li><strong>Monthly Rent:</strong> ₦{{ number_format($invitation->apartment->amount) }}</li>
+                                        <li><strong>Monthly Rent:</strong> {{ format_money($invitation->apartment->amount, ($invitation->apartment->property->currency->code ?? null)) }}</li>
                                     </ul>
                                 </div>
                             </div>
@@ -59,7 +59,7 @@
 </li>
                                         <li><strong>Move-in Date:</strong> {{ \Carbon\Carbon::parse($invitation->move_in_date)->format('M d, Y') }}</li>
                                         <li><strong>Lease End:</strong> {{ \Carbon\Carbon::parse($invitation->move_in_date)->addMonths($invitation->lease_duration)->format('M d, Y') }}</li>
-                                        <li><strong>Total Paid:</strong> <span class="text-success fw-bold">₦{{ number_format($invitation->total_amount) }}</span></li>
+                                        <li><strong>Total Paid:</strong> <span class="text-success fw-bold">{{ format_money($invitation->total_amount, ($invitation->apartment->property->currency->code ?? null)) }}</span></li>
                                     </ul>
                                 </div>
                             </div>

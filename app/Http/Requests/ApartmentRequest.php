@@ -27,6 +27,7 @@ class ApartmentRequest extends FormRequest
                 'amount' => 'required|numeric|min:0',
                 'rentalType' => 'required|in:hourly,daily,weekly,monthly,quarterly,semi_annually,yearly,bi_annually',
                 'duration' => 'nullable|numeric|min:0',
+                'currency_id' => 'nullable|exists:currencies,id',
             ];
         } else {
             // Array field validation (from listing page bulk creation)
@@ -38,6 +39,7 @@ class ApartmentRequest extends FormRequest
                 'amount.*' => 'required|numeric|min:0',
                 'rentalType.*' => 'required|in:hourly,daily,weekly,monthly,quarterly,semi_annually,yearly,bi_annually',
                 'duration.*' => 'nullable|numeric|min:0',
+                'currency_id.*' => 'nullable|exists:currencies,id',
             ];
         }
     }

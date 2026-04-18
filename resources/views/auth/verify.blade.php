@@ -1,217 +1,206 @@
 @include('header')
 
 <style>
-    .navbar {
-        display: none;
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+    :root {
+        --primary-gradient: linear-gradient(135deg, #3e8189 0%, #51cbce 100%);
+        --accent: #3b82f6;
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --text-primary: #1e293b;
+        --text-muted: #64748b;
     }
 
+    body {
+        font-family: 'Outfit', sans-serif;
+        background: #f8fafc;
+    }
+
+    .navbar,
     footer {
-        display: none;
-
+        display: none !important;
     }
 
-    .pt-pad {
-        margin-top: 0;
-        margin-bottom: 0;
-        padding-top: 90px;
-        padding-bottom: 90px;
+    .auth-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('{{ asset(' auth_background_premium_1772325387793.png') }}');
+        background-size: cover;
+        background-position: center;
+        filter: brightness(0.5);
+        z-index: -1;
     }
 
-    .auth-container {
+    .auth-wrapper {
         min-height: 100vh;
-        background: linear-gradient(45deg, #17a2b8, #6bd098) !important;
         display: flex;
         align-items: center;
-        padding: 2rem 0;
-    }
-
-    .auth-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-
-    .auth-header {
-
-        /* background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%) ; */
+        justify-content: center;
         padding: 2rem;
+    }
+
+    .verify-card-premium {
+        background: var(--glass-bg);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 40px;
+        box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.5);
+        width: 100%;
+        max-width: 480px;
+        padding: 4rem 3.5rem;
         text-align: center;
+        animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .brand-logo {
+        margin-bottom: 2.5rem;
+    }
+
+    .brand-logo img {
+        width: 80px;
+    }
+
+    .verify-icon-wrapper {
+        width: 100px;
+        height: 100px;
+        background: #f0f7ff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: var(--accent);
+        font-size: 2.5rem;
+        box-shadow: 0 15px 30px rgba(59, 130, 246, 0.1);
+    }
+
+    .auth-title {
+        color: var(--text-primary);
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .auth-subtitle {
+        color: var(--text-muted);
+        line-height: 1.7;
+        margin-bottom: 3rem;
+        font-size: 1.05rem;
+    }
+
+    .btn-premium-verify {
+        background: var(--primary-gradient);
+        color: white;
         border: none;
-    }
-
-    .auth-header h2 {
-        margin: 0;
+        border-radius: 16px;
+        padding: 1.1rem;
+        width: 100%;
         font-weight: 600;
-        font-size: 1.8rem;
-    }
-
-    .auth-body {
-        padding: 2.5rem;
-        text-align: center;
-    }
-
-    .verification-icon {
-        font-size: 4rem;
-        color: #28a745;
-        margin-bottom: 1.5rem;
-    }
-
-    .verification-message {
         font-size: 1.1rem;
-        color: #6c757d;
-        margin-bottom: 2rem;
-        line-height: 1.6;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
     }
 
-    .btn-auth {
-        background: linear-gradient(45deg, #17a2b8, #6bd098) !important;
-        border: none;
-        border-radius: 12px;
-        padding: 0.875rem 2rem;
-        font-weight: 600;
-        font-size: 1rem;
-        color: white;
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        text-decoration: none;
-        display: inline-block;
-    }
-
-    .btn-auth:hover {
+    .btn-premium-verify:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-        color: white;
-        text-decoration: none;
+        filter: brightness(1.1);
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
     }
 
-    .alert-modern {
-        border: none;
-        border-radius: 12px;
-        padding: 1rem 1.5rem;
-        margin-bottom: 1.5rem;
-        font-weight: 500;
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        color: white;
+    .btn-premium-verify:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
     }
 
-    .auth-links {
-        margin-top: 2rem;
+    .auth-footer {
+        margin-top: 2.5rem;
         padding-top: 2rem;
-        border-top: 1px solid #e9ecef;
+        border-top: 1px solid #e2e8f0;
     }
 
-    .auth-links a {
-        color: #28a745;
+    .auth-footer a {
+        color: var(--text-muted);
         text-decoration: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
+        font-weight: 600;
+        transition: color 0.3s;
     }
 
-    .auth-links a:hover {
-        color: #ffc107;
-        text-decoration: underline;
-    }
-
-    @media (max-width: 768px) {
-        .auth-container {
-            padding: 1rem;
-        }
-
-        .auth-body {
-            padding: 1.5rem;
-        }
-
-        .auth-header {
-            padding: 1.5rem;
-        }
+    .auth-footer a:hover {
+        color: var(--accent);
     }
 </style>
 
-<div class="pt-pad">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="text-center mb-4">
-                    <a href="/"><img src="/assets/images/logo-small.png" alt="EasyRent Logo" style="width:80px;"></a>
+<div class="auth-bg"></div>
 
-                </div>
-                <div class="auth-card">
-                    <div class="auth-header">
-                        <!-- <a href="/"><img src="/assets/images/logo-small.png" alt="EasyRent Logo" style="width:80px;"></a>
-                  
-                  <h2><i class="fas fa-envelope-open me-2"></i>Email Verification</h2>
-                        <p class="mb-0 mt-2 opacity-90">Verify your email to continue</p> -->
-                    </div>
+<div class="auth-wrapper">
+    <div class="verify-card-premium">
+        <div class="brand-logo">
+            <a href="/"><img src="/assets/images/logo-small.png" alt="EasyRent Logo"></a>
+        </div>
 
-                    <div class="auth-body">
-                        <div id="toast-container" class="modern-toast-container"></div>
+        <div class="verify-icon-wrapper">
+            <i class="fas fa-paper-plane"></i>
+        </div>
 
-                        <div class="verification-icon">
-                            <i class="fas fa-envelope-circle-check"></i>
-                        </div>
+        <h1 class="auth-title">Verify Email</h1>
+        <p class="auth-subtitle">
+            A verification link was sent to your email. Please click the link to activate your account.
+        </p>
 
-                        <div class="verification-message">
-                            <p><strong>Almost there!</strong></p>
-                            <p>{{ __('Before proceeding, please check your email for a verification link.') }}</p>
-                            <p class="text-muted">{{ __('If you did not receive the email, you can request a new one
-                                below.') }}</p>
-                        </div>
+        <form method="POST" action="{{ route('verification.resend') }}" id="resendForm">
+            @csrf
+            <button type="submit" class="btn-premium-verify" id="resendBtn">
+                Resend Email <i class="fas fa-sync-alt"></i>
+            </button>
+        </form>
 
-                        <form method="POST" action="{{ route('verification.resend') }}" id="resendForm">
-                            @csrf
-                            <button type="submit" class="btn btn-auth" id="resendBtn">
-                                <i class="fas fa-paper-plane me-2"></i>{{ __('Resend Verification Email') }}
-                            </button>
-                        </form>
-
-                        <div class="auth-links">
-                            <a href="{{ route('login') }}">
-                                <i class="fas fa-arrow-left me-1"></i>Back to Login
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="auth-footer">
+            <a href="{{ route('login') }}">
+                <i class="fas fa-arrow-left me-2"></i> Back to Login
+            </a>
         </div>
     </div>
 </div>
 
 <script>
-    // Show session messages as modern toasts
     document.addEventListener('DOMContentLoaded', function () {
         @if (session('resent'))
-            showToast("{{ __('A fresh verification link has been sent to your email address.') }}", 'success');
-        @endif
-        @if (session('status'))
-            showToast("{{ session('status') }}", 'success');
-        @endif
-        @if ($errors -> any())
-            @foreach($errors -> all() as $error)
-        showToast("{{ $error }}", 'error');
-        @endforeach
+            alert("A fresh verification link has been sent to your email address.");
         @endif
 
-        // Handle resend form submission
         const resendForm = document.getElementById('resendForm');
         const resendBtn = document.getElementById('resendBtn');
 
         if (resendForm && resendBtn) {
             resendForm.addEventListener('submit', function (e) {
-                // Disable button and show loading state
                 resendBtn.disabled = true;
-                resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+                resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
-                // Re-enable button after 5 seconds to prevent permanent disable
                 setTimeout(() => {
                     resendBtn.disabled = false;
-                    resendBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>{{ __("Resend Verification Email") }}';
-                }, 5000);
+                    resendBtn.innerHTML = 'Resend Email <i class="fas fa-sync-alt"></i>';
+                }, 10000);
             });
         }
     });

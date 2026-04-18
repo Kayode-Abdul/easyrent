@@ -181,7 +181,7 @@ class BenefactorPayment extends Model
                     'subject' => 'Rent Paid by Benefactor',
                     'body' => "Great news! Your tenant's rent has been paid by a benefactor.\n\n"
                         . "Tenant: " . $this->tenant->first_name . " " . $this->tenant->last_name . "\n"
-                        . "Amount: ₦" . number_format($this->amount, 2) . "\n"
+                        . "Amount: " . format_money($this->amount, $proforma->currency ?? null) . "\n"
                         . "Paid by: " . $this->benefactor->full_name . "\n"
                         . "Payment Reference: " . $this->payment_reference . "\n"
                         . "Payment Type: " . ucfirst(str_replace('_', ' ', $this->payment_type)) . "\n"

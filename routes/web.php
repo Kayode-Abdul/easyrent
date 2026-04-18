@@ -17,6 +17,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\SettingsController;
 
 /*
  |--------------------------------------------------------------------------
@@ -52,7 +53,7 @@ Route::get('/faq', function () {
 })->name('faq');
 
 
-Route::get('/dashboard', [DashboardController::class , 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class , 'index'])->middleware(['auth', 'verified', 'check.approved'])->name('dashboard');
 Route::get('/dashupload', function () {
     return view('show');
 });
@@ -63,6 +64,9 @@ Route::post('/listing', [PropertyController::class , 'add']);
 Route::get('/apartment', [PropertyController::class , 'addApartment']);
 Route::post('/apartment', [PropertyController::class , 'addApartment']);
 Route::post('/apartment/single', [PropertyController::class , 'addSingleApartment']);
+
+// Location data API (for cascading country → state → city dropdowns)
+Route::get('/api/location-data', [PropertyController::class , 'getLocationData']);
 
 // Property CRUD routes
 Route::get('/dashboard/property/{propId}', [PropertyController::class , 'show']);
@@ -102,7 +106,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/users', [UserController::class , 'users'])->name('admin.users.list');
 });
 
-Route::get('/dashboard/myproperty', [PropertyController::class , 'userProperty'])->middleware('auth');
+Route::get('/dashboard/myproperty', [PropertyController::class , 'userProperty'])->middleware('auth')->name('dashboard.myproperty');
 Route::get('/dashboard/user', [UserController::class , 'user'])->middleware('auth');
 // Billing Route
 Route::get('/dashboard/billing', [BillingController::class , 'index'])->middleware('auth')->name('billing.index');
@@ -171,7 +175,7 @@ Route::get('/api/session-status', function () {
 
 // Protected User Profile routes
 Route::middleware(['auth'])->group(function () {
-    Route::put('/user/{id}', [UserController::class , 'update']);
+    Route::put('/user/{id}', [UserController::class , 'update'])->name('user.update');
     Route::post('/user/{id}', [UserController::class , 'update']);
     Route::get('/dashboard/users/profile/{id}', [UserController::class , 'show'])->name('users.profile');
     Route::post('/dashboard/users/profile/{id}', [UserController::class , 'show'])->name('users.profile.update');
@@ -202,6 +206,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/messages/compose', [MessageController::class , 'compose'])->name('messages.compose');
     Route::post('/dashboard/messages/send', [MessageController::class , 'send'])->name('messages.send');
     Route::get('/dashboard/messages/{id}', [MessageController::class , 'show'])->name('messages.show');
+    
+    // Settings Hub Routes
+    Route::get('/dashboard/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/dashboard/settings/payouts', [SettingsController::class, 'updatePayouts'])->name('settings.payouts.update');
+    Route::post('/dashboard/settings/security', [SettingsController::class, 'updateSecurity'])->name('settings.security.update');
+    Route::post('/dashboard/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
 
     // User lookup API for tenant ID validation
     Route::get('/api/user/lookup/{userId}', [UserController::class , 'lookup'])->name('user.lookup');
@@ -209,6 +219,7 @@ Route::middleware(['auth'])->group(function () {
     // Payment routes
     Route::get('/dashboard/payments', [PaymentController::class , 'index'])->name('payments.index');
     Route::get('/dashboard/payments/analytics', [PaymentController::class , 'analytics'])->name('payments.analytics');
+    Route::get('/dashboard/payments/{transactionId}/receipt/download', [App\Http\Controllers\PaymentReceiptController::class, 'download'])->name('payment.receipt.download');
 
     // Enhanced rental calculation routes
     Route::post('/api/payment/calculate-rental', [PaymentController::class , 'calculateEnhancedRentalPayment'])->name('payment.calculate.rental');
@@ -228,7 +239,7 @@ Route::middleware(['auth'])->group(function () {
         );
 
         // Artisan System Routes
-        Route::prefix('artisan')->name('artisan.')->group(function () {
+        Route::prefix('artisan')->name('artisan.')->middleware(['check.approved'])->group(function () {
             // Landlord actions on tasks
             Route::post('/tasks', [App\Http\Controllers\ArtisanTaskController::class , 'store'])->name('tasks.store');
             Route::get('/tasks/{task}', [App\Http\Controllers\ArtisanTaskController::class , 'show'])->name('tasks.show');
@@ -492,7 +503,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     });
 
 // Marketer Routes (Protected by marketer middleware)
-Route::prefix('marketer')->name('marketer.')->middleware(['auth'])->group(function () {
+Route::prefix('marketer')->name('marketer.')->middleware(['auth', 'check.approved'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\MarketerController::class , 'dashboard'])->name('dashboard');
 
     // Profile management
@@ -572,6 +583,7 @@ Route::post('/dashboard/switch-property-manager-mode', [App\Http\Controllers\Das
 
 // Admin Dashboard Mode Switching
 Route::post('/dashboard/switch-admin-mode', [App\Http\Controllers\DashboardController::class , 'switchAdminMode'])->middleware('auth');
+Route::post('/dashboard/switch-artisan-mode', [App\Http\Controllers\DashboardController::class , 'switchArtisanMode'])->middleware('auth');
 
 // Commission Transparency Routes
 Route::middleware(['auth'])->group(function () {

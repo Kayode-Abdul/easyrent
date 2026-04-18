@@ -28,7 +28,7 @@
                                     <p><strong>Email:</strong> {{ $invitation->tenant->email }}</p>
                                 </div>
                                 <div class="col-md-6 text-right">
-                                    <h2 class="text-primary">₦{{ number_format($invitation->amount, 2) }}</h2>
+                                    <h2 class="text-primary">{{ format_money($invitation->amount) }}</h2>
                                     <p class="text-muted">Amount Due</p>
                                 </div>
                             </div>

@@ -240,7 +240,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h5 class="card-title mb-0">
-                            <i class="nc-icon nc-settings-tool-66"></i> Actions
+                            <i class="nc-icon nc-settings-gear-65"></i> Actions
                         </h5>
                     </div>
                     <div class="card-body">
@@ -303,7 +303,7 @@
                             <div class="alert alert-info py-2 px-3">
                                 <small><i class="nc-icon nc-delivery-fast"></i> Artisan request active</small>
                                 <br>
-                                <a href="{{ route('complaints.artisan.tasks.show', $complaint->artisanTask) }}"
+                                <a href="{{ route('artisan.tasks.show', $complaint->artisanTask) }}"
                                     class="btn btn-link btn-sm p-0 text-white">View Task Details</a>
                             </div>
                         </div>
@@ -416,14 +416,14 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group text-left">
-                                <label>Min Budget (₦)</label>
+                                <label>Min Budget ({{ $complaint->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }})</label>
                                 <input type="number" name="budget_min" class="form-control" placeholder="e.g. 5000"
                                     required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group text-left">
-                                <label>Max Budget (₦)</label>
+                                <label>Max Budget ({{ $complaint->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }})</label>
                                 <input type="number" name="budget_max" class="form-control" placeholder="e.g. 15000"
                                     required>
                             </div>

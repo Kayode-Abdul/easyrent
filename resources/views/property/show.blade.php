@@ -395,7 +395,7 @@ $types = [
                                         }}</td>
                                     <td>{{ $apartment->range_end ? $apartment->range_end->format('M d, Y') : 'N/A' }}
                                     </td>
-                                    <td>₦{{ number_format($apartment->amount ?? 0) }}</td>
+                                    <td>{{ $apartment->getFormattedAmount() }}</td>
                                     <td>
                                         <span class="badge bg-{{ $statusClass }} text-white px-2 py-1">
                                             {{ $enhancedStatus['message'] }}
@@ -570,7 +570,7 @@ $types = [
                             <label>Price</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text">₦</span>
+                                    <span class="input-group-text">{{ $property->currency->symbol ?? format_money(0)->getSymbol() }}</span>
                                 </div>
                                 <input type="text" class="form-control" name="amount" id="apartmentPriceInput"
                                     placeholder="Enter rental price" required>
@@ -716,6 +716,16 @@ $types = [
         <div class="mb-3 text-muted small">Search for a verified property manager by name or city. All fields are
             optional.</div>
         <form id="agentSearchForm">
+            <div class="form-group">
+                <label for="agentCountry">Country</label>
+                <select name="country" id="agentCountry" class="form-control" onchange="getStatesForAgent()">
+                    <option value="" disabled selected>Select Country</option>
+                    @foreach ($countries as $c)
+                    <option value="{{ $c['name'] }}" {{ $c['name']==='Nigeria' ? 'selected' : '' }}>{{ $c['name'] }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
             <div class="form-group">
                 <label for="states">State</label>
                 <select name="state" id="states" class="form-control" onchange="getCities()">
@@ -991,23 +1001,32 @@ $types = [
         }
 
         // Use correct selectors for single apartment add form
-        $('input[name="fromDate"]').on('change', function () {
-            const parentDiv = $(this).closest('.form-group').parent();
-            const duration = parentDiv.find('select[name="duration"]').val();
-            const endDateInput = parentDiv.find('input[name="toDate"]');
+        $('input[name="fromRange"]').on('change', function () {
+            const parentDiv = $(this).closest('#apartmentFormFields');
+            const duration = parentDiv.find('select[name="rentalType"] option:selected').data('duration');
+            const endDateInput = parentDiv.find('input[name="toRange"]');
+
+            if (duration) {
+                parentDiv.find('input[name="duration"]').val(duration);
+            }
 
             if (duration && this.value) {
                 endDateInput.val(calculateEndDate(this.value, duration));
             }
         });
 
-        $('select[name="duration"]').on('change', function () {
-            const parentDiv = $(this).closest('.form-group').parent();
-            const startDate = parentDiv.find('input[name="fromDate"]').val();
-            const endDateInput = parentDiv.find('input[name="toDate"]');
+        $('select[name="rentalType"]').on('change', function () {
+            const parentDiv = $(this).closest('#apartmentFormFields');
+            const startDate = parentDiv.find('input[name="fromRange"]').val();
+            const duration = $(this).find('option:selected').data('duration');
+            const endDateInput = parentDiv.find('input[name="toRange"]');
 
-            if (startDate) {
-                endDateInput.val(calculateEndDate(startDate, this.value));
+            if (duration) {
+                parentDiv.find('input[name="duration"]').val(duration);
+            }
+
+            if (startDate && duration) {
+                endDateInput.val(calculateEndDate(startDate, duration));
             }
         });
 
@@ -1142,19 +1161,43 @@ $types = [
 </script>
 <script>
 
+    let cachedAgentLocationData = null;
+
+    function getStatesForAgent() {
+        const country = document.getElementById('agentCountry').value;
+        const stateSelect = document.getElementById('states');
+        const citySelect = document.getElementById('agentCity');
+
+        stateSelect.innerHTML = '<option value="" disabled selected>Select State</option>';
+        citySelect.innerHTML = '<option value="" disabled selected>Select City</option>';
+
+        if (!country) return;
+
+        fetch('/api/location-data?country=' + encodeURIComponent(country))
+            .then(r => r.json())
+            .then(data => {
+                cachedAgentLocationData = data.states || [];
+                cachedAgentLocationData.forEach(function (state) {
+                    const opt = document.createElement('option');
+                    opt.value = state.name;
+                    opt.textContent = state.name;
+                    stateSelect.appendChild(opt);
+                });
+            });
+    }
+
     function getCities() {
-        const locations = <?= json_encode($locations) ?>;
         const stateSelect = document.getElementById("states");
         const citySelect = document.getElementById("agentCity");
         const selectedState = stateSelect.value;
 
-        // Clear existing options
-        citySelect.innerHTML = '<option value="" disabled="disabled" selected>Select City</option>';
+        citySelect.innerHTML = '<option value="" disabled selected>Select City</option>';
 
-        // Find the selected state in locations
-        const state = locations.find(loc => loc.name === selectedState);
-        if (state && state.cities) {
-            state.cities.forEach(city => {
+        if (!selectedState || !cachedAgentLocationData) return;
+
+        const found = cachedAgentLocationData.find(s => s.name === selectedState);
+        if (found && found.cities) {
+            found.cities.forEach(function (city) {
                 const option = document.createElement("option");
                 option.value = city;
                 option.textContent = city;

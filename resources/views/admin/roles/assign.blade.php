@@ -202,8 +202,10 @@
 <script>
     // Guard against redeclaration across partials/pages
     if (typeof window.statesData === 'undefined') {
-        // Convert array of state objects to object with state names as keys
-        const statesArray = @json(json_decode(file_get_contents(resource_path('states-and-cities.json')), true));
+        // Load countries data and extract Nigeria's states for scope assignment
+        const countriesData = @json(json_decode(file_get_contents(resource_path('countries.json')), true));
+        const nigeriaEntry = countriesData.find(c => c.name === 'Nigeria');
+        const statesArray = nigeriaEntry ? nigeriaEntry.states : [];
         window.statesData = {};
         statesArray.forEach(state => {
             // Ensure we handle states without cities properly

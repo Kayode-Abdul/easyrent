@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Home-Refined</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <!-- HEADER & NAVIGATION -->
+  <header>
+    <nav class="top-nav">
+      <div class="logo"><a href="index.html"><i class="fas fa-home"></i> Home-Refined</a></div>
+      
+      <ul class="nav-menu">
+        <li><a href="products.html">Shop</a></li>
+        <li><a href="index.html#categories">Categories</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+      </ul>
+
+      <div class="nav-right">
+        <button class="user-btn" onclick="logout()">
+          <i class="fas fa-user-circle"></i>
+          <span id="userDisplayName">User</span>
+        </button>
+        <button class="icon-btn" onclick="logout()" title="Logout">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- PAGE CONTENT -->
+  <div class="container" style="padding: var(--spacing-xl) 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
+      <h1><i class="fas fa-chart-line"></i> My Dashboard</h1>
+      <div style="display: flex; gap: var(--spacing-md);">
+        <button class="btn btn-primary" onclick="showModal('newProject')"><i class="fas fa-plus-circle"></i> New Project</button>
+        <button class="btn btn-outline" onclick="window.location.href='products.html'"><i class="fas fa-shopping-cart"></i> Continue Shopping</button>
+      </div>
+    </div>
+
+    <!-- QUICK STATS -->
+    <div class="dashboard-grid" style="margin-bottom: var(--spacing-xl);">
+      <div class="dashboard-card">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; margin-bottom: var(--spacing-sm);">Active Projects</div>
+            <div style="font-size: 2.5rem; font-weight: 700;">3</div>
+          </div>
+          <div style="font-size: 2rem;"><i class="fas fa-folder" style="color: var(--accent);"></i></div>
+        </div>
+      </div>
+      <div class="dashboard-card">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; margin-bottom: var(--spacing-sm);">Total Saved Items</div>
+            <div style="font-size: 2.5rem; font-weight: 700;">24</div>
+          </div>
+          <div style="font-size: 2rem;"><i class="fas fa-heart" style="color: #ef4444;"></i></div>
+        </div>
+      </div>
+      <div class="dashboard-card">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; margin-bottom: var(--spacing-sm);">Total Spent</div>
+            <div style="font-size: 2.5rem; font-weight: 700;">$4,250</div>
+          </div>
+          <div style="font-size: 2rem;"><i class="fas fa-money-bill" style="color: #10b981;"></i></div>
+        </div>
+      </div>
+      <div class="dashboard-card">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-light); text-transform: uppercase; margin-bottom: var(--spacing-sm);">Loyalty Points</div>
+            <div style="font-size: 2.5rem; font-weight: 700;">1,250</div>
+          </div>
+          <div style="font-size: 2rem;"><i class="fas fa-star" style="color: #f59e0b;"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div style="display: grid; grid-template-columns: 1fr 380px; gap: var(--spacing-xl);">
+      <!-- LEFT COLUMN -->
+      <main>
+        <!-- PROJECTS SECTION -->
+        <section style="margin-bottom: var(--spacing-xl);">
+          <h2 style="font-size: 1.5rem; margin-bottom: var(--spacing-lg);">My Projects</h2>
+          <div class="project-list">
+            <div class="project-item">
+              <div>
+                <div class="project-name">Kitchen Remodel 2026</div>
+                <div class="project-count">8 items saved • Started 2 weeks ago</div>
+              </div>
+              <div style="display: flex; gap: var(--spacing-sm);">
+                <button class="btn btn-small btn-accent">View</button>
+                <button class="btn btn-small btn-outline"><i class="fas fa-edit"></i></button>
+              </div>
+            </div>
+            <div class="project-item">
+              <div>
+                <div class="project-name">Bathroom Renovation</div>
+                <div class="project-count">12 items saved • Started 1 month ago</div>
+              </div>
+              <div style="display: flex; gap: var(--spacing-sm);">
+                <button class="btn btn-small btn-accent">View</button>
+                <button class="btn btn-small btn-outline"><i class="fas fa-edit"></i></button>
+              </div>
+            </div>
+            <div class="project-item">
+              <div>
+                <div class="project-name">Bedroom Flooring</div>
+                <div class="project-count">4 items saved • Started 3 days ago</div>
+              </div>
+              <div style="display: flex; gap: var(--spacing-sm);">
+                <button class="btn btn-small btn-accent">View</button>
+                <button class="btn btn-small btn-outline"><i class="fas fa-edit"></i></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RECENT ORDERS SECTION -->
+        <section>
+          <h2 style="font-size: 1.5rem; margin-bottom: var(--spacing-lg);">Recent Orders</h2>
+          <div class="order-list">
+            <div class="order-item">
+              <div class="order-header">
+                <div>
+                  <div class="order-number">Order #HR-2026-0489</div>
+                  <div style="font-size: 0.85rem; color: var(--text-light) small;">Placed on March 1, 2026</div>
+                </div>
+                <div class="order-status">DELIVERED</div>
+              </div>
+              <div class="order-details">
+                <p style="margin-bottom: 4px;">3 items • <strong>$287.50</strong></p>
+                <a href="#" style="color: var(--accent);">Track Delivery</a> • 
+                <a href="#" style="color: var(--accent);">View Receipt</a> • 
+                <a href="#" style="color: var(--accent);">Help</a>
+              </div>
+            </div>
+            <div class="order-item">
+              <div class="order-header">
+                <div>
+                  <div class="order-number">Order #HR-2026-0456</div>
+                  <div style="font-size: 0.85rem; color: var(--text-light) small;">Placed on February 28, 2026</div>
+                </div>
+                <div class="order-status" style="background: #ff9800; color: white;">IN TRANSIT</div>
+              </div>
+              <div class="order-details">
+                <p style="margin-bottom: 4px;">1 item • <strong>$149.99</strong> • Arrives March 5-7</p>
+                <a href="#" style="color: var(--accent);">Track Delivery</a> • 
+                <a href="#" style="color: var(--accent);">View Receipt</a> • 
+                <a href="#" style="color: var(--accent);">Help</a>
+              </div>
+            </div>
+            <div class="order-item">
+              <div class="order-header">
+                <div>
+                  <div class="order-number">Order #HR-2026-0425</div>
+                  <div style="font-size: 0.85rem; color: var(--text-light) small;">Placed on February 25, 2026</div>
+                </div>
+                <div class="order-status">DELIVERED</div>
+              </div>
+              <div class="order-details">
+                <p style="margin-bottom: 4px;">2 items • <strong>$425.00</strong></p>
+                <a href="#" style="color: var(--accent);">Track Delivery</a> • 
+                <a href="#" style="color: var(--accent);">View Receipt</a> • 
+                <a href="#" style="color: var(--accent);">Help</a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- RIGHT COLUMN -->
+      <aside>
+        <!-- ACCOUNT SECTION -->
+        <div class="dashboard-card" style="margin-bottom: var(--spacing-lg);">
+          <h3>Account</h3>
+          <div style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
+            <a href="#" style="color: var(--accent); font-weight: 500;"><i class="fas fa-user-circle"></i> Profile Settings</a>
+            <a href="#" style="color: var(--accent); font-weight: 500;"><i class="fas fa-map-marker-alt"></i> Addresses</a>
+            <a href="#" style="color: var(--accent); font-weight: 500;"><i class="fas fa-credit-card"></i> Payment Methods</a>
+            <a href="#" style="color: var(--accent); font-weight: 500;"><i class="fas fa-bell"></i> Notifications</a>
+            <a href="#" style="color: var(--accent); font-weight: 500;"><i class="fas fa-file-vault"></i> Document Vault</a>
+          </div>
+        </div>
+
+        <!-- DOCUMENT VAULT -->
+        <div class="dashboard-card" style="margin-bottom: var(--spacing-lg);">
+          <h3><i class="fas fa-folder"></i> Document Vault</h3>
+          <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: var(--spacing-md);">Store manuals, warranties, and invoices</p>
+          <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); font-size: 0.9rem;">
+            <div style="padding: 8px; background: var(--light-gray); border-radius: 4px;">
+              <a href="#" style="color: var(--accent);"><i class="fas fa-file"></i> Kitchen Remodel Invoice</a>
+            </div>
+            <div style="padding: 8px; background: var(--light-gray); border-radius: 4px;">
+              <a href="#" style="color: var(--accent);"><i class="fas fa-book"></i> Countertop Manual</a>
+            </div>
+            <div style="padding: 8px; background: var(--light-gray); border-radius: 4px;">
+              <a href="#" style="color: var(--accent);"><i class="fas fa-shield-alt"></i> Warranty - Sink</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- SELLER SECTION -->
+        <div id="sellerSection" class="dashboard-card" style="display: none;">
+          <h3><i class="fas fa-store"></i> Seller Options</h3>
+          <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); font-size: 0.9rem;">
+            <div style="padding: var(--spacing-md); background: var(--light-gray); border-radius: 4px;">
+              <div style="font-weight: 600; margin-bottom: 4px;">Net-30 Balance</div>
+              <div style="font-size: 1.5rem; color: var(--accent); font-weight: 700;">$8,500</div>
+            </div>
+            <div style="padding: var(--spacing-md); background: var(--light-gray); border-radius: 4px;">
+              <div style="font-weight: 600; margin-bottom: 4px;">Tax-Exempt Status</div>
+              <div style=\"color: var(--success);\"><i class=\"fas fa-check-circle\"></i> Verified</div>
+            </div>
+          </div>
+          <button class="btn btn-accent" style="width: 100%; margin-top: var(--spacing-md);">View Quotes</button>
+        </div>
+
+        <!-- PROMOTIONS -->
+        <div class="dashboard-card">
+          <h3><i class="fas fa-gift"></i> Special Offers</h3>
+          <div style="padding: var(--spacing-md); background: #fff8dc; border-left: 4px solid var(--accent); border-radius: 4px; font-size: 0.9rem;">
+            <strong style="color: var(--accent);">Flash Sale</strong>
+            <p style="margin: 4px 0; color: var(--text-dark);">Save 15% on lighting fixtures</p>
+            <button class="btn btn-small btn-accent" style="width: 100%; margin-top: var(--spacing-sm);">Shop Now</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- NEW PROJECT MODAL -->
+  <div id="newProjectModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 2000; display: flex; align-items: center; justify-content: center;">
+    <div style="background: white; padding: var(--spacing-xl); border-radius: 4px; max-width: 500px; width: 90%;">
+      <h2 style="margin-bottom: var(--spacing-lg);">Create New Project</h2>
+      <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+        <input type="text" placeholder="Project Name (e.g., Kitchen Remodel)" style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border); border-radius: 4px;">
+        <textarea placeholder="Project Description (optional)" style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--border); border-radius: 4px; min-height: 80px;"></textarea>
+        <div style="display: flex; gap: var(--spacing-md);">
+          <button class="btn btn-primary" style="flex: 1;" onclick="closeModal('newProject')">Create Project</button>
+          <button class="btn btn-outline" style="flex: 1;" onclick="closeModal('newProject')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer style="background: var(--primary); color: white; padding: var(--spacing-xl) var(--spacing-lg); text-align: center; margin-top: var(--spacing-xl);">
+    <div class="container">
+      <p>&copy; 2026 Home-Refined. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script src="js/products.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    function showModal(modalId) {
+      document.getElementById(modalId + 'Modal').style.display = 'flex';
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId + 'Modal').style.display = 'none';
+    }
+
+    function logout() {
+      localStorage.removeItem("userDisplayName");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userAccountType");
+      window.location.href = "index.html";
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if user is logged in
+      const userDisplayName = localStorage.getItem("userDisplayName");
+      if (userDisplayName) {
+        document.getElementById("userDisplayName").textContent = userDisplayName;
+      }
+
+      // Show Seller section if in seller mode
+      if (cartManager.isSeller) {
+        document.getElementById('sellerSection').style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>     

@@ -54,7 +54,7 @@ class ArtisanTaskController extends Controller
         ]);
 
         // Log activity or add comment to complaint
-        $complaint->addComment(Auth::user(), "Artisan task posted to marketplace with budget ₦" . number_format($request->budget_min) . " - ₦" . number_format($request->budget_max) . ".");
+        $complaint->addComment(Auth::user(), "Artisan task posted to marketplace with budget " . format_money($request->budget_min, $complaint->apartment->currency) . " - " . format_money($request->budget_max, $complaint->apartment->currency) . ".");
 
         return back()->with('success', 'Task posted successfully to the artisan marketplace.');
     }
@@ -127,6 +127,7 @@ class ArtisanTaskController extends Controller
             'duration' => $request->duration,
             'proposal' => $request->proposal,
             'status' => 'pending',
+            'is_read' => false,
         ]);
 
         return back()->with('success', 'Your bid has been submitted successfully.');
@@ -146,7 +147,10 @@ class ArtisanTaskController extends Controller
         }
 
         // Update bid status
-        $bid->update(['status' => 'accepted']);
+        $bid->update([
+            'status' => 'accepted',
+            'is_read' => false
+        ]);
 
         // Reject other bids
         $task->bids()->where('id', '!=', $bid->id)->update(['status' => 'rejected']);
@@ -167,7 +171,7 @@ class ArtisanTaskController extends Controller
         ]);
 
         // Notify complaint system
-        $task->complaint->addComment(Auth::user(), "Artisan bid from {$bid->artisan->first_name} for ₦" . number_format($bid->amount) . " has been accepted.");
+        $task->complaint->addComment(Auth::user(), "Artisan bid from {$bid->artisan->first_name} for " . format_money($bid->amount, $task->complaint->apartment->currency) . " has been accepted.");
 
         return back()->with('success', 'Bid accepted. The artisan has been notified.');
     }
@@ -206,7 +210,7 @@ class ArtisanTaskController extends Controller
                 'paid_at' => now(),
             ]);
 
-            $task->complaint->addComment($user, "Rent set-off of ₦" . number_format($acceptedBid->amount) . " has been recorded.");
+            $task->complaint->addComment($user, "Rent set-off of " . format_money($acceptedBid->amount, $task->complaint->apartment->currency) . " has been recorded.");
         }
 
         $task->complaint->addComment($user, "Artisan task marked as completed.");

@@ -88,7 +88,7 @@
                                 Total Commission
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                ₦{{ number_format($performanceMetrics['total_commission'], 2) }}
+                                {{ format_money($performanceMetrics['total_commission']) }}
                             </div>
                             <div class="text-xs text-muted">
                                 Lifetime earnings
@@ -209,7 +209,7 @@
                                     @foreach($commissionHistory->take(10) as $payment)
                                         <tr>
                                             <td>{{ $payment->created_at->format('M d, Y') }}</td>
-                                            <td class="font-weight-bold">₦{{ number_format($payment->total_amount, 2) }}</td>
+                                            <td class="font-weight-bold">{{ format_money($payment->total_amount, ($payment->currency->code ?? null)) }}</td>
                                             <td>
                                                 <span class="badge bg-{{ 
                                                     $payment->payment_status === 'completed' ? 'success' : 

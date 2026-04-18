@@ -18,8 +18,12 @@ class Property extends Model
         'property_id', // Business identifier (renamed from prop_id)
         'prop_type',
         'address',
+        'country',
         'state',
         'lga',
+        'country_name',
+        'state_id',
+        'lga_id',
         'no_of_apartment',
         'agent_id',
         'status',
@@ -27,6 +31,7 @@ class Property extends Model
         'rejected_at',
         'size_value',
         'size_unit',
+        'currency_id',
     ];
 
     public function agent(): BelongsTo
@@ -38,6 +43,18 @@ class Property extends Model
         'created_at' => 'datetime',
         'prop_type' => 'integer'
     ];
+
+    /**
+     * Boot the model and register cascading delete events.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (Property $property) {
+            // Cascade delete apartments and attributes
+            $property->apartments()->delete();
+            $property->attributes()->delete();
+        });
+    }
 
     /**
      * Relationships
@@ -143,6 +160,11 @@ class Property extends Model
     public function propertyType(): BelongsTo
     {
         return $this->belongsTo(PropertyType::class, 'prop_type', 'id');
+    }
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class);
     }
 
     // Helper methods
@@ -257,7 +279,8 @@ class Property extends Model
 
     public function getFullAddress(): string
     {
-        return "{$this->address}, {$this->lga}, {$this->state}";
+        $parts = array_filter([$this->address, $this->lga, $this->state, $this->country]);
+        return implode(', ', $parts);
     }
 
     public function isOwner(int $userId): bool

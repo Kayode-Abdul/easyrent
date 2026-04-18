@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
+    protected $table = 'payments';
+
     protected $fillable = [
         'transaction_id',
         'tenant_id',
@@ -19,14 +21,18 @@ class Payment extends Model
         'payment_reference',
         'payment_meta',
         'paid_at',
-        'due_date'
+        'due_date',
+        'currency_id',
+        'is_read'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'payment_meta' => 'array',
         'paid_at' => 'datetime',
-        'due_date' => 'date'
+        'due_date' => 'date',
+        'currency_id' => 'integer',
+        'is_read' => 'boolean'
     ];
 
     // Status constants
@@ -50,9 +56,15 @@ class Payment extends Model
         return $this->belongsTo(Apartment::class, 'apartment_id', 'apartment_id');
     }
 
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class);
+    }
+
     public function getFormattedAmount(): string
     {
-        return '₦' . number_format($this->amount, 2);
+        $currency = $this->currency ?? ($this->apartment && $this->apartment->currency ? $this->apartment->currency : null);
+        return format_money($this->amount, $currency);
     }
 
     public function getFormattedStatus(): string

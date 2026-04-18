@@ -86,7 +86,7 @@
         <div class="payment-details">
             <div class="detail-row">
                 <span class="detail-label">Amount Paid:</span>
-                <span class="detail-value amount">₦{{ number_format($payment->amount, 2) }}</span>
+                <span class="detail-value amount">{{ format_money($payment->amount, $payment->currency) }}</span>
             </div>
             
             <div class="detail-row">

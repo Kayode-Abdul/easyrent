@@ -15,7 +15,7 @@
                     <label for="amount">Payment Amount *</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <span class="input-group-text">₦</span>
+                            <span class="input-group-text">${window.currencySymbol}</span>
                         </div>
                         <input type="number" 
                                class="form-control" 
@@ -26,7 +26,7 @@
                                min="0" 
                                required>
                     </div>
-                    <small class="form-text text-muted">Enter the payment amount in Naira</small>
+                    <small class="form-text text-muted">Enter the payment amount</small>
                 </div>
 
                 <!-- Payment Description -->
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (amount > 10000000) { // 10 million naira limit
                 e.preventDefault();
-                alert('Payment amount cannot exceed ₦10,000,000');
+                alert('Payment amount cannot exceed ' + window.currencySymbol + '10,000,000');
                 return false;
             }
             

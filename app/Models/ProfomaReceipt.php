@@ -28,6 +28,7 @@ class ProfomaReceipt extends Model
         'total',
         'calculation_method',
         'calculation_log',
+        'currency_id',
     ];
 
     protected $casts = [
@@ -39,6 +40,11 @@ class ProfomaReceipt extends Model
     const STATUS_CONFIRMED = 1;
     const STATUS_NEW = 2;
     const STATUS_PAID = 4;
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class);
+    }
 
     public function apartment()
     {
@@ -226,15 +232,15 @@ class ProfomaReceipt extends Model
      */
     public function getCalculationSummaryAttribute(): string
     {
+        $currency = $this->currency ?? ($this->apartment->currency ?? null);
         if (!$this->hasCalculationDetails()) {
-            return "Legacy calculation - Total: ₦" . number_format($this->total, 2);
+            return "Legacy calculation - Total: " . format_money($this->total, $currency);
         }
 
         $method = $this->calculation_method;
-        $total = number_format($this->total, 2);
         $timestamp = $this->calculation_log['timestamp'] ?? 'Unknown';
         
-        return "Method: {$method} - Total: ₦{$total} (Calculated: {$timestamp})";
+        return "Method: {$method} - Total: " . format_money($this->total, $currency) . " (Calculated: {$timestamp})";
     }
 
     /**

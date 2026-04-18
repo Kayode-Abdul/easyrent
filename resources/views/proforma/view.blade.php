@@ -36,7 +36,7 @@
                 <strong>Duration:</strong> {{ $proforma->duration ? $proforma->duration . ' months' : 'N/A' }}<br>
                 <strong>Monthly Rent:</strong> 
                 @if(optional($proforma->apartment)->amount)
-                    ₦{{ number_format($proforma->apartment->amount, 2) }}
+                    {{ $proforma->apartment->getFormattedAmount() }}
                 @else
                     N/A
                 @endif
@@ -45,7 +45,7 @@
             <div class="amount">
                 <strong>Total Amount:</strong>
                 @if(optional($proforma->apartment)->amount && $proforma->duration)
-                    ₦{{ number_format($proforma->apartment->amount * $proforma->duration, 2) }}
+                    {{ format_money($proforma->apartment->amount * $proforma->duration, $proforma->apartment->currency) }}
                 @else
                     N/A
                 @endif

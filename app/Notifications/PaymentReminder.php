@@ -35,7 +35,7 @@ class PaymentReminder extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject($message)
             ->line($message)
-            ->line('Amount: ₦' . number_format($this->payment->amount, 2))
+            ->line('Amount: ' . format_money($this->payment->amount, $this->payment->currency))
             ->line('Due Date: ' . $this->payment->due_date->format('M d, Y'))
             ->action('Make Payment', route('payments.show', $this->payment->id))
             ->line('Thank you for using our application!');

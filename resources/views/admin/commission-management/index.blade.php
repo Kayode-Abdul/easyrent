@@ -204,6 +204,8 @@
 
 @section('scripts')
 <script>
+// window.currencySymbol is initialized in layout
+
 function calculateCommission() {
     const rentAmount = document.getElementById('rentAmount').value;
     const region = document.getElementById('calculatorRegion').value;
@@ -243,14 +245,14 @@ function displayCalculationResult(breakdown, rentAmount) {
     
     let html = `
         <div class="alert alert-info">
-            <h6 class="mb-3"><i class="fas fa-calculator me-2"></i>Commission Breakdown for ₦${parseFloat(rentAmount).toLocaleString()}</h6>
+            <h6 class="mb-3"><i class="fas fa-calculator me-2"></i>Commission Breakdown for ${window.currencySymbol}${parseFloat(rentAmount).toLocaleString()}</h6>
             <div class="row">
                 <div class="col-md-6">
                     <div class="table-responsive">
                         <table class="table table-sm table-borderless">
                             <tr>
                                 <td><strong>Total Commission:</strong></td>
-                                <td class="text-end"><strong>₦${breakdown.total_commission.toLocaleString()}</strong></td>
+                                <td class="text-end"><strong>${window.currencySymbol}${breakdown.total_commission.toLocaleString()}</strong></td>
                             </tr>
     `;
     
@@ -258,7 +260,7 @@ function displayCalculationResult(breakdown, rentAmount) {
         html += `
             <tr>
                 <td>Super Marketer (${breakdown.rates.super_marketer_rate}%):</td>
-                <td class="text-end">₦${breakdown.super_marketer_commission.toLocaleString()}</td>
+                <td class="text-end">${window.currencySymbol}${breakdown.super_marketer_commission.toLocaleString()}</td>
             </tr>
         `;
     }
@@ -266,7 +268,7 @@ function displayCalculationResult(breakdown, rentAmount) {
     html += `
                             <tr>
                                 <td>Marketer (${breakdown.rates.marketer_rate}%):</td>
-                                <td class="text-end">₦${breakdown.marketer_commission.toLocaleString()}</td>
+                                <td class="text-end">${window.currencySymbol}${breakdown.marketer_commission.toLocaleString()}</td>
                             </tr>
     `;
     
@@ -274,7 +276,7 @@ function displayCalculationResult(breakdown, rentAmount) {
         html += `
             <tr>
                 <td>Regional Manager (${breakdown.rates.regional_manager_rate}%):</td>
-                <td class="text-end">₦${breakdown.regional_manager_commission.toLocaleString()}</td>
+                <td class="text-end">${window.currencySymbol}${breakdown.regional_manager_commission.toLocaleString()}</td>
             </tr>
         `;
     }
@@ -282,14 +284,14 @@ function displayCalculationResult(breakdown, rentAmount) {
     html += `
                             <tr>
                                 <td>Company (${breakdown.rates.company_rate}%):</td>
-                                <td class="text-end">₦${breakdown.company_commission.toLocaleString()}</td>
+                                <td class="text-end">${window.currencySymbol}${breakdown.company_commission.toLocaleString()}</td>
                             </tr>
                         </table>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="text-center">
-                        <div class="display-6 text-primary">₦${breakdown.total_commission.toLocaleString()}</div>
+                        <div class="display-6 text-primary">${window.currencySymbol}${breakdown.total_commission.toLocaleString()}</div>
                         <small class="text-muted">Total Commission (${breakdown.rates.total_rate}%)</small>
                     </div>
                 </div>

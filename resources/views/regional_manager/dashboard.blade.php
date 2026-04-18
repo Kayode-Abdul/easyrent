@@ -409,7 +409,7 @@
                         <strong>Commission Paid</strong>
                         <span class="activity-time">2 days ago</span>
                     </div>
-                    <p class="mb-0 text-muted small">₦50,000 commission processed</p>
+                    <p class="mb-0 text-muted small">{{ format_money(50000) }} commission processed</p>
                 </div>
 
                 <div class="text-center mt-3">

@@ -6,13 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class ArtisanBid extends Model
 {
+    protected $table = 'artisan_bids';
+
     protected $fillable = [
         'task_id',
         'artisan_id',
         'amount',
         'duration',
         'proposal',
-        'status'
+        'status',
+        'is_read'
     ];
 
     public function task()

@@ -29,17 +29,17 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
-            <i class="nc-icon nc-check-2"></i> {{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-        </div>
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="nc-icon nc-check-2"></i> {{ session('success') }}
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show">
-            <i class="nc-icon nc-simple-remove"></i> {{ session('error') }}
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-        </div>
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="nc-icon nc-simple-remove"></i> {{ session('error') }}
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
     @endif
 
     <!-- Email Statistics -->
@@ -158,7 +158,8 @@
                             </a>
                         </div>
                         <div class="col-md-3">
-                            <a href="#" class="btn btn-success btn-block" data-toggle="modal" data-target="#testEmailModal">
+                            <a href="#" class="btn btn-success btn-block" data-toggle="modal"
+                                data-target="#testEmailModal">
                                 <i class="nc-icon nc-check-2"></i><br>
                                 <strong>Test Email</strong><br>
                                 <small>Send test message</small>
@@ -176,7 +177,7 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title">
-                        <i class="nc-icon nc-chart-pie-35"></i> User Groups
+                        <i class="nc-icon nc-chart-pie-36"></i> User Groups
                     </h5>
                 </div>
                 <div class="card-body">
@@ -194,7 +195,8 @@
                                     <td><strong>Admin Users</strong></td>
                                     <td>{{ $stats['admin_users'] }}</td>
                                     <td>
-                                        <a href="{{ route('admin.email-center.compose', ['group' => 'admins']) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ route('admin.email-center.compose', ['group' => 'admins']) }}"
+                                            class="btn btn-sm btn-primary">
                                             <i class="nc-icon nc-send"></i> Email
                                         </a>
                                     </td>
@@ -203,7 +205,8 @@
                                     <td><strong>Landlords</strong></td>
                                     <td>{{ $stats['landlords'] }}</td>
                                     <td>
-                                        <a href="{{ route('admin.email-center.compose', ['group' => 'landlords']) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ route('admin.email-center.compose', ['group' => 'landlords']) }}"
+                                            class="btn btn-sm btn-primary">
                                             <i class="nc-icon nc-send"></i> Email
                                         </a>
                                     </td>
@@ -212,7 +215,8 @@
                                     <td><strong>Tenants</strong></td>
                                     <td>{{ $stats['tenants'] }}</td>
                                     <td>
-                                        <a href="{{ route('admin.email-center.compose', ['group' => 'tenants']) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ route('admin.email-center.compose', ['group' => 'tenants']) }}"
+                                            class="btn btn-sm btn-primary">
                                             <i class="nc-icon nc-send"></i> Email
                                         </a>
                                     </td>
@@ -221,7 +225,8 @@
                                     <td><strong>Agents</strong></td>
                                     <td>{{ $stats['agents'] }}</td>
                                     <td>
-                                        <a href="{{ route('admin.email-center.compose', ['group' => 'agents']) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ route('admin.email-center.compose', ['group' => 'agents']) }}"
+                                            class="btn btn-sm btn-primary">
                                             <i class="nc-icon nc-send"></i> Email
                                         </a>
                                     </td>
@@ -265,13 +270,13 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     @if($stats['unverified_emails'] > 0)
-                        <div class="alert alert-warning mt-3">
-                            <i class="nc-icon nc-bell-55"></i>
-                            <strong>{{ $stats['unverified_emails'] }}</strong> users have unverified email addresses. 
-                            Consider sending a verification reminder.
-                        </div>
+                    <div class="alert alert-warning mt-3">
+                        <i class="nc-icon nc-bell-55"></i>
+                        <strong>{{ $stats['unverified_emails'] }}</strong> users have unverified email addresses.
+                        Consider sending a verification reminder.
+                    </div>
                     @endif
                 </div>
             </div>
@@ -289,53 +294,55 @@
                 </div>
                 <div class="card-body">
                     @if($recentCampaigns->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Subject</th>
-                                        <th>Recipients</th>
-                                        <th>Sent Date</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($recentCampaigns as $campaign)
-                                        <tr>
-                                            <td>
-                                                <strong>{{ $campaign['subject'] }}</strong>
-                                            </td>
-                                            <td>{{ number_format($campaign['recipients']) }}</td>
-                                            <td>
-                                                {{ \Carbon\Carbon::parse($campaign['sent_at'])->format('M d, Y H:i') }}
-                                                <br><small class="text-muted">{{ \Carbon\Carbon::parse($campaign['sent_at'])->diffForHumans() }}</small>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-{{ $campaign['status'] === 'completed' ? 'success' : 'warning' }}">
-                                                    {{ ucfirst($campaign['status']) }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group">
-                                                    <button class="btn btn-info btn-sm" title="View Details">
-                                                        <i class="nc-icon nc-zoom-split"></i>
-                                                    </button>
-                                                    <button class="btn btn-secondary btn-sm" title="Duplicate">
-                                                        <i class="nc-icon nc-simple-add"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Recipients</th>
+                                    <th>Sent Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($recentCampaigns as $campaign)
+                                <tr>
+                                    <td>
+                                        <strong>{{ $campaign['subject'] }}</strong>
+                                    </td>
+                                    <td>{{ number_format($campaign['recipients']) }}</td>
+                                    <td>
+                                        {{ \Carbon\Carbon::parse($campaign['sent_at'])->format('M d, Y H:i') }}
+                                        <br><small class="text-muted">{{
+                                            \Carbon\Carbon::parse($campaign['sent_at'])->diffForHumans() }}</small>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge badge-{{ $campaign['status'] === 'completed' ? 'success' : 'warning' }}">
+                                            {{ ucfirst($campaign['status']) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-info btn-sm" title="View Details">
+                                                <i class="nc-icon nc-zoom-split"></i>
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm" title="Duplicate">
+                                                <i class="nc-icon nc-simple-add"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                     @else
-                        <div class="alert alert-info">
-                            <i class="nc-icon nc-bell-55"></i>
-                            No email campaigns have been sent yet. Start by composing your first email!
-                        </div>
+                    <div class="alert alert-info">
+                        <i class="nc-icon nc-bell-55"></i>
+                        No email campaigns have been sent yet. Start by composing your first email!
+                    </div>
                     @endif
                 </div>
             </div>
@@ -360,14 +367,15 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Test Email Address <span class="text-danger">*</span></label>
-                        <input type="email" name="test_email" class="form-control" placeholder="Enter email address..." value="{{ auth()->user()->email }}" required>
+                        <input type="email" name="test_email" class="form-control" placeholder="Enter email address..."
+                            value="{{ auth()->user()->email }}" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Subject</label>
                         <input type="text" name="subject" class="form-control" value="EasyRent Test Email" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Message</label>
                         <textarea name="message" class="form-control" rows="4" required>This is a test email from the EasyRent Email Center.

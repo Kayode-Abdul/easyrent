@@ -24,7 +24,8 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
         PaymentCalculationMonitoringService $monitoringService,
         PaymentCalculationAuditLogger $auditLogger,
         PaymentCalculationCacheService $cacheService
-    ) {
+        )
+    {
         $this->securityService = $securityService;
         $this->monitoringService = $monitoringService;
         $this->auditLogger = $auditLogger;
@@ -38,12 +39,12 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
     const MAX_RENTAL_DURATION = 120; // 10 years maximum
     const MAX_APARTMENT_PRICE = 999999999.99; // Maximum price to prevent overflow
     const MIN_APARTMENT_PRICE = 0.01; // Minimum non-zero price
-    
+
     // Error handling constants
     const MAX_CALCULATION_RESULT = 9999999999.99; // Maximum final calculation result
     const PRECISION_DECIMAL_PLACES = 2; // Currency precision
     const DEFAULT_FALLBACK_PRICING_TYPE = self::PRICING_TYPE_TOTAL;
-    
+
     // Monitoring thresholds
     const HIGH_VALUE_THRESHOLD = 1000000.00; // Log high-value calculations
     const SUSPICIOUS_DURATION_THRESHOLD = 60; // Log unusually long durations
@@ -55,24 +56,24 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
     {
         // Sanitize and validate inputs using security service
         $validationResult = $this->securityService->sanitizeCalculationInputs($inputs);
-        
+
         if (!$validationResult['is_valid']) {
             $errorMessage = 'Input validation failed: ' . implode(', ', $validationResult['validation_errors']);
             return PaymentCalculationResult::failure($errorMessage);
         }
-        
+
         if (!empty($validationResult['security_issues'])) {
             $errorMessage = 'Security validation failed: ' . implode(', ', $validationResult['security_issues']);
             return PaymentCalculationResult::failure($errorMessage);
         }
-        
+
         $sanitizedInputs = $validationResult['sanitized_inputs'];
-        
+
         // Extract sanitized values
         $apartmentPrice = $sanitizedInputs['apartment_price'] ?? 0.0;
         $rentalDuration = $sanitizedInputs['rental_duration'] ?? 1;
         $pricingType = $sanitizedInputs['pricing_type'] ?? self::PRICING_TYPE_TOTAL;
-        
+
         // Call the standard calculation method with sanitized inputs
         return $this->calculatePaymentTotal($apartmentPrice, $rentalDuration, $pricingType);
     }
@@ -81,31 +82,32 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
      * Calculate payment total based on apartment price, rental duration, and pricing type
      */
     public function calculatePaymentTotal(
-        float $apartmentPrice, 
-        int $rentalDuration, 
+        float $apartmentPrice,
+        int $rentalDuration,
         string $pricingType = self::PRICING_TYPE_TOTAL
-    ): PaymentCalculationResult {
+        ): PaymentCalculationResult
+    {
         $calculationId = uniqid('calc_');
         $startTime = microtime(true);
-        
+
         $inputs = [
             'apartment_price' => $apartmentPrice,
             'rental_duration' => $rentalDuration,
             'pricing_type' => $pricingType
         ];
-        
+
         // Check cache first for performance optimization
         $cachedResult = $this->cacheService->getCachedCalculationResult(
-            $apartmentPrice, 
-            $rentalDuration, 
+            $apartmentPrice,
+            $rentalDuration,
             $pricingType
         );
-        
+
         if ($cachedResult !== null) {
             // Record cache hit metrics
             $executionTime = (microtime(true) - $startTime) * 1000;
             $this->monitoringService->recordCalculationPerformance($calculationId, $executionTime, $cachedResult, $inputs);
-            
+
             Log::debug('Payment calculation served from cache', [
                 'calculation_id' => $calculationId,
                 'apartment_price' => $apartmentPrice,
@@ -114,10 +116,10 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
                 'cache_hit' => true,
                 'execution_time_ms' => $executionTime
             ]);
-            
+
             return $cachedResult;
         }
-        
+
         try {
             // Comprehensive input validation with detailed error messages
             $validationResult = $this->validateInputsComprehensive($apartmentPrice, $rentalDuration, $pricingType);
@@ -139,7 +141,7 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
             // Initialize calculation tracking
             $calculationSteps = [];
             $calculationMethod = $this->determineCalculationMethod($normalizedPricingType);
-            
+
             $calculationSteps[] = [
                 'step' => 'input_validation',
                 'calculation_id' => $calculationId,
@@ -153,9 +155,9 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
 
             // Perform calculation with overflow protection
             $totalAmount = $this->performCalculationWithProtection(
-                $apartmentPrice, 
-                $rentalDuration, 
-                $normalizedPricingType, 
+                $apartmentPrice,
+                $rentalDuration,
+                $normalizedPricingType,
                 $calculationSteps,
                 $calculationId
             );
@@ -210,55 +212,60 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
 
             return $result;
 
-        } catch (ArithmeticError $e) {
+        }
+        catch (ArithmeticError $e) {
             $this->logCalculationError($calculationId, 'arithmetic_error', $e->getMessage(), [
                 'apartment_price' => $apartmentPrice,
                 'rental_duration' => $rentalDuration,
                 'pricing_type' => $pricingType,
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             $this->monitoringService->recordCalculationError($calculationId, 'arithmetic_error', $e->getMessage(), $inputs);
             return PaymentCalculationResult::failure('Arithmetic calculation error: Invalid mathematical operation');
-            
-        } catch (DivisionByZeroError $e) {
+
+        }
+        catch (DivisionByZeroError $e) {
             $this->logCalculationError($calculationId, 'division_by_zero', $e->getMessage(), [
                 'apartment_price' => $apartmentPrice,
                 'rental_duration' => $rentalDuration,
                 'pricing_type' => $pricingType
             ]);
-            
+
             $this->monitoringService->recordCalculationError($calculationId, 'division_by_zero', $e->getMessage(), $inputs);
             return PaymentCalculationResult::failure('Division by zero error in calculation');
-            
-        } catch (OverflowException $e) {
+
+        }
+        catch (OverflowException $e) {
             $this->logCalculationError($calculationId, 'overflow_exception', $e->getMessage(), [
                 'apartment_price' => $apartmentPrice,
                 'rental_duration' => $rentalDuration,
                 'pricing_type' => $pricingType
             ]);
-            
+
             $this->monitoringService->recordCalculationError($calculationId, 'overflow_exception', $e->getMessage(), $inputs);
             return PaymentCalculationResult::failure('Calculation result exceeds system limits');
-            
-        } catch (InvalidArgumentException $e) {
+
+        }
+        catch (InvalidArgumentException $e) {
             $this->logCalculationError($calculationId, 'invalid_argument', $e->getMessage(), [
                 'apartment_price' => $apartmentPrice,
                 'rental_duration' => $rentalDuration,
                 'pricing_type' => $pricingType
             ]);
-            
+
             $this->monitoringService->recordCalculationError($calculationId, 'invalid_argument', $e->getMessage(), $inputs);
             return PaymentCalculationResult::failure('Invalid calculation parameters: ' . $e->getMessage());
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             $this->logCalculationError($calculationId, 'unexpected_error', $e->getMessage(), [
                 'apartment_price' => $apartmentPrice,
                 'rental_duration' => $rentalDuration,
                 'pricing_type' => $pricingType,
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             $this->monitoringService->recordCalculationError($calculationId, 'unexpected_error', $e->getMessage(), $inputs);
             return PaymentCalculationResult::failure('Unexpected calculation error occurred');
         }
@@ -296,7 +303,8 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
 
             return true;
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Pricing configuration validation failed', [
                 'config' => $config,
                 'error' => $e->getMessage()
@@ -330,7 +338,8 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
                 ]);
             }
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Failed to log calculation steps', [
                 'error' => $e->getMessage(),
                 'result_summary' => $result->getCalculationSummary()
@@ -402,21 +411,15 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
     {
         // Normalize pricing type
         $normalizedType = trim(strtolower($pricingType));
-        
+
         // If pricing type is invalid, apply fallback
         if (!in_array($normalizedType, [self::PRICING_TYPE_TOTAL, self::PRICING_TYPE_MONTHLY])) {
             return self::DEFAULT_FALLBACK_PRICING_TYPE;
         }
 
-        // Apply intelligent fallback for suspicious configurations
-        if ($normalizedType === self::PRICING_TYPE_MONTHLY) {
-            // If monthly price seems too high for a monthly rate, suggest total pricing
-            $projectedTotal = $apartmentPrice * $rentalDuration;
-            if ($apartmentPrice > 100000 && $projectedTotal > self::HIGH_VALUE_THRESHOLD * 10) {
-                // This looks like a total price being treated as monthly
-                return self::PRICING_TYPE_TOTAL;
-            }
-        }
+        // Removed the intelligent fallback that was causing calculation mismatches
+        // by forcing high-value monthly rents to be treated as total amounts.
+        // We should honor the explicitly set pricing type even for high values.
 
         return $normalizedType;
     }
@@ -425,12 +428,13 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
      * Perform calculation with overflow protection
      */
     protected function performCalculationWithProtection(
-        float $apartmentPrice, 
-        int $rentalDuration, 
-        string $pricingType, 
+        float $apartmentPrice,
+        int $rentalDuration,
+        string $pricingType,
         array &$calculationSteps,
         string $calculationId
-    ): float {
+        ): float
+    {
         switch ($pricingType) {
             case self::PRICING_TYPE_TOTAL:
                 $calculationSteps[] = [
@@ -449,7 +453,7 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
                 }
 
                 $totalAmount = $apartmentPrice * $rentalDuration;
-                
+
                 // Post-calculation validation
                 if (!is_finite($totalAmount)) {
                     throw new ArithmeticError('Monthly calculation resulted in non-finite number');
@@ -601,11 +605,12 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
      * Perform the actual calculation based on pricing type
      */
     protected function performCalculation(
-        float $apartmentPrice, 
-        int $rentalDuration, 
-        string $pricingType, 
+        float $apartmentPrice,
+        int $rentalDuration,
+        string $pricingType,
         array &$calculationSteps
-    ): float {
+        ): float
+    {
         switch ($pricingType) {
             case self::PRICING_TYPE_TOTAL:
                 $calculationSteps[] = [
@@ -664,7 +669,7 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
     {
         $bulkId = uniqid('bulk_');
         $startTime = microtime(true);
-        
+
         // Check if bulk results are cached
         $cachedResults = $this->cacheService->getCachedBulkCalculationResults($bulkId);
         if ($cachedResults !== null) {
@@ -674,43 +679,44 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
             ]);
             return $cachedResults;
         }
-        
+
         $results = [];
         $cacheHits = 0;
         $cacheMisses = 0;
-        
+
         foreach ($calculations as $index => $calc) {
             if (!isset($calc['apartment_price'], $calc['rental_duration'])) {
                 $results[$index] = PaymentCalculationResult::failure('Missing required calculation parameters');
                 continue;
             }
-            
-            $apartmentPrice = (float) $calc['apartment_price'];
-            $rentalDuration = (int) $calc['rental_duration'];
+
+            $apartmentPrice = (float)$calc['apartment_price'];
+            $rentalDuration = (int)$calc['rental_duration'];
             $pricingType = $calc['pricing_type'] ?? self::PRICING_TYPE_TOTAL;
-            
+
             // Try cache first
             $cachedResult = $this->cacheService->getCachedCalculationResult(
-                $apartmentPrice, 
-                $rentalDuration, 
+                $apartmentPrice,
+                $rentalDuration,
                 $pricingType
             );
-            
+
             if ($cachedResult !== null) {
                 $results[$index] = $cachedResult;
                 $cacheHits++;
-            } else {
+            }
+            else {
                 $result = $this->calculatePaymentTotal($apartmentPrice, $rentalDuration, $pricingType);
                 $results[$index] = $result;
                 $cacheMisses++;
             }
         }
-        
+
         // Cache bulk results for future use
         $this->cacheService->cacheBulkCalculationResults($bulkId, $results);
-        
+
         $executionTime = (microtime(true) - $startTime) * 1000;
-        
+
         Log::info('Bulk payment calculations completed', [
             'bulk_id' => $bulkId,
             'total_calculations' => count($calculations),
@@ -719,10 +725,10 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
             'cache_hit_rate' => count($calculations) > 0 ? round(($cacheHits / count($calculations)) * 100, 2) : 0,
             'execution_time_ms' => $executionTime
         ]);
-        
+
         return $results;
     }
-    
+
     /**
      * Optimized calculation for frequently used apartment configurations
      */
@@ -731,23 +737,24 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
         float $apartmentPrice,
         int $rentalDuration,
         string $pricingType = self::PRICING_TYPE_TOTAL
-    ): PaymentCalculationResult {
+        ): PaymentCalculationResult
+    {
         // Check apartment-specific pricing configuration cache
         $cachedPricingConfig = $this->cacheService->getCachedApartmentPricingConfig($apartmentId);
-        
+
         if ($cachedPricingConfig) {
             // Use cached pricing configuration if available
             $pricingType = $cachedPricingConfig['pricing_type'] ?? $pricingType;
-            
+
             Log::debug('Using cached apartment pricing configuration', [
                 'apartment_id' => $apartmentId,
                 'cached_pricing_type' => $pricingType
             ]);
         }
-        
+
         return $this->calculatePaymentTotal($apartmentPrice, $rentalDuration, $pricingType);
     }
-    
+
     /**
      * Pre-calculate and cache common calculation scenarios
      */
@@ -765,27 +772,27 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
             ['price' => 0, 'duration' => 1, 'type' => 'total'],
             ['price' => 1000000, 'duration' => 1, 'type' => 'total'],
         ];
-        
+
         $preCalculatedCount = 0;
-        
+
         foreach ($commonScenarios as $scenario) {
             $result = $this->calculatePaymentTotal(
                 $scenario['price'],
                 $scenario['duration'],
                 $scenario['type']
             );
-            
+
             if ($result->isValid) {
                 $preCalculatedCount++;
             }
         }
-        
+
         Log::info('Pre-calculated common payment scenarios', [
             'scenarios_calculated' => $preCalculatedCount,
             'total_scenarios' => count($commonScenarios)
         ]);
     }
-    
+
     /**
      * Get calculation performance metrics with caching statistics
      */
@@ -793,13 +800,13 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
     {
         $baseMetrics = $this->monitoringService->getPerformanceMetrics($hours);
         $cacheMetrics = $this->cacheService->getCachePerformanceStatistics($hours);
-        
+
         return array_merge($baseMetrics, [
             'cache_performance' => $cacheMetrics,
             'cache_usage_summary' => $this->cacheService->getCacheUsageSummary()
         ]);
     }
-    
+
     /**
      * Calculate payment total with additional charges (for proforma calculations)
      */
@@ -808,10 +815,11 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
         int $rentalDuration,
         string $pricingType = self::PRICING_TYPE_TOTAL,
         array $additionalCharges = []
-    ): PaymentCalculationResult {
+        ): PaymentCalculationResult
+    {
         // First calculate the base payment total
         $baseResult = $this->calculatePaymentTotal($apartmentPrice, $rentalDuration, $pricingType);
-        
+
         if (!$baseResult->isValid) {
             return $baseResult;
         }
@@ -850,7 +858,8 @@ class PaymentCalculationService implements PaymentCalculationServiceInterface
                 $calculationSteps
             );
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Payment calculation with charges failed', [
                 'apartment_price' => $apartmentPrice,
                 'rental_duration' => $rentalDuration,

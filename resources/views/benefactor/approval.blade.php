@@ -45,7 +45,7 @@
                             </tr>
                             <tr>
                                 <th>Amount:</th>
-                                <td><strong class="text-success">₦{{ number_format($invitation->amount, 2) }}</strong></td>
+                                <td><strong class="text-success">{{ format_money($invitation->amount) }}</strong></td>
                             </tr>
                             @if($invitation->invoice_details)
                                 @php

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout | Home-Refined</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <!-- HEADER & NAVIGATION -->
+  <header>
+    <nav class="top-nav">
+      <div class="logo"><a href="index.html"><i class="fas fa-home"></i> Home-Refined</a></div>
+      
+      <ul class="nav-menu">
+        <li><a href="products.html">Shop</a></li>
+        <li><a href="index.html#categories">Categories</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+      </ul>
+
+      <div class="nav-right">
+        <div class="user-menu">
+          <button class="user-btn" id="userBtn" style="display: none;">
+            <i class="fas fa-user-circle"></i>
+            <span id="userDisplayName"></span>
+          </button>
+          <div id="authButtons">
+            <a href="login.html" class="btn btn-outline btn-small">
+              <i class="fas fa-sign-in-alt"></i> Sign In
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- PAGE CONTENT -->
+  <div class="container" style="padding: var(--spacing-xl) 0;">
+    <h1 style="margin-bottom: var(--spacing-lg);"><i class="fas fa-credit-card"></i> Checkout</h1>
+
+    <div class="checkout-flow">
+      <!-- LEFT: FORM -->
+      <div class="checkout-form">
+        <!-- CONTACT INFO -->
+        <div class="form-section">
+          <h3><i class="fas fa-envelope"></i> Contact Information</h3>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" placeholder="(555) 123-4567" required>
+          </div>
+        </div>
+
+        <!-- SHIPPING ADDRESS -->
+        <div class="form-section">
+          <h3><i class="fas fa-map-marker-alt"></i> Shipping Address</h3>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" placeholder="John Doe" required>
+          </div>
+          <div class="form-group">
+            <label>Street Address</label>
+            <input type="text" placeholder="123 Main St" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>City</label>
+              <input type="text" placeholder="New York" required>
+            </div>
+            <div class="form-group">
+              <label>State</label>
+              <select required>
+                <option>California</option>
+                <option>Texas</option>
+                <option>Florida</option>
+                <option>New York</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>ZIP Code</label>
+              <input type="text" placeholder="10001" required>
+            </div>
+            <div class="form-group">
+              <label>Country</label>
+              <input type="text" value="United States" readonly>
+            </div>
+          </div>
+          <div class="form-group">
+            <input type="checkbox" id="billingAddressCB">
+            <label for="billingAddressCB">Billing address same as shipping</label>
+          </div>
+        </div>
+
+        <!-- DELIVERY OPTIONS -->
+        <div class="form-section">
+          <h3><i class="fas fa-boxes"></i> Delivery Options</h3>
+          <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+            <label style="display: flex; align-items: center; gap: var(--spacing-md); cursor: pointer;">
+              <input type="radio" name="delivery" value="home" checked>
+              <span><i class="fas fa-home"></i> Ship to home address</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: var(--spacing-md); cursor: pointer;">
+              <input type="radio" name="delivery" value="split">
+              <span><i class="fas fa-sitemap"></i> Split delivery (home + job site)</span>
+            </label>
+          </div>
+          <div id="jobSiteOption" style="margin-top: var(--spacing-md); display: none;">
+            <label style="display: block; margin-bottom: var(--spacing-sm); font-weight: 600;"><i class="fas fa-map-pin"></i> Job Site Address</label>
+            <input type="text" placeholder="Job site street address" style="width: 100%; margin-bottom: var(--spacing-sm);">
+            <input type="text" placeholder="City, State, ZIP" style="width: 100%;">
+          </div>
+        </div>
+
+        <!-- SHIPPING METHOD -->
+        <div class="form-section">
+          <h3><i class="fas fa-truck"></i> Shipping Method</h3>
+          <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+            <label style="display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-md); background: var(--light-gray); border-radius: 4px; cursor: pointer;">
+              <input type="radio" name="shipping" value="standard" checked>
+              <div style="flex-grow: 1;">
+                <strong><i class="fas fa-shipping-fast"></i> Standard Shipping</strong>
+                <p style="color: var(--text-light); font-size: 0.85rem; margin-top: 4px;">3-5 business days</p>
+              </div>
+              <span style="font-weight: 600;">$50</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-md); background: var(--light-gray); border-radius: 4px; cursor: pointer;">
+              <input type="radio" name="shipping" value="express">
+              <div style="flex-grow: 1;">
+                <strong><i class="fas fa-bolt"></i> Express Shipping</strong>
+                <p style="color: var(--text-light); font-size: 0.85rem; margin-top: 4px;">1-2 business days</p>
+              </div>
+              <span style="font-weight: 600;">$125</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-md); background: var(--light-gray); border-radius: 4px; cursor: pointer;">
+              <input type="radio" name="shipping" value="pickup">
+              <div style="flex-grow: 1;">
+                <strong><i class="fas fa-warehouse"></i> Pickup at Warehouse</strong>
+                <p style="color: var(--text-light); font-size: 0.85rem; margin-top: 4px;">Available in 24 hours</p>
+              </div>
+              <span style="font-weight: 600;">FREE</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- PAYMENT METHOD -->
+        <div class="form-section">
+          <h3><i class="fas fa-credit-card"></i> Payment Method</h3>
+          <div class="payment-methods">
+            <label class="payment-method active" style="cursor: pointer;">
+              <input type="radio" name="payment" value="card" checked style="display: none;">
+              <div class="payment-method-icon"><i class="fas fa-credit-card"></i></div>
+              <div class="payment-method-name">Credit Card</div>
+            </label>
+            <label class="payment-method" style="cursor: pointer;">
+              <input type="radio" name="payment" value="applepay" style="display: none;">
+              <div class="payment-method-icon"><i class="fab fa-apple"></i></div>
+              <div class="payment-method-name">Apple Pay</div>
+            </label>
+            <label class="payment-method" style="cursor: pointer;">
+              <input type="radio" name="payment" value="googlepay" style="display: none;">
+              <div class="payment-method-icon"><i class="fab fa-google"></i></div>
+              <div class="payment-method-name">Google Pay</div>
+            </label>
+            <label class="payment-method" style="cursor: pointer;">
+              <input type="radio" name="payment" value="bnpl" style="display: none;">
+              <div class="payment-method-icon"><i class="fas fa-calendar"></i></div>
+              <div class="payment-method-name">BNPL</div>
+            </label>
+          </div>
+
+          <!-- CARD DETAILS -->
+          <div id="cardDetails" style="margin-top: var(--spacing-lg);">
+            <div class="form-group">
+              <label>Cardholder Name</label>
+              <input type="text" placeholder="John Doe" required>
+            </div>
+            <div class="form-group">
+              <label>Card Number</label>
+              <input type="text" placeholder="0000 0000 0000 0000" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Expiry Date</label>
+                <input type="text" placeholder="MM/YY" required>
+              </div>
+              <div class="form-group">
+                <label>CVC</label>
+                <input type="text" placeholder="000" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- SELLER PAYMENT OPTIONS -->
+          <div id="sellerPaymentOptions" style="display: none; margin-top: var(--spacing-lg); background: var(--light-gray); padding: var(--spacing-lg); border-radius: 4px;">
+            <h4 style="margin-bottom: var(--spacing-md);"><i class="fas fa-store"></i> Seller Payment Options</h4>
+            <div class="form-group">
+              <input type="checkbox" id="net30">
+              <label for="net30"><strong>Net-30 Terms</strong></label>
+              <p style="color: var(--text-light); font-size: 0.85rem; margin-top: 4px;">Pay within 30 days of invoice</p>
+            </div>
+            <div class="form-group">
+              <input type="checkbox" id="taxExempt">
+              <label for="taxExempt"><strong>Apply Tax-Exempt Certificate</strong></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUOTE REQUEST (SELLER) -->
+        <div id="quoteSection" style="display: none;">
+          <div class="form-section" style="background: #fffbea; border: 1px solid var(--accent);">
+            <h3 style="color: var(--accent);"><i class="fas fa-file-invoice"></i> Quote-to-Order</h3>
+            <p style="color: var(--text-light); margin-bottom: var(--spacing-md);">Convert your cart to a professional quote for approval</p>
+            <textarea style="width: 100%; min-height: 80px; margin-bottom: var(--spacing-md);" placeholder="Add special notes (delivery instructions, project details, etc.)"></textarea>
+            <button class="btn btn-accent" style="width: 100%;"><i class="fas fa-file-pdf"></i> Generate & Send Quote</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: SUMMARY -->
+      <div class="checkout-summary">
+        <h3>Order Summary</h3>
+
+        <div class="summary-items" id="checkoutItems"></div>
+
+        <div class="discount-code">
+          <input type="text" placeholder="Discount code" style="flex-grow: 1;">
+          <button style="padding: 8px 16px; background: var(--light-gray); border: 1px solid var(--border); border-radius: 4px; cursor: pointer;">Apply</button>
+        </div>
+
+        <div style="margin-bottom: var(--spacing-lg);">
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span id="checkoutSubtotal">$0.00</span>
+          </div>
+          <div class="summary-row">
+            <span>Tax</span>
+            <span id="checkoutTax">$0.00</span>
+          </div>
+          <div class="summary-row">
+            <span>Shipping</span>
+            <span id="checkoutShipping">$50.00</span>
+          </div>
+          <div id="checkoutDiscount" class="summary-row" style="display: none; color: var(--success);">
+            <span>Discount</span>
+            <span id="checkoutDiscountAmount">-$0.00</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total</span>
+            <span id="checkoutTotal">$0.00</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%; padding: var(--spacing-lg); font-size: 1.1rem;" id="placeOrderBtn">Place Order</button>
+
+        <button class="btn btn-outline" style="width: 100%; margin-top: var(--spacing-md); padding: var(--spacing-lg);" onclick="window.location.href='products.html'">Continue Shopping</button>
+
+        <div style="margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid var(--medium-gray); font-size: 0.8rem; color: var(--text-light); text-align: center;">
+          <p style="margin-bottom: var(--spacing-sm);\"><i class=\"fas fa-check-circle\" style=\"color: var(--accent);\"></i> Secure checkout • <i class=\"fas fa-check-circle\" style=\"color: var(--accent);\"></i> 30-day returns • <i class=\"fas fa-check-circle\" style=\"color: var(--accent);\"></i> Free support</p>
+          <p>Questions? <a href="#" style="color: var(--accent);">Chat with us</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer style="background: var(--primary); color: white; padding: var(--spacing-xl) var(--spacing-lg); text-align: center; margin-top: var(--spacing-xl);">
+    <div class="container">
+      <p>&copy; 2026 Home-Refined. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script src="js/products.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    function renderCheckoutItems() {
+      const container = document.getElementById('checkoutItems');
+      container.innerHTML = cartManager.cart.map(item => `
+        <div class="summary-item">
+          <span>${item.name} x${item.quantity}</span>
+          <span>$${(item.price * item.quantity).toFixed(2)}</span>
+        </div>
+      `).join('');
+    }
+
+    function updateCheckoutSummary() {
+      const subtotal = cartManager.getCartTotal();
+      const discount = cartManager.getDiscount();
+      const tax = subtotal * 0.08; // 8% tax (simplified)
+      const shipping = 50; // Default shipping
+      const total = subtotal - discount + tax + shipping;
+
+      document.getElementById('checkoutSubtotal').textContent = `$${subtotal.toFixed(2)}`;
+      document.getElementById('checkoutTax').textContent = `$${tax.toFixed(2)}`;
+      document.getElementById('checkoutShipping').textContent = `$${shipping.toFixed(2)}`;
+
+      if (discount > 0) {
+        document.getElementById('checkoutDiscount').style.display = 'flex';
+        document.getElementById('checkoutDiscountAmount').textContent = `-$${discount.toFixed(2)}`;
+      }
+
+      document.getElementById('checkoutTotal').textContent = `$${total.toFixed(2)}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if user is logged in
+      const userDisplayName = localStorage.getItem("userDisplayName");
+      const userBtn = document.getElementById("userBtn");
+      const authButtons = document.getElementById("authButtons");
+
+      if (userDisplayName) {
+        userBtn.style.display = "flex";
+        authButtons.style.display = "none";
+        document.getElementById("userDisplayName").textContent = userDisplayName;
+
+        // Add click handler to logout
+        userBtn.addEventListener("click", logout);
+      }
+
+      if (cartManager.cart.length === 0) {
+        alert('Your cart is empty');
+        window.location.href = 'products.html';
+        return;
+      }
+
+      renderCheckoutItems();
+      updateCheckoutSummary();
+
+      // Delivery option handling
+      document.querySelectorAll('input[name="delivery"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          document.getElementById('jobSiteOption').style.display = e.target.value === 'split' ? 'block' : 'none';
+        });
+      });
+
+      // Payment method handling
+      document.querySelectorAll('.payment-method').forEach(method => {
+        method.addEventListener('click', () => {
+          document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+          method.classList.add('active');
+          method.querySelector('input').checked = true;
+        });
+      });
+
+      // Seller mode
+      if (cartManager.isSeller) {
+        document.getElementById('sellerPaymentOptions').style.display = 'block';
+        document.getElementById('quoteSection').style.display = 'block';
+      }
+
+      // Place order
+      document.getElementById('placeOrderBtn').addEventListener('click', () => {
+        alert('Order placed successfully! Order #' + Math.random().toString(36).substr(2, 9).toUpperCase());
+        cartManager.clearCart();
+        window.location.href = 'dashboard.html';
+      });
+    });
+
+    function logout() {
+      localStorage.removeItem("userDisplayName");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userAccountType");
+      window.location.href = "products.html";
+    }
+  </script>
+</body>
+</html>

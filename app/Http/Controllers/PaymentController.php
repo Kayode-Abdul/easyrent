@@ -33,7 +33,8 @@ class PaymentController extends Controller
         PaymentIntegrationService $paymentIntegrationService,
         PaymentCalculationServiceInterface $paymentCalculationService,
         EnhancedRentalCalculationService $enhancedRentalCalculationService
-    ) {
+        )
+    {
         $this->paymentIntegrationService = $paymentIntegrationService;
         $this->paymentCalculationService = $paymentCalculationService;
         $this->enhancedRentalCalculationService = $enhancedRentalCalculationService;
@@ -75,12 +76,12 @@ class PaymentController extends Controller
     public function showProformaPaymentForm($id)
     {
         $proforma = ProfomaReceipt::findOrFail($id);
-        
+
         // Ensure only the tenant can access their payment form
         if (auth()->user()->user_id !== $proforma->tenant_id) {
             return redirect()->back()->with('error', 'Unauthorized access');
         }
-        
+
         return view('proforma.payment', compact('proforma'));
     }
 
@@ -96,9 +97,10 @@ class PaymentController extends Controller
             $request->validate([
                 'email' => 'required|email',
                 'amount' => 'required|numeric|min:0.01',
-                'metadata' => 'required'
+                'metadata' => 'required',
+                'gateway' => 'required|in:paystack,flutterwave,googlepay'
             ]);
-            
+
             // Parse metadata
             $metadata = json_decode($request->metadata, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -108,7 +110,7 @@ class PaymentController extends Controller
                 ]);
                 return back()->withError('Invalid payment metadata format');
             }
-            
+
             // Validate payment amount using calculation service
             $validationResult = $this->validatePaymentAmount($request->amount, $metadata);
             if (!$validationResult['valid']) {
@@ -119,23 +121,28 @@ class PaymentController extends Controller
                 ]);
                 return back()->withError('Payment amount validation failed: ' . $validationResult['error']);
             }
-            
+
             // Log calculation details for audit
             $this->logPaymentInitiation($request->amount, $metadata, $validationResult);
-            
+
+            $gateway = $request->gateway;
+            $metadata['gateway'] = $gateway;
+
             // Check if this is an apartment invitation payment or proforma payment
             if (isset($metadata['invitation_token'])) {
                 // Handle apartment invitation payment
                 return $this->handleApartmentInvitationPayment($request, $metadata);
-            } else {
+            }
+            else {
                 // Handle proforma payment (existing logic)
                 return $this->handleProformaPayment($request, $metadata);
             }
-        } catch(\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Payment initiation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'request_data' => $request->only(['email', 'amount'])
+                'request_data' => $request->only(['email', 'amount', 'gateway'])
             ]);
             return back()->withError('The payment could not be initialized. Please try again.');
         }
@@ -147,28 +154,28 @@ class PaymentController extends Controller
     private function handleApartmentInvitationPayment(Request $request, array $metadata)
     {
         $invitationToken = $metadata['invitation_token'];
-        
+
         // Find the apartment invitation
         $invitation = \App\Models\ApartmentInvitation::where('invitation_token', $invitationToken)->firstOrFail();
-        
+
         // Validate payment amount against apartment pricing
         $apartment = $invitation->apartment;
         $duration = $invitation->lease_duration ?? 12;
-        
+
         $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
             $apartment->amount,
             $duration,
             $apartment->getPricingType()
         );
-        
+
         if (!$calculationResult->isValid) {
             throw new \Exception('Payment calculation failed: ' . $calculationResult->errorMessage);
         }
-        
+
         // Validate that the requested amount matches the calculated amount
         $expectedAmount = $calculationResult->totalAmount;
         $requestedAmount = $request->amount;
-        
+
         if (abs($expectedAmount - $requestedAmount) > 0.01) { // Allow for minor rounding differences
             Log::error('Payment amount mismatch for invitation', [
                 'invitation_token' => $invitationToken,
@@ -178,16 +185,16 @@ class PaymentController extends Controller
             ]);
             throw new \Exception('Payment amount does not match expected calculation');
         }
-        
+
         // Log calculation for audit purposes
         $this->paymentCalculationService->logCalculationSteps($calculationResult);
-        
+
         // Find or create the payment record
         $payment = \App\Models\Payment::where('payment_id', $request->payment_id)->first();
         if (!$payment) {
             throw new \Exception('Payment record not found');
         }
-        
+
         // Store calculation details in payment metadata
         $payment->payment_meta = json_encode([
             'invitation_token' => $invitationToken,
@@ -195,14 +202,14 @@ class PaymentController extends Controller
             'calculation_steps' => $calculationResult->calculationSteps,
             'validated_amount' => $expectedAmount
         ]);
-        
+
         // Use the reference from the form or generate a new one
         $reference = $request->reference ?? \Unicodeveloper\Paystack\Paystack::genTranxRef();
-        
+
         // Update payment with reference
         $payment->payment_reference = $reference;
         $payment->save();
-        
+
         // Prepare payment data for Paystack
         $data = [
             "amount" => $request->amount * 100, // Convert to kobo
@@ -222,31 +229,32 @@ class PaymentController extends Controller
     private function handleProformaPayment(Request $request, array $metadata)
     {
         $proformaId = $metadata['proforma_id'] ?? null;
-        
+        $gateway = $metadata['gateway'] ?? 'paystack';
+
         // Find the proforma receipt
         $proforma = ProfomaReceipt::findOrFail($proformaId);
         // Use the relationship to get the apartment (proforma.apartment_id refers to apartments.apartment_id)
         $apartment = $proforma->apartment;
-        
+
         if (!$apartment) {
             throw new \Exception('Apartment not found for proforma ID: ' . $proformaId);
         }
-        
+
         // Validate payment amount against proforma calculation
         $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
             $apartment->amount,
             $proforma->duration ?? 12,
             $apartment->getPricingType()
         );
-        
+
         if (!$calculationResult->isValid) {
             throw new \Exception('Payment calculation failed: ' . $calculationResult->errorMessage);
         }
-        
+
         // Validate that the requested amount matches the calculated amount
         $expectedAmount = $calculationResult->totalAmount;
-        $requestedAmount = $request->amount / 100; // Convert from kobo to naira for comparison
-        
+        $requestedAmount = $gateway === 'paystack' ? $request->amount / 100 : $request->amount; // Paystack is in kobo, others might be in Naira
+
         if (abs($expectedAmount - $requestedAmount) > 0.01) { // Allow for minor rounding differences
             Log::error('Payment amount mismatch for proforma', [
                 'proforma_id' => $proformaId,
@@ -256,99 +264,163 @@ class PaymentController extends Controller
             ]);
             throw new \Exception('Payment amount does not match proforma calculation');
         }
-        
+
         // Log calculation for audit purposes
         $this->paymentCalculationService->logCalculationSteps($calculationResult);
-        
+
         // Store calculation details in proforma
         $proforma->calculation_method = $calculationResult->calculationMethod;
         $proforma->calculation_log = $calculationResult->calculationSteps;
-        
+
         // Use the reference from the form or generate a new one
-        $reference = $request->reference ?? \Unicodeveloper\Paystack\Paystack::genTranxRef();
+        $reference = $request->reference ?? ($gateway === 'paystack' ?\Unicodeveloper\Paystack\Paystack::genTranxRef() : 'FLW-' . time() . '-' . rand(1000, 9999));
 
         // Persist reference on the related proforma so callback can locate it reliably
         $proforma->transaction_id = $reference;
         $proforma->save();
-        
-        // Prepare payment data
-        $data = [
-            "amount" => $request->amount, // Amount is already in kobo from the form
-            "reference" => $reference,
-            "email" => $request->email,
-            "currency" => $request->currency ?? "NGN",
-            "metadata" => $metadata
-        ];
 
-        return \Unicodeveloper\Paystack\Paystack::getAuthorizationUrl($data)->redirectNow();
+        // Prepare payment data
+        if ($gateway === 'paystack') {
+            $data = [
+                "amount" => $request->amount, // Amount is already in kobo from the form
+                "reference" => $reference,
+                "email" => $request->email,
+                "currency" => $request->currency ?? "NGN",
+                "metadata" => $metadata
+            ];
+            return \Unicodeveloper\Paystack\Paystack::getAuthorizationUrl($data)->redirectNow();
+        }
+        elseif ($gateway === 'flutterwave') {
+            // Logic for Flutterwave redirect will be implemented in the frontend
+            // This is just a placeholder to return data if needed
+            return response()->json([
+                'status' => 'success',
+                'gateway' => 'flutterwave',
+                'reference' => $reference,
+                'amount' => $request->amount,
+                'email' => $request->email,
+                'public_key' => config('flutterwave.public_key'),
+                'metadata' => $metadata
+            ]);
+        }
+
+        throw new \Exception('Unsupported payment gateway: ' . $gateway);
     }
 
     /**
-     * Obtain Paystack payment information
+     * Handle Flutterwave payment callback
+     */
+    public function handleFlutterwaveCallback(Request $request)
+    {
+        $status = $request->status;
+        $tx_ref = $request->tx_ref;
+        $transaction_id = $request->transaction_id;
+
+        if ($status !== 'successful') {
+            Log::warning('Flutterwave payment was not successful', ['status' => $status, 'tx_ref' => $tx_ref]);
+            return redirect('/dashboard')->with('error', 'Payment failed or was cancelled.');
+        }
+
+        // Verify transaction
+        $client = new \GuzzleHttp\Client();
+        $secretKey = config('flutterwave.secret_key');
+
+        try {
+            $response = $client->get(config('flutterwave.payment_url') . '/transactions/' . $transaction_id . '/verify', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $secretKey,
+                    'Content-Type' => 'application/json',
+                ]
+            ]);
+
+            $paymentDetails = json_decode($response->getBody(), true);
+
+            if ($paymentDetails['status'] !== 'success' || $paymentDetails['data']['status'] !== 'successful') {
+                throw new \Exception('Flutterwave transaction verification failed');
+            }
+
+            // Process payment logic (similar to Paystack but adapted for Flutterwave data structure)
+            return $this->processVerifiedPayment($paymentDetails['data'], 'flutterwave');
+        }
+        catch (\Exception $e) {
+            Log::error('Flutterwave verification error', ['error' => $e->getMessage(), 'tx_ref' => $tx_ref]);
+            return redirect('/dashboard')->with('error', 'Payment verification failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Obtain gateway payment information
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function handleGatewayCallback(Request $request)
     {
+        $reference = $request->input('reference') ?? $request->query('reference') ?? $request->query('trxref') ?? $request->query('tx_ref');
+
+        if (str_starts_with($reference, 'FLW-')) {
+            return $this->handleFlutterwaveCallback($request);
+        }
+
         try {
             $this->logPaymentEvent('payment_callback_received', new Payment(), [
                 'request_method' => $request->method(),
                 'has_reference' => $request->has('reference'),
             ]);
-            
+
             // Set the base URL for Paystack API
             config(['paystack.paymentUrl' => env('PAYSTACK_PAYMENT_URL', 'https://api.paystack.co')]);
-            
+
             // Get the transaction reference from the request
             // Paystack sends the reference as 'reference' in the request body
             $transactionReference = $request->input('reference') ?? $request->query('reference') ?? $request->query('trxref');
-            
+
             if (!$transactionReference) {
                 $this->logEasyRentError('No transaction reference found in callback', new \Exception('Missing transaction reference'), []);
                 return redirect('/dashboard')->with('error', 'Payment verification failed: No transaction reference');
             }
-            
+
             // Temporarily set the reference in the request for the Paystack library
             // The library expects 'trxref' in the query parameters
             $request->query->set('trxref', $transactionReference);
-            
+
             Log::info('Attempting to get payment data from Paystack', ['reference' => $transactionReference]);
-            
+
             // Create a custom Paystack instance and verify the transaction
             $paystack = app(\Unicodeveloper\Paystack\Paystack::class);
-            
+
             // Manually verify the transaction to avoid the getPaymentData() issue
             $client = new \GuzzleHttp\Client();
             $secretKey = config('paystack.secretKey');
-            
+
             try {
                 $response = $client->get(
                     config('paystack.paymentUrl') . '/transaction/verify/' . $transactionReference,
-                    [
-                        'headers' => [
-                            'Authorization' => 'Bearer ' . $secretKey,
-                            'Content-Type' => 'application/json',
-                            'Accept' => 'application/json'
-                        ]
+                [
+                    'headers' => [
+                        'Authorization' => 'Bearer ' . $secretKey,
+                        'Content-Type' => 'application/json',
+                        'Accept' => 'application/json'
                     ]
+                ]
                 );
-                
+
                 $paymentDetails = json_decode($response->getBody(), true);
-                
+
                 Log::info('Payment details retrieved', ['status' => $paymentDetails['status'] ?? 'unknown']);
-                
+
                 // Check if verification was successful
                 if (!$paymentDetails['status'] || $paymentDetails['data']['status'] !== 'success') {
                     throw new \Exception('Transaction verification failed');
                 }
-            } catch (\GuzzleHttp\Exception\ClientException $e) {
+            }
+            catch (\GuzzleHttp\Exception\ClientException $e) {
                 $errorResponse = json_decode($e->getResponse()->getBody(), true);
                 Log::error('Paystack API error', [
                     'reference' => $transactionReference,
                     'error' => $errorResponse['message'] ?? 'Unknown error',
                     'status_code' => $e->getResponse()->getStatusCode()
                 ]);
-                
+
                 // For test references, we'll simulate a successful response for testing purposes
                 if (strpos($transactionReference, 'test_') === 0) {
                     Log::info('Test reference detected, simulating success');
@@ -357,7 +429,7 @@ class PaymentController extends Controller
                         'data' => [
                             'status' => 'success',
                             'reference' => $transactionReference,
-                            'amount' => 100000, // 1000 NGN in kobo
+                            'amount' => 100000, // 1000 UNT in kobo/cents
                             'metadata' => [
                                 'proforma_id' => 1,
                                 'custom_fields' => [
@@ -366,465 +438,35 @@ class PaymentController extends Controller
                             ]
                         ]
                     ];
-                } else {
+                }
+                else {
                     throw new \Exception('Transaction verification failed: ' . ($errorResponse['message'] ?? 'Unknown error'));
                 }
             }
-            
+
             // Check if payment was successful
             if ($paymentDetails['status'] && $paymentDetails['data']['status'] === 'success') {
-                
-                // Log the entire payment process for debugging
-                $this->logPaymentEvent('payment_callback_processing_start', new Payment(), [
-                    'reference' => $transactionReference,
-                    'payment_status' => $paymentDetails['data']['status'] ?? 'unknown',
-                ]);
-                    $reference = $paymentDetails['data']['reference'];
-                    $metadata = $paymentDetails['data']['metadata'];
-                    
-                    Log::info('Payment successful', [
-                        'reference' => $reference,
-                        'amount' => $paymentDetails['data']['amount'],
-                        'metadata' => $metadata
-                    ]);
-
-                    // Handle EasyRent invitation payments
-                    if (!empty($metadata['invitation_token'])) {
-                        try {
-                            $invitationToken = $metadata['invitation_token'];
-                            $invitation = ApartmentInvitation::where('invitation_token', $invitationToken)
-                                ->with(['apartment', 'landlord', 'tenant'])
-                                ->first();
-
-                            if (!$invitation) {
-                                Log::error('Invitation not found for invitation payment callback', [
-                                    'reference' => $reference,
-                                    'invitation_token' => $invitationToken,
-                                ]);
-                                return redirect('/dashboard')->with('error', 'Payment verification failed: Invitation not found');
-                            }
-
-                            // Check if payment already exists
-                            $existingPayment = Payment::where('transaction_id', $reference)->first();
-                            if ($existingPayment) {
-                                $result = $this->paymentIntegrationService->processInvitationPayment(
-                                    $existingPayment,
-                                    $paymentDetails['data']
-                                );
-
-                                if ($result['success']) {
-                                    return !empty($result['apartment_assigned'])
-                                        ? redirect()->route('invite.success', $result['invitation']->invitation_token)
-                                            ->with('success', 'Payment completed and apartment assigned successfully!')
-                                        : redirect()->route('register', ['invitation_token' => $result['invitation']->invitation_token])
-                                            ->with('success', 'Payment completed. Please register to finalize your apartment.');
-                                }
-
-                                return redirect('/dashboard')->with('error', 'Payment was received but processing failed: ' . ($result['error'] ?? 'Unknown error'));
-                            }
-
-                            // Create new payment record
-                            $tenantId = !empty($metadata['tenant_id']) && is_numeric($metadata['tenant_id']) 
-                                ? (int) $metadata['tenant_id'] 
-                                : null;
-                            
-                            // Fallback: check if user is authenticated but tenant_id missing from metadata
-                            if (empty($tenantId) && auth()->check()) {
-                                $tenantId = auth()->user()->user_id;
-                                Log::info('Using authenticated user fallback for tenant_id', [
-                                    'reference' => $reference,
-                                    'original_tenant_id' => $metadata['tenant_id'] ?? null,
-                                    'fallback_tenant_id' => $tenantId,
-                                    'user_email' => auth()->user()->email
-                                ]);
-                            }
-
-                            $payment = new Payment();
-                            $payment->transaction_id = $reference;
-                            $payment->payment_reference = 'easyrent_' . $invitationToken;
-                            $payment->amount = $paymentDetails['data']['amount'] / 100;
-                            $payment->tenant_id = $tenantId;
-                            $payment->landlord_id = !empty($metadata['landlord_id']) && is_numeric($metadata['landlord_id'])
-                                ? (int) $metadata['landlord_id']
-                                : ($invitation->landlord_id ?? null);
-                            $payment->apartment_id = !empty($metadata['apartment_id']) && is_numeric($metadata['apartment_id'])
-                                ? (int) $metadata['apartment_id']
-                                : ($invitation->apartment_id ?? null);
-                            $payment->status = Payment::STATUS_COMPLETED;
-                            $payment->payment_method = $paymentDetails['data']['channel'] ?? ($metadata['payment_method'] ?? 'card');
-                            $payment->duration = (int) ($invitation->lease_duration ?? 12);
-                            $payment->paid_at = now();
-                            $payment->payment_meta = [
-                                'invitation_token' => $invitationToken,
-                                'transaction_type' => $metadata['transaction_type'] ?? 'apartment_invitation_payment',
-                                'payment_source' => 'paystack_callback',
-                                'paystack_amount_kobo' => $paymentDetails['data']['amount'] ?? null,
-                                'paystack_data' => [
-                                    'channel' => $paymentDetails['data']['channel'] ?? null,
-                                    'gateway_response' => $paymentDetails['data']['gateway_response'] ?? null,
-                                    'paid_at' => $paymentDetails['data']['paid_at'] ?? null,
-                                ],
-                            ];
-                            $payment->save();
-
-                            $result = $this->paymentIntegrationService->processInvitationPayment(
-                                $payment,
-                                $paymentDetails['data']
-                            );
-
-                            if ($result['success']) {
-                                return !empty($result['apartment_assigned'])
-                                    ? redirect()->route('invite.success', $result['invitation']->invitation_token)
-                                        ->with('success', 'Payment completed and apartment assigned successfully!')
-                                    : redirect()->route('register', ['invitation_token' => $result['invitation']->invitation_token])
-                                        ->with('success', 'Payment completed. Please register to finalize your apartment.');
-                            }
-
-                            return redirect('/dashboard')->with('error', 'Payment was received but apartment assignment failed: ' . ($result['error'] ?? 'Unknown error'));
-                        } catch (\Exception $e) {
-                            Log::error('Invitation payment callback processing failed', [
-                                'reference' => $reference,
-                                'error' => $e->getMessage(),
-                                'trace' => $e->getTraceAsString(),
-                            ]);
-                            return redirect('/dashboard')->with('error', 'Payment was received but could not be processed. Please contact support with reference: ' . $reference);
-                        }
-                    }
-                    
-                    // Handle test references
-                    if (str_starts_with($reference, 'test_')) {
-                        // For test references, create a mock proforma if it doesn't exist
-                        $proforma = ProfomaReceipt::where('transaction_id', $reference)->first();
-                        
-                        if (!$proforma) {
-                            Log::info('Creating test proforma receipt', ['reference' => $reference]);
-                            
-                            // Create a test tenant if needed
-                            $testTenant = \App\Models\User::where('email', 'test@example.com')->first();
-                            if (!$testTenant) {
-                                $testTenant = new \App\Models\User();
-                                $testTenant->first_name = 'Test';
-                                $testTenant->last_name = 'Tenant';
-                                $testTenant->username = 'testtenant';
-                                $testTenant->email = 'test@example.com';
-                                $testTenant->user_id = 999001; // Numeric ID for test tenant
-                                $testTenant->role = 1; // Tenant role ID
-                                $testTenant->password = bcrypt('password');
-                                $testTenant->save();
-                            }
-                            
-                            // Create a test landlord if needed
-                            $testLandlord = \App\Models\User::where('email', 'landlord@example.com')->first();
-                            if (!$testLandlord) {
-                                $testLandlord = new \App\Models\User();
-                                $testLandlord->first_name = 'Test';
-                                $testLandlord->last_name = 'Landlord';
-                                $testLandlord->username = 'testlandlord';
-                                $testLandlord->email = 'landlord@example.com';
-                                $testLandlord->user_id = 999002; // Numeric ID for test landlord
-                                $testLandlord->role = 2; // Landlord role ID
-                                $testLandlord->password = bcrypt('password');
-                                $testLandlord->save();
-                            }
-                            
-                            // Create a test apartment if needed
-                            $testApartment = Apartment::where('apartment_id', 999001)->first();
-                            if (!$testApartment) {
-                                $testApartment = new Apartment();
-                                $testApartment->apartment_id = 999001; // Numeric ID
-                                $testApartment->property_id = 999001; // Numeric property ID
-                                $testApartment->apartment_type = 'Test Apartment';
-                                $testApartment->occupied = false;
-                                $testApartment->amount = 1000; // 1000 naira
-                                $testApartment->user_id = $testLandlord->user_id; // Set landlord as owner
-                                $testApartment->save();
-                            }
-                            
-                            // Create the test proforma
-                            $proforma = new ProfomaReceipt();
-                            $proforma->transaction_id = $reference;
-                            $proforma->tenant_id = $testTenant->user_id;
-                            $proforma->user_id = $testLandlord->user_id;
-                            $proforma->apartment_id = $testApartment->apartment_id;
-                            $proforma->amount = $paymentDetails['data']['amount'] / 100;
-                            $proforma->duration = 12; // 12 months
-                            $proforma->status = ProfomaReceipt::STATUS_NEW;
-                            $proforma->save();
-                            
-                            Log::info('Test proforma receipt created', ['proforma_id' => $proforma->id]);
-                        }
-                    } else {
-                        // For real references, find the actual proforma receipt
-                        $proforma = ProfomaReceipt::where('transaction_id', $reference)->first();
-                        
-                        // Fallback: if transaction_id isn't set, use proforma_id carried in Paystack metadata
-                        if (!$proforma && !empty($metadata['proforma_id'])) {
-                            $proforma = ProfomaReceipt::find($metadata['proforma_id']);
-                        }
-                        
-                        if (!$proforma) {
-                            Log::error('Proforma receipt not found for transaction', ['reference' => $reference, 'metadata' => $metadata]);
-                            return redirect('/dashboard')->with('error', 'Payment verification failed: Receipt not found');
-                        }
-                    }
-                
-                Log::info('Proforma receipt found', ['proforma_id' => $proforma->id]);
-                
-                // Use the relationship to get the apartment (proforma.apartment_id refers to apartments.apartment_id)
-                $apartment = $proforma->apartment;
-                
-                if (!$apartment) {
-                    Log::error('Apartment not found for proforma', [
-                        'proforma_id' => $proforma->id, 
-                        'proforma_apartment_id' => $proforma->apartment_id,
-                        'note' => 'proforma.apartment_id should reference apartments.apartment_id'
-                    ]);
-                    return redirect('/dashboard')->with('error', 'Payment verification failed: Apartment not found for proforma');
-                }
-                
-                Log::info('Apartment found', ['apartment_id' => $apartment->apartment_id]);
-                
-                // Create payment record
-                try {
-                    Log::info('Creating payment record', [
-                        'transaction_id' => $reference,
-                        'amount' => $paymentDetails['data']['amount'] / 100,
-                        'tenant_id' => $proforma->tenant_id,
-                        'landlord_id' => $proforma->user_id,
-                        'apartment_id' => $apartment->apartment_id, // Use apartment's apartment_id field
-                        'duration' => $proforma->duration
-                    ]);
-                    
-                    // Check if payment already exists to avoid duplicates
-                    $existingPayment = Payment::where('transaction_id', $reference)->first();
-                    if ($existingPayment) {
-                        Log::info('Payment already exists', ['payment_id' => $existingPayment->id]);
-                        
-                        // Validate existing payment amount against current calculation
-                        $validationResult = $this->validateExistingPaymentAmount($existingPayment);
-                        if (!$validationResult['valid']) {
-                            Log::warning('Existing payment amount validation failed', [
-                                'payment_id' => $existingPayment->id,
-                                'validation_error' => $validationResult['error']
-                            ]);
-                        }
-                        
-                        // Check if this is an invitation-based payment that needs processing
-                        if ($this->isInvitationBasedPayment($existingPayment)) {
-                            $result = $this->paymentIntegrationService->processInvitationPayment(
-                                $existingPayment, 
-                                $paymentDetails['data']
-                            );
-                            
-                            if ($result['success']) {
-                                return $result['apartment_assigned']
-                                    ? redirect()->route('apartment.invite.success', $result['invitation']->invitation_token)
-                                        ->with('success', 'Payment completed and apartment assigned successfully!')
-                                    : redirect()->route('register', ['invitation_token' => $result['invitation']->invitation_token])
-                                        ->with('success', 'Payment completed. Please register to finalize your apartment.');
-                            }
-                        }
-                        
-                        return redirect()->route('payment.receipt', ['id' => $existingPayment->id])->with('success', 'Payment was already processed!');
-                    }
-                    
-                    // Validate required data before creating payment
-                    if (!$proforma->tenant_id || !$proforma->user_id || !$apartment->apartment_id) {
-                        throw new \Exception('Missing required proforma data: tenant_id=' . $proforma->tenant_id . ', landlord_id=' . $proforma->user_id . ', apartment_id=' . $apartment->apartment_id);
-                    }
-                    
-                    // Use the actual amount paid to Paystack (no recalculation after payment)
-                    $actualPaidAmount = $paymentDetails['data']['amount'] / 100; // Convert from kobo to naira
-                    
-                    // For audit purposes only, calculate what the current system would expect
-                    // This is NOT used for validation, only for logging/audit trail
-                    $auditCalculationResult = null;
-                    try {
-                        $auditCalculationResult = $this->paymentCalculationService->calculatePaymentTotal(
-                            $apartment->amount,
-                            $proforma->duration ?? 12,
-                            $apartment->getPricingType()
-                        );
-                        
-                        // Log for audit purposes (but don't validate against it)
-                        if ($auditCalculationResult->isValid) {
-                            $currentExpectedAmount = $auditCalculationResult->totalAmount;
-                            Log::info('Payment audit calculation', [
-                                'transaction_id' => $reference,
-                                'actual_paid_amount' => $actualPaidAmount,
-                                'current_expected_amount' => $currentExpectedAmount,
-                                'difference' => abs($currentExpectedAmount - $actualPaidAmount),
-                                'calculation_method' => $auditCalculationResult->calculationMethod,
-                                'note' => 'This is for audit only - actual paid amount takes precedence'
-                            ]);
-                        }
-                    } catch (\Exception $e) {
-                        Log::warning('Audit calculation failed (not critical)', [
-                            'transaction_id' => $reference,
-                            'error' => $e->getMessage()
-                        ]);
-                    }
-                    
-                    // Use DB transaction to ensure data consistency
-                    DB::beginTransaction();
-                    
-                    $payment = new Payment();
-                    $payment->transaction_id = $reference;
-                    $payment->payment_reference = $reference;
-                    $payment->amount = $actualPaidAmount; // Use actual paid amount, not recalculated
-                    $payment->tenant_id = $proforma->tenant_id;
-                    $payment->landlord_id = $proforma->user_id;
-                    // Store the apartment's apartment_id field (the unique identifier)
-                    $payment->apartment_id = $apartment->apartment_id;
-                    $payment->status = 'completed';
-                    $payment->payment_method = $paymentDetails['data']['channel'] ?? 'card';
-                    $payment->duration = $proforma->duration ?? 12;
-                    $payment->paid_at = now();
-                    
-                    // Store payment metadata with actual paid amount and audit info
-                    $paymentMeta = [
-                        'actual_paid_amount' => $actualPaidAmount,
-                        'paystack_amount_kobo' => $paymentDetails['data']['amount'],
-                        'paystack_data' => [
-                            'channel' => $paymentDetails['data']['channel'] ?? null,
-                            'gateway_response' => $paymentDetails['data']['gateway_response'] ?? null,
-                            'paid_at' => $paymentDetails['data']['paid_at'] ?? null
-                        ],
-                        'payment_source' => 'paystack_callback',
-                        'amount_source' => 'actual_payment' // Indicates this is the real paid amount
-                    ];
-                    
-                    // Add audit calculation details if available (for reference only)
-                    if ($auditCalculationResult && $auditCalculationResult->isValid) {
-                        $paymentMeta['audit_calculation'] = [
-                            'method' => $auditCalculationResult->calculationMethod,
-                            'steps' => $auditCalculationResult->calculationSteps,
-                            'current_expected_amount' => $auditCalculationResult->totalAmount,
-                            'note' => 'For audit purposes only - not used for payment amount'
-                        ];
-                    }
-                    
-                    $payment->payment_meta = json_encode($paymentMeta);
-                    
-                    Log::info('About to save payment', ['payment_data' => $payment->toArray()]);
-                    
-                    $saved = $payment->save();
-                    
-                    if (!$saved) {
-                        throw new \Exception('Failed to save payment record - save() returned false');
-                    }
-                    
-                    Log::info('Payment record created successfully', ['payment_id' => $payment->id, 'payment_data' => $payment->fresh()->toArray()]);
-                    
-                    // Check if this is an invitation-based payment
-                    if ($this->isInvitationBasedPayment($payment)) {
-                        // Process through invitation payment service
-                        $result = $this->paymentIntegrationService->processInvitationPayment(
-                            $payment, 
-                            $paymentDetails['data']
-                        );
-                        
-                        if ($result['success']) {
-                            DB::commit();
-
-                            Log::info('Invitation payment processed successfully', [
-                                'payment_id' => $payment->id,
-                                'invitation_id' => $result['invitation']->id,
-                                'apartment_assigned' => $result['apartment_assigned'] ?? null,
-                            ]);
-
-                            // If apartment was assigned, proceed to success; otherwise send user to register
-                            if (!empty($result['apartment_assigned'])) {
-                                // Generate receipt
-                                $receiptFile = $this->generateReceipt($payment);
-
-                                return redirect()->route('apartment.invite.success', $result['invitation']->invitation_token)
-                                    ->with('success', 'Payment completed and apartment assigned successfully!');
-                            }
-
-                            return redirect()->route('register', ['invitation_token' => $result['invitation']->invitation_token])
-                                ->with('success', 'Payment completed. Please register to finalize your apartment.');
-                        } else {
-                            // Handle invitation payment failure
-                            DB::rollBack();
-                            return redirect('/dashboard')->with('error', 'Payment was received but apartment assignment failed: ' . $result['error']);
-                        }
-                    } else {
-                        // Handle regular proforma payment
-                        // Update apartment details
-                        $apartment->update([
-                            'tenant_id' => $proforma->tenant_id,
-                            'occupied' => true,
-                            'range_start' => now(),
-                            'range_end' => now()->addMonths($proforma->duration)
-                        ]);
-
-                        // Update proforma status
-                        $proforma->update(['status' => ProfomaReceipt::STATUS_CONFIRMED]);
-                        
-                        DB::commit();
-                        
-                        Log::info('Regular payment processing completed successfully');
-                    }
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    Log::error('Failed to create payment record', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                        'reference' => $reference,
-                        'proforma_data' => $proforma ? $proforma->toArray() : null,
-                        'apartment_data' => $apartment ? $apartment->toArray() : null
-                    ]);
-                    
-                    // Try to save a minimal payment record for debugging
-                    try {
-                        Log::info('Attempting to save minimal payment record for debugging');
-                        $debugPayment = new Payment();
-                        $debugPayment->transaction_id = $reference . '_debug';
-                        $debugPayment->amount = $paymentDetails['data']['amount'] / 100;
-                        $debugPayment->tenant_id = $proforma->tenant_id ?? 0;
-                        $debugPayment->landlord_id = $proforma->user_id ?? 0;
-                        $debugPayment->apartment_id = $apartment ? $apartment->apartment_id : 0;
-                        $debugPayment->status = 'failed';
-                        $debugPayment->payment_method = 'debug';
-                        $debugPayment->duration = 1;
-                        $debugPayment->save();
-                        Log::info('Debug payment record saved', ['debug_payment_id' => $debugPayment->id]);
-                    } catch (\Exception $debugE) {
-                        Log::error('Even debug payment failed', ['debug_error' => $debugE->getMessage()]);
-                    }
-                    
-                    return redirect('/dashboard')->with('error', 'Payment was received but could not be recorded. Please contact support with reference: ' . $reference . '. Error: ' . $e->getMessage());
-                }
-                
-                Log::info('=== PAYMENT CALLBACK PROCESSING END ===', [
-                    'reference' => $reference,
-                    'success' => true
-                ]);
-                
-                // Generate receipt
-                $receiptFile = $this->generateReceipt($payment);
-                
-                return redirect()->route('proforma.payment.success', ['payment' => $payment->id])->with('success', 'Payment completed successfully! Your apartment has been assigned.');
+                return $this->processVerifiedPayment($paymentDetails['data'], 'paystack', $transactionReference);
             }
-
             Log::warning('Payment verification failed', ['payment_details' => $paymentDetails ?? null]);
             return redirect('/dashboard')->with('error', 'Payment failed!');
-        } catch(\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Payment callback error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'reference' => $transactionReference ?? 'unknown'
             ]);
-            
+
             // Try to create a minimal payment record for failed callbacks
             try {
                 if (isset($transactionReference)) {
                     $this->createFallbackPayment($transactionReference, $e->getMessage());
                 }
-            } catch (\Exception $fallbackE) {
+            }
+            catch (\Exception $fallbackE) {
                 Log::error('Fallback payment creation also failed', ['error' => $fallbackE->getMessage()]);
             }
-            
+
             return redirect('/dashboard')->with('error', 'An error occurred while processing your payment. Reference: ' . ($transactionReference ?? 'unknown'));
         }
     }
@@ -832,6 +474,552 @@ class PaymentController extends Controller
     /**
      * Generate and save receipt PDF
      */
+
+    protected function processVerifiedPayment(array $paymentData, string $gateway, string $transactionReference = null)
+    {
+        $reference = $gateway === 'paystack' ? ($paymentData['reference'] ?? null) : ($paymentData['tx_ref'] ?? null);
+        if (!$transactionReference) {
+            $transactionReference = $reference;
+        }
+
+        $metadata = $gateway === 'paystack' ? ($paymentData['metadata'] ?? []) : ($paymentData['meta'] ?? []);
+        $amount = $gateway === 'paystack' ? ($paymentData['amount'] / 100) : $paymentData['amount'];
+        $channel = $gateway === 'paystack' ? ($paymentData['channel'] ?? 'card') : ($paymentData['payment_type'] ?? 'card');
+
+
+
+        // Log the entire payment process for debugging
+        $this->logPaymentEvent('payment_callback_processing_start', new Payment(), [
+            'reference' => $transactionReference,
+            'payment_status' => $paymentData['status'] ?? 'unknown',
+        ]);
+        $reference = $reference;
+        $metadata = $metadata;
+
+        Log::info('Payment successful', [
+            'reference' => $reference,
+            'amount' => ($amount * 100),
+            'metadata' => $metadata
+        ]);
+
+        // Handle EasyRent invitation payments
+        if (!empty($metadata['invitation_token'])) {
+            try {
+                $invitationToken = $metadata['invitation_token'];
+                $invitation = ApartmentInvitation::where('invitation_token', $invitationToken)
+                    ->with(['apartment', 'landlord', 'tenant'])
+                    ->first();
+
+                if (!$invitation) {
+                    Log::error('Invitation not found for invitation payment callback', [
+                        'reference' => $reference,
+                        'invitation_token' => $invitationToken,
+                    ]);
+                    return redirect('/dashboard')->with('error', 'Payment verification failed: Invitation not found');
+                }
+
+                // Check if payment already exists
+                $existingPayment = Payment::where('transaction_id', $reference)->first();
+                if ($existingPayment) {
+                    $result = $this->paymentIntegrationService->processInvitationPayment(
+                        $existingPayment,
+                        $paymentData
+                    );
+
+                    if ($result['success'] && !empty($result['apartment_assigned'])) {
+                        return redirect()->route('dashboard')
+                            ->with('payment_congratulations', true)
+                            ->with('congrats_apartment_id', $result['invitation']->apartment_id)
+                            ->with('congrats_payment_id', $existingPayment->id)
+                            ->with('success', 'Payment completed and apartment assigned successfully!');
+                    }
+                    elseif ($result['success']) {
+                        return redirect()->route('register', ['invitation_token' => $result['invitation']->invitation_token])
+                            ->with('success', 'Payment completed. Please register to finalize your apartment.');
+                    }
+
+                    return redirect('/dashboard')->with('error', 'Payment was received but processing failed: ' . ($result['error'] ?? 'Unknown error'));
+                }
+
+                // If a pending payment was created during initiation, update it instead of creating a new record
+                $pendingPayment = Payment::where('status', Payment::STATUS_PENDING)
+                    ->where(function ($q) use ($invitationToken) {
+                        $q->where('payment_reference', 'easyrent_' . $invitationToken)
+                            ->orWhere('payment_meta->invitation_token', $invitationToken);
+                    })
+                    ->orderByDesc('id')
+                    ->first();
+
+                if ($pendingPayment) {
+                    $tenantId = !empty($metadata['tenant_id']) && is_numeric($metadata['tenant_id'])
+                        ? (int)$metadata['tenant_id']
+                        : null;
+
+                    if (empty($tenantId) && auth()->check()) {
+                        $tenantId = auth()->user()->user_id;
+                        Log::info('Using authenticated user fallback for tenant_id (pending payment update)', [
+                            'reference' => $reference,
+                            'original_tenant_id' => $metadata['tenant_id'] ?? null,
+                            'fallback_tenant_id' => $tenantId,
+                            'user_email' => auth()->user()->email
+                        ]);
+                    }
+
+                    $pendingPayment->transaction_id = $reference;
+                    $pendingPayment->amount = $amount;
+                    $pendingPayment->tenant_id = $pendingPayment->tenant_id ?? $tenantId;
+                    $pendingPayment->landlord_id = $pendingPayment->landlord_id
+                        ?? (!empty($metadata['landlord_id']) && is_numeric($metadata['landlord_id'])
+                            ? (int)$metadata['landlord_id']
+                            : ($invitation->landlord_id ?? null));
+                    $pendingPayment->apartment_id = $pendingPayment->apartment_id
+                        ?? (!empty($metadata['apartment_id']) && is_numeric($metadata['apartment_id'])
+                            ? (int)$metadata['apartment_id']
+                            : ($invitation->apartment_id ?? null));
+                    $pendingPayment->status = Payment::STATUS_COMPLETED;
+                    $pendingPayment->payment_method = $channel ?? ($metadata['payment_method'] ?? 'card');
+                    $pendingPayment->duration = $pendingPayment->duration ?? (int)($invitation->lease_duration ?? 12);
+                    $pendingPayment->paid_at = now();
+
+                    $pendingPayment->payment_meta = array_merge($pendingPayment->payment_meta ?? [], [
+                        'invitation_token' => $invitationToken,
+                        'transaction_type' => $metadata['transaction_type'] ?? 'apartment_invitation_payment',
+                        'payment_source' => 'paystack_callback',
+                        'paystack_amount_base_units' => ($amount * 100) ?? null,
+                        'paystack_data' => [
+                            'channel' => $channel ?? null,
+                            'gateway_response' => ($paymentData['gateway_response'] ?? $paymentData['processor_response'] ?? null) ?? null,
+                            'paid_at' => ($paymentData['paid_at'] ?? $paymentData['created_at'] ?? null) ?? null,
+                        ],
+                    ]);
+
+                    $pendingPayment->save();
+
+                    $result = $this->paymentIntegrationService->processInvitationPayment(
+                        $pendingPayment,
+                        $paymentData
+                    );
+
+                    if ($result['success'] && !empty($result['apartment_assigned'])) {
+                        return redirect()->route('dashboard')
+                            ->with('payment_congratulations', true)
+                            ->with('congrats_apartment_id', $result['invitation']->apartment_id)
+                            ->with('congrats_payment_id', $pendingPayment->id)
+                            ->with('success', 'Payment completed and apartment assigned successfully!');
+                    }
+                    elseif ($result['success']) {
+                        return redirect()->route('register', ['invitation_token' => $result['invitation']->invitation_token])
+                            ->with('success', 'Payment completed. Please register to finalize your apartment.');
+                    }
+
+                    return redirect('/dashboard')->with('error', 'Payment was received but processing failed: ' . ($result['error'] ?? 'Unknown error'));
+                }
+
+                // Create new payment record
+                $tenantId = !empty($metadata['tenant_id']) && is_numeric($metadata['tenant_id'])
+                    ? (int)$metadata['tenant_id']
+                    : null;
+
+                // Fallback: check if user is authenticated but tenant_id missing from metadata
+                if (empty($tenantId) && auth()->check()) {
+                    $tenantId = auth()->user()->user_id;
+                    Log::info('Using authenticated user fallback for tenant_id', [
+                        'reference' => $reference,
+                        'original_tenant_id' => $metadata['tenant_id'] ?? null,
+                        'fallback_tenant_id' => $tenantId,
+                        'user_email' => auth()->user()->email
+                    ]);
+                }
+
+                $payment = new Payment();
+                $payment->transaction_id = $reference;
+                $payment->payment_reference = 'easyrent_' . $invitationToken;
+                $payment->amount = $amount;
+                $payment->tenant_id = $tenantId;
+                $payment->landlord_id = !empty($metadata['landlord_id']) && is_numeric($metadata['landlord_id'])
+                    ? (int)$metadata['landlord_id']
+                    : ($invitation->landlord_id ?? null);
+                $payment->apartment_id = !empty($metadata['apartment_id']) && is_numeric($metadata['apartment_id'])
+                    ? (int)$metadata['apartment_id']
+                    : ($invitation->apartment_id ?? null);
+                $payment->status = Payment::STATUS_COMPLETED;
+                $payment->payment_method = $channel ?? ($metadata['payment_method'] ?? 'card');
+                $payment->duration = (int)($invitation->lease_duration ?? 12);
+                $payment->paid_at = now();
+                $payment->payment_meta = [
+                    'invitation_token' => $invitationToken,
+                    'transaction_type' => $metadata['transaction_type'] ?? 'apartment_invitation_payment',
+                    'payment_source' => 'paystack_callback',
+                    'paystack_amount_base_units' => ($amount * 100) ?? null,
+                    'paystack_data' => [
+                        'channel' => $channel ?? null,
+                        'gateway_response' => ($paymentData['gateway_response'] ?? $paymentData['processor_response'] ?? null) ?? null,
+                        'paid_at' => ($paymentData['paid_at'] ?? $paymentData['created_at'] ?? null) ?? null,
+                    ],
+                ];
+                $payment->save();
+
+                $result = $this->paymentIntegrationService->processInvitationPayment(
+                    $payment,
+                    $paymentData
+                );
+
+                if ($result['success'] && !empty($result['apartment_assigned'])) {
+                    return redirect()->route('dashboard')
+                        ->with('payment_congratulations', true)
+                        ->with('congrats_apartment_id', $result['invitation']->apartment_id)
+                        ->with('congrats_payment_id', $payment->id)
+                        ->with('success', 'Payment completed and apartment assigned successfully!');
+                }
+                elseif ($result['success']) {
+                    return redirect()->route('register', ['invitation_token' => $result['invitation']->invitation_token])
+                        ->with('success', 'Payment completed. Please register to finalize your apartment.');
+                }
+
+                return redirect('/dashboard')->with('error', 'Payment was received but apartment assignment failed: ' . ($result['error'] ?? 'Unknown error'));
+            }
+            catch (\Exception $e) {
+                Log::error('Invitation payment callback processing failed', [
+                    'reference' => $reference,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                return redirect('/dashboard')->with('error', 'Payment was received but could not be processed. Please contact support with reference: ' . $reference);
+            }
+        }
+
+        // Handle test references
+        if (str_starts_with($reference, 'test_')) {
+            // For test references, create a mock proforma if it doesn't exist
+            $proforma = ProfomaReceipt::where('transaction_id', $reference)->first();
+
+            if (!$proforma) {
+                Log::info('Creating test proforma receipt', ['reference' => $reference]);
+
+                // Create a test tenant if needed
+                $testTenant = \App\Models\User::where('email', 'test@example.com')->first();
+                if (!$testTenant) {
+                    $testTenant = new \App\Models\User();
+                    $testTenant->first_name = 'Test';
+                    $testTenant->last_name = 'Tenant';
+                    $testTenant->username = 'testtenant';
+                    $testTenant->email = 'test@example.com';
+                    $testTenant->user_id = 999001; // Numeric ID for test tenant
+                    $testTenant->role = 1; // Tenant role ID
+                    $testTenant->password = bcrypt('password');
+                    $testTenant->save();
+                }
+
+                // Create a test landlord if needed
+                $testLandlord = \App\Models\User::where('email', 'landlord@example.com')->first();
+                if (!$testLandlord) {
+                    $testLandlord = new \App\Models\User();
+                    $testLandlord->first_name = 'Test';
+                    $testLandlord->last_name = 'Landlord';
+                    $testLandlord->username = 'testlandlord';
+                    $testLandlord->email = 'landlord@example.com';
+                    $testLandlord->user_id = 999002; // Numeric ID for test landlord
+                    $testLandlord->role = 2; // Landlord role ID
+                    $testLandlord->password = bcrypt('password');
+                    $testLandlord->save();
+                }
+
+                // Create a test apartment if needed
+                $testApartment = Apartment::where('apartment_id', 999001)->first();
+                if (!$testApartment) {
+                    $testApartment = new Apartment();
+                    $testApartment->apartment_id = 999001; // Numeric ID
+                    $testApartment->property_id = 999001; // Numeric property ID
+                    $testApartment->apartment_type = 'Test Apartment';
+                    $testApartment->occupied = false;
+                    $testApartment->amount = 1000; // 1000 naira
+                    $testApartment->user_id = $testLandlord->user_id; // Set landlord as owner
+                    $testApartment->save();
+                }
+
+                // Create the test proforma
+                $proforma = new ProfomaReceipt();
+                $proforma->transaction_id = $reference;
+                $proforma->tenant_id = $testTenant->user_id;
+                $proforma->user_id = $testLandlord->user_id;
+                $proforma->apartment_id = $testApartment->apartment_id;
+                $proforma->amount = $amount;
+                $proforma->duration = 12; // 12 months
+                $proforma->status = ProfomaReceipt::STATUS_NEW;
+                $proforma->save();
+
+                Log::info('Test proforma receipt created', ['proforma_id' => $proforma->id]);
+            }
+        }
+        else {
+            // For real references, find the actual proforma receipt
+            $proforma = ProfomaReceipt::where('transaction_id', $reference)->first();
+
+            // Fallback: if transaction_id isn't set, use proforma_id carried in Paystack metadata
+            if (!$proforma && !empty($metadata['proforma_id'])) {
+                $proforma = ProfomaReceipt::find($metadata['proforma_id']);
+            }
+
+            if (!$proforma) {
+                Log::error('Proforma receipt not found for transaction', ['reference' => $reference, 'metadata' => $metadata]);
+                return redirect('/dashboard')->with('error', 'Payment verification failed: Receipt not found');
+            }
+        }
+
+        Log::info('Proforma receipt found', ['proforma_id' => $proforma->id]);
+
+        // Use the relationship to get the apartment (proforma.apartment_id refers to apartments.apartment_id)
+        $apartment = $proforma->apartment;
+
+        if (!$apartment) {
+            Log::error('Apartment not found for proforma', [
+                'proforma_id' => $proforma->id,
+                'proforma_apartment_id' => $proforma->apartment_id,
+                'note' => 'proforma.apartment_id should reference apartments.apartment_id'
+            ]);
+            return redirect('/dashboard')->with('error', 'Payment verification failed: Apartment not found for proforma');
+        }
+
+        Log::info('Apartment found', ['apartment_id' => $apartment->apartment_id]);
+
+        // Create payment record
+        try {
+            Log::info('Creating payment record', [
+                'transaction_id' => $reference,
+                'amount' => $amount,
+                'tenant_id' => $proforma->tenant_id,
+                'landlord_id' => $proforma->user_id,
+                'apartment_id' => $apartment->apartment_id, // Use apartment's apartment_id field
+                'duration' => $proforma->duration
+            ]);
+
+            // Check if payment already exists to avoid duplicates
+            $existingPayment = Payment::where('transaction_id', $reference)->first();
+            if ($existingPayment) {
+                Log::info('Payment already exists', ['payment_id' => $existingPayment->id]);
+
+                // Validate existing payment amount against current calculation
+                $validationResult = $this->validateExistingPaymentAmount($existingPayment);
+                if (!$validationResult['valid']) {
+                    Log::warning('Existing payment amount validation failed', [
+                        'payment_id' => $existingPayment->id,
+                        'validation_error' => $validationResult['error']
+                    ]);
+                }
+
+                // Check if this is an invitation-based payment that needs processing
+                if ($this->isInvitationBasedPayment($existingPayment)) {
+                    $result = $this->paymentIntegrationService->processInvitationPayment(
+                        $existingPayment,
+                        $paymentData
+                    );
+
+                    if ($result['success'] && !empty($result['apartment_assigned'])) {
+                        return redirect()->route('dashboard')
+                            ->with('payment_congratulations', true)
+                            ->with('congrats_apartment_id', $result['invitation']->apartment_id)
+                            ->with('congrats_payment_id', $existingPayment->id)
+                            ->with('success', 'Payment completed and apartment assigned successfully!');
+                    }
+                    elseif ($result['success']) {
+                        return redirect()->route('register', ['invitation_token' => $result['invitation']->invitation_token])
+                            ->with('success', 'Payment completed. Please register to finalize your apartment.');
+                    }
+                }
+
+                return redirect()->route('payment.receipt', ['id' => $existingPayment->id])->with('success', 'Payment was already processed!');
+            }
+
+            // Validate required data before creating payment
+            if (!$proforma->tenant_id || !$proforma->user_id || !$apartment->apartment_id) {
+                throw new \Exception('Missing required proforma data: tenant_id=' . $proforma->tenant_id . ', landlord_id=' . $proforma->user_id . ', apartment_id=' . $apartment->apartment_id);
+            }
+
+            // Use the actual amount paid to Paystack (no recalculation after payment)
+            $actualPaidAmount = $amount; // Convert from kobo to naira
+
+            // For audit purposes only, calculate what the current system would expect
+            // This is NOT used for validation, only for logging/audit trail
+            $auditCalculationResult = null;
+            try {
+                $auditCalculationResult = $this->paymentCalculationService->calculatePaymentTotal(
+                    $apartment->amount,
+                    $proforma->duration ?? 12,
+                    $apartment->getPricingType()
+                );
+
+                // Log for audit purposes (but don't validate against it)
+                if ($auditCalculationResult->isValid) {
+                    $currentExpectedAmount = $auditCalculationResult->totalAmount;
+                    Log::info('Payment audit calculation', [
+                        'transaction_id' => $reference,
+                        'actual_paid_amount' => $actualPaidAmount,
+                        'current_expected_amount' => $currentExpectedAmount,
+                        'difference' => abs($currentExpectedAmount - $actualPaidAmount),
+                        'calculation_method' => $auditCalculationResult->calculationMethod,
+                        'note' => 'This is for audit only - actual paid amount takes precedence'
+                    ]);
+                }
+            }
+            catch (\Exception $e) {
+                Log::warning('Audit calculation failed (not critical)', [
+                    'transaction_id' => $reference,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            // Use DB transaction to ensure data consistency
+            DB::beginTransaction();
+
+            $payment = new Payment();
+            $payment->transaction_id = $reference;
+            $payment->payment_reference = $reference;
+            $payment->amount = $actualPaidAmount; // Use actual paid amount, not recalculated
+            $payment->tenant_id = $proforma->tenant_id;
+            $payment->landlord_id = $proforma->user_id;
+            // Store the apartment's apartment_id field (the unique identifier)
+            $payment->apartment_id = $apartment->apartment_id;
+            $payment->status = 'completed';
+            $payment->payment_method = $channel ?? 'card';
+            $payment->duration = $proforma->duration ?? 12;
+            $payment->paid_at = now();
+
+            // Store payment metadata with actual paid amount and audit info
+            $paymentMeta = [
+                'actual_paid_amount' => $actualPaidAmount,
+                'paystack_amount_kobo' => ($amount * 100),
+                'paystack_data' => [
+                    'channel' => $channel ?? null,
+                    'gateway_response' => ($paymentData['gateway_response'] ?? $paymentData['processor_response'] ?? null) ?? null,
+                    'paid_at' => ($paymentData['paid_at'] ?? $paymentData['created_at'] ?? null) ?? null
+                ],
+                'payment_source' => 'paystack_callback',
+                'amount_source' => 'actual_payment' // Indicates this is the real paid amount
+            ];
+
+            // Add audit calculation details if available (for reference only)
+            if ($auditCalculationResult && $auditCalculationResult->isValid) {
+                $paymentMeta['audit_calculation'] = [
+                    'method' => $auditCalculationResult->calculationMethod,
+                    'steps' => $auditCalculationResult->calculationSteps,
+                    'current_expected_amount' => $auditCalculationResult->totalAmount,
+                    'note' => 'For audit purposes only - not used for payment amount'
+                ];
+            }
+
+            $payment->payment_meta = json_encode($paymentMeta);
+
+            Log::info('About to save payment', ['payment_data' => $payment->toArray()]);
+
+            $saved = $payment->save();
+
+            if (!$saved) {
+                throw new \Exception('Failed to save payment record - save() returned false');
+            }
+
+            Log::info('Payment record created successfully', ['payment_id' => $payment->id, 'payment_data' => $payment->fresh()->toArray()]);
+
+            // Check if this is an invitation-based payment
+            if ($this->isInvitationBasedPayment($payment)) {
+                // Process through invitation payment service
+                $result = $this->paymentIntegrationService->processInvitationPayment(
+                    $payment,
+                    $paymentData
+                );
+
+                if ($result['success']) {
+                    DB::commit();
+
+                    Log::info('Invitation payment processed successfully', [
+                        'payment_id' => $payment->id,
+                        'invitation_id' => $result['invitation']->id,
+                        'apartment_assigned' => $result['apartment_assigned'] ?? null,
+                    ]);
+
+                    // If apartment was assigned, proceed to success; otherwise send user to register
+                    if (!empty($result['apartment_assigned'])) {
+                        // Generate receipt
+                        $receiptFile = $this->generateReceipt($payment);
+
+                        $result['invitation']->update(['status' => \App\Models\ApartmentInvitation::STATUS_USED]);
+
+                        return redirect()->route('dashboard')
+                            ->with('payment_congratulations', true)
+                            ->with('congrats_apartment_id', $result['invitation']->apartment_id)
+                            ->with('congrats_payment_id', $payment->id)
+                            ->with('success', 'Payment completed and apartment assigned successfully!');
+                    }
+
+                    return redirect()->route('register', ['invitation_token' => $result['invitation']->invitation_token])
+                        ->with('success', 'Payment completed. Please register to finalize your apartment.');
+                }
+                else {
+                    // Handle invitation payment failure
+                    DB::rollBack();
+                    return redirect('/dashboard')->with('error', 'Payment was received but apartment assignment failed: ' . $result['error']);
+                }
+            }
+            else {
+                // Handle regular proforma payment
+                // Update apartment details
+                $apartment->update([
+                    'tenant_id' => $proforma->tenant_id,
+                    'occupied' => true,
+                    'range_start' => now(),
+                    'range_end' => now()->addMonths($proforma->duration)
+                ]);
+
+                // Update proforma status
+                $proforma->update(['status' => ProfomaReceipt::STATUS_CONFIRMED]);
+
+                DB::commit();
+
+                Log::info('Regular payment processing completed successfully');
+            }
+        }
+        catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to create payment record', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'reference' => $reference,
+                'proforma_data' => $proforma ? $proforma->toArray() : null,
+                'apartment_data' => $apartment ? $apartment->toArray() : null
+            ]);
+
+            // Try to save a minimal payment record for debugging
+            try {
+                Log::info('Attempting to save minimal payment record for debugging');
+                $debugPayment = new Payment();
+                $debugPayment->transaction_id = $reference . '_debug';
+                $debugPayment->amount = $amount;
+                $debugPayment->tenant_id = $proforma->tenant_id ?? 0;
+                $debugPayment->landlord_id = $proforma->user_id ?? 0;
+                $debugPayment->apartment_id = $apartment ? $apartment->apartment_id : 0;
+                $debugPayment->status = 'failed';
+                $debugPayment->payment_method = 'debug';
+                $debugPayment->duration = 1;
+                $debugPayment->save();
+                Log::info('Debug payment record saved', ['debug_payment_id' => $debugPayment->id]);
+            }
+            catch (\Exception $debugE) {
+                Log::error('Even debug payment failed', ['debug_error' => $debugE->getMessage()]);
+            }
+
+            return redirect('/dashboard')->with('error', 'Payment was received but could not be recorded. Please contact support with reference: ' . $reference . '. Error: ' . $e->getMessage());
+        }
+
+        Log::info('=== PAYMENT CALLBACK PROCESSING END ===', [
+            'reference' => $reference,
+            'success' => true
+        ]);
+
+        // Generate receipt
+        $receiptFile = $this->generateReceipt($payment);
+
+        return redirect()->route('proforma.payment.success', ['payment' => $payment->id])->with('success', 'Payment completed successfully! Your apartment has been assigned.');
+    }
+
     private function generateReceipt($payment)
     {
         try {
@@ -839,30 +1027,31 @@ class PaymentController extends Controller
             $payment = Payment::with(['tenant', 'landlord', 'apartment.property'])
                 ->where('id', $payment->id)
                 ->firstOrFail();
-            
+
             // Add calculation details to payment for receipt display
             $calculationDetails = $this->getPaymentCalculationDetails($payment);
             $payment->calculation_details = $calculationDetails;
-                
+
             $pdf = Pdf::loadView('payments.receipt', compact('payment'));
             $filename = 'receipt_' . $payment->transaction_id . '.pdf';
             Storage::put('receipts/' . $filename, $pdf->output());
-            
+
             // Send receipt via email to tenant
             if ($payment->tenant && $payment->tenant->email) {
                 Mail::to($payment->tenant->email)->send(new PaymentReceiptMail($payment));
             }
-            
+
             // Send landlord-specific notification email
             if ($payment->landlord && $payment->landlord->email) {
                 Mail::to($payment->landlord->email)->send(new \App\Mail\LandlordPaymentNotification($payment));
             }
-            
+
             // Create in-app message for landlord
             $this->createLandlordPaymentMessage($payment);
-            
+
             return $filename;
-        } catch(\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Receipt generation failed: ' . $e->getMessage());
             return null;
         }
@@ -876,14 +1065,14 @@ class PaymentController extends Controller
         try {
             $commissionAmount = $payment->amount * 0.025;
             $netAmount = $payment->amount - $commissionAmount;
-            
+
             $messageBody = sprintf(
                 "You have received a rent payment from %s %s.\n\n" .
                 "Property: %s\n" .
                 "Apartment: %s\n" .
-                "Gross Amount: ₦%s\n" .
-                "Platform Fee (2.5%%): ₦%s\n" .
-                "Net Amount: ₦%s\n\n" .
+                "Gross Amount: " . format_money($payment->amount, $payment->apartment->currency)->getSymbol() . "%s\n" .
+                "Platform Fee (2.5%%): " . format_money($commissionAmount, $payment->apartment->currency)->getSymbol() . "%s\n" .
+                "Net Amount: " . format_money($netAmount, $payment->apartment->currency)->getSymbol() . "%s\n\n" .
                 "Transaction ID: %s\n" .
                 "Payment Date: %s\n" .
                 "Duration: %d %s",
@@ -899,20 +1088,51 @@ class PaymentController extends Controller
                 $payment->duration,
                 \Illuminate\Support\Str::plural('Month', $payment->duration)
             );
-            
+
             \App\Models\Message::create([
                 'sender_id' => 0, // System message
                 'receiver_id' => $payment->landlord_id,
-                'subject' => 'Payment Received - ₦' . number_format($netAmount, 2),
+                'subject' => 'Payment Received - ' . format_money($netAmount, $payment->apartment->currency)->getSymbol() . number_format($netAmount, 2),
                 'body' => $messageBody,
                 'is_read' => false,
             ]);
-            
+
+            // Also create a specific app notification for the landlord with payer details
+            try {
+                if (\Illuminate\Support\Facades\DB::getSchemaBuilder()->hasTable('user_notifications')) {
+                    $tenantName = $payment->tenant->first_name . ' ' . $payment->tenant->last_name;
+                    $propertyAddress = $payment->apartment->property->address ?? 'N/A';
+
+                    \Illuminate\Support\Facades\DB::table('user_notifications')->insert([
+                        'user_id' => $payment->landlord_id,
+                        'notification_id' => uniqid('notif_'),
+                        'type' => 'payment_received',
+                        'title' => 'Rent Payment Received',
+                        'message' => "Payment from {$tenantName} for {$propertyAddress}.",
+                        'data' => json_encode([
+                            'payment_id' => $payment->id,
+                            'amount' => $payment->amount,
+                            'net_amount' => $netAmount,
+                            'property' => $propertyAddress,
+                            'tenant' => $tenantName,
+                            'action_url' => '/dashboard/payments',
+                            'icon' => 'nc-icon nc-money-coins text-success'
+                        ]),
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+            }
+            catch (\Exception $e) {
+                Log::error('Failed to create landlord specific app notification: ' . $e->getMessage());
+            }
+
             Log::info('Landlord payment message created', [
                 'landlord_id' => $payment->landlord_id,
                 'payment_id' => $payment->id
             ]);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Failed to create landlord payment message: ' . $e->getMessage());
         }
     }
@@ -924,46 +1144,43 @@ class PaymentController extends Controller
     {
         $payment = Payment::with(['tenant', 'landlord', 'apartment.property'])
             ->findOrFail($id);
-            
+
         // Ensure only the tenant or landlord can view the receipt
         $user = auth()->user();
         if ($user->user_id !== $payment->tenant_id && $user->user_id !== $payment->landlord_id) {
             return redirect()->route('dashboard')->with('error', 'Unauthorized access');
         }
-        
+
         return view('payments.receipt_view', compact('payment'));
     }
 
     /**
      * Download payment receipt
      */
-    public function downloadReceipt($transactionId)
+    public function downloadReceipt($id)
     {
         try {
-            $payment = Payment::where('transaction_id', $transactionId)
-                ->with(['tenant', 'landlord', 'apartment'])
-                ->firstOrFail();
-            
+            $payment = Payment::with(['tenant', 'landlord', 'apartment.property', 'currency'])
+                ->findOrFail($id);
+
             // Check if user is authorized to view this receipt
-            if (auth()->user()->user_id !== $payment->tenant_id && 
-                auth()->user()->user_id !== $payment->landlord_id) {
+            if (auth()->user()->user_id !== $payment->tenant_id &&
+                auth()->user()->user_id !== $payment->landlord_id &&
+                !auth()->user()->isAdmin()) {
                 abort(403);
             }
 
             $filename = 'receipt_' . $payment->transaction_id . '.pdf';
-            if (!Storage::exists('receipts/' . $filename)) {
-                // Generate new receipt if it doesn't exist
-                $pdf = Pdf::loadView('payments.receipt', compact('payment'));
-                Storage::put('receipts/' . $filename, $pdf->output());
-            }
-
-            return Storage::download('receipts/' . $filename);
-        } catch(\Exception $e) {
+            $pdf = Pdf::loadView('payments.receipt_pdf', compact('payment'));
+            
+            return $pdf->download($filename);
+        }
+        catch (\Exception $e) {
             Log::error('Receipt download failed: ' . $e->getMessage());
             return back()->with('error', 'Unable to download receipt. Please try again later.');
         }
     }
-    
+
     /**
      * Show payment receipt by transaction reference
      */
@@ -973,20 +1190,21 @@ class PaymentController extends Controller
             $payment = Payment::where('transaction_id', $reference)
                 ->with(['tenant', 'landlord', 'apartment.property'])
                 ->firstOrFail();
-                
+
             // Ensure only the tenant or landlord can view the receipt
             $user = auth()->user();
             if ($user && $user->user_id !== $payment->tenant_id && $user->user_id !== $payment->landlord_id) {
                 return redirect()->to('/dashboard')->with('error', 'Unauthorized access');
             }
-            
+
             return view('payments.receipt_view', compact('payment'));
-        } catch(\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Receipt view failed: ' . $e->getMessage());
             return redirect()->to('/dashboard')->with('error', 'Unable to find payment receipt. Please contact support.');
         }
     }
-    
+
     /**
      * Show payment receipt by ID
      */
@@ -994,21 +1212,21 @@ class PaymentController extends Controller
     // {
     //     try {
     //         $payment = Payment::findOrFail($id);
-            
+
     //         // Check if user is authorized to view this receipt
     //         if (auth()->user()->user_id !== $payment->tenant_id && 
     //             auth()->user()->user_id !== $payment->landlord_id &&
     //             auth()->user()->role !== 1 && auth()->user()->role !== 2) { // Allow admins and super admins
     //             abort(403, 'You are not authorized to view this receipt.');
     //         }
-            
+
     //         return view('payments.receipt', compact('payment'));
     //     } catch(\Exception $e) {
     //         Log::error('Receipt view failed: ' . $e->getMessage());
     //         return back()->with('error', 'Unable to view receipt. Please try again later.');
     //     }
     // }
-    
+
     /**
      * Download payment receipt by ID
      */
@@ -1016,20 +1234,21 @@ class PaymentController extends Controller
     {
         try {
             $payment = Payment::findOrFail($id);
-            
+
             // Check if user is authorized to view this receipt
-            if (auth()->user()->user_id !== $payment->tenant_id && 
-                auth()->user()->user_id !== $payment->landlord_id &&
-                auth()->user()->role !== 1 && auth()->user()->role !== 2) { // Allow admins and super admins
+            if (auth()->user()->user_id !== $payment->tenant_id &&
+            auth()->user()->user_id !== $payment->landlord_id &&
+            auth()->user()->role !== 1 && auth()->user()->role !== 2) { // Allow admins and super admins
                 abort(403, 'You are not authorized to download this receipt.');
             }
-            
+
             $filename = 'receipt_' . $payment->transaction_id . '.pdf';
             // Generate new receipt PDF
             $pdf = Pdf::loadView('payments.receipt', compact('payment'));
-            
+
             return $pdf->download($filename);
-        } catch(\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Receipt download by ID failed: ' . $e->getMessage());
             return back()->with('error', 'Unable to download receipt. Please try again later.');
         }
@@ -1037,60 +1256,79 @@ class PaymentController extends Controller
 
     public function analytics()
     {
-        $totalRevenue = Payment::where('status', 'completed')->sum('amount');
-        $totalTransactions = Payment::where('status', 'completed')->count();
-        $monthlyAverage = Payment::where('status', 'completed')
-            ->whereYear('created_at', Carbon::now()->year)
-            ->avg('amount') ?? 0;
+        $payments = Payment::where('status', 'completed')->with('currency')->get();
+        
+        $totalRevenueByCurrency = $payments->groupBy('currency_id')->map(function ($group) {
+            return [
+                'amount' => $group->sum('amount'),
+                'symbol' => $group->first()->currency->symbol ?? '₦',
+                'code' => $group->first()->currency->code ?? 'NGN'
+            ];
+        });
+
+        $totalTransactions = $payments->count();
+        
+        $currentYearPayments = $payments->filter(function($p) {
+            return $p->created_at->year == Carbon::now()->year;
+        });
+
+        $monthlyAverageByCurrency = $currentYearPayments->groupBy('currency_id')->map(function ($group) {
+            return [
+                'amount' => $group->avg('amount') ?? 0,
+                'symbol' => $group->first()->currency->symbol ?? '₦',
+                'code' => $group->first()->currency->code ?? 'NGN'
+            ];
+        });
+
         $pendingPayments = Payment::where('status', 'pending')->count();
 
-        // Get monthly revenue data for the past year
-        $revenueData = Payment::where('status', 'completed')
+        // Get monthly revenue data (grouped by currency for more accuracy in future, but for now we'll stick to NGN or most common for the chart to avoid breaking it)
+        $revenueDataRaw = Payment::where('status', 'completed')
             ->whereBetween('created_at', [Carbon::now()->subYear(), Carbon::now()])
             ->select(
                 DB::raw('SUM(amount) as total'),
                 DB::raw('MONTH(created_at) as month'),
-                DB::raw('YEAR(created_at) as year')
+                DB::raw('YEAR(created_at) as year'),
+                'currency_id'
             )
-            ->groupBy(DB::raw('YEAR(created_at)'), DB::raw('MONTH(created_at)'))
+            ->groupBy(DB::raw('YEAR(created_at)'), DB::raw('MONTH(created_at)'), 'currency_id')
             ->orderBy(DB::raw('YEAR(created_at)'))
             ->orderBy(DB::raw('MONTH(created_at)'))
             ->get();
 
-        // Format revenue data for the chart
+        // For the chart, we'll pick the most common currency or just NGN for now as a baseline
+        $chartCurrencyId = $revenueDataRaw->groupBy('currency_id')->sortByDesc->count()->keys()->first();
+        
         $labels = [];
         $values = [];
         $start = Carbon::now()->subYear();
         for ($i = 0; $i < 12; $i++) {
             $month = $start->copy()->addMonths($i);
             $labels[] = $month->format('M Y');
-            $monthData = $revenueData->where('month', $month->month)
+            $monthData = $revenueDataRaw->where('month', $month->month)
                 ->where('year', $month->year)
+                ->where('currency_id', $chartCurrencyId)
                 ->first();
             $values[] = $monthData ? $monthData->total : 0;
         }
 
-        // Get payment methods distribution
         $paymentMethods = Payment::where('status', 'completed')
             ->select('payment_method', DB::raw('COUNT(*) as count'))
             ->groupBy('payment_method')
             ->get();
 
-        $methodLabels = $paymentMethods->pluck('payment_method')->toArray();
-        $methodValues = $paymentMethods->pluck('count')->toArray();
-
         return view('payments.analytics', [
-            'totalRevenue' => $totalRevenue,
+            'totalRevenueByCurrency' => $totalRevenueByCurrency,
             'totalTransactions' => $totalTransactions,
-            'monthlyAverage' => $monthlyAverage,
+            'monthlyAverageByCurrency' => $monthlyAverageByCurrency,
             'pendingPayments' => $pendingPayments,
             'revenueData' => [
                 'labels' => $labels,
                 'values' => $values,
             ],
             'paymentMethods' => [
-                'labels' => $methodLabels,
-                'values' => $methodValues,
+                'labels' => $paymentMethods->pluck('payment_method')->toArray(),
+                'values' => $paymentMethods->pluck('count')->toArray(),
             ],
         ]);
     }
@@ -1098,7 +1336,7 @@ class PaymentController extends Controller
     protected function exportPayments($query, $format)
     {
         $payments = $query->get();
-        
+
         switch ($format) {
             case 'csv':
                 return $this->exportToCsv($payments);
@@ -1121,7 +1359,7 @@ class PaymentController extends Controller
             "Expires" => "0"
         ];
 
-        $callback = function() use ($payments) {
+        $callback = function () use ($payments) {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['Transaction ID', 'Amount', 'Status', 'Payment Method', 'Date']);
 
@@ -1144,11 +1382,11 @@ class PaymentController extends Controller
     {
         // Build a simple Excel-compatible HTML table for export
         $headers = [
-            'Content-Type'        => 'application/vnd.ms-excel',
+            'Content-Type' => 'application/vnd.ms-excel',
             'Content-Disposition' => 'attachment; filename="payments.xls"',
-            'Expires'             => '0',
-            'Cache-Control'       => 'must-revalidate',
-            'Pragma'              => 'public',
+            'Expires' => '0',
+            'Cache-Control' => 'must-revalidate',
+            'Pragma' => 'public',
         ];
 
         $callback = function () use ($payments) {
@@ -1178,7 +1416,7 @@ class PaymentController extends Controller
         $pdf = Pdf::loadView('payments.export.pdf', compact('payments'));
         return $pdf->download('payments.pdf');
     }
-    
+
     /**
      * Check if a payment is invitation-based
      */
@@ -1195,7 +1433,8 @@ class PaymentController extends Controller
             $decoded = json_decode($meta, true);
             if (json_last_error() === JSON_ERROR_NONE) {
                 $meta = $decoded;
-            } else {
+            }
+            else {
                 $meta = null;
             }
         }
@@ -1222,22 +1461,25 @@ class PaymentController extends Controller
             // Determine the source of the payment (invitation or proforma)
             if (isset($metadata['invitation_token'])) {
                 return $this->validateInvitationPaymentAmount($requestedAmount, $metadata);
-            } elseif (isset($metadata['proforma_id'])) {
+            }
+            elseif (isset($metadata['proforma_id'])) {
                 return $this->validateProformaPaymentAmount($requestedAmount, $metadata);
-            } else {
+            }
+            else {
                 return [
                     'valid' => false,
                     'error' => 'Payment metadata missing required identifiers',
                     'calculation_result' => null
                 ];
             }
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Payment amount validation error', [
                 'requested_amount' => $requestedAmount,
                 'metadata' => $metadata,
                 'error' => $e->getMessage()
             ]);
-            
+
             return [
                 'valid' => false,
                 'error' => 'Payment validation failed due to system error',
@@ -1254,7 +1496,7 @@ class PaymentController extends Controller
         try {
             $invitationToken = $metadata['invitation_token'];
             $invitation = \App\Models\ApartmentInvitation::where('invitation_token', $invitationToken)->first();
-            
+
             if (!$invitation) {
                 return [
                     'valid' => false,
@@ -1262,7 +1504,7 @@ class PaymentController extends Controller
                     'calculation_result' => null
                 ];
             }
-            
+
             $apartment = $invitation->apartment;
             if (!$apartment) {
                 return [
@@ -1271,12 +1513,12 @@ class PaymentController extends Controller
                     'calculation_result' => null
                 ];
             }
-            
+
             // Check if this is an enhanced calculation payment
             if (isset($metadata['enhanced_calculation'])) {
                 return $this->validateEnhancedCalculationPayment($requestedAmount, $metadata, $apartment);
             }
-            
+
             // Fall back to standard calculation
             $duration = $invitation->lease_duration ?? 12;
             $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
@@ -1284,7 +1526,7 @@ class PaymentController extends Controller
                 $duration,
                 $apartment->getPricingType()
             );
-            
+
             if (!$calculationResult->isValid) {
                 return [
                     'valid' => false,
@@ -1292,34 +1534,35 @@ class PaymentController extends Controller
                     'calculation_result' => $calculationResult
                 ];
             }
-            
+
             $expectedAmount = $calculationResult->totalAmount;
             $tolerance = 0.01; // Allow for minor rounding differences
-            
+
             if (abs($expectedAmount - $requestedAmount) > $tolerance) {
                 return [
                     'valid' => false,
                     'error' => sprintf(
-                        'Payment amount mismatch. Expected: ₦%s, Requested: ₦%s',
-                        number_format($expectedAmount, 2),
-                        number_format($requestedAmount, 2)
-                    ),
+                    'Payment amount mismatch. Expected: ' . format_money($expectedAmount, $apartment->currency)->getSymbol() . '%s, Requested: ' . format_money($requestedAmount, $apartment->currency)->getSymbol() . '%s',
+                    number_format($expectedAmount, 2),
+                    number_format($requestedAmount, 2)
+                ),
                     'calculation_result' => $calculationResult
                 ];
             }
-            
+
             return [
                 'valid' => true,
                 'error' => null,
                 'calculation_result' => $calculationResult
             ];
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             Log::error('Invitation payment validation error', [
                 'metadata' => $metadata,
                 'error' => $e->getMessage()
             ]);
-            
+
             return [
                 'valid' => false,
                 'error' => 'Invitation payment validation failed',
@@ -1338,14 +1581,14 @@ class PaymentController extends Controller
             $durationType = $enhancedCalc['duration_type'];
             $quantity = $enhancedCalc['quantity'];
             $expectedAmount = $enhancedCalc['calculated_amount'];
-            
+
             // Re-calculate using the enhanced service to verify
             $result = $this->enhancedRentalCalculationService->calculateRentalCost(
                 $apartment,
                 $durationType,
                 $quantity
             );
-            
+
             if (!$result->isValid) {
                 return [
                     'valid' => false,
@@ -1353,13 +1596,13 @@ class PaymentController extends Controller
                     'calculation_result' => $result
                 ];
             }
-            
+
             $tolerance = 0.01; // Allow for minor rounding differences
-            
+
             // Validate against both the client-calculated amount and server re-calculation
-            if (abs($expectedAmount - $requestedAmount) > $tolerance || 
-                abs($result->totalAmount - $requestedAmount) > $tolerance) {
-                
+            if (abs($expectedAmount - $requestedAmount) > $tolerance ||
+            abs($result->totalAmount - $requestedAmount) > $tolerance) {
+
                 Log::warning('Enhanced payment amount mismatch', [
                     'requested_amount' => $requestedAmount,
                     'client_calculated_amount' => $expectedAmount,
@@ -1368,30 +1611,31 @@ class PaymentController extends Controller
                     'quantity' => $quantity,
                     'calculation_method' => $result->calculationMethod
                 ]);
-                
+
                 return [
                     'valid' => false,
                     'error' => sprintf(
-                        'Enhanced payment amount mismatch. Expected: ₦%s, Requested: ₦%s',
-                        number_format($result->totalAmount, 2),
-                        number_format($requestedAmount, 2)
-                    ),
+                    'Enhanced payment amount mismatch. Expected: ' . format_money($result->totalAmount, $apartment->currency)->getSymbol() . '%s, Requested: ' . format_money($requestedAmount, $apartment->currency)->getSymbol() . '%s',
+                    number_format($result->totalAmount, 2),
+                    number_format($requestedAmount, 2)
+                ),
                     'calculation_result' => $result
                 ];
             }
-            
+
             return [
                 'valid' => true,
                 'error' => null,
                 'calculation_result' => $result
             ];
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             Log::error('Enhanced calculation payment validation error', [
                 'metadata' => $metadata,
                 'error' => $e->getMessage()
             ]);
-            
+
             return [
                 'valid' => false,
                 'error' => 'Enhanced calculation validation failed',
@@ -1408,7 +1652,7 @@ class PaymentController extends Controller
         try {
             $proformaId = $metadata['proforma_id'];
             $proforma = ProfomaReceipt::find($proformaId);
-            
+
             if (!$proforma) {
                 return [
                     'valid' => false,
@@ -1416,7 +1660,7 @@ class PaymentController extends Controller
                     'calculation_result' => null
                 ];
             }
-            
+
             // Use the relationship to get the apartment (proforma.apartment_id refers to apartments.apartment_id)
             $apartment = $proforma->apartment;
             if (!$apartment) {
@@ -1426,14 +1670,14 @@ class PaymentController extends Controller
                     'calculation_result' => null
                 ];
             }
-            
+
             $duration = $proforma->duration ?? 12;
             $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
                 $apartment->amount,
                 $duration,
                 $apartment->getPricingType()
             );
-            
+
             if (!$calculationResult->isValid) {
                 return [
                     'valid' => false,
@@ -1441,37 +1685,38 @@ class PaymentController extends Controller
                     'calculation_result' => $calculationResult
                 ];
             }
-            
+
             $expectedAmount = $calculationResult->totalAmount;
             $tolerance = 0.01; // Allow for minor rounding differences
-            
+
             // Convert requested amount from kobo to naira if needed
             $requestedAmountNaira = $requestedAmount > 1000 ? $requestedAmount / 100 : $requestedAmount;
-            
+
             if (abs($expectedAmount - $requestedAmountNaira) > $tolerance) {
                 return [
                     'valid' => false,
                     'error' => sprintf(
-                        'Payment amount mismatch. Expected: ₦%s, Requested: ₦%s',
-                        number_format($expectedAmount, 2),
-                        number_format($requestedAmountNaira, 2)
-                    ),
+                    'Payment amount mismatch. Expected: ' . format_money($expectedAmount, $apartment->currency)->getSymbol() . '%s, Requested: ' . format_money($requestedAmountNaira, $apartment->currency)->getSymbol() . '%s',
+                    number_format($expectedAmount, 2),
+                    number_format($requestedAmountNaira, 2)
+                ),
                     'calculation_result' => $calculationResult
                 ];
             }
-            
+
             return [
                 'valid' => true,
                 'error' => null,
                 'calculation_result' => $calculationResult
             ];
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             Log::error('Proforma payment validation error', [
                 'metadata' => $metadata,
                 'error' => $e->getMessage()
             ]);
-            
+
             return [
                 'valid' => false,
                 'error' => 'Proforma payment validation failed',
@@ -1497,7 +1742,7 @@ class PaymentController extends Controller
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent()
             ];
-            
+
             // Add calculation details if available
             if (isset($validationResult['calculation_result']) && $validationResult['calculation_result']) {
                 $calculationResult = $validationResult['calculation_result'];
@@ -1506,14 +1751,15 @@ class PaymentController extends Controller
                     'calculation_method' => $calculationResult->calculationMethod,
                     'steps_count' => count($calculationResult->calculationSteps)
                 ];
-                
+
                 // Log the calculation steps for audit
                 $this->paymentCalculationService->logCalculationSteps($calculationResult);
             }
-            
+
             Log::info('Payment initiation logged', $logData);
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             Log::error('Failed to log payment initiation', [
                 'error' => $e->getMessage(),
                 'amount' => $amount,
@@ -1531,9 +1777,9 @@ class PaymentController extends Controller
         try {
             // IMPORTANT: For existing payments, we always consider the stored amount as valid
             // This method is only for audit/reporting purposes, not for changing displayed amounts
-            
+
             $actualAmount = $payment->amount; // This is the amount that was actually paid
-            
+
             // Get the apartment for audit calculation
             $apartment = Apartment::where('apartment_id', $payment->apartment_id)->first();
             if (!$apartment) {
@@ -1545,14 +1791,14 @@ class PaymentController extends Controller
                     'audit_possible' => false
                 ];
             }
-            
+
             // Calculate what the current system would expect (for audit only)
             $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
                 $apartment->amount,
                 $payment->duration ?? 12,
                 $apartment->getPricingType()
             );
-            
+
             if (!$calculationResult->isValid) {
                 return [
                     'valid' => true, // Payment amount is always valid (it was actually paid)
@@ -1562,13 +1808,13 @@ class PaymentController extends Controller
                     'audit_possible' => false
                 ];
             }
-            
+
             $currentExpectedAmount = $calculationResult->totalAmount;
             $difference = abs($currentExpectedAmount - $actualAmount);
             $tolerance = 0.01;
-            
+
             $auditMatches = $difference <= $tolerance;
-            
+
             // Log audit information (but don't treat as validation failure)
             if (!$auditMatches) {
                 Log::info('Payment audit discrepancy (informational only)', [
@@ -1584,30 +1830,31 @@ class PaymentController extends Controller
                     'note' => 'This is audit information only - actual paid amount is always correct'
                 ]);
             }
-            
+
             return [
                 'valid' => true, // Payment amount is ALWAYS valid (it was actually paid)
                 'error' => null,
                 'audit_matches' => $auditMatches,
                 'audit_note' => $auditMatches ? 'Payment matches current calculation' : sprintf(
-                    'Payment differs from current calculation. Paid: ₦%s, Current calc: ₦%s (Diff: ₦%s)',
-                    number_format($actualAmount, 2),
-                    number_format($currentExpectedAmount, 2),
-                    number_format($difference, 2)
-                ),
+                'Payment differs from current calculation. Paid: ' . format_money($actualAmount, $apartment->currency)->getSymbol() . '%s, Current calc: ' . format_money($currentExpectedAmount, $apartment->currency)->getSymbol() . '%s (Diff: ' . format_money($difference, $apartment->currency)->getSymbol() . '%s)',
+                number_format($actualAmount, 2),
+                number_format($currentExpectedAmount, 2),
+                number_format($difference, 2)
+            ),
                 'calculation_result' => $calculationResult,
                 'actual_amount' => $actualAmount,
                 'current_expected_amount' => $currentExpectedAmount,
                 'difference' => $difference,
                 'audit_possible' => true
             ];
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             Log::error('Payment audit calculation error', [
                 'payment_id' => $payment->id,
                 'error' => $e->getMessage()
             ]);
-            
+
             return [
                 'valid' => true, // Payment amount is always valid (it was actually paid)
                 'error' => null,
@@ -1626,13 +1873,13 @@ class PaymentController extends Controller
     {
         try {
             $actualPaidAmount = $payment->amount; // This is what was actually paid
-            
+
             // Try to get details from payment metadata first
             if ($payment->payment_meta) {
-                $meta = is_string($payment->payment_meta) 
-                    ? json_decode($payment->payment_meta, true) 
+                $meta = is_string($payment->payment_meta)
+                    ? json_decode($payment->payment_meta, true)
                     : $payment->payment_meta;
-                
+
                 if (is_array($meta)) {
                     // Check for new format metadata (post-fix)
                     if (isset($meta['actual_paid_amount']) && isset($meta['amount_source'])) {
@@ -1645,7 +1892,7 @@ class PaymentController extends Controller
                             'source' => 'payment_metadata_v2'
                         ];
                     }
-                    
+
                     // Check for old format metadata (pre-fix) - still show actual paid amount
                     if (isset($meta['calculation_method'])) {
                         return [
@@ -1659,7 +1906,7 @@ class PaymentController extends Controller
                     }
                 }
             }
-            
+
             // If no metadata available, show actual paid amount with audit info
             $apartment = Apartment::where('apartment_id', $payment->apartment_id)->first();
             if (!$apartment) {
@@ -1672,7 +1919,7 @@ class PaymentController extends Controller
                     'source' => 'apartment_not_found'
                 ];
             }
-            
+
             // Get audit calculation (for information only, not for display amount)
             try {
                 $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
@@ -1680,11 +1927,11 @@ class PaymentController extends Controller
                     $payment->duration ?? 12,
                     $apartment->getPricingType()
                 );
-                
+
                 if ($calculationResult->isValid) {
                     $currentExpected = $calculationResult->totalAmount;
                     $difference = abs($currentExpected - $actualPaidAmount);
-                    
+
                     return [
                         'method' => 'actual_payment',
                         'steps' => [],
@@ -1699,13 +1946,14 @@ class PaymentController extends Controller
                         'source' => 'with_audit_calculation'
                     ];
                 }
-            } catch (\Exception $auditError) {
+            }
+            catch (\Exception $auditError) {
                 Log::warning('Audit calculation failed for payment display', [
                     'payment_id' => $payment->id,
                     'error' => $auditError->getMessage()
                 ]);
             }
-            
+
             // Fallback: just show actual paid amount
             return [
                 'method' => 'actual_payment',
@@ -1715,13 +1963,14 @@ class PaymentController extends Controller
                 'audit_note' => 'Audit calculation not available',
                 'source' => 'fallback'
             ];
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             Log::error('Failed to get payment calculation details', [
                 'payment_id' => $payment->id,
                 'error' => $e->getMessage()
             ]);
-            
+
             // Even on error, show the actual paid amount
             return [
                 'method' => 'actual_payment',
@@ -1748,7 +1997,7 @@ class PaymentController extends Controller
             ]);
 
             $apartment = Apartment::where('apartment_id', $request->apartment_id)->firstOrFail();
-            
+
             // Use enhanced rental calculation service
             $result = $this->enhancedRentalCalculationService->calculateRentalCost(
                 $apartment,
@@ -1770,7 +2019,7 @@ class PaymentController extends Controller
                 'success' => true,
                 'calculation' => [
                     'total_amount' => $result->totalAmount,
-                    'formatted_amount' => '₦' . number_format($result->totalAmount, 2),
+                    'formatted_amount' => format_money($result->totalAmount, $apartment->currency)->getSymbol() . number_format($result->totalAmount, 2),
                     'calculation_method' => $result->calculationMethod,
                     'calculation_steps' => $result->calculationSteps,
                     'duration_type' => $request->duration_type,
@@ -1787,7 +2036,8 @@ class PaymentController extends Controller
                 ]
             ]);
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Enhanced rental calculation failed', [
                 'error' => $e->getMessage(),
                 'request_data' => $request->all()
@@ -1807,7 +2057,7 @@ class PaymentController extends Controller
     {
         try {
             $apartment = Apartment::where('apartment_id', $apartmentId)->firstOrFail();
-            
+
             $availableOptions = $this->enhancedRentalCalculationService->getAvailableRentalOptions($apartment);
 
             return response()->json([
@@ -1818,7 +2068,8 @@ class PaymentController extends Controller
                 'default_rental_type' => $apartment->getDefaultRentalType()
             ]);
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             Log::error('Failed to get apartment rental options', [
                 'apartment_id' => $apartmentId,
                 'error' => $e->getMessage()
@@ -1838,16 +2089,16 @@ class PaymentController extends Controller
     {
         try {
             Log::info('Creating fallback payment record', ['reference' => $reference]);
-            
+
             // Try to find any user and apartment for the fallback
             $user = User::first();
             $apartment = Apartment::first();
-            
+
             if (!$user || !$apartment) {
                 Log::error('Cannot create fallback payment - no user or apartment found');
                 return;
             }
-            
+
             $fallbackPayment = new Payment();
             $fallbackPayment->transaction_id = $reference . '_fallback';
             $fallbackPayment->payment_reference = $reference;
@@ -1860,10 +2111,11 @@ class PaymentController extends Controller
             $fallbackPayment->duration = 1;
             $fallbackPayment->payment_meta = json_encode(['error' => $errorMessage, 'type' => 'fallback']);
             $fallbackPayment->save();
-            
+
             Log::info('Fallback payment created', ['payment_id' => $fallbackPayment->id]);
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             Log::error('Fallback payment creation failed', ['error' => $e->getMessage()]);
         }
     }
@@ -1876,31 +2128,32 @@ class PaymentController extends Controller
         try {
             $payment = Payment::with(['tenant', 'landlord', 'apartment.property'])
                 ->findOrFail($paymentId);
-            
+
             // Verify user owns this payment (either as tenant or landlord)
             if ($payment->tenant_id !== auth()->user()->user_id && $payment->landlord_id !== auth()->user()->user_id) {
                 abort(403, 'Unauthorized access to this payment');
             }
-            
+
             // Verify payment is completed
             if ($payment->status !== 'completed') {
                 return redirect()->route('dashboard')->with('error', 'This payment has not been completed yet.');
             }
-            
+
             Log::info('Proforma payment success page accessed', [
                 'payment_id' => $payment->id,
                 'user_id' => auth()->user()->user_id,
                 'transaction_id' => $payment->transaction_id
             ]);
-            
+
             return view('proforma.payment-success', compact('payment'));
-            
-        } catch (\Exception $e) {
+
+        }
+        catch (\Exception $e) {
             Log::error('Error loading proforma payment success page', [
                 'payment_id' => $paymentId,
                 'error' => $e->getMessage()
             ]);
-            
+
             return redirect()->route('dashboard')->with('error', 'Payment not found or access denied.');
         }
     }

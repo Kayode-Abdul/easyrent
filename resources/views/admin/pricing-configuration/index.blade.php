@@ -277,7 +277,7 @@
                                         <span class="badge bg-secondary">{{ $apartment->apartment_type }}</span>
                                     </td>
                                     <td>
-                                        <div class="amount-display">₦{{ number_format($apartment->amount, 2) }}</div>
+                                        <div class="amount-display">{{ format_money($apartment->amount, $apartment->property->currency ?? null) }}</div>
                                     </td>
                                     <td>
                                         <span
@@ -389,7 +389,7 @@
                     <div class="mb-3" id="amountField" style="display: none;">
                         <label class="form-label">New Amount</label>
                         <div class="input-group">
-                            <span class="input-group-text">₦</span>
+                            <span class="input-group-text currency-symbol-preview">${window.currencySymbol}</span>
                             <input type="number" name="amount" class="form-control" step="0.01" min="0">
                         </div>
                     </div>
@@ -551,7 +551,7 @@
                     <strong>Apartment:</strong> ${data.apartment.id} (${data.apartment.property_name})
                 </div>
                 <div class="calculation-step">
-                    <strong>Base Amount:</strong> ₦${parseFloat(calc.base_amount).toLocaleString()}
+                    <strong>Base Amount:</strong> ${data.apartment.currency_symbol || window.currencySymbol}${parseFloat(calc.base_amount).toLocaleString()}
                 </div>
                 <div class="calculation-step">
                     <strong>Duration:</strong> ${calc.duration} months
@@ -574,7 +574,7 @@
 
                     html += `
                 <div class="calculation-step bg-success text-white">
-                    <strong>Total Amount: ₦${parseFloat(calc.total_amount).toLocaleString()}</strong>
+                    <strong>Total Amount: ${data.apartment.currency_symbol || window.currencySymbol}${parseFloat(calc.total_amount).toLocaleString()}</strong>
                 </div>
             `;
 
@@ -611,7 +611,7 @@
                         <strong>Type:</strong> ${apartment.apartment_type}<br>
                     </div>
                     <div class="col-md-6">
-                        <strong>Amount:</strong> ₦${parseFloat(apartment.amount).toLocaleString()}<br>
+                        <strong>Amount:</strong> ${apartment.currency_symbol || window.currencySymbol}${parseFloat(apartment.amount).toLocaleString()}<br>
                         <strong>Pricing Type:</strong> ${apartment.pricing_type}<br>
                     </div>
                 </div>

@@ -241,7 +241,7 @@
                                             </td>
                                             <td>
                                                 <div class="small">
-                                                    <div class="font-weight-bold">₦{{ number_format($marketer->performance_metrics['total_commission'], 2) }}</div>
+                                                    <div class="font-weight-bold">{{ format_money($marketer->performance_metrics['total_commission']) }}</div>
                                                     <div class="text-muted">Total earned</div>
                                                 </div>
                                             </td>
@@ -400,7 +400,7 @@ function generateMarketerDetailsHTML(marketer) {
                     </div>
                     <div class="col-6">
                         <div class="text-center">
-                            <h4 class="text-success">₦${marketer.performance.total_commission.toLocaleString()}</h4>
+                            <h4 class="text-success">${window.currencySymbol}${marketer.performance.total_commission.toLocaleString()}</h4>
                             <small class="text-muted">Total Commission</small>
                         </div>
                     </div>

@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Seller Portal | Home-Refined</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <!-- HEADER & NAVIGATION -->
+    <header>
+      <nav class="top-nav">
+        <div class="logo">
+          <a href="index.html"><i class="fas fa-home"></i> Home-Refined</a>
+        </div>
+
+        <ul class="nav-menu">
+          <li><a href="products.html">Shop</a></li>
+          <li><a href="index.html#categories">Categories</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="contractor-portal.html">Sellers</a></li>
+        </ul>
+
+        <div class="nav-right">
+          <div class="seller-toggle">
+            <span style="font-size: 0.85rem; font-weight: 600"
+              ><i class="fas fa-shop"></i> Seller</span
+            >
+            <label class="switch">
+              <input type="checkbox" data-seller-toggle />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <a href="login.html" class="btn btn-outline btn-small">
+            <i class="fas fa-sign-in-alt"></i> Sign In
+          </a>
+        </div>
+      </nav>
+    </header>
+
+    <!-- HERO SECTION -->
+    <div class="portal-header">
+      <h1><i class="fas fa-store"></i> Professional Seller Portal</h1>
+      <p
+        style="
+          font-size: 1.1rem;
+          margin-bottom: var(--spacing-lg);
+          color: rgba(255, 255, 255, 0.9);
+        "
+      >
+        Streamlined ordering, Net-30 terms, and bulk discounts for serious
+        builders
+      </p>
+      <button class="btn btn-secondary" onclick="enableSeller()">
+        Activate Seller Mode
+      </button>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="container" style="padding: var(--spacing-xl) 0">
+      <div class="portal-features" style="margin-bottom: var(--spacing-xl)">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-credit-card"></i></div>
+          <h3>Net-30 Payment Terms</h3>
+          <p>
+            Qualified sellers get Net-30 credit lines. No prepayment required on
+            approved orders.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-building"></i></div>
+          <h3>Bulk Ordering Discounts</h3>
+          <p>
+            Save 10-25% on bulk orders. Volume discounts automatically applied
+            at checkout.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-money-bill"></i></div>
+          <h3>Tax-Exempt Status</h3>
+          <p>
+            Eliminate sales tax on projects. Upload your certificate once and
+            save on every order.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-file-invoice"></i></div>
+          <h3>Quote-to-Order System</h3>
+          <p>
+            Generate professional quotes that convert directly to orders with
+            approval.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-truck"></i></div>
+          <h3>Job Site Delivery</h3>
+          <p>
+            Ship materials directly to job sites. Split deliveries between
+            locations supported.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+          <h3>Project Management</h3>
+          <p>
+            Track multiple projects, manage budgets, and store quotes all in one
+            dashboard.
+          </p>
+        </div>
+      </div>
+
+      <!-- PRICING TIERS -->
+      <h2
+        style="
+          font-size: 2rem;
+          text-align: center;
+          margin-bottom: var(--spacing-xl);
+        "
+      >
+        Seller Membership Plans
+      </h2>
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: var(--spacing-lg);
+          margin-bottom: var(--spacing-xl);
+        "
+      >
+        <!-- STARTER -->
+        <div
+          style="
+            border: 2px solid var(--border);
+            padding: var(--spacing-lg);
+            border-radius: 4px;
+            text-align: center;
+          "
+        >
+          <h3 style="font-size: 1.3rem; margin-bottom: var(--spacing-md)">
+            Starter
+          </h3>
+          <div
+            style="
+              font-size: 2.5rem;
+              font-weight: 700;
+              color: var(--accent);
+              margin-bottom: var(--spacing-sm);
+            "
+          >
+            Free
+          </div>
+          <p style="color: var(--text-light); margin-bottom: var(--spacing-lg)">
+            For occasional sellers
+          </p>
+          <ul
+            style="
+              text-align: left;
+              margin-bottom: var(--spacing-lg);
+              list-style: none;
+            "
+          >
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              5% volume discount
+            </li>
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              Standard checkout
+            </li>
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              Same-day shipping
+            </li>
+            <li style="padding: 8px 0">
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              Basic support
+            </li>
+          </ul>
+          <button class="btn btn-outline" style="width: 100%">
+            Get Started
+          </button>
+        </div>
+
+        <!-- PROFESSIONAL (Featured) -->
+        <div
+          style="
+            border: 3px solid var(--accent);
+            padding: var(--spacing-lg);
+            border-radius: 4px;
+            text-align: center;
+            transform: scale(1.05);
+            position: relative;
+            z-index: 10;
+          "
+        >
+          <span
+            style="
+              position: absolute;
+              top: -12px;
+              left: 50%;
+              transform: translateX(-50%);
+              background: var(--accent);
+              color: var(--primary);
+              padding: 4px 12px;
+              border-radius: 4px;
+              font-size: 0.8rem;
+              font-weight: 600;
+            "
+            >MOST POPULAR</span
+          >
+          <h3 style="font-size: 1.3rem; margin-bottom: var(--spacing-md)">
+            Professional
+          </h3>
+          <div
+            style="
+              font-size: 2.5rem;
+              font-weight: 700;
+              color: var(--primary);
+              margin-bottom: var(--spacing-sm);
+            "
+          >
+            $99<span style="font-size: 1rem; color: var(--text-light)"
+              >/month</span
+            >
+          </div>
+          <p style="color: var(--text-light); margin-bottom: var(--spacing-lg)">
+            For active sellers
+          </p>
+          <ul
+            style="
+              text-align: left;
+              margin-bottom: var(--spacing-lg);
+              list-style: none;
+            "
+          >
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              10-15% volume discount
+            </li>
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              Net-30 credit terms
+            </li>
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              Quote-to-order system
+            </li>
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              Multi-project tracking
+            </li>
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              Priority support
+            </li>
+            <li style="padding: 8px 0">
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              Tax-exempt eligible
+            </li>
+          </ul>
+          <button
+            class="btn btn-primary"
+            style="
+              width: 100%;
+              background: var(--accent);
+              color: var(--primary);
+            "
+          >
+            Choose Plan
+          </button>
+        </div>
+
+        <!-- ENTERPRISE -->
+        <div
+          style="
+            border: 2px solid var(--border);
+            padding: var(--spacing-lg);
+            border-radius: 4px;
+            text-align: center;
+          "
+        >
+          <h3 style="font-size: 1.3rem; margin-bottom: var(--spacing-md)">
+            Enterprise
+          </h3>
+          <div
+            style="
+              font-size: 2.5rem;
+              font-weight: 700;
+              color: var(--primary);
+              margin-bottom: var(--spacing-sm);
+            "
+          >
+            Custom
+          </div>
+          <p style="color: var(--text-light); margin-bottom: var(--spacing-lg)">
+            For large teams
+          </p>
+          <ul
+            style="
+              text-align: left;
+              margin-bottom: var(--spacing-lg);
+              list-style: none;
+            "
+          >
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              Up to 25% volume discount
+            </li>
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              60-day terms available
+            </li>
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              API integration
+            </li>
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              Dedicated account manager
+            </li>
+            <li
+              style="
+                padding: 8px 0;
+                border-bottom: 1px solid var(--medium-gray);
+              "
+            >
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              Custom pricing
+            </li>
+            <li style="padding: 8px 0">
+              <i class="fas fa-check-circle" style="color: var(--accent)"></i>
+              24/7 concierge support
+            </li>
+          </ul>
+          <button
+            class="btn btn-outline"
+            style="width: 100%"
+            onclick="contactSales()"
+          >
+            Contact Sales
+          </button>
+        </div>
+      </div>
+
+      <!-- HOW IT WORKS -->
+      <section
+        style="
+          background: var(--light-gray);
+          padding: var(--spacing-xl);
+          border-radius: 4px;
+          margin-bottom: var(--spacing-xl);
+        "
+      >
+        <h2
+          style="
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+          "
+        >
+          How It Works
+        </h2>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-xl);
+            text-align: center;
+          "
+        >
+          <div>
+            <div
+              style="
+                background: var(--accent);
+                color: var(--primary);
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+                font-weight: 700;
+                margin: 0 auto var(--spacing-md);
+              "
+            >
+              1
+            </div>
+            <h3 style="margin-bottom: var(--spacing-sm)">
+              Apply for B2B Account
+            </h3>
+            <p style="color: var(--text-light)">
+              Fill out your business information and get approved in minutes
+            </p>
+          </div>
+          <div>
+            <div
+              style="
+                background: var(--accent);
+                color: var(--primary);
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+                font-weight: 700;
+                margin: 0 auto var(--spacing-md);
+              "
+            >
+              2
+            </div>
+            <h3 style="margin-bottom: var(--spacing-sm)">Build Your Orders</h3>
+            <p style="color: var(--text-light)">
+              Create projects and add items with real-time volume discounting
+            </p>
+          </div>
+          <div>
+            <div
+              style="
+                background: var(--accent);
+                color: var(--primary);
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+                font-weight: 700;
+                margin: 0 auto var(--spacing-md);
+              "
+            >
+              3
+            </div>
+            <h3 style="margin-bottom: var(--spacing-sm)">Get Net-30 Terms</h3>
+            <p style="color: var(--text-light)">
+              Pay within 30 days. Interest-free financing on $500+ orders
+            </p>
+          </div>
+          <div>
+            <div
+              style="
+                background: var(--accent);
+                color: var(--primary);
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+                font-weight: 700;
+                margin: 0 auto var(--spacing-md);
+              "
+            >
+              4
+            </div>
+            <h3 style="margin-bottom: var(--spacing-sm)">Track & Deliver</h3>
+            <p style="color: var(--text-light)">
+              Real-time tracking + split deliveries to multiple job sites
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section style="margin-bottom: var(--spacing-xl)">
+        <h2
+          style="
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+          "
+        >
+          Frequently Asked Questions
+        </h2>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-lg);
+          "
+        >
+          <details
+            style="
+              background: var(--light-gray);
+              padding: var(--spacing-lg);
+              border-radius: 4px;
+              cursor: pointer;
+            "
+          >
+            <summary style="font-weight: 600; cursor: pointer">
+              What if I'm not a registered business?
+            </summary>
+            <p style="margin-top: var(--spacing-md); color: var(--text-light)">
+              Sole proprietors with a business license or EIN can apply. We
+              verify your business status and issue contractor pricing
+              accordingly.
+            </p>
+          </details>
+
+          <details
+            style="
+              background: var(--light-gray);
+              padding: var(--spacing-lg);
+              border-radius: 4px;
+              cursor: pointer;
+            "
+          >
+            <summary style="font-weight: 600; cursor: pointer">
+              Can I withdraw an order quote?
+            </summary>
+            <p style="margin-top: var(--spacing-md); color: var(--text-light)">
+              Yes, quotes are valid for 30 days. You can modify or cancel them
+              anytime before conversion to an order.
+            </p>
+          </details>
+
+          <details
+            style="
+              background: var(--light-gray);
+              padding: var(--spacing-lg);
+              border-radius: 4px;
+              cursor: pointer;
+            "
+          >
+            <summary style="font-weight: 600; cursor: pointer">
+              How quickly will my orders be processed?
+            </summary>
+            <p style="margin-top: var(--spacing-md); color: var(--text-light)">
+              B2B orders are processed priority. Most orders ship same-day if
+              placed before 2 PM EST. Bulk orders may require 1-2 days prep.
+            </p>
+          </details>
+
+          <details
+            style="
+              background: var(--light-gray);
+              padding: var(--spacing-lg);
+              border-radius: 4px;
+              cursor: pointer;
+            "
+          >
+            <summary style="font-weight: 600; cursor: pointer">
+              Can I get special pricing on large projects?
+            </summary>
+            <p style="margin-top: var(--spacing-md); color: var(--text-light)">
+              Absolutely! Contact our enterprise team for custom pricing on
+              orders over $10,000.
+            </p>
+          </details>
+
+          <details
+            style="
+              background: var(--light-gray);
+              padding: var(--spacing-lg);
+              border-radius: 4px;
+              cursor: pointer;
+            "
+          >
+            <summary style="font-weight: 600; cursor: pointer">
+              What payment methods do you accept?
+            </summary>
+            <p style="margin-top: var(--spacing-md); color: var(--text-light)">
+              Credit cards, ACH transfers, and wire transfers. Net-30 terms
+              include a 2% discount for early payment.
+            </p>
+          </details>
+
+          <details
+            style="
+              background: var(--light-gray);
+              padding: var(--spacing-lg);
+              border-radius: 4px;
+              cursor: pointer;
+            "
+          >
+            <summary style="font-weight: 600; cursor: pointer">
+              Do you offer training for contractors?
+            </summary>
+            <p style="margin-top: var(--spacing-md); color: var(--text-light)">
+              Yes! All Professional and Enterprise members get access to product
+              training webinars and installation guides.
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <!-- CTA SECTION -->
+      <section
+        style="
+          background: linear-gradient(135deg, var(--primary) 0%, #2c2c2c 100%);
+          color: white;
+          padding: var(--spacing-xl);
+          border-radius: 4px;
+          text-align: center;
+        "
+      >
+        <h2 style="font-size: 2rem; margin-bottom: var(--spacing-md)">
+          Join Home-Refined Contractors Today
+        </h2>
+        <p
+          style="
+            font-size: 1.1rem;
+            margin-bottom: var(--spacing-lg);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+          "
+        >
+          Start saving on materials and streamline your ordering process with
+          our professional-grade B2B platform.
+        </p>
+        <button class="btn btn-secondary" onclick="documentScrollTo('start')">
+          Get Started Free
+        </button>
+      </section>
+    </div>
+
+    <!-- FOOTER -->
+    <footer
+      style="
+        background: var(--primary);
+        color: white;
+        padding: var(--spacing-xl) var(--spacing-lg);
+        text-align: center;
+        margin-top: var(--spacing-xl);
+      "
+    >
+      <div class="container">
+        <p>&copy; 2026 Home-Refined. All rights reserved.</p>
+        <p
+          style="
+            font-size: 0.85rem;
+            margin-top: var(--spacing-md);
+            color: rgba(255, 255, 255, 0.7);
+          "
+        >
+          Professional-grade marketplace for sellers and contractors.
+        </p>
+      </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="js/products.js"></script>
+    <script src="js/cart.js"></script>
+    <script>
+      function enableSeller() {
+        cartManager.saveSellerMode(true);
+        window.location.href = "products.html";
+      }
+
+      function contactSales() {
+        alert(
+          "Sales team will contact you shortly. Please have your business information ready.",
+        );
+      }
+
+      function documentScrollTo(id) {
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      }
+
+      function logout() {
+        localStorage.removeItem("userDisplayName");
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("userAccountType");
+        window.location.href = "index.html";
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Update Seller toggle
+        const toggle = document.querySelector("[data-seller-toggle]");
+        if (toggle) {
+          toggle.checked = cartManager.isSeller;
+        }
+
+        // Check if user is logged in
+        const userDisplayName = localStorage.getItem("userDisplayName");
+        if (userDisplayName) {
+          // User is logged in, could update UI accordingly
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -577,13 +577,13 @@ class MobileInvitationController extends Controller
                 ],
                 'mobile_features' => [
                     'formatted_display_amounts' => [
-                        'total_amount' => '₦' . number_format($result->totalAmount, 2),
-                        'base_rent' => '₦' . number_format($apartmentPrice, 2),
+                        'total_amount' => format_money($result->totalAmount, $invitation->apartment->currency)->getSymbol() . number_format($result->totalAmount, 2),
+                        'base_rent' => format_money($apartmentPrice, $invitation->apartment->currency)->getSymbol() . number_format($apartmentPrice, 2),
                         'monthly_equivalent' => $pricingType === 'total' && $rentalDuration > 0 
-                            ? '₦' . number_format($result->totalAmount / $rentalDuration, 2) . '/month'
+                            ? format_money($result->totalAmount / $rentalDuration, $invitation->apartment->currency)->getSymbol() . number_format($result->totalAmount / $rentalDuration, 2) . '/month'
                             : null,
                         'additional_charges_total' => !empty($additionalCharges) 
-                            ? '₦' . number_format(array_sum($additionalCharges), 2)
+                            ? format_money(array_sum($additionalCharges), $invitation->apartment->currency)->getSymbol() . number_format(array_sum($additionalCharges), 2)
                             : null
                     ],
                     'calculation_explanation' => [
@@ -593,8 +593,8 @@ class MobileInvitationController extends Controller
                         'has_additional_charges' => !empty($additionalCharges),
                         'calculation_transparency' => [
                             'base_calculation' => $pricingType === 'total' 
-                                ? "₦{$apartmentPrice} (total for {$rentalDuration} months)"
-                                : "₦{$apartmentPrice} × {$rentalDuration} months = ₦" . number_format($apartmentPrice * $rentalDuration, 2),
+                                ? format_money($apartmentPrice, $invitation->apartment->currency)->getSymbol() . "{$apartmentPrice} (total for {$rentalDuration} months)"
+                                : format_money($apartmentPrice, $invitation->apartment->currency)->getSymbol() . "{$apartmentPrice} × {$rentalDuration} months = " . format_money($apartmentPrice * $rentalDuration, $invitation->apartment->currency)->getSymbol() . number_format($apartmentPrice * $rentalDuration, 2),
                             'additional_charges_breakdown' => $this->formatAdditionalChargesForMobile($additionalCharges)
                         ]
                     ],
@@ -744,7 +744,7 @@ class MobileInvitationController extends Controller
             $breakdown[] = [
                 'index' => $index,
                 'amount' => $charge,
-                'formatted_amount' => '₦' . number_format($charge, 2),
+                'formatted_amount' => format_money($charge, $invitation->apartment->currency)->getSymbol() . number_format($charge, 2),
                 'description' => "Additional charge " . ($index + 1)
             ];
         }

@@ -22,7 +22,11 @@ class MarketerController extends Controller
         $this->middleware('auth');
         $this->middleware(function ($request, $next) {
             $user = auth()->user();
-            if (!$user->isMarketer()) {
+            // Allow access to profile creation and storage even if not yet a marketer
+            $excludedRoutes = ['marketer.profile.create', 'marketer.profile.store'];
+            
+            // Allow if they are already a marketer (including pending) OR accessing excluded routes
+            if (!$user->isMarketer() && !in_array($request->route()->getName(), $excludedRoutes)) {
                 abort(403, 'Access denied. Marketer privileges required.');
             }
             return $next($request);
@@ -132,10 +136,16 @@ class MarketerController extends Controller
             'website' => 'nullable|url',
             'social_media_handles' => 'nullable|string',
             'preferred_commission_rate' => 'required|numeric|min:1|max:15',
-            'kyc_documents.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120'
+            'kyc_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
         ]);
 
         $marketer = Auth::user();
+
+        // Proactively promote the user to marketer role if they aren't one yet
+        if (!$marketer->isMarketer()) {
+            $marketer->promoteToMarketer();
+            $marketer = $marketer->fresh();
+        }
         
         // Handle KYC document uploads
         $kycDocuments = [];
@@ -161,8 +171,7 @@ class MarketerController extends Controller
             'kyc_status' => MarketerProfile::KYC_PENDING
         ]);
 
-        // Update user status to pending
-        $marketer->update(['marketer_status' => 'pending']);
+        $marketer->update(['marketer_status' => 'active']);
 
         return redirect()->route('marketer.profile')
             ->with('success', 'Profile created successfully! Your application is under review.');

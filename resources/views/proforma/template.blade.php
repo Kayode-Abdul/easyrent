@@ -52,7 +52,7 @@
         <thead>
             <tr style="background:#f5f5f5;">
                 <th style="border:1px solid #ccc;padding:8px;text-align:left;">Description</th>
-                <th style="border:1px solid #ccc;padding:8px;text-align:right;">Amount (₦)</th>
+                <th style="border:1px solid #ccc;padding:8px;text-align:right;">Amount ({{ $proforma->currency->symbol ?? format_money(0)->getSymbol() }})</th>
             </tr>
         </thead>
         <tbody>
@@ -64,41 +64,41 @@
                         Monthly Rent @if($proforma->duration) ({{ $proforma->duration }} months) @endif
                     @endif
                 </td>
-                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ number_format(($proforma->amount ?? optional($proforma->apartment)->amount ?? 0), 2) }}</td>
+                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ format_money($proforma->amount ?? optional($proforma->apartment)->amount ?? 0, $proforma->currency) }}</td>
             </tr>
             @if($proforma->security_deposit)
             <tr>
                 <td style="border:1px solid #ccc;padding:8px;">Security Deposit</td>
-                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ number_format($proforma->security_deposit, 2) }}</td>
+                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ format_money($proforma->security_deposit, $proforma->currency) }}</td>
             </tr>
             @endif
             @if($proforma->water)
             <tr>
                 <td style="border:1px solid #ccc;padding:8px;">Water</td>
-                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ number_format($proforma->water, 2) }}</td>
+                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ format_money($proforma->water, $proforma->currency) }}</td>
             </tr>
             @endif
             @if($proforma->internet)
             <tr>
                 <td style="border:1px solid #ccc;padding:8px;">Internet</td>
-                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ number_format($proforma->internet, 2) }}</td>
+                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ format_money($proforma->internet, $proforma->currency) }}</td>
             </tr>
             @endif
             @if($proforma->generator)
             <tr>
                 <td style="border:1px solid #ccc;padding:8px;">Generator</td>
-                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ number_format($proforma->generator, 2) }}</td>
+                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ format_money($proforma->generator, $proforma->currency) }}</td>
             </tr>
             @endif
             @if($proforma->other_charges_desc || $proforma->other_charges_amount)
             <tr>
                 <td style="border:1px solid #ccc;padding:8px;">Other Charges: {{ $proforma->other_charges_desc }}</td>
-                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ number_format($proforma->other_charges_amount, 2) }}</td>
+                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ format_money($proforma->other_charges_amount, $proforma->currency) }}</td>
             </tr>
             @endif
             <tr style="font-weight:bold;background:#f5f5f5;">
                 <td style="border:1px solid #ccc;padding:8px;">Total</td>
-                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ number_format($proforma->total, 2) }}</td>
+                <td style="border:1px solid #ccc;padding:8px;text-align:right;">{{ format_money($proforma->total, $proforma->currency) }}</td>
             </tr>
         </tbody>
     </table>
@@ -128,7 +128,7 @@
                             Payment Reference: {{ $completedPayment->payment_reference ?? $completedPayment->transaction_id }}
                         </p>
                         <p style="margin:5px 0 0 0;color:#155724;font-size:14px;">
-                            Amount Paid: ₦{{ number_format($completedPayment->amount, 2) }}
+                            Amount Paid: {{ format_money($completedPayment->amount, $completedPayment->currency) }}
                         </p>
                     </div>
                 @else
@@ -281,7 +281,7 @@ $(document).ready(function() {
     });
 
     function showInviteModal(paymentLink, invitationToken) {
-        const amount = '₦{{ number_format($proforma->total, 2) }}';
+        const amount = '{{ format_money($proforma->total, $proforma->currency) }}';
         const propertyName = {!! json_encode($proforma->property->apartment->address ?? "Property") !!};
         const tenantName = {!! json_encode(auth()->user()->first_name . ' ' . auth()->user()->last_name) !!};
         

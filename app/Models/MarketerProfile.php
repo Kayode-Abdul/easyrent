@@ -26,7 +26,10 @@ class MarketerProfile extends Model
         'social_media_handles',
         'total_referrals',
         'total_commission_earned',
-        'verified_at'
+        'verified_at',
+        'country_name',
+        'state_id',
+        'lga_id'
     ];
 
     protected $casts = [

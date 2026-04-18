@@ -44,8 +44,8 @@
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4 class="text-primary">₦{{ number_format($summary['total_amount'], 2) }}</h4>
-                    <small class="text-muted">Total Amount</small>
+                    <h4 class="text-primary">{{ format_money($summary['total_amount']) }}</h4>
+                    <small class="text-muted">Total Amount ({{ format_money(0)->getSymbol() }})</small>
                 </div>
             </div>
         </div>
@@ -60,8 +60,8 @@
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4 class="text-info">₦{{ number_format($summary['avg_amount'], 2) }}</h4>
-                    <small class="text-muted">Average Payment</small>
+                    <h4 class="text-info">{{ format_money($summary['avg_amount']) }}</h4>
+                    <small class="text-muted">Average Payment ({{ format_money(0)->getSymbol() }})</small>
                 </div>
             </div>
         </div>
@@ -87,8 +87,8 @@
                         <div class="card-body">
                             <h5>{{ ucfirst(str_replace('_', ' ', $tier)) }}</h5>
                             <p class="mb-1"><strong>Count:</strong> {{ $data['count'] }}</p>
-                            <p class="mb-1"><strong>Total:</strong> ₦{{ number_format($data['total'], 2) }}</p>
-                            <p class="mb-0"><strong>Average:</strong> ₦{{ number_format($data['avg'], 2) }}</p>
+                            <p class="mb-1"><strong>Total:</strong> {{ format_money($data['total']) }}</p>
+                            <p class="mb-0"><strong>Average:</strong> {{ format_money($data['avg']) }}</p>
                         </div>
                     </div>
                 </div>
@@ -135,7 +135,7 @@
                                     {{ $payment->formatted_commission_tier }}
                                 </span>
                             </td>
-                            <td>₦{{ number_format($payment->total_amount, 2) }}</td>
+                            <td>{{ format_money($payment->total_amount) }}</td>
                             <td>{{ $payment->region ?? 'N/A' }}</td>
                             <td>
                                 <span class="badge {{ $payment->status_badge_class }}">
