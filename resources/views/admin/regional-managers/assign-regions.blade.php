@@ -73,29 +73,33 @@
                             
                             <div id="assignmentsContainer">
                                 <div class="assignment-group mb-3 p-3 border rounded">
-                                    <div class="row">
-                                        <div class="col-md-5">
-                                            <label class="form-label">State <span class="text-danger">*</span></label>
-                                            <select name="states[]" class="form-select state-select" required>
-                                                <option value="">Select State</option>
-                                                @foreach($availableStates as $state)
-                                                    <option value="{{ e($state) }}">{{ e($state) }}</option>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Country <span class="text-danger">*</span></label>
+                                            <select name="countries[]" class="form-select country-select" required>
+                                                <option value="">Select Country</option>
+                                                @foreach($availableCountries as $country)
+                                                    <option value="{{ e($country) }}">{{ e($country) }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-md-5">
+                                        <div class="col-md-3">
+                                            <label class="form-label">State <span class="text-danger">*</span></label>
+                                            <select name="states[]" class="form-select state-select" required disabled>
+                                                <option value="">Select State</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
                                             <label class="form-label">LGA (Optional)</label>
-                                            <select name="lgas[]" class="form-select lga-select">
+                                            <select name="lgas[]" class="form-select lga-select" disabled>
                                                 <option value="">All LGAs in State</option>
                                             </select>
-                                            <small class="text-muted">Leave empty to assign entire state</small>
+                                            <small class="text-muted">Leave empty for entire state</small>
                                         </div>
                                         <div class="col-md-2 d-flex align-items-end">
                                             <button type="button" class="btn btn-outline-danger remove-assignment" disabled>
                                                 <i class="fa fa-times"></i>
                                             </button>
                                         </div>
-                                    </div>
                                 </div>
                             </div>
 
@@ -146,18 +150,43 @@
 @endpush
 
 @push('scripts')
-<script>
-// LGA options for each state (guard global)
-window.lgaOptions = Object.assign({}, window.lgaOptions || {}, @json($availableLgas));
+// Location data (guard global)
+window.statesByCountry = @json($statesByCountry);
+window.lgaOptions = @json($availableLgas);
 
-// Handle state selection change
+// Handle country selection change
 document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('country-select')) {
+        const group = e.target.closest('.assignment-group');
+        const stateSelect = group.querySelector('.state-select');
+        const lgaSelect = group.querySelector('.lga-select');
+        const selectedCountry = e.target.value;
+        
+        // Reset and disable sub-selectors
+        stateSelect.innerHTML = '<option value="">Select State</option>';
+        stateSelect.disabled = !selectedCountry;
+        lgaSelect.innerHTML = '<option value="">All LGAs in State</option>';
+        lgaSelect.disabled = true;
+        
+        // Add state options for selected country
+        if (selectedCountry && window.statesByCountry[selectedCountry]) {
+            window.statesByCountry[selectedCountry].forEach(state => {
+                const option = document.createElement('option');
+                option.value = state.name;
+                option.textContent = state.name;
+                stateSelect.appendChild(option);
+            });
+        }
+    }
+
     if (e.target.classList.contains('state-select')) {
-        const lgaSelect = e.target.closest('.assignment-group').querySelector('.lga-select');
+        const group = e.target.closest('.assignment-group');
+        const lgaSelect = group.querySelector('.lga-select');
         const selectedState = e.target.value;
         
-        // Clear LGA options
+        // Clear and reset LGA options
         lgaSelect.innerHTML = '<option value="">All LGAs in State</option>';
+        lgaSelect.disabled = !selectedState;
         
         // Add LGA options for selected state
         if (selectedState && window.lgaOptions[selectedState]) {
@@ -177,8 +206,11 @@ document.getElementById('addAssignmentBtn').addEventListener('click', function()
     const newGroup = document.querySelector('.assignment-group').cloneNode(true);
     
     // Reset values
-    newGroup.querySelector('.state-select').value = '';
+    newGroup.querySelector('.country-select').value = '';
+    newGroup.querySelector('.state-select').innerHTML = '<option value="">Select State</option>';
+    newGroup.querySelector('.state-select').disabled = true;
     newGroup.querySelector('.lga-select').innerHTML = '<option value="">All LGAs in State</option>';
+    newGroup.querySelector('.lga-select').disabled = true;
     
     // Enable remove button
     const removeBtn = newGroup.querySelector('.remove-assignment');

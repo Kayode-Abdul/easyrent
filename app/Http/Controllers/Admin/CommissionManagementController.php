@@ -272,7 +272,8 @@ class CommissionManagementController extends Controller
      */
     public function regionalManager()
     {
-        return view('admin.commission-management.regional-manager');
+        $states = State::orderBy('name')->get();
+        return view('admin.commission-management.regional-manager', compact('states'));
     }
 
     /**

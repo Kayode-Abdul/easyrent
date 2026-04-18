@@ -128,24 +128,28 @@ class RegionalManagerManagementController extends Controller
         
         $currentScopes = $regionalManager->getFormattedRegionalScopes();
         
-        // Get available states (you might want to make this configurable)
-        $availableStates = [
-            'Lagos', 'Abuja', 'Kano', 'Rivers', 'Oyo', 'Kaduna', 
-            'Ogun', 'Ondo', 'Delta', 'Anambra', 'Imo', 'Enugu'
-        ];
+        // Get available countries
+        $availableCountries = State::distinct('country_name')->pluck('country_name');
         
-        // Get available LGAs for each state (simplified - you might want to store this in DB)
-        $availableLgas = [
-            'Lagos' => ['Ikeja', 'Victoria Island', 'Lekki', 'Surulere', 'Yaba', 'Apapa', 'Ikoyi'],
-            'Abuja' => ['Garki', 'Wuse', 'Maitama', 'Asokoro', 'Gwarinpa', 'Kubwa'],
-            'Kano' => ['Kano Municipal', 'Fagge', 'Dala', 'Gwale', 'Tarauni'],
-            // Add more as needed
-        ];
+        // Get all states grouped by country for JS filtering
+        $statesByCountry = State::orderBy('name')->get()->groupBy('country_name')->toArray();
+        
+        // Get available LGAs for each state (mapping for JS)
+        $availableLgas = [];
+        $lgas = Lga::with('state')->get();
+        foreach ($lgas as $lga) {
+            $stateName = $lga->state->name;
+            if (!isset($availableLgas[$stateName])) {
+                $availableLgas[$stateName] = [];
+            }
+            $availableLgas[$stateName][] = $lga->name;
+        }
         
         return view('admin.regional-managers.assign-regions', compact(
             'regionalManager', 
             'currentScopes', 
-            'availableStates', 
+            'availableCountries',
+            'statesByCountry', 
             'availableLgas'
         ));
     }
@@ -156,6 +160,8 @@ class RegionalManagerManagementController extends Controller
     public function storeRegionalAssignments(Request $request, User $regionalManager)
     {
         $request->validate([
+            'countries' => 'required|array|min:1',
+            'countries.*' => 'required|string',
             'states' => 'required|array|min:1',
             'states.*' => 'required|string',
             'lgas' => 'array',
@@ -165,11 +171,12 @@ class RegionalManagerManagementController extends Controller
         try {
             DB::beginTransaction();
             
+            $countries = $request->input('countries');
             $states = $request->input('states');
             $lgas = $request->input('lgas', []);
             
             // Create new scopes
-            RegionalScope::createScopes($regionalManager->user_id, $states, $lgas);
+            RegionalScope::createScopes($regionalManager->user_id, $states, $lgas, $countries);
             
             DB::commit();
             

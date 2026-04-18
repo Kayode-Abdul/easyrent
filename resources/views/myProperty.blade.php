@@ -311,7 +311,7 @@
                                         </div>
                                     @else
                                         <div class="table-responsive">
-                                            <table class="table">
+                                            <table class="table" id="managedPropertiesTable">
                                                 <thead class="text-primary">
                                                     <tr>
                                                         <th>Property ID</th>
@@ -532,7 +532,7 @@
                                     </div>
                                 @else
                                     <div class="table-responsive">
-                                        <table class="table">
+                                        <table class="table" id="landlordPropertiesTable">
                                             <thead class="text-primary">
                                                 <tr>
                                                     <th>Photo</th>
@@ -795,7 +795,7 @@
                                     </div>
                                 @else
                                     <div class="table-responsive">
-                                        <table class="table">
+                                        <table class="table" id="tenancyTable">
                                             <thead class="text-primary">
                                                 <tr>
                                                     <th>Apartment</th>
@@ -1833,19 +1833,36 @@
     </script>
 
     <script>
-        // Replace the existing search script with this
         $(document).ready(function () {
-            $("#searchInput").on("keyup", function () {
-                var value = $(this).val().toLowerCase();
-                $("table tbody tr").filter(function () {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-                });
+            // Function to perform search on a specific table
+            function performSearch(query, tableId) {
+                const $table = $(`#${tableId}`);
+                if (!$table.length) return 0;
 
-                // Update visible count
-                var visibleRows = $("table tbody tr:visible").length;
-                if (visibleRows === 0) {
+                let visibleRows = 0;
+                $table.find("tbody tr").each(function() {
+                    const $row = $(this);
+                    const text = $row.text().toLowerCase();
+                    const matches = text.indexOf(query) > -1;
+                    $row.toggle(matches);
+                    if (matches) visibleRows++;
+                });
+                return visibleRows;
+            }
+
+            $("#searchInput").on("keyup", function () {
+                const value = $(this).val().toLowerCase();
+                let totalVisible = 0;
+
+                // Search through all our main property tables
+                totalVisible += performSearch(value, 'landlordPropertiesTable');
+                totalVisible += performSearch(value, 'managedPropertiesTable');
+                totalVisible += performSearch(value, 'tenancyTable');
+
+                // Update no results message
+                if (totalVisible === 0 && value !== "") {
                     if ($("#noResults").length === 0) {
-                        $("table").after('<div id="noResults" class="alert alert-info text-center">No matching properties found</div>');
+                        $(".table-responsive:visible").first().after('<div id="noResults" class="alert alert-info text-center mt-3">No matching properties found</div>');
                     } else {
                         $("#noResults").show();
                     }
@@ -1853,6 +1870,16 @@
                     $("#noResults").hide();
                 }
             });
+
+            // If there's a different search input for tenant mode (form-based), 
+            // ensure it's handled or the AJAX one is available there too.
+            const $tenantSearch = $('input[name="search"][placeholder*="Search"]');
+            if ($tenantSearch.length && $tenantSearch.attr('id') !== 'searchInput') {
+                $tenantSearch.on("keyup", function() {
+                    const value = $(this).val().toLowerCase();
+                    performSearch(value, 'tenancyTable');
+                });
+            }
         });
     </script>
 

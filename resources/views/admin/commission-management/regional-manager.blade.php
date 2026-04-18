@@ -45,42 +45,9 @@
                             <select class="form-select" id="regionSelector" onchange="loadRegionRates()">
                                 <option value="">Select a region...</option>
                                 <option value="default">Default (Fallback)</option>
-                                <option value="lagos">Lagos State</option>
-                                <option value="abuja">Abuja (FCT)</option>
-                                <option value="kano">Kano State</option>
-                                <option value="rivers">Rivers State</option>
-                                <option value="ogun">Ogun State</option>
-                                <option value="anambra">Anambra State</option>
-                                <option value="kaduna">Kaduna State</option>
-                                <option value="oyo">Oyo State</option>
-                                <option value="plateau">Plateau State</option>
-                                <option value="delta">Delta State</option>
-                                <option value="edo">Edo State</option>
-                                <option value="enugu">Enugu State</option>
-                                <option value="imo">Imo State</option>
-                                <option value="abia">Abia State</option>
-                                <option value="akwa_ibom">Akwa Ibom State</option>
-                                <option value="bayelsa">Bayelsa State</option>
-                                <option value="cross_river">Cross River State</option>
-                                <option value="ebonyi">Ebonyi State</option>
-                                <option value="ekiti">Ekiti State</option>
-                                <option value="gombe">Gombe State</option>
-                                <option value="ondo">Ondo State</option>
-                                <option value="osun">Osun State</option>
-                                <option value="taraba">Taraba State</option>
-                                <option value="adamawa">Adamawa State</option>
-                                <option value="bauchi">Bauchi State</option>
-                                <option value="benue">Benue State</option>
-                                <option value="borno">Borno State</option>
-                                <option value="jigawa">Jigawa State</option>
-                                <option value="kebbi">Kebbi State</option>
-                                <option value="kogi">Kogi State</option>
-                                <option value="kwara">Kwara State</option>
-                                <option value="nasarawa">Nasarawa State</option>
-                                <option value="niger">Niger State</option>
-                                <option value="sokoto">Sokoto State</option>
-                                <option value="yobe">Yobe State</option>
-                                <option value="zamfara">Zamfara State</option>
+                                @foreach($states as $state)
+                                    <option value="{{ str_replace(' ', '_', strtolower($state->name)) }}">{{ $state->name }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-4">

@@ -32,16 +32,19 @@ class RegionalScope extends Model
     /**
      * Create state and LGA scopes for a user
      */
-    public static function createScopes($userId, $states, $lgas = [])
+    public static function createScopes($userId, $states, $lgas = [], $countries = [])
     {
         foreach ((array)$states as $idx => $state) {
             if (!$state) continue;
+            
+            $country = $countries[$idx] ?? null;
             
             // Create state scope
             static::firstOrCreate([
                 'user_id' => $userId,
                 'scope_type' => 'state',
                 'scope_value' => $state,
+                'country_name' => $country
             ]);
             
             // Create LGA scope if provided
@@ -51,6 +54,7 @@ class RegionalScope extends Model
                     'user_id' => $userId,
                     'scope_type' => 'lga',
                     'scope_value' => $state . '::' . $lga, // Store as state::lga format
+                    'country_name' => $country
                 ]);
             }
         }
