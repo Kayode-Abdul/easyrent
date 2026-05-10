@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\RegionalScope;
+use App\Models\State;
+use App\Models\Lga;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 

@@ -20,6 +20,10 @@ Licensed under the MIT license - http://opensource.org/licenses/MIT
 
 Copyright (c) 2015 Daniel Eden
 */
+.sidebar-wrapper ul.nav li a {
+  border-bottom: 1px solid #ddd;
+}
+
 .animated {
   -webkit-animation-duration: 1s;
   animation-duration: 1s;
@@ -4597,13 +4601,13 @@ License - nucleoapp.com/license/
   margin-top: 0;
 }
 
-div#messagesMenu li {
+/* div#messagesMenu li {
   background-color: #f4f3ef;
 }
 
 div#messagesMenu li a {
   color: #01623b;
-}
+} */
 
 .sidebar .sidebar-background,
 .off-canvas-sidebar .sidebar-background {
@@ -4633,7 +4637,7 @@ div#messagesMenu li a {
 .sidebar .logo,
 .off-canvas-sidebar .logo {
   position: relative;
-  padding: 7px 0.7rem;
+  padding: 0 0.7rem;
   z-index: 4;
 }
 
@@ -4651,7 +4655,7 @@ div#messagesMenu li a {
 .off-canvas-sidebar .logo a.logo-normal {
   display: block;
   opacity: 1;
-  padding: 11px 0 8px;
+  padding: 8px;
   transform: translate3d(0px, 0, 0);
 }
 

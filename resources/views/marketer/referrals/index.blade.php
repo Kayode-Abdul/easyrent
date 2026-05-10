@@ -23,7 +23,7 @@
                         </div>
                         
                         <a href="{{ route('marketer.dashboard') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            <i class="fa fa-arrow-left"></i> Back to Dashboard
                         </a>
                     </div>
                 </div>
@@ -95,9 +95,9 @@
                                             </td>
                                             <td>
                                                 <div>
-                                                    <i class="fas fa-envelope text-muted"></i> {{ $referral->referred->email }}
+                                                    <i class="fa fa-envelope text-muted"></i> {{ $referral->referred->email }}
                                                     <br>
-                                                    <i class="fas fa-phone text-muted"></i> {{ $referral->referred->phone ?? 'N/A' }}
+                                                    <i class="fa fa-phone text-muted"></i> {{ $referral->referred->phone ?? 'N/A' }}
                                                 </div>
                                             </td>
                                             <td>
@@ -158,20 +158,20 @@
                                                 <div class="btn-group" role="group">
                                                     <button class="btn btn-sm btn-outline-primary" 
                                                             onclick="viewReferralDetails({{ $referral->id }})" title="View Details">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="fa fa-eye"></i>
                                                     </button>
                                                     
                                                     @if($referral->commission_status === 'pending')
                                                         <button class="btn btn-sm btn-outline-info" 
                                                                 onclick="contactSupport('{{ $referral->id }}')" title="Contact Support">
-                                                            <i class="fas fa-question-circle"></i>
+                                                            <i class="fa fa-question-circle"></i>
                                                         </button>
                                                     @endif
                                                     
                                                     @if($referral->campaign)
                                                         <a href="{{ route('marketer.campaigns.show', $referral->campaign->id) }}" 
                                                            class="btn btn-sm btn-outline-secondary" title="View Campaign">
-                                                            <i class="fas fa-bullhorn"></i>
+                                                            <i class="fa fa-bullhorn"></i>
                                                         </a>
                                                     @endif
                                                 </div>
@@ -188,7 +188,7 @@
                         </div>
                     @else
                         <div class="text-center py-5">
-                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <i class="fa fa-users fa-3x text-muted mb-3"></i>
                             <h5>No Referrals Yet</h5>
                             <p class="text-muted">
                                 @if(request('status'))
@@ -199,10 +199,10 @@
                             </p>
                             <div class="mt-3">
                                 <a href="{{ route('marketer.campaigns.index') }}" class="btn btn-primary mr-2">
-                                    <i class="fas fa-bullhorn"></i> View Campaigns
+                                    <i class="fa fa-bullhorn"></i> View Campaigns
                                 </a>
                                 <a href="{{ route('marketer.campaigns.create') }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-plus"></i> Create Campaign
+                                    <i class="fa fa-plus"></i> Create Campaign
                                 </a>
                             </div>
                         </div>

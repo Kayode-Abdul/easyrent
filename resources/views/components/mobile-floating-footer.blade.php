@@ -83,7 +83,7 @@
                         <i class="bi bi-speedometer2 mr-2"></i> Dashboard
                     </a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item text-danger" href="#" onclick="handleLogout('logout-form-mobile-footer')">
+                    <a class="dropdown-item text-danger" href="#" onclick="handleLogout('logout-form-mobile-footer', event)">
                         <i class="bi bi-box-arrow-right mr-2"></i> Logout
                     </a>
                 </div>

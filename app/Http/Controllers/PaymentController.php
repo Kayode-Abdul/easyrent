@@ -705,7 +705,7 @@ class PaymentController extends Controller
                     $testTenant->username = 'testtenant';
                     $testTenant->email = 'test@example.com';
                     $testTenant->user_id = 999001; // Numeric ID for test tenant
-                    $testTenant->role = 1; // Tenant role ID
+                    $testTenant->role = \App\Models\User::getRoleId('tenant') ?? 1; // Tenant role ID
                     $testTenant->password = bcrypt('password');
                     $testTenant->save();
                 }
@@ -719,7 +719,7 @@ class PaymentController extends Controller
                     $testLandlord->username = 'testlandlord';
                     $testLandlord->email = 'landlord@example.com';
                     $testLandlord->user_id = 999002; // Numeric ID for test landlord
-                    $testLandlord->role = 2; // Landlord role ID
+                    $testLandlord->role = \App\Models\User::getRoleId('landlord') ?? 13; // Landlord role ID (13 problem fix)
                     $testLandlord->password = bcrypt('password');
                     $testLandlord->save();
                 }
@@ -930,6 +930,9 @@ class PaymentController extends Controller
                 if ($result['success']) {
                     DB::commit();
 
+                    // Trigger commission distribution
+                    $this->distributeCommissionForPayment($payment);
+
                     Log::info('Invitation payment processed successfully', [
                         'payment_id' => $payment->id,
                         'invitation_id' => $result['invitation']->id,
@@ -973,6 +976,9 @@ class PaymentController extends Controller
                 $proforma->update(['status' => ProfomaReceipt::STATUS_CONFIRMED]);
 
                 DB::commit();
+
+                // Trigger commission distribution
+                $this->distributeCommissionForPayment($payment);
 
                 Log::info('Regular payment processing completed successfully');
             }
@@ -1238,7 +1244,8 @@ class PaymentController extends Controller
             // Check if user is authorized to view this receipt
             if (auth()->user()->user_id !== $payment->tenant_id &&
             auth()->user()->user_id !== $payment->landlord_id &&
-            auth()->user()->role !== 1 && auth()->user()->role !== 2) { // Allow admins and super admins
+            !auth()->user()->isTenant() && !auth()->user()->isLandlord() && 
+            !auth()->user()->admin) { 
                 abort(403, 'You are not authorized to download this receipt.');
             }
 
@@ -2155,6 +2162,57 @@ class PaymentController extends Controller
             ]);
 
             return redirect()->route('dashboard')->with('error', 'Payment not found or access denied.');
+        }
+    }
+
+    /**
+     * Distribute multi-tier commission for a successful payment
+     */
+    private function distributeCommissionForPayment(\App\Models\Payment $payment): void
+    {
+        try {
+            // Find the active referral chain for this landlord/property
+            $chain = \App\Models\ReferralChain::where('landlord_id', $payment->landlord_id)
+                ->where('status', \App\Models\ReferralChain::STATUS_ACTIVE)
+                ->first();
+
+            if (!$chain) {
+                return;
+            }
+
+            $distributionService = app(\App\Services\Commission\PaymentDistributionService::class);
+            
+            $referralChainArray = [];
+            if ($chain->super_marketer_id) {
+                $referralChainArray[] = $chain->super_marketer_id;
+            }
+            if ($chain->marketer_id) {
+                $referralChainArray[] = $chain->marketer_id;
+            }
+            $referralChainArray[] = $chain->landlord_id;
+            
+            $region = $chain->region ?? $payment->apartment->property->state ?? 'Default';
+
+            $commissionPool = $payment->amount * 0.025;
+            
+            $distributionService->distributeMultiTierCommission(
+                $commissionPool,
+                $referralChainArray,
+                $region,
+                $chain->id
+            );
+            
+            \Illuminate\Support\Facades\Log::info('Commission successfully distributed for payment', [
+                'payment_id' => $payment->id,
+                'commission_pool' => $commissionPool,
+                'referral_chain_id' => $chain->id
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Commission distribution failed', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
         }
     }
 }

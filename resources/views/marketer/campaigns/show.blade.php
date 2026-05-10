@@ -13,26 +13,26 @@
                     </div>
                     <div>
                         <a href="{{ route('marketer.campaigns.index') }}" class="btn btn-secondary mr-2">
-                            <i class="fas fa-arrow-left"></i> Back to Campaigns
+                            <i class="fa fa-arrow-left"></i> Back to Campaigns
                         </a>
                         @if($campaign->status === 'active')
                             <button class="btn btn-warning mr-2" onclick="pauseCampaign()">
-                                <i class="fas fa-pause"></i> Pause
+                                <i class="fa fa-pause"></i> Pause
                             </button>
                         @elseif($campaign->status === 'paused')
                             <button class="btn btn-success mr-2" onclick="resumeCampaign()">
-                                <i class="fas fa-play"></i> Resume
+                                <i class="fa fa-play"></i> Resume
                             </button>
                         @endif
                         
                         @if($campaign->campaign_type === 'qr_code')
                             <button class="btn btn-info mr-2" onclick="showQRCode()">
-                                <i class="fas fa-qrcode"></i> QR Code
+                                <i class="fa fa-qrcode"></i> QR Code
                             </button>
                         @endif
                         
                         <button class="btn btn-primary" onclick="copyReferralLink()">
-                            <i class="fas fa-link"></i> Copy Link
+                            <i class="fa fa-link"></i> Copy Link
                         </button>
                     </div>
                 </div>
@@ -136,7 +136,7 @@
                                 </div>
                             @else
                                 <div class="text-center py-3">
-                                    <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                                    <i class="fa fa-users fa-2x text-muted mb-2"></i>
                                     <p class="text-muted">No referrals yet for this campaign</p>
                                 </div>
                             @endif
@@ -237,7 +237,7 @@
                                        value="{{ $campaign->getReferralLink() }}" readonly>
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-primary" onclick="copyReferralLink()">
-                                        <i class="fas fa-copy"></i>
+                                        <i class="fa fa-copy"></i>
                                     </button>
                                 </div>
                             </div>

@@ -29,9 +29,9 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-image: url('{{ asset(' auth_background_premium_1772325387793.png') }}');
-        background-size: cover;
-        background-position: center;
+        background-image: url('{{ asset('assets/images/pagelayout.jpg') }}');
+        background-repeat: repeat;
+        background-size: 500px;
         filter: brightness(0.6);
         z-index: -1;
     }
@@ -310,17 +310,31 @@
         <p class="auth-subtitle">Sign in to manage your spaces.</p>
 
         @if (session('status'))
-        <div class="alert-premium">
-            <i class="fas fa-check-circle"></i>
-            {{ session('status') }}
-        </div>
+            <div class="alert-premium">
+                <i class="fa fa-check-circle"></i>
+                {{ session('status') }}
+            </div>
+        @endif
+
+        @if (session('warning'))
+            <div class="alert-premium" style="background: #fff7ed; color: #9a3412; border-color: #ffedd5;">
+                <i class="fa fa-exclamation-triangle"></i>
+                {{ session('warning') }}
+            </div>
+        @endif
+
+        @if (session('info'))
+            <div class="alert-premium" style="background: #f0f9ff; color: #075985; border-color: #e0f2fe;">
+                <i class="fa fa-info-circle"></i>
+                {{ session('info') }}
+            </div>
         @endif
 
         @if (session('error'))
-        <div class="alert-premium" style="background: #fee2e2; color: #991b1b; border-color: #fecaca;">
-            <i class="fas fa-exclamation-circle"></i>
-            {{ session('error') }}
-        </div>
+            <div class="alert-premium" style="background: #fee2e2; color: #991b1b; border-color: #fecaca;">
+                <i class="fa fa-exclamation-circle"></i>
+                {{ session('error') }}
+            </div>
         @endif
 
         <form method="POST" action="{{ route('login') }}">
@@ -331,9 +345,9 @@
                 <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email"
                     value="{{ old('email') }}" required autocomplete="email" autofocus placeholder="Enter your email">
                 @error('email')
-                <div class="invalid-feedback-premium">
-                    {{ $message }}
-                </div>
+                    <div class="invalid-feedback-premium">
+                        {{ $message }}
+                    </div>
                 @enderror
             </div>
 
@@ -345,9 +359,9 @@
                     <i class="far fa-eye-slash" id="password-toggle-icon"></i>
                 </button>
                 @error('password')
-                <div class="invalid-feedback-premium">
-                    {{ $message }}
-                </div>
+                    <div class="invalid-feedback-premium">
+                        {{ $message }}
+                    </div>
                 @enderror
             </div>
 
@@ -359,12 +373,12 @@
                 </label>
 
                 @if (Route::has('password.request'))
-                <a href="{{ route('password.request') }}" class="forgot-pass">Forgot Password?</a>
+                    <a href="{{ route('password.request') }}" class="forgot-pass">Forgot Password?</a>
                 @endif
             </div>
 
             <button type="submit" class="btn-premium">
-                Sign In <i class="fas fa-arrow-right"></i>
+                Sign In <i class="fa fa-arrow-right"></i>
             </button>
         </form>
 

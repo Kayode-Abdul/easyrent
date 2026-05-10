@@ -72,7 +72,7 @@ class Kernel extends HttpKernel
         'easyrent.performance' => \App\Http\Middleware\EasyRentPerformanceMonitoring::class ,
         'invitation.rate.limit' => \App\Http\Middleware\InvitationRateLimitMiddleware::class ,
         'enhanced.csrf' => \App\Http\Middleware\EnhancedCsrfProtection::class ,
-        'easyrent.error.handler' => \App\Http\Middleware\EasyRentErrorHandler::class ,
+        'easyrent.error.handler' => \App\Http\Middleware\ErrorHandlerMiddleware::class ,
         'api.auth' => \App\Http\Middleware\ApiAuthMiddleware::class ,
         'payment.calculation.rate.limit' => \App\Http\Middleware\PaymentCalculationRateLimitMiddleware::class ,
         'payment.calculation.input.validation' => \App\Http\Middleware\PaymentCalculationInputValidationMiddleware::class ,

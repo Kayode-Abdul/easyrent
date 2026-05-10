@@ -16,9 +16,10 @@ class ReferralChainService
     /**
      * Role IDs for validation
      */
-    const SUPER_MARKETER_ROLE_ID = 9;
-    const MARKETER_ROLE_ID = 7;
-    const LANDLORD_ROLE_ID = 1;
+    public static function getSuperMarketerRoleId() { return User::getRoleId('super_marketer') ?? 9; }
+    public static function getMarketerRoleId() { return User::getRoleId('marketer') ?? 3; }
+    public static function getLandlordRoleId() { return User::getRoleId('landlord') ?? 2; }
+
 
     /**
      * Create a referral chain for multi-tier hierarchy
@@ -151,7 +152,7 @@ class ReferralChainService
                 throw new Exception("Marketer with ID {$marketerId} not found");
             }
 
-            if (!$this->userHasRole($marketerId, self::MARKETER_ROLE_ID)) {
+            if (!$this->userHasRole($marketerId, self::getMarketerRoleId())) {
                 throw new Exception("User {$marketerId} does not have marketer role");
             }
         }
@@ -163,9 +164,10 @@ class ReferralChainService
                 throw new Exception("Super Marketer with ID {$superMarketerId} not found");
             }
 
-            if (!$this->userHasRole($superMarketerId, self::SUPER_MARKETER_ROLE_ID)) {
+            if (!$this->userHasRole($superMarketerId, self::getSuperMarketerRoleId())) {
                 throw new Exception("User {$superMarketerId} does not have super marketer role");
             }
+
         }
 
         // Validate chain structure

@@ -92,13 +92,37 @@ class ArtisanTaskController extends Controller
             return redirect()->route('dashboard')->with('error', 'Access denied. For artisans only.');
         }
 
-        $myBids = $user->artisanBids()->with('task.complaint')->latest()->get();
-        $relevantTasks = ArtisanTask::where('status', 'open')
+        $myBids = $user->artisanBids()->with('task.complaint.category')->latest()->get();
+        
+        $stats = [
+            'total_bids' => $myBids->count(),
+            'pending_bids' => $myBids->where('status', 'pending')->count(),
+            'accepted_bids' => $myBids->where('status', 'accepted')->count(),
+            'completed_tasks' => ArtisanTask::where('status', 'completed')
+                ->whereIn('id', $myBids->where('status', 'accepted')->pluck('task_id'))
+                ->count(),
+        ];
+
+        // Tasks in artisan's category
+        $categoryTasks = ArtisanTask::where('status', 'open')
+            ->whereHas('complaint', function($q) use ($user) {
+                if ($user->artisan_category_id) {
+                    $q->where('category_id', $user->artisan_category_id);
+                }
+            })
+            ->with(['complaint.category', 'landlord'])
             ->latest()
             ->take(5)
             ->get();
 
-        return view('artisan.dashboard', compact('myBids', 'relevantTasks'));
+        $relevantTasks = ArtisanTask::where('status', 'open')
+            ->whereNotIn('id', $categoryTasks->pluck('id'))
+            ->with(['complaint.category', 'landlord'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('artisan.dashboard', compact('myBids', 'categoryTasks', 'relevantTasks', 'stats'));
     }
 
     /**

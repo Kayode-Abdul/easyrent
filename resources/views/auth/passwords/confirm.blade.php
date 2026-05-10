@@ -27,10 +27,10 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-image: url('{{ asset(' auth_background_premium_1772325387793.png') }}');
-        background-size: cover;
-        background-position: center;
-        filter: brightness(0.5);
+        background-image: url('{{ asset('assets/images/pagelayout.jpg') }}');
+        background-repeat: repeat;
+        background-size: 500px;
+        filter: brightness(0.6);
         z-index: -1;
     }
 
@@ -200,7 +200,7 @@
         </div>
 
         <div class="security-badge">
-            <i class="fas fa-user-shield"></i>
+            <i class="fa fa-user-shield"></i>
         </div>
 
         <h1 class="auth-title">Verify Identity</h1>
@@ -222,7 +222,7 @@
                     </button>
                 </div>
                 @error('password')
-                <span class="text-danger small mt-2 d-block"><strong>{{ $message }}</strong></span>
+                    <span class="text-danger small mt-2 d-block"><strong>{{ $message }}</strong></span>
                 @enderror
             </div>
 
@@ -233,12 +233,12 @@
 
         <div class="auth-footer">
             @if (Route::has('password.request'))
-            <a href="{{ route('password.request') }}">
-                <i class="fas fa-key me-2"></i> Forgot Your Password?
-            </a>
+                <a href="{{ route('password.request') }}">
+                    <i class="fa fa-key me-2"></i> Forgot Your Password?
+                </a>
             @endif
             <a href="{{ route('login') }}">
-                <i class="fas fa-arrow-left me-2"></i> Back to Login
+                <i class="fa fa-arrow-left me-2"></i> Back to Login
             </a>
         </div>
     </div>

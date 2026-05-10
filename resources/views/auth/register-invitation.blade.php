@@ -17,9 +17,21 @@
         padding-bottom: 90px;
     }
 
+    .auth-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('{{ asset('assets/images/pagelayout.jpg') }}');
+        background-repeat: repeat;
+        background-size: 500px;
+        filter: brightness(0.6);
+        z-index: -1;
+    }
+
     .auth-container {
         min-height: 100vh;
-        background: linear-gradient(45deg, #17a2b8, #6bd098) !important;
         padding: 2rem 0;
     }
 
@@ -249,6 +261,8 @@
     }
 </style>
 
+<div class="auth-bg"></div>
+
 <div class="pt-pad">
     <div aria-live="polite" aria-atomic="true" class="sticky-top">
         <div id="toast-container" class="modern-toast-container"></div>
@@ -271,14 +285,14 @@
                         @if(isset($invitation) && $invitation)
                         <div class="invitation-context">
                             <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-home fa-2x text-primary me-3"></i>
+                                <i class="fa fa-home fa-2x text-primary me-3"></i>
                                 <div>
                                     <h6 class="mb-1 text-primary">{{ $invitation->apartment->property->prop_name }}</h6>
                                     <small class="text-muted">{{ $invitation->apartment->apartment_type }} • {{ $invitation->apartment->getFormattedAmount() }}/month</small>
                                 </div>
                             </div>
                             <div class="alert alert-success mb-0">
-                                <i class="fas fa-gift me-2"></i>
+                                <i class="fa fa-gift me-2"></i>
                                 <small><strong>Special Offer:</strong> Create your account now and complete your
                                     apartment application in one seamless process!</small>
                             </div>
@@ -306,7 +320,7 @@
                                         <img src="{{ asset('assets/images/default-avatar.png') }}" alt="Profile Photo"
                                             id="photo-preview-img" />
                                         <div class="photo-overlay">
-                                            <i class="fas fa-camera"></i>
+                                            <i class="fa fa-camera"></i>
                                         </div>
                                     </div>
                                     <p class="text-muted mt-3 mb-0">Click to upload profile photo</p>
@@ -323,7 +337,7 @@
                                         class="form-control @error('name') is-invalid @enderror" name="name"
                                         value="{{ old('name') }}" required autocomplete="name" autofocus
                                         placeholder="Full Name">
-                                    <label for="name"><i class="fas fa-user me-2"></i>Full Name</label>
+                                    <label for="name"><i class="fa fa-user me-2"></i>Full Name</label>
                                     @error('name')
                                     <div class="invalid-feedback">
                                         <strong>{{ $message }}</strong>
@@ -336,7 +350,7 @@
                                         class="form-control @error('email') is-invalid @enderror" name="email"
                                         value="{{ old('email') }}" required autocomplete="email"
                                         placeholder="Email Address">
-                                    <label for="email"><i class="fas fa-envelope me-2"></i>Email Address</label>
+                                    <label for="email"><i class="fa fa-envelope me-2"></i>Email Address</label>
                                     @error('email')
                                     <div class="invalid-feedback">
                                         <strong>{{ $message }}</strong>
@@ -349,10 +363,10 @@
                                     <input id="password" type="password"
                                         class="form-control @error('password') is-invalid @enderror" name="password"
                                         required autocomplete="new-password" placeholder="Password">
-                                    <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
+                                    <label for="password"><i class="fa fa-lock me-2"></i>Password</label>
                                     <button type="button" class="password-toggle-btn"
                                         onclick="togglePasswordVisibility('password')">
-                                        <i class="fas fa-eye-slash" id="password-toggle-icon"></i>
+                                        <i class="fa fa-eye-slash" id="password-toggle-icon"></i>
                                     </button>
                                     @error('password')
                                     <div class="invalid-feedback">
@@ -365,17 +379,17 @@
                                     <input id="password-confirm" type="password" class="form-control"
                                         name="password_confirmation" required autocomplete="new-password"
                                         placeholder="Confirm Password">
-                                    <label for="password-confirm"><i class="fas fa-lock me-2"></i>Confirm
+                                    <label for="password-confirm"><i class="fa fa-lock me-2"></i>Confirm
                                         Password</label>
                                     <button type="button" class="password-toggle-btn"
                                         onclick="togglePasswordVisibility('password-confirm')">
-                                        <i class="fas fa-eye-slash" id="password-confirm-toggle-icon"></i>
+                                        <i class="fa fa-eye-slash" id="password-confirm-toggle-icon"></i>
                                     </button>
                                 </div>
 
                                 <div class="d-flex justify-content-end">
                                     <button type="button" class="btn btn-auth" onclick="validateStep1()">
-                                        Next Step <i class="fas fa-arrow-right ms-2"></i>
+                                        Next Step <i class="fa fa-arrow-right ms-2"></i>
                                     </button>
                                 </div>
                             </div>
@@ -385,7 +399,7 @@
                                     <input id="first_name" type="text"
                                         class="form-control @error('first_name') is-invalid @enderror" name="first_name"
                                         value="{{ old('first_name') }}" required placeholder="First Name">
-                                    <label for="first_name"><i class="fas fa-user me-2"></i>First Name</label>
+                                    <label for="first_name"><i class="fa fa-user me-2"></i>First Name</label>
                                     @error('first_name')
                                     <div class="invalid-feedback">
                                         <strong>{{ $message }}</strong>
@@ -397,7 +411,7 @@
                                     <input id="last_name" type="text"
                                         class="form-control @error('last_name') is-invalid @enderror" name="last_name"
                                         value="{{ old('last_name') }}" required placeholder="Last Name">
-                                    <label for="last_name"><i class="fas fa-user me-2"></i>Last Name</label>
+                                    <label for="last_name"><i class="fa fa-user me-2"></i>Last Name</label>
                                     @error('last_name')
                                     <div class="invalid-feedback">
                                         <strong>{{ $message }}</strong>
@@ -409,7 +423,7 @@
                                     <input id="username" type="text"
                                         class="form-control @error('username') is-invalid @enderror" name="username"
                                         value="{{ old('username') }}" required placeholder="Username">
-                                    <label for="username"><i class="fas fa-at me-2"></i>Username</label>
+                                    <label for="username"><i class="fa fa-at me-2"></i>Username</label>
                                     @error('username')
                                     <div class="invalid-feedback">
                                         <strong>{{ $message }}</strong>
@@ -428,7 +442,7 @@
                                         </option>
                                         <option value="3" {{ old('role')==3 ? 'selected' : '' }}>📈 Marketer</option>
                                     </select>
-                                    <label for="role"><i class="fas fa-user-tag me-2"></i>Role</label>
+                                    <label for="role"><i class="fa fa-user-tag me-2"></i>Role</label>
                                     @error('role')
                                     <div class="invalid-feedback">
                                         <strong>{{ $message }}</strong>
@@ -440,7 +454,7 @@
                                     <input id="occupation" type="text"
                                         class="form-control @error('occupation') is-invalid @enderror" name="occupation"
                                         value="{{ old('occupation') }}" placeholder="Occupation">
-                                    <label for="occupation"><i class="fas fa-briefcase me-2"></i>Occupation
+                                    <label for="occupation"><i class="fa fa-briefcase me-2"></i>Occupation
                                         (Optional)</label>
                                     @error('occupation')
                                     <div class="invalid-feedback">
@@ -453,7 +467,7 @@
                                     <input id="phone" type="tel"
                                         class="form-control @error('phone') is-invalid @enderror" name="phone"
                                         value="{{ old('phone') }}" placeholder="Phone Number">
-                                    <label for="phone"><i class="fas fa-phone me-2"></i>Phone Number (Optional)</label>
+                                    <label for="phone"><i class="fa fa-phone me-2"></i>Phone Number (Optional)</label>
                                     @error('phone')
                                     <div class="invalid-feedback">
                                         <strong>{{ $message }}</strong>
@@ -465,7 +479,7 @@
                                     <input id="address" type="text"
                                         class="form-control @error('address') is-invalid @enderror" name="address"
                                         value="{{ old('address') }}" placeholder="Address">
-                                    <label for="address"><i class="fas fa-map-marker-alt me-2"></i>Address
+                                    <label for="address"><i class="fa fa-map-marker-alt me-2"></i>Address
                                         (Optional)</label>
                                     @error('address')
                                     <div class="invalid-feedback">
@@ -484,7 +498,7 @@
                                             {{ $c['name'] }}</option>
                                         @endforeach
                                     </select>
-                                    <label for="country"><i class="fas fa-globe me-2"></i>Country</label>
+                                    <label for="country"><i class="fa fa-globe me-2"></i>Country</label>
                                 </div>
 
                                 <div class="form-floating">
@@ -502,7 +516,7 @@
                                         @endif
                                         @endforeach
                                     </select>
-                                    <label for="state"><i class="fas fa-map me-2"></i>State</label>
+                                    <label for="state"><i class="fa fa-map me-2"></i>State</label>
                                     @error('state')
                                     <div class="invalid-feedback">
                                         <strong>{{ $message }}</strong>
@@ -516,7 +530,7 @@
                                         <option value="" disabled selected>Select LGA</option>
                                         <!-- LGAs will be populated by JS -->
                                     </select>
-                                    <label for="lga" id="lgaLabel"><i class="fas fa-map-pin me-2"></i>Local Government
+                                    <label for="lga" id="lgaLabel"><i class="fa fa-map-pin me-2"></i>Local Government
                                         Area</label>
                                     @error('lga')
                                     <div class="invalid-feedback">
@@ -528,10 +542,10 @@
                                 <div class="d-flex justify-content-between gap-3">
                                     <button type="button" class="btn btn-secondary-auth flex-fill"
                                         onclick="showStep(1)">
-                                        <i class="fas fa-arrow-left me-2"></i>Previous
+                                        <i class="fa fa-arrow-left me-2"></i>Previous
                                     </button>
                                     <button type="submit" class="btn btn-auth flex-fill">
-                                        <i class="fas fa-user-plus me-2"></i>Create Account & Continue
+                                        <i class="fa fa-user-plus me-2"></i>Create Account & Continue
                                     </button>
                                 </div>
                             </div>
@@ -541,7 +555,7 @@
                             <span class="text-muted">Already have an account?</span>
                             <a href="{{ route('login') }}{{ request('token') ? '?token=' . request('token') : '' }}"
                                 class="ms-1">
-                                <i class="fas fa-sign-in-alt me-1"></i>Sign In
+                                <i class="fa fa-sign-in-alt me-1"></i>Sign In
                             </a>
                         </div>
                     </div>
@@ -684,7 +698,7 @@
         if (registerForm) {
             registerForm.addEventListener('submit', function () {
                 const submitBtn = this.querySelector('button[type="submit"]');
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
+                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Creating Account...';
                 submitBtn.disabled = true;
             });
         }
@@ -730,7 +744,7 @@
         const lgaLabel = document.getElementById('lgaLabel');
 
         if (lgaLabel) {
-            lgaLabel.innerHTML = '<i class="fas fa-map-pin me-2"></i>' + (country === 'Nigeria' ? 'Local Government Area' : 'City');
+            lgaLabel.innerHTML = '<i class="fa fa-map-pin me-2"></i>' + (country === 'Nigeria' ? 'Local Government Area' : 'City');
         }
 
         stateSelect.innerHTML = '<option value="" disabled selected>Select State</option>';

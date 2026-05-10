@@ -1,5 +1,4 @@
-
-    @include('header')
+@include('header')
 <div class="content">
     <div class="row">
         <div class="col-md-4">
@@ -9,12 +8,18 @@
                 </div> -->
                 <div class="card-body">
                     <div class="author text-center">
-                        <input id="profile-photo-input" type="file" class="d-none" name="photo" accept="image/*" onchange="previewProfilePhoto(event)">
-                        <div style="display:inline-block; cursor:pointer;text-align: -webkit-center;" onclick="document.getElementById('profile-photo-input').click()">
-                            <img class="avatar border-gray user-img" id="profile-photo-preview" src="{{ auth()->user()->photo ? asset(auth()->user()->photo) : asset('assets/images/default-avatar.png') }}" alt="..." style="object-fit:cover; border-radius:50%; max-width:120px; max-height:120px;">
+                        <input id="profile-photo-input" type="file" class="d-none" name="photo" accept="image/*"
+                            onchange="previewProfilePhoto(event)">
+                        <div style="display:inline-block; cursor:pointer;text-align: -webkit-center;"
+                            onclick="document.getElementById('profile-photo-input').click()">
+                            <img class="avatar border-gray user-img" id="profile-photo-preview"
+                                src="{{ auth()->user()->photo ? asset(auth()->user()->photo) : asset('assets/images/default-avatar.png') }}"
+                                alt="..."
+                                style="object-fit:cover; border-radius:50%; max-width:120px; max-height:120px;">
                             <div class="text-muted" style="font-size:0.9em;">Click to change photo</div>
                             <small class="form-text text-muted">Upload a new profile photo (optional)</small>
-                            <small class="form-text text-muted">Allowed file types: jpeg, png, jpg, gif, svg. Max size: 2MB.</small>
+                            <small class="form-text text-muted">Allowed file types: jpeg, png, jpg, gif, svg. Max size:
+                                2MB.</small>
                         </div>
                     </div>
                     <p class="description text-center">
@@ -25,7 +30,7 @@
                     <hr>
                     <div class="mb-3">
                         <label class="text-center d-block"><strong>Your Referral Link:</strong></label>
-                        
+
                         <!-- @.  php
                             $userRoles = [];
                             $currentRole = auth()->user()->role;
@@ -55,7 +60,7 @@
                                 $userRoles[] = ['id' => $currentRole, 'name' => 'User', 'param' => 'user'];
                             }
                         @.  endphp -->
-                        
+
                         <!-- @    if(count($userRoles) > 1)
                             <div class="referral-role-selector mb-3">
                                 <label class="d-block text-center mb-2"><small>Share as:</small></label>
@@ -69,11 +74,13 @@
                                 </div>
                             </div>
                         @ endif -->
-                        
+
                         <div class="input-group">
-                            <input type="text" class="form-control" value="{{ auth()->user()->getReferralLink() }}" readonly id="referralLinkInput">
+                            <input type="text" class="form-control" value="{{ auth()->user()->getReferralLink() }}"
+                                readonly id="referralLinkInput">
                             <div class="input-group-append">
-                                <button class="btn btn-primary" type="button" onclick="copyReferralLink()" title="Copy to clipboard">
+                                <button class="btn btn-primary" type="button" onclick="copyReferralLink()"
+                                    title="Copy to clipboard">
                                     <i class="nc-icon nc-single-copy-04"></i> Copy
                                 </button>
                             </div>
@@ -82,81 +89,81 @@
                             <span id="referralRoleText">Share this link to invite new users and earn rewards!</span>
                         </small>
                     </div>
-                    
+
                     <style>
-                    .referral-role-selector .btn-outline-primary {
-                        border-color: #28a745;
-                        color: #28a745;
-                    }
-                    
-                    .referral-role-selector .btn-outline-primary.active {
-                        background-color: #28a745;
-                        color: white;
-                    }
-                    
-                    .referral-role-selector .btn-outline-primary:hover {
-                        background-color: #28a745;
-                        color: white;
-                    }
-                    
-                    #referralLinkInput {
-                        font-size: 0.85rem;
-                        background-color: #f4f3ef;
-                    }
+                        .referral-role-selector .btn-outline-primary {
+                            border-color: #28a745;
+                            color: #28a745;
+                        }
+
+                        .referral-role-selector .btn-outline-primary.active {
+                            background-color: #28a745;
+                            color: white;
+                        }
+
+                        .referral-role-selector .btn-outline-primary:hover {
+                            background-color: #28a745;
+                            color: white;
+                        }
+
+                        #referralLinkInput {
+                            font-size: 0.85rem;
+                            background-color: #f4f3ef;
+                        }
                     </style>
-                    
+
                     <script>
-                    function updateReferralLink() {
-                        const selectedRole = document.querySelector('input[name="referral_role"]:checked');
-                        if (!selectedRole) return;
-                        
-                        const roleParam = selectedRole.value;
-                        const baseUrl = "{{ url('/register') }}";
-                        const referralCode = "{{ auth()->user()->referral_code ?? auth()->user()->user_id }}";
-                        
-                        // Build the referral link with role parameter
-                        const referralLink = `${baseUrl}?ref=${referralCode}&source=${roleParam}`;
-                        
-                        // Update the input field
-                        document.getElementById('referralLinkInput').value = referralLink;
-                        
-                        // Update the description text
-                        const roleTexts = {
-                            'marketer': 'Share as a Marketer to earn commissions on referred landlords!',
-                            'landlord': 'Share as a Landlord to invite other property owners!',
-                            'property_manager': 'Share as a Property Manager to grow your network!',
-                            'tenant': 'Share as a Tenant to help others find great properties!',
-                            'user': 'Share this link to invite new users and earn rewards!'
-                        };
-                        
-                        document.getElementById('referralRoleText').textContent = roleTexts[roleParam] || roleTexts['user'];
-                    }
-                    
-                    function copyReferralLink() {
-                        const copyText = document.getElementById('referralLinkInput');
-                        copyText.select();
-                        copyText.setSelectionRange(0, 99999); // For mobile devices
-                        
-                        // Modern clipboard API
-                        if (navigator.clipboard) {
-                            navigator.clipboard.writeText(copyText.value).then(function() {
-                                showToast('Referral link copied to clipboard!', 'success');
-                            }).catch(function() {
-                                // Fallback
+                        function updateReferralLink() {
+                            const selectedRole = document.querySelector('input[name="referral_role"]:checked');
+                            if (!selectedRole) return;
+
+                            const roleParam = selectedRole.value;
+                            const baseUrl = "{{ url('/register') }}";
+                            const referralCode = "{{ auth()->user()->referral_code ?? auth()->user()->user_id }}";
+
+                            // Build the referral link with role parameter
+                            const referralLink = `${baseUrl}?ref=${referralCode}&source=${roleParam}`;
+
+                            // Update the input field
+                            document.getElementById('referralLinkInput').value = referralLink;
+
+                            // Update the description text
+                            const roleTexts = {
+                                'marketer': 'Share as a Marketer to earn commissions on referred landlords!',
+                                'landlord': 'Share as a Landlord to invite other property owners!',
+                                'property_manager': 'Share as a Property Manager to grow your network!',
+                                'tenant': 'Share as a Tenant to help others find great properties!',
+                                'user': 'Share this link to invite new users and earn rewards!'
+                            };
+
+                            document.getElementById('referralRoleText').textContent = roleTexts[roleParam] || roleTexts['user'];
+                        }
+
+                        function copyReferralLink() {
+                            const copyText = document.getElementById('referralLinkInput');
+                            copyText.select();
+                            copyText.setSelectionRange(0, 99999); // For mobile devices
+
+                            // Modern clipboard API
+                            if (navigator.clipboard) {
+                                navigator.clipboard.writeText(copyText.value).then(function () {
+                                    showToast('Referral link copied to clipboard!', 'success');
+                                }).catch(function () {
+                                    // Fallback
+                                    document.execCommand('copy');
+                                    showToast('Referral link copied!', 'success');
+                                });
+                            } else {
+                                // Fallback for older browsers
                                 document.execCommand('copy');
                                 showToast('Referral link copied!', 'success');
-                            });
-                        } else {
-                            // Fallback for older browsers
-                            document.execCommand('copy');
-                            showToast('Referral link copied!', 'success');
+                            }
                         }
-                    }
-                    
-                    // Initialize the referral link on page load
-                    document.addEventListener('DOMContentLoaded', function() {
-                        updateReferralLink();
-                    });
+
+                        // Initialize the referral link on page load
+                        document.addEventListener('DOMContentLoaded', function () {
+                            updateReferralLink();
+                        });
                     </script>
                     <div class="button-container">
                         <div class="row">
@@ -201,19 +208,22 @@
                             <div class="col-md-5 pr-1">
                                 <div class="form-group">
                                     <label>Role</label>
-                                    <input type="text" class="form-control" disabled value="{{ $roles[auth()->user()->role] ?? 'Unknown' }}">
+                                    <input type="text" class="form-control" disabled
+                                        value="{{ $roles[auth()->user()->role] ?? 'Unknown' }}">
                                 </div>
                             </div>
                             <div class="col-md-3 px-1">
                                 <div class="form-group">
                                     <label>Username</label>
-                                    <input type="text" class="form-control" name="username" value="{{ auth()->user()->username }}">
+                                    <input type="text" class="form-control" name="username"
+                                        value="{{ auth()->user()->username }}">
                                 </div>
                             </div>
                             <div class="col-md-4 pl-1">
                                 <div class="form-group">
                                     <label>Email address</label>
-                                    <input type="email" class="form-control" disabled value="{{ auth()->user()->email }}">
+                                    <input type="email" class="form-control" disabled
+                                        value="{{ auth()->user()->email }}">
                                 </div>
                             </div>
                         </div>
@@ -221,13 +231,15 @@
                             <div class="col-md-6 pr-1">
                                 <div class="form-group">
                                     <label>First Name</label>
-                                    <input type="text" class="form-control" name="first_name" value="{{ auth()->user()->first_name }}">
+                                    <input type="text" class="form-control" name="first_name"
+                                        value="{{ auth()->user()->first_name }}">
                                 </div>
                             </div>
                             <div class="col-md-6 pl-1">
                                 <div class="form-group">
                                     <label>Last Name</label>
-                                    <input type="text" class="form-control" name="last_name" value="{{ auth()->user()->last_name }}">
+                                    <input type="text" class="form-control" name="last_name"
+                                        value="{{ auth()->user()->last_name }}">
                                 </div>
                             </div>
                         </div>
@@ -235,13 +247,15 @@
                             <div class="col-md-6 pr-1">
                                 <div class="form-group">
                                     <label>Occupation</label>
-                                    <input type="text" class="form-control" disabled value="{{ auth()->user()->occupation }}">
+                                    <input type="text" class="form-control" disabled
+                                        value="{{ auth()->user()->occupation }}">
                                 </div>
                             </div>
                             <div class="col-md-6 pl-1">
                                 <div class="form-group">
                                     <label>Phone Number</label>
-                                    <input type="tel" class="form-control" name="phone" value="{{ auth()->user()->phone }}">
+                                    <input type="tel" class="form-control" name="phone"
+                                        value="{{ auth()->user()->phone }}">
                                 </div>
                             </div>
                         </div>
@@ -249,28 +263,54 @@
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label>Address</label>
-                                    <input type="text" class="form-control" name="address" value="{{ auth()->user()->address }}">
+                                    <input type="text" class="form-control" name="address"
+                                        value="{{ auth()->user()->address }}">
                                 </div>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6 pr-1">
+                            <div class="col-md-4 pr-1">
                                 <div class="form-group">
-                                    <label>City/L.G.A</label>
-                                    <input type="text" class="form-control" name="lga" value="{{ auth()->user()->lga }}">
+                                    <label for="country">Country</label>
+                                    <select name="country_name" id="country" class="form-control"
+                                        onchange="getStatesForProfile()">
+                                        <option value="" disabled {{ !auth()->user()->country_name ? 'selected' : '' }}>
+                                            Select Country</option>
+                                        @if(isset($countries))
+                                            @foreach ($countries as $country)
+                                                <option value="{{ $country['name'] }}" {{ (auth()->user()->country_name ?? 'Nigeria') == $country['name'] ? 'selected' : '' }}>
+                                                    {{ $country['name'] }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
                                 </div>
                             </div>
-                            <div class="col-md-6 pl-1">
+                            <div class="col-md-4 px-1">
                                 <div class="form-group">
-                                    <label>State</label>
-                                    <input type="text" class="form-control" name="state" value="{{ auth()->user()->state }}">
+                                    <label for="states">State</label>
+                                    <select id="states" class="form-control" onchange="getCitiesForProfile()">
+                                        <option value="" disabled>Select State</option>
+                                    </select>
+                                    <input type="hidden" name="state" id="state_name"
+                                        value="{{ auth()->user()->state }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4 pl-1">
+                                <div class="form-group">
+                                    <label id="cityLabel" for="cities">City/L.G.A</label>
+                                    <select id="cities" class="form-control" onchange="updateCityNameForProfile()">
+                                        <option value="" disabled>Select City/L.G.A</option>
+                                    </select>
+                                    <input type="hidden" name="lga" id="city_name" value="{{ auth()->user()->lga }}">
                                 </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="alert alert-info">
-                                    <strong>Note:</strong> Leave password fields empty if you don't want to change your password.
+                                    <strong>Note:</strong> Leave password fields empty if you don't want to change your
+                                    password.
                                 </div>
                             </div>
                         </div>
@@ -279,21 +319,24 @@
                                 <div class="form-group position-relative">
                                     <label>New Password</label>
                                     <input type="password" class="form-control" name="password" id="new-password">
-                                    <button type="button" class="password-toggle-btn-user" onclick="togglePasswordVisibility('new-password')">
-                                        <i class="fas fa-eye" id="new-password-toggle-icon"></i>
+                                    <button type="button" class="password-toggle-btn-user"
+                                        onclick="togglePasswordVisibility('new-password')">
+                                        <i class="fa fa-eye" id="new-password-toggle-icon"></i>
                                     </button>
                                 </div>
                             </div>
                             <div class="col-md-6 pl-1">
                                 <div class="form-group position-relative">
                                     <label>Confirm New Password</label>
-                                    <input type="password" class="form-control" name="password_confirmation" id="confirm-password">
-                                    <button type="button" class="password-toggle-btn-user" onclick="togglePasswordVisibility('confirm-password')">
-                                        <i class="fas fa-eye" id="confirm-password-toggle-icon"></i>
+                                    <input type="password" class="form-control" name="password_confirmation"
+                                        id="confirm-password">
+                                    <button type="button" class="password-toggle-btn-user"
+                                        onclick="togglePasswordVisibility('confirm-password')">
+                                        <i class="fa fa-eye" id="confirm-password-toggle-icon"></i>
                                     </button>
                                 </div>
                             </div>
-                        </div> 
+                        </div>
                         <div class="row">
                             <div class="update ml-auto mr-auto">
                                 <button type="submit" class="btn btn-primary btn-round">Update Profile</button>
@@ -329,56 +372,137 @@
 </div>
 <!-- Footer area end -->
 <style>
-.password-toggle-btn-user {
-    position: absolute;
-    right: 10px;
-    top: 35px;
-    background: none;
-    border: none;
-    color: #6c757d;
-    cursor: pointer;
-    padding: 5px;
-    z-index: 10;
-    transition: color 0.3s ease;
-}
+    .password-toggle-btn-user {
+        position: absolute;
+        right: 10px;
+        top: 35px;
+        background: none;
+        border: none;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 5px;
+        z-index: 10;
+        transition: color 0.3s ease;
+    }
 
-.password-toggle-btn-user:hover {
-    color: #28a745;
-}
+    .password-toggle-btn-user:hover {
+        color: #28a745;
+    }
 
-.password-toggle-btn-user:focus {
-    outline: none;
-    color: #28a745;
-}
+    .password-toggle-btn-user:focus {
+        outline: none;
+        color: #28a745;
+    }
 </style>
 
 <script>
-// Password visibility toggle function
-function togglePasswordVisibility(fieldId) {
-    const passwordField = document.getElementById(fieldId);
-    const toggleIcon = document.getElementById(fieldId + '-toggle-icon');
-    
-    if (passwordField.type === 'password') {
-        passwordField.type = 'text';
-        toggleIcon.classList.remove('fa-eye');
-        toggleIcon.classList.add('fa-eye-slash');
-    } else {
-        passwordField.type = 'password';
-        toggleIcon.classList.remove('fa-eye-slash');
-        toggleIcon.classList.add('fa-eye');
-    }
-}
+    // Password visibility toggle function
+    function togglePasswordVisibility(fieldId) {
+        const passwordField = document.getElementById(fieldId);
+        const toggleIcon = document.getElementById(fieldId + '-toggle-icon');
 
-function previewProfilePhoto(event) {
-    const input = event.target;
-    const img = document.getElementById('profile-photo-preview');
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            img.src = e.target.result;
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
         }
-        reader.readAsDataURL(input.files[0]);
     }
-}
+
+    function previewProfilePhoto(event) {
+        const input = event.target;
+        const img = document.getElementById('profile-photo-preview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    let cachedProfileLocationData = null;
+
+    function getStatesForProfile(initialLoad = false) {
+        const country = document.getElementById('country').value;
+        const stateSelect = document.getElementById('states');
+        const citySelect = document.getElementById('cities');
+        const cityLabel = document.getElementById('cityLabel');
+        const savedState = document.getElementById('state_name').value;
+
+        if (cityLabel) {
+            cityLabel.textContent = (country === 'Nigeria') ? 'L.G.A' : 'City';
+        }
+
+        stateSelect.innerHTML = '<option value="" disabled selected>Select State</option>';
+        citySelect.innerHTML = '<option value="" disabled selected>Select ' + (country === 'Nigeria' ? 'L.G.A' : 'City') + '</option>';
+
+        if (!country) return;
+
+        fetch('/api/location-data?country=' + encodeURIComponent(country))
+            .then(r => r.json())
+            .then(data => {
+                cachedProfileLocationData = data.states || [];
+                cachedProfileLocationData.forEach(function (state) {
+                    const opt = document.createElement('option');
+                    opt.value = state.id;
+                    opt.textContent = state.name;
+                    if (initialLoad && savedState && savedState === state.name) {
+                        opt.selected = true;
+                    }
+                    stateSelect.appendChild(opt);
+                });
+
+                // Trigger City load if we selected a state initially
+                if (initialLoad && savedState) {
+                    getCitiesForProfile(true);
+                }
+            });
+    }
+
+    function getCitiesForProfile(initialLoad = false) {
+        const stateSelect = document.getElementById("states");
+        const citySelect = document.getElementById("cities");
+        const country = document.getElementById('country').value;
+        const selectedStateId = stateSelect.value;
+        const savedCity = document.getElementById('city_name').value;
+
+        // Update hidden state name input if this was a manual change
+        if (!initialLoad) {
+            const selectedStateName = stateSelect.options[stateSelect.selectedIndex].text;
+            document.getElementById('state_name').value = selectedStateName;
+        }
+
+        citySelect.innerHTML = '<option value="" disabled selected>Select ' + (country === 'Nigeria' ? 'L.G.A' : 'City') + '</option>';
+
+        if (!selectedStateId || !cachedProfileLocationData) return;
+
+        const found = cachedProfileLocationData.find(s => s.id == selectedStateId);
+        if (found && found.lgas) {
+            found.lgas.forEach(function (lga) {
+                const option = document.createElement("option");
+                option.value = lga.id;
+                option.textContent = lga.name;
+                if (initialLoad && savedCity && savedCity === lga.name) {
+                    option.selected = true;
+                }
+                citySelect.appendChild(option);
+            });
+        }
+    }
+
+    function updateCityNameForProfile() {
+        const citySelect = document.getElementById("cities");
+        const selectedCityName = citySelect.options[citySelect.selectedIndex].text;
+        document.getElementById('city_name').value = selectedCityName;
+    }
+
+    // Ensure the profile handles initial state loading
+    document.addEventListener("DOMContentLoaded", function () {
+        getStatesForProfile(true);
+    });
 </script>
 @include('footer')

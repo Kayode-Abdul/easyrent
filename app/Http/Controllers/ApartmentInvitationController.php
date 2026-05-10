@@ -339,7 +339,7 @@ class ApartmentInvitationController extends Controller
         // Handle security issues
         if (!empty($securityIssues)) {
             if (in_array('invitation_expired', $securityIssues)) {
-                return view('apartment.invite.expired', compact('invitation'));
+                return redirect()->route('apartment.invite.expired', $token);
             }
 
             if (in_array('rate_limit_exceeded', $securityIssues)) {
@@ -580,8 +580,21 @@ class ApartmentInvitationController extends Controller
             ->with(['apartment.property', 'landlord'])
             ->first();
 
-        if (!$invitation || !$invitation->isActive()) {
-            return redirect()->route('apartment.invite.expired', $token);
+        if (!$invitation) {
+            return redirect('/dashboard')->with('error', 'Invitation link not found.');
+        }
+
+        if ($invitation->status === ApartmentInvitation::STATUS_USED) {
+            return redirect()->route('apartment.invite.show', $token)->with('info', 'This invitation has already been used.');
+        }
+
+        if (!$invitation->isActive()) {
+            Log::warning('Application attempt for inactive invitation', [
+                'token' => $token,
+                'status' => $invitation->status,
+                'expires_at' => $invitation->expires_at
+            ]);
+            return view('apartment.invite.expired', compact('invitation'));
         }
 
         // Check if user is authenticated
@@ -1183,6 +1196,18 @@ class ApartmentInvitationController extends Controller
         ];
 
         return response()->json(['success' => true, 'stats' => $stats]);
+    }
+
+    /**
+     * Show the expired invitation page with context
+     */
+    public function expired($token)
+    {
+        $invitation = ApartmentInvitation::where('invitation_token', $token)
+            ->with(['apartment.property', 'landlord'])
+            ->first();
+
+        return view('apartment.invite.expired', compact('invitation', 'token'));
     }
 
     /**

@@ -112,7 +112,7 @@
                                                 <div class="d-flex justify-content-between align-items-start">
                                                     <div>
                                                         <strong>{{ $update->user->first_name }} {{ $update->user->last_name
-                                                            }}</strong>
+                                                                                                }}</strong>
                                                         <span class="badge badge-{{ $update->update_color }} badge-sm ml-2">
                                                             {{ $update->update_type_formatted }}
                                                         </span>
@@ -121,7 +121,7 @@
                                                         @endif
                                                     </div>
                                                     <small class="text-muted">{{ $update->created_at->format('M j, Y g:i A')
-                                                        }}</small>
+                                                                                            }}</small>
                                                 </div>
                                                 <p class="mt-2 mb-0">{{ $update->message }}</p>
                                                 @if($update->old_value && $update->new_value)
@@ -190,11 +190,11 @@
                                                             <option value="in_progress" {{ $complaint->status === 'in_progress' ? 'selected' :
                                     '' }}>In Progress</option>
                                                             <option value="resolved" {{ $complaint->status === 'resolved' ? 'selected' : ''
-                                                }}>Resolved</option>
+                                                                                                                        }}>Resolved</option>
                                                             <option value="closed" {{ $complaint->status === 'closed' ? 'selected' : ''
-                                                }}>Closed</option>
+                                                                                                                        }}>Closed</option>
                                                             <option value="escalated" {{ $complaint->status === 'escalated' ? 'selected' : ''
-                                                }}>Escalated</option>
+                                                                                                                        }}>Escalated</option>
                                                         </select>
                                                     </div>
                                                     <div class="form-group">
@@ -227,7 +227,8 @@
                                 <!-- Artisan Task Creation -->
                                 @if((auth()->user()->isLandlord() || auth()->user()->admin) && !$complaint->artisanTask)
                                     <div class="mt-3 card-footer">
-                                        <button type="button" class="btn btn-warning btn-block" data-toggle="modal"
+                                        <label for="getArtisanModal">Find your Artisan:</label>
+                                        <button type="button" class="btn btn-info btn-block" data-toggle="modal"
                                             data-target="#getArtisanModal">
                                             <i class="nc-icon nc-settings"></i> Get Artisan
                                         </button>
@@ -281,7 +282,7 @@
                             <div class="info-item mb-3">
                                 <strong>Landlord:</strong>
                                 <div class="mt-1">{{ $complaint->landlord->first_name }} {{ $complaint->landlord->last_name
-                                    }}</div>
+                                                }}</div>
                             </div>
 
                             @if($complaint->assigned_to)

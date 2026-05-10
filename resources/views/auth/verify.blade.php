@@ -27,10 +27,10 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-image: url('{{ asset(' auth_background_premium_1772325387793.png') }}');
-        background-size: cover;
-        background-position: center;
-        filter: brightness(0.5);
+        background-image: url('{{ asset('assets/images/pagelayout.jpg') }}');
+        background-repeat: repeat;
+        background-size: 500px;
+        filter: brightness(0.6);
         z-index: -1;
     }
 
@@ -160,7 +160,7 @@
         </div>
 
         <div class="verify-icon-wrapper">
-            <i class="fas fa-paper-plane"></i>
+            <i class="fa fa-paper-plane"></i>
         </div>
 
         <h1 class="auth-title">Verify Email</h1>
@@ -171,13 +171,13 @@
         <form method="POST" action="{{ route('verification.resend') }}" id="resendForm">
             @csrf
             <button type="submit" class="btn-premium-verify" id="resendBtn">
-                Resend Email <i class="fas fa-sync-alt"></i>
+                Resend Email <i class="fa fa-sync-alt"></i>
             </button>
         </form>
 
         <div class="auth-footer">
             <a href="{{ route('login') }}">
-                <i class="fas fa-arrow-left me-2"></i> Back to Login
+                <i class="fa fa-arrow-left me-2"></i> Back to Login
             </a>
         </div>
     </div>
@@ -195,11 +195,11 @@
         if (resendForm && resendBtn) {
             resendForm.addEventListener('submit', function (e) {
                 resendBtn.disabled = true;
-                resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                resendBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
 
                 setTimeout(() => {
                     resendBtn.disabled = false;
-                    resendBtn.innerHTML = 'Resend Email <i class="fas fa-sync-alt"></i>';
+                    resendBtn.innerHTML = 'Resend Email <i class="fa fa-sync-alt"></i>';
                 }, 10000);
             });
         }

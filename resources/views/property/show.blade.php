@@ -196,7 +196,7 @@ $types = [
                             <div class="form-group">
                                 <label>Owner</label>
                                 <div class="d-flex align-items-center">
-                                    <span class="mr-2">{{ $property->owner->name ?? 'N/A' }}</span>
+                                    <span class="mr-2">{{ $property->owner ? $property->owner->first_name . ' ' . $property->owner->last_name : 'N/A' }}</span>
 
                                 </div>
                             </div>
@@ -206,7 +206,8 @@ $types = [
                             </div>
                             <div class="form-group">
                                 <label>Date Created</label>
-                                <p class="form-control-static">{{ date('M d, Y', strtotime($property->date_created)) }}
+                                <p class="form-control-static">
+                                    {{ $property->created_at ? $property->created_at->format('M d, Y') : 'N/A' }}
                                 </p>
                             </div>
                         </div>

@@ -219,7 +219,14 @@ class RegisterController extends Controller
             session()->forget(['referrer_id', 'campaign_code']);
         }
 
+        event(new \Illuminate\Auth\Events\Registered($user));
+        
         $this->guard()->login($user);
+        
+        if ($response = $this->registered($request, $user)) {
+            return $response;
+        }
+
         return redirect($this->redirectPath());
     }
 

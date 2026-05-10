@@ -179,7 +179,7 @@ $isDashboard = in_array($currentSegment, ['dashboard', 'admin', 'proforma', 'pro
   </footer><!-- End Footer -->
   <!-- loader -->
 
-     <div id="ftco-loader" class="show fullscreen"><img class="circular" width="48px" height="48px" src="/assets/images/logo-small.png" />
+     <div id="ftco-loader" class="show fullscreen"><img class="circular" style="border-top: 2px solid #ff5e15; border-left: 2px solid #c8ff15ff; border-right: 2px solid #15fff3ff; border-bottom: 2px solid #15ff8aff;   width: 50px; height: 50px; background: rgba(255,94,21,0.1); border-radius: 35%; text-align: center;" width="48px" height="48px"  />
     <circle class="path-bg" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke="#eeeeee" />
     <circle class="path" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke-miterlimit="10" stroke="#F96D00" />
     </svg>

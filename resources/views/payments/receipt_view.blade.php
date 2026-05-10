@@ -5,12 +5,12 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div class="card-header bg-gradient-info d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            <a href="{{ route('billing.index') }}" class="btn btn-sm btn-outline-secondary me-3">
-                                <i class="fa fa-arrow-left"></i> Back
+                            <a href="{{ route('billing.index') }}" class="btn btn-sm btn-outline-white me-3">
+                                <i class="bi bi-arrow-left"></i> Back
                             </a>
-                            <h5 class="card-title mb-0">Payment Receipt</h5>
+                            <h5 class="card-title mb-0"> Payment Receipt</h5>
                         </div>
                         {{-- The original content had a text-end div here, but it was incomplete and would cause syntax
                         errors.
@@ -112,13 +112,14 @@
                                     $amountStr = format_money($payment->amount, $payment->currency->code ?? null);
                                     $propertyName = $payment->apartment->property->prop_name ?? 'Property';
                                     $shareText = "Hello! Here is my payment receipt for {$propertyName} (Ref: {$payment->transaction_id}). Amount: {$amountStr}. View it here: " . $shareUrl;
-                                    
+
                                     $whatsappUrl = "https://wa.me/?text=" . urlencode($shareText);
                                     $emailUrl = "mailto:?subject=" . urlencode("Payment Receipt - " . $payment->transaction_id) . "&body=" . urlencode($shareText);
                                     $smsUrl = "sms:?body=" . urlencode($shareText);
                                 @endphp
-                                
-                                <a href="{{ $whatsappUrl }}" target="_blank" class="btn btn-success btn-sm share-btn" title="Share on WhatsApp">
+
+                                <a href="{{ $whatsappUrl }}" target="_blank" class="btn btn-success btn-sm share-btn"
+                                    title="Share on WhatsApp">
                                     <i class="fa fa-whatsapp"></i> WhatsApp
                                 </a>
                                 <a href="{{ $emailUrl }}" class="btn btn-info btn-sm share-btn" title="Share via Email">

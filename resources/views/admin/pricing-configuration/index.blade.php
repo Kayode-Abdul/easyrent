@@ -389,7 +389,7 @@
                     <div class="mb-3" id="amountField" style="display: none;">
                         <label class="form-label">New Amount</label>
                         <div class="input-group">
-                            <span class="input-group-text currency-symbol-preview">${window.currencySymbol}</span>
+                            <span class="input-group-text currency-symbol-preview">{{ format_money(0)->getSymbol() }}</span>
                             <input type="number" name="amount" class="form-control" step="0.01" min="0">
                         </div>
                     </div>
@@ -567,7 +567,24 @@
                     if (calc.calculation_steps && calc.calculation_steps.length > 0) {
                         html += '<div class="calculation-step"><strong>Steps:</strong><ul>';
                         calc.calculation_steps.forEach(step => {
-                            html += `<li>${step}</li>`;
+                            if (typeof step === 'string') {
+                                html += `<li>${step}</li>`;
+                            } else if (typeof step === 'object' && step !== null) {
+                                // Extract meaningful description from step object
+                                let stepText = step.note || step.method || step.step || '';
+                                if (step.apartment_price !== undefined) {
+                                    stepText += ` (Price: ${parseFloat(step.apartment_price).toLocaleString()})`;
+                                }
+                                if (step.multiplication_result !== undefined) {
+                                    stepText += ` = ${parseFloat(step.multiplication_result).toLocaleString()}`;
+                                }
+                                if (step.total_amount !== undefined) {
+                                    stepText += ` → Total: ${parseFloat(step.total_amount).toLocaleString()}`;
+                                }
+                                html += `<li>${stepText || JSON.stringify(step)}</li>`;
+                            } else {
+                                html += `<li>${String(step)}</li>`;
+                            }
                         });
                         html += '</ul></div>';
                     }

@@ -326,7 +326,7 @@ class PaymentDistributionService
             return null;
         }
 
-        return CommissionPayment::create([
+        $payment = CommissionPayment::create([
             'marketer_id' => $breakdown['user_id'],
             'total_amount' => $breakdown['amount'],
             'payment_method' => CommissionPayment::METHOD_BANK_TRANSFER,
@@ -341,6 +341,36 @@ class PaymentDistributionService
                 'calculated_at' => now()->toISOString()
             ]
         ]);
+
+        // Sync to legacy referrals and ReferralRewards table for backward compatibility in Dashboards
+        if ($referralChainId) {
+            $chain = \App\Models\ReferralChain::find($referralChainId);
+            if ($chain && $chain->landlord_id) {
+                $referral = \App\Models\Referral::where('referrer_id', $breakdown['user_id'])
+                    ->where(function($q) use ($chain) {
+                        $q->where('referred_id', $chain->landlord_id)
+                          ->orWhere('referred_id', $chain->marketer_id);
+                    })
+                    ->first();
+                    
+                if ($referral) {
+                    $referral->increment('commission_amount', $breakdown['amount']);
+                    $referral->commission_status = 'pending';
+                    $referral->save();
+                    
+                    \App\Models\ReferralReward::create([
+                        'marketer_id' => $breakdown['user_id'],
+                        'referral_id' => $referral->id,
+                        'reward_type' => 'rent_commission',
+                        'amount' => $breakdown['amount'],
+                        'description' => 'Rent commission (' . $breakdown['tier'] . ')',
+                        'status' => 'approved' 
+                    ]);
+                }
+            }
+        }
+
+        return $payment;
     }
 
     /**

@@ -53,6 +53,10 @@ html {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
+.auth-wrapper {
+    background: #9de4e66b;
+}
+
 .bg-gradient {
     background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%);
 }
@@ -67,6 +71,10 @@ html {
 
 .user_img {
     max-width: 10px;
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%);
 }
 
 article,
@@ -750,6 +758,7 @@ pre code {
     width: 100%;
     padding-right: 15px;
     padding-left: 15px;
+    padding-bottom: 15px;
 }
 
 .col {
@@ -12869,8 +12878,9 @@ h5,
 }
 
 .services .media-body h3 {
-    font-size: 22px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: normal;
     color: #000000;
 }
 
@@ -13066,7 +13076,7 @@ textarea.form-control {
 }
 
 .ftco-section {
-    padding: 6em 0;
+    padding: 4em 0;
     position: relative;
 }
 
@@ -13415,9 +13425,15 @@ textarea.form-control {
     background: rgb(12 84 85);
 }
 
+.bg-gradient-info .heading-section h2,
+.bg-gradient-info .heading-section {
+    color: #fff;
+}
+
 .heading-section h2 {
-    font-size: 40px;
+    font-size: 35px;
     font-weight: 600;
+    line-height: normal;
 }
 
 @media (max-width: 767.98px) {

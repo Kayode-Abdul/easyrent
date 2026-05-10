@@ -252,6 +252,12 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/tasks/{task}/bid', [App\Http\Controllers\ArtisanTaskController::class , 'placeBid'])->name('tasks.bid');
         }
         );
+
+        // Role Management
+        Route::post('/roles/add', [App\Http\Controllers\RoleController::class, 'addRole'])->name('roles.add');
+
+        // Commission Tracking for Tenants/Users
+        Route::get('/commissions', [App\Http\Controllers\MarketerController::class, 'commissions'])->name('commissions.index');
     });
 // AJAX: Find verified agents for property assignment
 Route::get('/dashboard/agents/search', [UserController::class , 'searchAgents'])->middleware('auth');
@@ -345,11 +351,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/proforma/{id}/reject', [ProfomaController::class , 'reject'])->name('proforma.reject.post');
     Route::get('/proforma/{id}/accept', [ProfomaController::class , 'accept'])->name('proforma.accept');
     Route::get('/proforma/{id}/reject', [ProfomaController::class , 'reject'])->name('proforma.reject');
-// [PaymentController::class , 'showProformaPaymentForm'])->name('proforma.payment.form');
+    Route::get('/proforma/payment/{id}', [PaymentController::class , 'showProformaPaymentForm'])->name('proforma.payment.form');
 });
 
 // Super Admin Routes
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/users', [App\Http\Controllers\Admin\AdminController::class , 'userManagement'])->name('users');
     Route::get('/properties', [App\Http\Controllers\Admin\AdminController::class , 'propertyOversight'])->name('properties');
     Route::get('/properties/pending', [App\Http\Controllers\Admin\AdminController::class , 'pendingApprovals'])->name('properties.pending');
@@ -464,12 +470,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
             Route::get('/regional-manager', [App\Http\Controllers\Admin\CommissionManagementController::class , 'regionalManager'])->name('regional-manager');
             Route::get('/create', [App\Http\Controllers\Admin\CommissionManagementController::class , 'create'])->name('create');
             Route::post('/', [App\Http\Controllers\Admin\CommissionManagementController::class , 'store'])->name('store');
-            Route::get('/region/{region}', [App\Http\Controllers\Admin\CommissionManagementController::class , 'getRegionRates'])->name('region.rates');
+            Route::get('/region/{region}', [App\Http\Controllers\Admin\CommissionManagementController::class , 'getRegionRates'])->where('region', '.*')->name('region.rates');
             Route::post('/region/bulk-save', [App\Http\Controllers\Admin\CommissionManagementController::class , 'bulkSaveRegion'])->name('region.bulk-save');
             Route::get('/rate/{commissionRate}/edit', [App\Http\Controllers\Admin\CommissionManagementController::class , 'edit'])->name('edit');
             Route::put('/rate/{commissionRate}', [App\Http\Controllers\Admin\CommissionManagementController::class , 'update'])->name('update');
             Route::delete('/rate/{commissionRate}', [App\Http\Controllers\Admin\CommissionManagementController::class , 'destroy'])->name('destroy');
-            Route::post('/region/{region}/bulk-update', [App\Http\Controllers\Admin\CommissionManagementController::class , 'bulkUpdate'])->name('bulk-update');
+            Route::post('/region/{region}/bulk-update', [App\Http\Controllers\Admin\CommissionManagementController::class , 'bulkUpdate'])->where('region', '.*')->name('bulk-update');
             Route::post('/breakdown', [App\Http\Controllers\Admin\CommissionManagementController::class , 'getCommissionBreakdown'])->name('breakdown');
         }
         );
@@ -537,7 +543,7 @@ Route::prefix('marketer')->name('marketer.')->middleware(['auth', 'check.approve
 Route::post('/switch-role', [App\Http\Controllers\RoleController::class , 'switchRole'])->middleware('auth')->name('switch.role');
 
 // Admin Role Management consolidated routes under /admin/dashboard/*
-Route::middleware(['auth'])->prefix('admin/dashboard')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin/dashboard')->name('admin.')->group(function () {
     Route::get('/roles', [App\Http\Controllers\Admin\RoleManagementController::class , 'index'])->name('roles.index');
     Route::get('/roles/assign', [App\Http\Controllers\Admin\RoleManagementController::class , 'assign'])->name('roles.assign');
     Route::post('/roles/assign', [App\Http\Controllers\Admin\RoleManagementController::class , 'assignPost'])->name('roles.assign.post');
@@ -646,10 +652,7 @@ Route::prefix('apartment/invite')->name('apartment.invite.')->group(function () 
         Route::get('/{token}/success', [App\Http\Controllers\ApartmentInvitationController::class , 'success'])->name('invite.success');
 
         // Error pages
-        Route::get('/{token}/expired', function ($token) {
-            return view('apartment.invite.expired', compact('token'));
-        }
-        )->name('expired');
+        Route::get('/{token}/expired', [App\Http\Controllers\ApartmentInvitationController::class , 'expired'])->name('expired');
         Route::get('/{token}/not-found', function ($token) {
             return view('apartment.invite.not-found', compact('token'));
         }

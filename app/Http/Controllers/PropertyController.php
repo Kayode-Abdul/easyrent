@@ -24,7 +24,7 @@ class PropertyController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('auth')->except(['getLocationData']);
     }
     public function properties(Request $request): \Illuminate\View\View
     {
@@ -141,7 +141,7 @@ class PropertyController extends Controller
 
                     PropertyImage::create([
                         'property_id' => $property->id, // Use primary ID for FK
-                        'uploaded_by' => $userId,
+                        'uploaded_by' => auth()->id(), // Use primary ID (id) not business ID (user_id)
                         'file_name' => $fileName,
                         'file_path' => $storagePath,
                         'original_name' => $originalName,
@@ -165,7 +165,9 @@ class PropertyController extends Controller
             Log::error('Property creation failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'messages' => 'Server Error! Cannot create Property. ' . $e->getMessage()
+                'messages' => [
+                    'message' => 'Server Error! Cannot create Property. ' . $e->getMessage()
+                ]
             ], 500);
         }
     }
@@ -472,26 +474,15 @@ class PropertyController extends Controller
         $user = auth()->user();
         $hasProperties = Property::where('user_id', $userId)->exists();
         
-        // Handle mode for property managers and regular users
-        if (in_array($user->role, [6, 8])) {
-            // Property manager - check their dashboard mode preference
-            $dashboardMode = session('dashboard_mode', 'landlord');
-            
-            // If they have explicitly set landlord/tenant mode, use that
-            if (in_array($dashboardMode, ['landlord', 'tenant'])) {
-                $mode = $dashboardMode;
-            } else {
-                // Default to landlord mode for their personal properties
-                $mode = 'landlord';
-            }
-        } else {
-            // Regular user mode handling
-            $mode = session('dashboard_mode');
-            if (!$mode) {
-                $mode = $hasProperties ? 'landlord' : 'tenant';
-                session(['dashboard_mode' => $mode]);
-            }
+        // Determine mode: check session first
+        $mode = session('dashboard_mode');
+        
+        // If mode is null, 'personal', or anything else unknown, normalize it
+        if (!in_array($mode, ['landlord', 'tenant'])) {
+            $mode = $hasProperties ? 'landlord' : 'tenant';
+            session(['dashboard_mode' => $mode]);
         }
+
         $myProperties = collect();
         $myApartment = collect();
         if ($mode === 'landlord') {
@@ -1340,7 +1331,12 @@ class PropertyController extends Controller
         }
         $property = Property::where('property_id', $propId)->firstOrFail();
         $countries = json_decode(File::get(resource_path('/countries.json')), true);
-        $locations = $countries[0]['states'] ?? [];
+        
+        // Find the specific country the property belongs to, or default to empty
+        $propCountry = $property->country ?? 'Nigeria';
+        $countryIndex = array_search($propCountry, array_column($countries, 'name'));
+        $locations = $countryIndex !== false ? ($countries[$countryIndex]['states'] ?? []) : [];
+        
         $currencies = Currency::where('is_active', true)->get();
         return view('property.edit', compact('property', 'countries', 'locations', 'currencies'));
     }
@@ -1549,18 +1545,57 @@ class PropertyController extends Controller
     {
         $countryName = $request->input('country', 'Nigeria');
         
-        $states = State::where('country_name', $countryName)
+        // Try to get from database first to ensure we have valid IDs for validation
+        $dbStates = State::where('country_name', $countryName)
             ->with(['lgas' => function($query) {
                 $query->select('id', 'name', 'state_id');
             }])
             ->get(['id', 'name']);
 
+        if ($dbStates->isNotEmpty()) {
+            $states = $dbStates->map(function($state) {
+                return [
+                    'id' => $state->id,
+                    'name' => $state->name,
+                    'lgas' => $state->lgas->map(function($lga) {
+                        return ['id' => $lga->id, 'name' => $lga->name];
+                    })
+                ];
+            });
+            
+            // Still need currency from JSON if possible
+            $countries = json_decode(File::get(resource_path('/countries.json')), true);
+            $countryData = collect($countries)->firstWhere('name', $countryName);
+            
+            return response()->json([
+                'states' => $states,
+                'currency_code' => $countryData['currency_code'] ?? null,
+                'currency_symbol' => $countryData['currency_symbol'] ?? null
+            ]);
+        }
+
+        // Fallback for other countries from JSON
         $countries = json_decode(File::get(resource_path('/countries.json')), true);
-        $country = collect($countries)->firstWhere('name', $countryName);
+        $countryData = collect($countries)->firstWhere('name', $countryName);
+
+        $states = [];
+        if ($countryData && isset($countryData['states'])) {
+            foreach ($countryData['states'] as $stateData) {
+                $states[] = [
+                    'id' => $stateData['name'],
+                    'name' => $stateData['name'],
+                    'lgas' => isset($stateData['cities']) ? array_map(function($city) {
+                        return ['id' => $city, 'name' => $city];
+                    }, $stateData['cities']) : []
+                ];
+            }
+        }
 
         return response()->json([
             'states' => $states,
-            'currency_code' => $country['currency_code'] ?? null
+            'currency_code' => $countryData['currency_code'] ?? null,
+            'currency_symbol' => $countryData['currency_symbol'] ?? null
         ]);
     }
+
 }

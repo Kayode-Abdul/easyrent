@@ -22,8 +22,8 @@ class MarketerController extends Controller
         $this->middleware('auth');
         $this->middleware(function ($request, $next) {
             $user = auth()->user();
-            // Allow access to profile creation and storage even if not yet a marketer
-            $excludedRoutes = ['marketer.profile.create', 'marketer.profile.store'];
+            // Allow access to commissions and profile creation even if not yet a marketer
+            $excludedRoutes = ['commissions.index', 'marketer.profile.create', 'marketer.profile.store'];
             
             // Allow if they are already a marketer (including pending) OR accessing excluded routes
             if (!$user->isMarketer() && !in_array($request->route()->getName(), $excludedRoutes)) {
@@ -31,6 +31,32 @@ class MarketerController extends Controller
             }
             return $next($request);
         });
+    }
+
+    /**
+     * General Commission View for all users (Tenants, etc.)
+     */
+    public function commissions()
+    {
+        $user = Auth::user();
+        
+        // Fetch rewards earned by this user (could be marketer or just a tenant who referred someone)
+        $rewards = \App\Models\ReferralReward::where('marketer_id', $user->user_id)
+            ->with(['referral.referred', 'landlord'])
+            ->latest()
+            ->paginate(15);
+            
+        $stats = [
+            'total_earned' => \App\Models\ReferralReward::where('marketer_id', $user->user_id)
+                ->whereIn('status', ['approved', 'paid'])
+                ->sum('amount'),
+            'pending_approval' => \App\Models\ReferralReward::where('marketer_id', $user->user_id)
+                ->where('status', 'pending')
+                ->sum('amount'),
+            'total_referrals' => \App\Models\Referral::where('referrer_id', $user->user_id)->count(),
+        ];
+
+        return view('commissions.index', compact('rewards', 'stats'));
     }
 
     /**

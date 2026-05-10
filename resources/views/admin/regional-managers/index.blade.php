@@ -328,23 +328,22 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">States to Assign <span class="text-danger">*</span></label>
+                        <label class="form-label">Regions to Assign <span class="text-danger">*</span></label>
                         <div id="statesContainer">
                             <div class="state-group mb-2">
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <select name="states[]" class="form-select state-select" required>
-                                            <option value="">Select State</option>
-                                            <option value="Lagos">Lagos</option>
-                                            <option value="Abuja">Abuja</option>
-                                            <option value="Kano">Kano</option>
-                                            <option value="Rivers">Rivers</option>
-                                            <option value="Oyo">Oyo</option>
-                                            <option value="Kaduna">Kaduna</option>
+                                    <div class="col-md-4">
+                                        <select class="form-select country-select-bulk" onchange="loadBulkStates(this)">
+                                            <option value="">Select Country</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-5">
-                                        <select name="lgas[]" class="form-select lga-select">
+                                    <div class="col-md-4">
+                                        <select name="states[]" class="form-select state-select" required disabled>
+                                            <option value="">Select State</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select name="lgas[]" class="form-select lga-select" disabled>
                                             <option value="">All LGAs</option>
                                         </select>
                                     </div>
@@ -357,7 +356,7 @@
                             </div>
                         </div>
                         <button type="button" class="btn btn-outline-primary btn-sm" id="addStateBtn">
-                            <i class="fa fa-plus"></i> Add Another State
+                            <i class="fa fa-plus"></i> Add Another Region
                         </button>
                     </div>
                 </div>
@@ -474,14 +473,90 @@
             alert('Modal system not available. Please refresh the page.');
         }
     }
-    // LGA options for each state (guard global)
-    window.lgaOptions = Object.assign({}, window.lgaOptions || {}, {
-        'Lagos': ['Ikeja', 'Victoria Island', 'Lekki', 'Surulere', 'Yaba', 'Apapa', 'Ikoyi'],
-        'Abuja': ['Garki', 'Wuse', 'Maitama', 'Asokoro', 'Gwarinpa', 'Kubwa'],
-        'Kano': ['Kano Municipal', 'Fagge', 'Dala', 'Gwale', 'Tarauni'],
-        'Rivers': ['Port Harcourt', 'Obio-Akpor', 'Eleme', 'Ikwerre', 'Oyigbo'],
-        'Oyo': ['Ibadan North', 'Ibadan South-West', 'Egbeda', 'Akinyele', 'Lagelu'],
-        'Kaduna': ['Kaduna North', 'Kaduna South', 'Chikun', 'Igabi', 'Kajuru']
+    // Cached location data per country for bulk assign
+    window.bulkLocationCache = {};
+
+    // Load countries list into all country-select-bulk dropdowns
+    function loadBulkCountries() {
+        fetch('/api/location-data?country=Nigeria')
+            .then(r => r.json())
+            .then(data => {
+                // We only need the endpoint to work; countries are loaded from the list
+            });
+        // Populate country selects from the countries JSON embedded in the page
+        const countrySelects = document.querySelectorAll('.country-select-bulk');
+        countrySelects.forEach(select => {
+            if (select.options.length <= 1) {
+                window.bulkCountryList.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    select.appendChild(opt);
+                });
+            }
+        });
+    }
+
+    // Load states for a country in bulk assign modal
+    function loadBulkStates(countrySelect) {
+        const group = countrySelect.closest('.state-group');
+        const stateSelect = group.querySelector('.state-select');
+        const lgaSelect = group.querySelector('.lga-select');
+        const country = countrySelect.value;
+
+        stateSelect.innerHTML = '<option value="">Select State</option>';
+        stateSelect.disabled = !country;
+        lgaSelect.innerHTML = '<option value="">All LGAs</option>';
+        lgaSelect.disabled = true;
+
+        if (!country) return;
+
+        if (window.bulkLocationCache[country]) {
+            populateBulkStates(stateSelect, window.bulkLocationCache[country]);
+            return;
+        }
+
+        fetch('/api/location-data?country=' + encodeURIComponent(country))
+            .then(r => r.json())
+            .then(data => {
+                window.bulkLocationCache[country] = data.states || [];
+                populateBulkStates(stateSelect, window.bulkLocationCache[country]);
+            });
+    }
+
+    function populateBulkStates(stateSelect, states) {
+        states.forEach(state => {
+            const opt = document.createElement('option');
+            opt.value = state.name;
+            opt.textContent = state.name;
+            stateSelect.appendChild(opt);
+        });
+    }
+
+    // Handle state selection change for bulk assign
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains('state-select')) {
+            const group = e.target.closest('.state-group');
+            const lgaSelect = group.querySelector('.lga-select');
+            const countrySelect = group.querySelector('.country-select-bulk');
+            const selectedState = e.target.value;
+            const country = countrySelect ? countrySelect.value : '';
+
+            lgaSelect.innerHTML = '<option value="">All LGAs</option>';
+            lgaSelect.disabled = !selectedState;
+
+            if (selectedState && country && window.bulkLocationCache[country]) {
+                const found = window.bulkLocationCache[country].find(s => s.name === selectedState);
+                if (found && found.lgas) {
+                    found.lgas.forEach(lga => {
+                        const option = document.createElement('option');
+                        option.value = lga.name;
+                        option.textContent = lga.name;
+                        lgaSelect.appendChild(option);
+                    });
+                }
+            }
+        }
     });
 
     // Handle select all checkbox
@@ -494,8 +569,6 @@
             });
             updateSelectedManagers();
         });
-    } else {
-        console.warn('selectAll element not found');
     }
 
     // Handle individual checkboxes
@@ -533,25 +606,12 @@
         ).join('');
     }
 
-    // Handle state selection change
-    document.addEventListener('change', function (e) {
-        if (e.target.classList.contains('state-select')) {
-            const lgaSelect = e.target.closest('.state-group').querySelector('.lga-select');
-            const selectedState = e.target.value;
+    // Country list for bulk assign
+    window.bulkCountryList = @json(\App\Models\State::distinct('country_name')->orderBy('country_name')->pluck('country_name'));
 
-            // Clear LGA options
-            lgaSelect.innerHTML = '<option value="">All LGAs</option>';
-
-            // Add LGA options for selected state
-            if (selectedState && window.lgaOptions[selectedState]) {
-                window.lgaOptions[selectedState].forEach(lga => {
-                    const option = document.createElement('option');
-                    option.value = lga;
-                    option.textContent = lga;
-                    lgaSelect.appendChild(option);
-                });
-            }
-        }
+    // Initialize country dropdowns when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        loadBulkCountries();
     });
 
     // Add new state group
@@ -562,8 +622,12 @@
             const newGroup = document.querySelector('.state-group').cloneNode(true);
 
             // Reset values
-            newGroup.querySelector('.state-select').value = '';
+            const countrySelect = newGroup.querySelector('.country-select-bulk');
+            if (countrySelect) countrySelect.value = '';
+            newGroup.querySelector('.state-select').innerHTML = '<option value="">Select State</option>';
+            newGroup.querySelector('.state-select').disabled = true;
             newGroup.querySelector('.lga-select').innerHTML = '<option value="">All LGAs</option>';
+            newGroup.querySelector('.lga-select').disabled = true;
 
             // Enable remove button
             const removeBtn = newGroup.querySelector('.remove-state');

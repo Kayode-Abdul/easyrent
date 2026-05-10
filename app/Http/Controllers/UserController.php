@@ -266,8 +266,11 @@ class UserController extends Controller
             return redirect('/login');
         }
         $profile = auth()->user();
+        $countries = json_decode(File::get(resource_path('/countries.json')), true);
+
         return view('user', [
             'profile' => $profile,
+            'countries' => $countries,
             'roles' => [
                 2 => 'Landlord',
                 1 => 'Tenant',
@@ -397,6 +400,7 @@ class UserController extends Controller
             'username' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
+            'country_name' => 'nullable|string|max:255',
             'lga' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:255',
             'password' => 'nullable|string|min:8|confirmed',
@@ -426,6 +430,7 @@ class UserController extends Controller
         $user->username = $request->input('username');
         $user->phone = $request->input('phone') ?? $user->phone;
         $user->address = $request->input('address') ?? $user->address;
+        $user->country_name = $request->input('country_name') ?? $user->country_name;
         $user->lga = $request->input('lga') ?? $user->lga;
         $user->state = $request->input('state') ?? $user->state;
 

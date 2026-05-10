@@ -37,7 +37,7 @@
   </div>
 </div>
 
-<section class="ftco-section ftco-no-pb">
+<section class="ftco-section">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-md-12 heading-section text-center ftco-animate mb-5">
@@ -268,7 +268,7 @@
     </div>
   </div>
 </section>
-<section class="ftco-section ftco-no-pb">
+<section class="ftco-section bg-gradient-info ">
   <div class="container">
     <div class="row no-gutters">
       <div class="col-md-6 py-md-5 ftco-animate">
@@ -449,93 +449,93 @@
     </div>
     <div class="row d-flex">
       @php
-      $recentPosts = \App\Models\Blog::published()->recent(4)->get();
+        $recentPosts = \App\Models\Blog::published()->recent(4)->get();
       @endphp
 
       @if($recentPosts->count() > 0)
-      @foreach($recentPosts as $post)
-      <div class="col-md-3 d-flex ftco-animate">
-        <div class="blog-entry justify-content-end">
-          <div class="text">
-            <h3 class="heading">
-              <a href="/readmore/{{ $post->topic_url }}">{{ $post->topic }}</a>
-            </h3>{{ (strlen($post->topic) >= 24 ? '<br>' : '')}}
-            <div class="meta mb-3">
-              <div><a href="#">{{ $post->date->format('M. d, Y') }}</a></div>
-              <div><a href="#">{{ $post->author }}</a></div>
-              <div><a href="#" class="meta-chat"><span class="icon-chat"></span> 0</a></div>
+        @foreach($recentPosts as $post)
+          <div class="col-md-3 d-flex ftco-animate">
+            <div class="blog-entry justify-content-end">
+              <div class="text">
+                <h3 class="heading">
+                  <a href="/readmore/{{ $post->topic_url }}">{{ $post->topic }}</a>
+                </h3>{{ (strlen($post->topic) >= 24 ? '<br>' : '')}}
+                <div class="meta mb-3">
+                  <div><a href="#">{{ $post->date->format('M. d, Y') }}</a></div>
+                  <div><a href="#">{{ $post->author }}</a></div>
+                  <div><a href="#" class="meta-chat"><span class="icon-chat"></span> 0</a></div>
+                </div>
+                <a href="/readmore/{{ $post->topic_url }}" class="block-20 img"
+                  style="background-image: url('{{ $post->cover_photo ?? 'assets/images/image_1.jpg' }}');">
+                </a>
+                <p>{{ $post->excerpt ?? \Illuminate\Support\Str::limit(strip_tags($post->content), 100) }}</p>
+              </div>
             </div>
-            <a href="/readmore/{{ $post->topic_url }}" class="block-20 img"
-              style="background-image: url('{{ $post->cover_photo ?? 'assets/images/image_1.jpg' }}');">
-            </a>
-            <p>{{ $post->excerpt ?? \Illuminate\Support\Str::limit(strip_tags($post->content), 100) }}</p>
           </div>
-        </div>
-      </div>
-      @endforeach
+        @endforeach
       @else
-      <!-- Fallback to static content if no blog posts exist -->
-      <div class="col-md-3 d-flex ftco-animate">
-        <div class="blog-entry justify-content-end">
-          <div class="text">
-            <h3 class="heading"><a href="#">Property Management Made Easy</a></h3>
-            <div class="meta mb-3">
-              <div><a href="#">Nov. 11, 2025</a></div>
-              <div><a href="#">Admin</a></div>
-              <div><a href="#" class="meta-chat"><span class="icon-chat"></span> 0</a></div>
+        <!-- Fallback to static content if no blog posts exist -->
+        <div class="col-md-3 d-flex ftco-animate">
+          <div class="blog-entry justify-content-end">
+            <div class="text">
+              <h3 class="heading"><a href="#">Property Management Made Easy</a></h3>
+              <div class="meta mb-3">
+                <div><a href="#">Nov. 11, 2025</a></div>
+                <div><a href="#">Admin</a></div>
+                <div><a href="#" class="meta-chat"><span class="icon-chat"></span> 0</a></div>
+              </div>
+              <a href="#" class="block-20 img" style="background-image: url('assets/images/image_1.jpg');">
+              </a>
+              <p>Discover how EasyRent makes property management simple and efficient for landlords and property managers.
+              </p>
             </div>
-            <a href="#" class="block-20 img" style="background-image: url('assets/images/image_1.jpg');">
-            </a>
-            <p>Discover how EasyRent makes property management simple and efficient for landlords and property managers.
-            </p>
           </div>
         </div>
-      </div>
-      <div class="col-md-3 d-flex ftco-animate">
-        <div class="blog-entry justify-content-end">
-          <div class="text">
-            <h3 class="heading"><a href="#">Automated Rent Collection</a></h3><br>
-            <div class="meta mb-3">
-              <div><a href="#">Nov. 10, 2025</a></div>
-              <div><a href="#">Admin</a></div>
-              <div><a href="#" class="meta-chat"><span class="icon-chat"></span> 0</a></div>
+        <div class="col-md-3 d-flex ftco-animate">
+          <div class="blog-entry justify-content-end">
+            <div class="text">
+              <h3 class="heading"><a href="#">Automated Rent Collection</a></h3><br>
+              <div class="meta mb-3">
+                <div><a href="#">Nov. 10, 2025</a></div>
+                <div><a href="#">Admin</a></div>
+                <div><a href="#" class="meta-chat"><span class="icon-chat"></span> 0</a></div>
+              </div>
+              <a href="#" class="block-20 img" style="background-image: url('assets/images/image_2.jpg');">
+              </a>
+              <p>Learn how our automated rent collection system saves time and reduces payment delays.</p>
             </div>
-            <a href="#" class="block-20 img" style="background-image: url('assets/images/image_2.jpg');">
-            </a>
-            <p>Learn how our automated rent collection system saves time and reduces payment delays.</p>
           </div>
         </div>
-      </div>
-      <div class="col-md-3 d-flex ftco-animate">
-        <div class="blog-entry justify-content-end">
-          <div class="text">
-            <h3 class="heading"><a href="#">Tenant Management Tips</a></h3><br>
-            <div class="meta mb-3">
-              <div><a href="#">Nov. 09, 2025</a></div>
-              <div><a href="#">Admin</a></div>
-              <div><a href="#" class="meta-chat"><span class="icon-chat"></span> 0</a></div>
+        <div class="col-md-3 d-flex ftco-animate">
+          <div class="blog-entry justify-content-end">
+            <div class="text">
+              <h3 class="heading"><a href="#">Tenant Management Tips</a></h3><br>
+              <div class="meta mb-3">
+                <div><a href="#">Nov. 09, 2025</a></div>
+                <div><a href="#">Admin</a></div>
+                <div><a href="#" class="meta-chat"><span class="icon-chat"></span> 0</a></div>
+              </div>
+              <a href="#" class="block-20 img" style="background-image: url('assets/images/image_3.jpg');">
+              </a>
+              <p>Best practices for maintaining good relationships with your tenants while protecting your investment.</p>
             </div>
-            <a href="#" class="block-20 img" style="background-image: url('assets/images/image_3.jpg');">
-            </a>
-            <p>Best practices for maintaining good relationships with your tenants while protecting your investment.</p>
           </div>
         </div>
-      </div>
-      <div class="col-md-3 d-flex ftco-animate">
-        <div class="blog-entry justify-content-end">
-          <div class="text">
-            <h3 class="heading"><a href="#">Earning Through Referrals</a></h3><br>
-            <div class="meta mb-3">
-              <div><a href="#">Nov. 08, 2025</a></div>
-              <div><a href="#">Admin</a></div>
-              <div><a href="#" class="meta-chat"><span class="icon-chat"></span> 0</a></div>
+        <div class="col-md-3 d-flex ftco-animate">
+          <div class="blog-entry justify-content-end">
+            <div class="text">
+              <h3 class="heading"><a href="#">Earning Through Referrals</a></h3><br>
+              <div class="meta mb-3">
+                <div><a href="#">Nov. 08, 2025</a></div>
+                <div><a href="#">Admin</a></div>
+                <div><a href="#" class="meta-chat"><span class="icon-chat"></span> 0</a></div>
+              </div>
+              <a href="#" class="block-20 img" style="background-image: url('assets/images/image_4.jpg');">
+              </a>
+              <p>Start your side hustle by introducing landlords to EasyRent and earn commissions for 5 years.</p>
             </div>
-            <a href="#" class="block-20 img" style="background-image: url('assets/images/image_4.jpg');">
-            </a>
-            <p>Start your side hustle by introducing landlords to EasyRent and earn commissions for 5 years.</p>
           </div>
         </div>
-      </div>
       @endif
     </div>
   </div>

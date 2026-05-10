@@ -5,9 +5,14 @@
     <div class="row">
         <div class="col-md-8 offset-md-2">
             <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Edit User: {{ $user->first_name }} {{ $user->last_name }}</h5>
-                    <p class="card-category">Update user information and settings</p>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">Edit User: {{ $user->first_name }} {{ $user->last_name }}</h5>
+                        <p class="card-category mb-0">Update user information and settings</p>
+                    </div>
+                    <a href="{{ route('admin.users') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="nc-icon nc-minimal-left"></i> Back to Users
+                    </a>
                 </div>
                 <div class="card-body">
                     <form action="{{ route('admin.users.update', $user) }}" method="POST">

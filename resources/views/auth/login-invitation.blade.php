@@ -17,9 +17,21 @@
         padding-bottom: 90px;
     }
 
+    .auth-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('{{ asset('assets/images/pagelayout.jpg') }}');
+        background-repeat: repeat;
+        background-size: 500px;
+        filter: brightness(0.6);
+        z-index: -1;
+    }
+
     .auth-container {
         min-height: 100vh;
-        background: linear-gradient(45deg, #17a2b8, #6bd098) !important;
         display: flex;
         align-items: center;
         padding: 2rem 0;
@@ -190,6 +202,8 @@
     }
 </style>
 
+<div class="auth-bg"></div>
+
 <div class="pt-pad">
     <div class="container">
         <div class="row justify-content-center">
@@ -204,20 +218,21 @@
                     <div class="auth-body">
                         <!-- Invitation Context Display -->
                         @if(isset($invitation) && $invitation)
-                        <div class="invitation-context">
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-home fa-2x text-primary me-3"></i>
-                                <div>
-                                    <h6 class="mb-1 text-primary">{{ $invitation->apartment->property->prop_name }}</h6>
-                                    <small class="text-muted">{{ $invitation->apartment->apartment_type }} • {{ $invitation->apartment->getFormattedAmount() }}/month</small>
+                            <div class="invitation-context">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="fa fa-home fa-2x text-primary me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1 text-primary">{{ $invitation->apartment->property->prop_name }}</h6>
+                                        <small class="text-muted">{{ $invitation->apartment->apartment_type }} •
+                                            {{ $invitation->apartment->getFormattedAmount() }}/month</small>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info mb-0">
+                                    <i class="fa fa-info-circle me-2"></i>
+                                    <small>Your apartment application is waiting. Sign in to continue where you left
+                                        off.</small>
                                 </div>
                             </div>
-                            <div class="alert alert-info mb-0">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <small>Your apartment application is waiting. Sign in to continue where you left
-                                    off.</small>
-                            </div>
-                        </div>
                         @endif
 
                         <div id="toast-container" class="modern-toast-container"></div>
@@ -227,18 +242,18 @@
 
                             <!-- Hidden field to preserve invitation context -->
                             @if(request('token'))
-                            <input type="hidden" name="invitation_token" value="{{ request('token') }}">
+                                <input type="hidden" name="invitation_token" value="{{ request('token') }}">
                             @endif
 
                             <div class="form-floating">
                                 <input id="email" type="email" class="form-control @error('email') is-invalid @enderror"
                                     name="email" value="{{ old('email') }}" required autocomplete="email" autofocus
                                     placeholder="Email Address">
-                                <label for="email"><i class="fas fa-envelope me-2"></i>Email Address</label>
+                                <label for="email"><i class="fa fa-envelope me-2"></i>Email Address</label>
                                 @error('email')
-                                <div class="invalid-feedback">
-                                    <strong>{{ $message }}</strong>
-                                </div>
+                                    <div class="invalid-feedback">
+                                        <strong>{{ $message }}</strong>
+                                    </div>
                                 @enderror
                             </div>
 
@@ -246,42 +261,42 @@
                                 <input id="password" type="password"
                                     class="form-control @error('password') is-invalid @enderror" name="password"
                                     required autocomplete="current-password" placeholder="Password">
-                                <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
+                                <label for="password"><i class="fa fa-lock me-2"></i>Password</label>
                                 <button type="button" class="password-toggle-btn"
                                     onclick="togglePasswordVisibility('password')">
-                                    <i class="fas fa-eye-slash" id="password-toggle-icon"></i>
+                                    <i class="fa fa-eye-slash" id="password-toggle-icon"></i>
                                 </button>
                                 @error('password')
-                                <div class="invalid-feedback">
-                                    <strong>{{ $message }}</strong>
-                                </div>
+                                    <div class="invalid-feedback">
+                                        <strong>{{ $message }}</strong>
+                                    </div>
                                 @enderror
                             </div>
 
                             <div class="form-check">
                                 <input type="checkbox" name="remember" id="remember" class="form-check-input" {{
-                                    old('remember') ? 'checked' : '' }}>
+    old('remember') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="remember">
                                     Remember Me
                                 </label>
                             </div>
 
                             <button type="submit" class="btn btn-auth">
-                                <i class="fas fa-sign-in-alt me-2"></i>Sign In & Continue
+                                <i class="fa fa-sign-in-alt me-2"></i>Sign In & Continue
                             </button>
                         </form>
 
                         <div class="auth-links">
                             @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}">
-                                <i class="fas fa-key me-1"></i>Forgot Your Password?
-                            </a>
+                                <a href="{{ route('password.request') }}">
+                                    <i class="fa fa-key me-1"></i>Forgot Your Password?
+                                </a>
                             @endif
                             <div class="mt-3">
                                 <span class="text-muted">Don't have an account?</span>
                                 <a href="{{ route('register') }}{{ request('token') ? '?token=' . request('token') : '' }}"
                                     class="ms-1">
-                                    <i class="fas fa-user-plus me-1"></i>Create Account
+                                    <i class="fa fa-user-plus me-1"></i>Create Account
                                 </a>
                             </div>
                         </div>
@@ -336,7 +351,7 @@
         if (loginForm) {
             loginForm.addEventListener('submit', function () {
                 const submitBtn = this.querySelector('button[type="submit"]');
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing In...';
+                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Signing In...';
                 submitBtn.disabled = true;
             });
         }

@@ -440,7 +440,23 @@
                     if (calc.calculation_steps && calc.calculation_steps.length > 0) {
                         html += '<div class="mt-3"><strong>Calculation Steps:</strong><ul class="mt-2">';
                         calc.calculation_steps.forEach(step => {
-                            html += `<li>${step}</li>`;
+                            if (typeof step === 'string') {
+                                html += `<li>${step}</li>`;
+                            } else if (typeof step === 'object' && step !== null) {
+                                let stepText = step.note || step.method || step.step || '';
+                                if (step.apartment_price !== undefined) {
+                                    stepText += ` (Price: ${parseFloat(step.apartment_price).toLocaleString()})`;
+                                }
+                                if (step.multiplication_result !== undefined) {
+                                    stepText += ` = ${parseFloat(step.multiplication_result).toLocaleString()}`;
+                                }
+                                if (step.total_amount !== undefined) {
+                                    stepText += ` → Total: ${parseFloat(step.total_amount).toLocaleString()}`;
+                                }
+                                html += `<li>${stepText || JSON.stringify(step)}</li>`;
+                            } else {
+                                html += `<li>${String(step)}</li>`;
+                            }
                         });
                         html += '</ul></div>';
                     }

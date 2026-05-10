@@ -89,7 +89,7 @@ class Handler extends ExceptionHandler
                 ], 419);
             }
 
-            return redirect()->route('login')
+            return redirect()->route('login', ['expired' => 1])
                 ->with('warning', 'Your session has expired. Please login again.');
         });
     }

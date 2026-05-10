@@ -10,7 +10,7 @@ use App\Services\ErrorHandling\EasyRentErrorHandler;
 use App\Services\ErrorHandling\ErrorRecoveryService;
 use App\Services\Monitoring\ErrorMonitoringService;
 
-class EasyRentErrorHandler
+class ErrorHandlerMiddleware
 {
     protected $errorHandler;
     protected $recoveryService;

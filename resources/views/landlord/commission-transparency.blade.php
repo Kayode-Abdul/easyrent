@@ -292,7 +292,7 @@
 
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
 $(document).ready(function() {
     // Initialize DataTable if available

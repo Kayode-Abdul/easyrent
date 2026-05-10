@@ -7,7 +7,7 @@
         <!-- Hero Section -->
         <div class="row mb-5">
             <div class="col-md-12">
-                <div class="card bg-gradient text-white">
+                <div class="card bg-gradient-info text-white">
                     <div class="card-body text-center py-5">
                         <h1 class="display-4 mb-3">
                             <i class="nc-icon nc-diamond"></i> Why Choose EasyRent?
@@ -337,7 +337,7 @@
         <!-- Call to Action -->
         <div class="row">
             <div class="col-md-12">
-                <div class="card bg-gradient-success text-white">
+                <div class="card bg-gradient-info text-white">
                     <div class="card-body text-center py-5">
                         <h2 class="mb-3">Ready to Get Started?</h2>
                         <p class="lead mb-4">Join thousands of satisfied users who have found their perfect rental
@@ -390,10 +390,6 @@
 
     .bg-gradient {
         background: linear-gradient(45deg, #28a745, #6bd098) !important;
-    }
-
-    .bg-gradient-success {
-        background: linear-gradient(45deg, #6bd098, #28a745) !important;
     }
 </style>
 

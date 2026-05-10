@@ -128,16 +128,27 @@ class ApartmentInvitation extends Model
         return $this->belongsTo(User::class, 'tenant_user_id', 'user_id');
     }
 
-    public function isActive(): bool
-    {
-        return $this->status === self::STATUS_ACTIVE && 
-               ($this->expires_at === null || $this->expires_at->isFuture());
-    }
-
     public function isExpired(): bool
     {
-        return $this->status === self::STATUS_EXPIRED || 
-               ($this->expires_at && $this->expires_at->isPast());
+        // If already marked as expired, it's expired
+        if ($this->status === self::STATUS_EXPIRED) {
+            return true;
+        }
+
+        // Check expires_at with a 2-hour grace period to prevent race conditions during payment
+        if ($this->expires_at) {
+            return $this->expires_at->addHours(2)->isPast();
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the invitation is currently active and usable
+     */
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE && !$this->isExpired();
     }
 
     /**

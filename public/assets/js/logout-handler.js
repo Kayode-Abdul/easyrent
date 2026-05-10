@@ -5,8 +5,10 @@
  */
 
 // Global logout handler function
-function handleLogout(formId) {
-    if (typeof event !== 'undefined') {
+function handleLogout(formId, e) {
+    if (e && e.preventDefault) {
+        e.preventDefault();
+    } else if (typeof event !== 'undefined') {
         event.preventDefault();
     }
     

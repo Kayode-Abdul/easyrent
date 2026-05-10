@@ -1,22 +1,22 @@
 @include('header')
 
 @php
-$invitationToken = request('invitation_token');
-$invitation = null;
-$hasCompletedPayment = false;
+    $invitationToken = request('invitation_token');
+    $invitation = null;
+    $hasCompletedPayment = false;
 
-if ($invitationToken) {
-$invitation = \App\Models\ApartmentInvitation::where('invitation_token', $invitationToken)
-->with(['apartment.property', 'landlord'])
-->first();
+    if ($invitationToken) {
+        $invitation = \App\Models\ApartmentInvitation::where('invitation_token', $invitationToken)
+            ->with(['apartment.property', 'landlord'])
+            ->first();
 
-if ($invitation) {
-$hasCompletedPayment = \App\Models\Payment::where('payment_meta->invitation_token', $invitationToken)
-->where('status', 'completed')
-->whereNull('tenant_id')
-->exists();
-}
-}
+        if ($invitation) {
+            $hasCompletedPayment = \App\Models\Payment::where('payment_meta->invitation_token', $invitationToken)
+                ->where('status', 'completed')
+                ->whereNull('tenant_id')
+                ->exists();
+        }
+    }
 @endphp
 
 <style>
@@ -49,10 +49,10 @@ $hasCompletedPayment = \App\Models\Payment::where('payment_meta->invitation_toke
         left: 0;
         width: 100%;
         height: 100%;
-        background-image: url('{{ asset(' auth_background_premium_1772325387793.png') }}');
-        background-size: cover;
-        background-position: center;
-        filter: brightness(0.5);
+        background-image: url('{{ asset('assets/images/pagelayout.jpg') }}');
+        background-repeat: repeat;
+        background-size: 500px;
+        filter: brightness(0.6);
         z-index: -1;
     }
 
@@ -325,16 +325,16 @@ $hasCompletedPayment = \App\Models\Payment::where('payment_meta->invitation_toke
         <p class="auth-subtitle">Join the most trusted property network.</p>
 
         @if($hasCompletedPayment && $invitation)
-        <div class="alert alert-success border-0 mb-4"
-            style="background: #ecfdf5; border: 1px solid #d1fae5; color: #065f46; border-radius: 16px; padding: 1rem;">
-            <div class="d-flex align-items-center gap-3">
-                <i class="fas fa-check-circle fa-lg"></i>
-                <div>
-                    <h6 class="mb-0 fw-bold">Payment Completed!</h6>
-                    <p class="mb-0 small">Finish registration for {{ $invitation->apartment->property->prop_name }}.</p>
+            <div class="alert alert-success border-0 mb-4"
+                style="background: #ecfdf5; border: 1px solid #d1fae5; color: #065f46; border-radius: 16px; padding: 1rem;">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fa fa-check-circle fa-lg"></i>
+                    <div>
+                        <h6 class="mb-0 fw-bold">Payment Completed!</h6>
+                        <p class="mb-0 small">Finish registration for {{ $invitation->apartment->property->prop_name }}.</p>
+                    </div>
                 </div>
             </div>
-        </div>
         @endif
 
         <div class="social-grid">
@@ -402,7 +402,7 @@ $hasCompletedPayment = \App\Models\Payment::where('payment_meta->invitation_toke
                     <select name="artisan_category_id" id="artisan-category" class="form-control-premium">
                         <option value="">Select your specialty</option>
                         @foreach(\App\Models\ComplaintCategory::all() as $category)
-                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -443,7 +443,7 @@ $hasCompletedPayment = \App\Models\Payment::where('payment_meta->invitation_toke
             </div>
 
             <button type="submit" class="btn-premium-register">
-                Start Exploring <i class="fas fa-arrow-right"></i>
+                Start Exploring <i class="fa fa-arrow-right"></i>
             </button>
         </form>
 

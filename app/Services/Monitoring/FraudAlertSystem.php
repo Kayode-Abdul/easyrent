@@ -421,7 +421,7 @@ class FraudAlertSystem
         $userStats = DB::table('referrals')
             ->select('referrer_id', 
                 DB::raw('COUNT(*) as total_referrals'),
-                DB::raw('SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as successful_referrals')
+                DB::raw('SUM(CASE WHEN referral_status = "completed" THEN 1 ELSE 0 END) as successful_referrals')
             )
             ->where('created_at', '>=', $last30Days)
             ->groupBy('referrer_id')

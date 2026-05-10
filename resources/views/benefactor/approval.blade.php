@@ -27,8 +27,8 @@
                     @endif
 
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> 
-                        <strong>{{ $invitation->tenant->first_name }} {{ $invitation->tenant->last_name }}</strong> 
+                        <i class="fa fa-info-circle"></i>
+                        <strong>{{ $invitation->tenant->first_name }} {{ $invitation->tenant->last_name }}</strong>
                         has requested you to pay their rent.
                     </div>
 
@@ -78,22 +78,25 @@
                     <div class="approval-actions">
                         <h5 class="mb-3">Your Decision</h5>
                         <p class="text-muted">
-                            Please review the payment request above. If you agree to pay, click "Approve & Continue to Payment". 
+                            Please review the payment request above. If you agree to pay, click "Approve & Continue to
+                            Payment".
                             If you cannot or do not wish to pay, you can decline with an optional reason.
                         </p>
 
                         <div class="row mt-4">
                             <div class="col-md-6 mb-3">
-                                <form action="{{ route('benefactor.payment.approve', $invitation->token) }}" method="POST">
+                                <form action="{{ route('benefactor.payment.approve', $invitation->token) }}"
+                                    method="POST">
                                     @csrf
                                     <button type="submit" class="btn btn-success btn-sm w-100">
-                                        <i class="fas fa-check-circle"></i> Approve & Continue to Payment
+                                        <i class="fa fa-check-circle"></i> Approve & Continue to Payment
                                     </button>
                                 </form>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <button type="button" class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="modal" data-bs-target="#declineModal">
-                                    <i class="fas fa-times-circle"></i> Decline Request
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="modal"
+                                    data-bs-target="#declineModal">
+                                    <i class="fa fa-times-circle"></i> Decline Request
                                 </button>
                             </div>
                         </div>
@@ -118,7 +121,7 @@
                     <p>Are you sure you want to decline this payment request?</p>
                     <div class="mb-3">
                         <label for="reason" class="form-label">Reason (Optional)</label>
-                        <textarea name="reason" id="reason" class="form-control" rows="3" 
+                        <textarea name="reason" id="reason" class="form-control" rows="3"
                             placeholder="Let the tenant know why you're declining..."></textarea>
                     </div>
                 </div>
@@ -131,4 +134,3 @@
     </div>
 </div>
 @include('footer')
-

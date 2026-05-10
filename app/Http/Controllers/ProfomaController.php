@@ -200,10 +200,12 @@ class ProfomaController extends Controller
         if ($user->user_id !== $proforma->user_id && $user->user_id !== $proforma->tenant_id) {
             abort(403, 'Unauthorized');
         }
-        // We no longer automatically mark as confirmed when tenant views
-        // This allows tenant to explicitly accept or reject the proforma
-        // Use the new template for rendering
-        return view('proforma.template', compact('proforma'));
+        
+        $isPaid = $proforma->hasSuccessfulPayment();
+        $isOccupied = $proforma->apartment->tenant_id && $proforma->apartment->tenant_id != $proforma->tenant_id;
+        $payment = $isPaid ? $proforma->getSuccessfulPayment() : null;
+
+        return view('proforma.template', compact('proforma', 'isPaid', 'isOccupied', 'payment'));
     }
     
     /**

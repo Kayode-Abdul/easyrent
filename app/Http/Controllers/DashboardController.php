@@ -82,8 +82,7 @@ class DashboardController extends Controller
             $stats = $this->getLandlordStats($userId);
             $chartData = $this->getLandlordChartData($userId);
             $recentActivities = $this->getLandlordActivities($userId, $activityPage);
-        }
-        else {
+        } else {
             $stats = $this->getTenantStats($userId);
             $chartData = $this->getTenantChartData($userId);
             $recentActivities = $this->getTenantActivities($userId, $activityPage);
@@ -92,8 +91,9 @@ class DashboardController extends Controller
         // Referral stats for the widget
         $referralData = $this->getReferralDashboardData($user);
         $hasReferrals = $referralData['has_referrals'];
+        $currencySymbol = '₦'; // Default fallback
 
-        return view('dash', compact('stats', 'chartData', 'recentActivities', 'greeting', 'hasReferrals', 'referralData'));
+        return view('dash', compact('stats', 'chartData', 'recentActivities', 'greeting', 'hasReferrals', 'referralData', 'currencySymbol'));
     }
 
     /**
@@ -103,7 +103,7 @@ class DashboardController extends Controller
     {
         return Cache::remember('user_referral_data_' . $user->user_id, now()->addMinutes(10), function () use ($user) {
             $referralsCount = $user->referrals()->count();
-            
+
             return [
                 'has_referrals' => $referralsCount > 0,
                 'total_referrals' => $referralsCount,
@@ -144,10 +144,10 @@ class DashboardController extends Controller
                 'new_users_this_week' => User::whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->count(),
                 'inactive_users' => 0, // No status column found
                 'users_by_type' => [
-                    'landlords' => User::where('role', 2)->count(),
-                    'tenants' => User::where('role', 3)->count(),
+                    'landlords' => User::where('role', User::getRoleId('landlord') ?? 2)->count(),
+                    'tenants' => User::where('role', User::getRoleId('tenant') ?? 1)->count(),
                     'admins' => User::where('admin', 1)->count(),
-                    'agents' => User::where('role', 4)->count(),
+                    'agents' => User::where('role', User::getRoleId('Verified_Property_Manager') ?? 8)->count(),
                 ],
 
                 // Property Management Stats
@@ -243,11 +243,11 @@ class DashboardController extends Controller
                     ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
                     ->toArray(),
                 'my_pending_payments' => Payment::where('tenant_id', $userId)
-                ->where('status', 'pending')
-                ->count(),
+                    ->where('status', 'pending')
+                    ->count(),
                 'unread_messages' => Message::where('receiver_id', $userId)
-                ->where('is_read', false)
-                ->count(),
+                    ->where('is_read', false)
+                    ->count(),
             ];
         });
     }
@@ -258,8 +258,7 @@ class DashboardController extends Controller
         try {
             $size = DB::select("SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) AS 'db_size' FROM information_schema.tables WHERE table_schema=DATABASE()")[0]->db_size;
             return $size . ' MB';
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return 'Unknown';
         }
     }
@@ -280,7 +279,8 @@ class DashboardController extends Controller
     private function calculateConversionRate()
     {
         $totalSignups = User::count();
-        $activeTenants = User::where('role', 3)->count(); // Role 3 = tenant
+        $tenantRoleId = User::getRoleId('tenant') ?? 1;
+        $activeTenants = User::where('role', $tenantRoleId)->count(); // Corrected role mapping
 
         return $totalSignups > 0 ? round(($activeTenants / $totalSignups) * 100, 2) . '%' : '0%';
     }
@@ -389,17 +389,17 @@ class DashboardController extends Controller
             $propertyTypes = [
                 'labels' => Property::select('prop_type')->distinct()->pluck('prop_type'),
                 'data' => Property::select('prop_type', DB::raw('count(*) as count'))
-                ->groupBy('prop_type')
-                ->pluck('count'),
+                    ->groupBy('prop_type')
+                    ->pluck('count'),
             ];
 
             $geographicData = [
                 'labels' => Property::select('state')->distinct()->limit(10)->pluck('state'),
                 'data' => Property::select('state', DB::raw('count(*) as count'))
-                ->groupBy('state')
-                ->orderBy('count', 'desc')
-                ->limit(10)
-                ->pluck('count'),
+                    ->groupBy('state')
+                    ->orderBy('count', 'desc')
+                    ->limit(10)
+                    ->pluck('count'),
             ];
 
             return [
@@ -530,7 +530,7 @@ class DashboardController extends Controller
                 'description' => $user->first_name . ' ' . $user->last_name . ' joined as ' . $userType,
                 'time' => $user->created_at,
                 'time_for_humans' => $user->created_at->diffForHumans(),
-                'link' => '/admin/users',
+                'link' => route('users.profile', $user->user_id),
             ]);
         });
 
@@ -544,7 +544,7 @@ class DashboardController extends Controller
                 'description' => 'Property at ' . $property->address . ', ' . $property->state,
                 'time' => $property->created_at,
                 'time_for_humans' => $property->created_at->diffForHumans(),
-                'link' => '/properties/' . $property->property_id,
+                'link' => route('property.show', $property->property_id),
             ]);
         });
 
@@ -559,12 +559,12 @@ class DashboardController extends Controller
                 'description' => 'Payment of ' . $currencySymbol . number_format($payment->amount, 2) . ' received',
                 'time' => $payment->created_at,
                 'time_for_humans' => $payment->created_at->diffForHumans(),
-                'link' => '/payments/' . $payment->id,
+                'link' => route('payment.receipt.reference', $payment->transaction_id),
             ]);
         });
 
         $sortedActivities = $activities->sortByDesc('time')->values();
-        
+
         return new \Illuminate\Pagination\LengthAwarePaginator(
             $sortedActivities->forPage($page, $perPage),
             $sortedActivities->count(),
@@ -675,8 +675,8 @@ class DashboardController extends Controller
             $userGrowth[] = [
                 'month' => $month->format('M Y'),
                 'count' => User::whereYear('created_at', $month->year)
-                ->whereMonth('created_at', $month->month)
-                ->count()
+                    ->whereMonth('created_at', $month->month)
+                    ->count()
             ];
         }
 
@@ -726,10 +726,10 @@ class DashboardController extends Controller
             $revenueTrend[] = [
                 'month' => $month->format('M'),
                 'revenue' => Payment::where('landlord_id', $user->user_id)
-                ->where('status', 'completed')
-                ->whereYear('created_at', $month->year)
-                ->whereMonth('created_at', $month->month)
-                ->sum('amount')
+                    ->where('status', 'completed')
+                    ->whereYear('created_at', $month->year)
+                    ->whereMonth('created_at', $month->month)
+                    ->sum('amount')
             ];
         }
 
@@ -774,10 +774,10 @@ class DashboardController extends Controller
             $paymentHistory[] = [
                 'month' => $month->format('M'),
                 'amount' => Payment::where('tenant_id', $user->user_id)
-                ->where('status', 'completed')
-                ->whereYear('created_at', $month->year)
-                ->whereMonth('created_at', $month->month)
-                ->sum('amount')
+                    ->where('status', 'completed')
+                    ->whereYear('created_at', $month->year)
+                    ->whereMonth('created_at', $month->month)
+                    ->sum('amount')
             ];
         }
 
@@ -821,7 +821,7 @@ class DashboardController extends Controller
         if (!in_array($mode, ['property_manager', 'personal'])) {
             return response()->json(['success' => false, 'message' => 'Invalid mode']);
         }
-        
+
         // When switching to property manager mode, ensure we exit admin mode
         if ($mode === 'property_manager') {
             session(['admin_dashboard_mode' => 'personal']);
@@ -829,7 +829,7 @@ class DashboardController extends Controller
             // When switching FROM pm mode back to personal, ensure all specific modes are cleared
             session(['admin_dashboard_mode' => 'personal']);
         }
-        
+
         // Store mode in session
         session(['dashboard_mode' => $mode]);
 
@@ -863,7 +863,7 @@ class DashboardController extends Controller
             // When switching FROM admin mode back to personal, ensure ALL specific modes are cleared
             session(['dashboard_mode' => 'personal']);
         }
-        
+
         session(['admin_dashboard_mode' => $mode]);
 
         return response()->json(['success' => true, 'mode' => $mode]);
@@ -916,7 +916,7 @@ class DashboardController extends Controller
         foreach ($payments as $payment) {
             $currencyCode = $payment->currency->code ?? 'NGN';
             $currencySymbol = $payment->currency->symbol ?? '₦';
-            
+
             if (!isset($commissionsByCurrency[$currencyCode])) {
                 $commissionsByCurrency[$currencyCode] = [
                     'amount' => 0,
@@ -954,8 +954,7 @@ class DashboardController extends Controller
                     'company_commission' => $rentAmount * 0.0165, // 1.65%
                     'total_commission' => $rentAmount * 0.025 // 2.5%
                 ];
-            }
-            else {
+            } else {
                 // Managed without Super Marketer: 2.5% total
                 return [
                     'super_marketer_commission' => 0,
@@ -965,8 +964,7 @@ class DashboardController extends Controller
                     'total_commission' => $rentAmount * 0.025 // 2.5%
                 ];
             }
-        }
-        else {
+        } else {
             if ($hasSuperMarketer) {
                 // Unmanaged with Super Marketer: 5% total
                 return [
@@ -976,8 +974,7 @@ class DashboardController extends Controller
                     'company_commission' => $rentAmount * 0.0325, // 3.25%
                     'total_commission' => $rentAmount * 0.05 // 5%
                 ];
-            }
-            else {
+            } else {
                 // Unmanaged without Super Marketer: 5% total
                 return [
                     'super_marketer_commission' => 0,
@@ -1109,7 +1106,7 @@ class DashboardController extends Controller
             // When switching FROM artisan mode back to personal, ensure ALL specific modes are cleared
             session(['admin_dashboard_mode' => 'personal']);
         }
-        
+
         session(['dashboard_mode' => $mode]);
 
         return response()->json(['success' => true, 'mode' => $mode]);

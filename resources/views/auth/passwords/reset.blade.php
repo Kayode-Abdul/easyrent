@@ -27,10 +27,10 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-image: url('{{ asset(' auth_background_premium_1772325387793.png') }}');
-        background-size: cover;
-        background-position: center;
-        filter: brightness(0.5);
+        background-image: url('{{ asset('assets/images/pagelayout.jpg') }}');
+        background-repeat: repeat;
+        background-size: 500px;
+        filter: brightness(0.6);
         z-index: -1;
     }
 
@@ -244,7 +244,7 @@
                     </button>
                 </div>
                 @error('password')
-                <span class="text-danger small mt-2 d-block"><strong>{{ $message }}</strong></span>
+                    <span class="text-danger small mt-2 d-block"><strong>{{ $message }}</strong></span>
                 @enderror
             </div>
 
@@ -262,24 +262,24 @@
 
             <div class="requirements-panel">
                 <div class="requirements-title">
-                    <i class="fas fa-shield-alt"></i> Security Checklist
+                    <i class="fa fa-shield-alt"></i> Security Checklist
                 </div>
                 <ul class="requirements-list">
-                    <li><i class="fas fa-check-circle"></i> 8+ Characters</li>
-                    <li><i class="fas fa-check-circle"></i> Uppercase</li>
-                    <li><i class="fas fa-check-circle"></i> Numbers</li>
-                    <li><i class="fas fa-check-circle"></i> Symbols</li>
+                    <li><i class="fa fa-check-circle"></i> 8+ Characters</li>
+                    <li><i class="fa fa-check-circle"></i> Uppercase</li>
+                    <li><i class="fa fa-check-circle"></i> Numbers</li>
+                    <li><i class="fa fa-check-circle"></i> Symbols</li>
                 </ul>
             </div>
 
             <button type="submit" class="btn-premium-action">
-                Update Password <i class="fas fa-lock"></i>
+                Update Password <i class="fa fa-lock"></i>
             </button>
         </form>
 
         <div class="auth-footer">
             <a href="{{ route('login') }}">
-                <i class="fas fa-arrow-left me-2"></i> Back to Login
+                <i class="fa fa-arrow-left me-2"></i> Back to Login
             </a>
         </div>
     </div>

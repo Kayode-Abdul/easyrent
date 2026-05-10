@@ -10,6 +10,7 @@ use App\Models\Apartment;
 use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Admin\AuditLogController;
 
 class AdminController extends Controller
 {
@@ -114,6 +115,15 @@ class AdminController extends Controller
             'rejected_at' => $status === 'rejected' ? now() : null,
         ]);
 
+        AuditLogController::logActivity(
+            'bulk_property_action',
+            'Bulk ' . $status . ' ' . count($request->property_ids) . ' properties',
+            Property::class,
+            implode(',', $request->property_ids),
+            ['property_ids' => $request->property_ids, 'action' => $request->action],
+            ['status' => $status]
+        );
+
         return response()->json(['success' => true, 'message' => 'Properties ' . $status . ' successfully.']);
     }
 
@@ -184,6 +194,8 @@ class AdminController extends Controller
             'admin' => 'boolean',
         ]);
 
+        $originalData = $user->toArray();
+
         $user->update([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -197,6 +209,15 @@ class AdminController extends Controller
             'lga' => $request->lga,
             'admin' => $request->has('admin') ? 1 : 0,
         ]);
+
+        AuditLogController::logActivity(
+            'user_updated',
+            'Updated user: ' . $user->first_name . ' ' . $user->last_name . ' (ID: ' . $user->user_id . ')',
+            User::class,
+            $user->user_id,
+            $originalData,
+            $user->fresh()->toArray()
+        );
 
         return redirect()->route('admin.users')
             ->with('success', 'User updated successfully.');
@@ -219,7 +240,17 @@ class AdminController extends Controller
                 ->with('error', 'You cannot delete your own account.');
         }
 
+        $userData = $user->toArray();
         $user->delete();
+
+        AuditLogController::logActivity(
+            'user_deleted',
+            'Deleted user: ' . $userData['first_name'] . ' ' . $userData['last_name'] . ' (ID: ' . $userData['user_id'] . ')',
+            User::class,
+            $userData['user_id'],
+            $userData,
+            null
+        );
 
         return redirect()->route('admin.users')
             ->with('success', 'User deleted successfully.');

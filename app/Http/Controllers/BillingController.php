@@ -32,9 +32,9 @@ class BillingController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Get pending payments (paginated)
-        $pendingPayments = Payment::where('tenant_id', $user->user_id)
-            ->where('status', 'pending')
+        // Get pending proformas (instead of initiated payments) to ensure 'Pay Now' links work correctly
+        $pendingPayments = \App\Models\ProfomaReceipt::where('tenant_id', $user->user_id)
+            ->whereIn('status', [\App\Models\ProfomaReceipt::STATUS_NEW, \App\Models\ProfomaReceipt::STATUS_CONFIRMED, 3])
             ->orderBy('created_at', 'desc')
             ->paginate(5);
 

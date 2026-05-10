@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class RoleController extends Controller
 {
@@ -12,36 +15,84 @@ class RoleController extends Controller
         $this->middleware('auth');
     }
 
-    // POST /switch-role
-    public function switchRole(Request $request)
+    /**
+     * Add a new role to the user (Restricted to Artisan and Property Manager)
+     */
+    public function addRole(Request $request)
     {
-        $request->validate(['role' => 'required|string']);
+        $request->validate([
+            'role_name' => 'required|string|in:Artisan,property_manager',
+        ]);
+
         $user = Auth::user();
-        $requested = $request->input('role');
-
-        // Build available roles from legacy numeric, admin flag, and pivot roles
-        $available = [];
-        $map = [
-            7 => 'admin',
-            2 => 'landlord',
-            1 => 'tenant',
-            6 => 'property_manager',
-            3 => 'marketer',
-            9 => 'regional_manager',
-        ];
-        if (isset($map[$user->role])) $available[] = $map[$user->role];
-        if ($user->admin == 1) $available[] = 'admin';
-        try {
-            if (method_exists($user, 'roles')) {
-                $available = array_unique(array_merge($available, $user->roles()->pluck('name')->toArray()));
-            }
-        } catch (\Throwable $e) {}
-
-        if (!in_array($requested, $available)) {
-            return back()->with('error', 'You do not have access to the requested role.');
+        $roleName = $request->role_name;
+        
+        // Find role ID
+        $role = Role::where('name', $roleName)->first();
+        if (!$role) {
+            return response()->json([
+                'success' => false, 
+                'message' => "Role $roleName not found in system."
+            ], 404);
         }
 
-        session(['selected_role' => $requested]);
-        return back()->with('success', 'Switched role to ' . str_replace('_',' ', $requested));
+        // Check if user already has this role
+        if ($user->hasRole($roleName)) {
+            return response()->json([
+                'success' => false, 
+                'message' => "You already have the $roleName role."
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+            
+            // Attach role in pivot table
+            // Note: User primary key is user_id
+            $user->roles()->attach($role->id);
+            
+            // If it's the legacy role field that needs updating as well:
+            // (Only update if it's currently a low-priority role or if we want to sync)
+            // For now, we rely on hasRole() check in the system.
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true, 
+                'message' => "Role " . ($role->display_name ?? $roleName) . " added successfully! You can now switch to your new dashboard."
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false, 
+                'message' => "An error occurred: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Switch current active role (session-based)
+     */
+    public function switchRole(Request $request)
+    {
+        $request->validate([
+            'role' => 'required|string'
+        ]);
+
+        $role = $request->role;
+        $user = Auth::user();
+
+        // Validate user has this role
+        if (!$user->hasRole($role) && $user->role != User::getRoleId($role)) {
+             // Special case for admin/legacy
+             if ($role === 'admin' && !($user->admin == 1 || $user->role == 7)) {
+                 return back()->with('error', 'Unauthorized role switch.');
+             }
+        }
+
+        session(['dashboard_mode' => $role]);
+        
+        return back()->with('success', "Switched to " . ucfirst($role) . " mode.");
     }
 }

@@ -143,12 +143,37 @@ class CommissionRate extends Model
         string $propertyManagementStatus = 'unmanaged',
         string $hierarchyStatus = 'without_super_marketer'
     ): ?self {
-        return self::where('region', $region)
-            ->where('property_management_status', $propertyManagementStatus)
-            ->where('hierarchy_status', $hierarchyStatus)
-            ->active()
-            ->first();
+        $regionsToTry = [$region];
+        
+        // If the region is in country:state:city format, add parent regions to try
+        if (strpos($region, ':') !== false) {
+            $parts = explode(':', $region);
+            while (count($parts) > 1) {
+                array_pop($parts);
+                $regionsToTry[] = implode(':', $parts);
+            }
+        }
+        
+        // Always try 'default' as the last resort
+        if (!in_array('default', $regionsToTry)) {
+            $regionsToTry[] = 'default';
+        }
+
+        foreach ($regionsToTry as $tryRegion) {
+            $rate = self::where('region', $tryRegion)
+                ->where('property_management_status', $propertyManagementStatus)
+                ->where('hierarchy_status', $hierarchyStatus)
+                ->active()
+                ->first();
+            
+            if ($rate) {
+                return $rate;
+            }
+        }
+
+        return null;
     }
+
 
     /**
      * Calculate commission breakdown for rent amount

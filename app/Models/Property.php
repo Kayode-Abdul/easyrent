@@ -127,6 +127,7 @@ class Property extends Model
     const TYPE_FARM = 7;
     const TYPE_STORE = 8;
     const TYPE_SHOP = 9;
+    const TYPE_SHOPPING_MALL = 10;
 
     public function owner(): BelongsTo
     {
@@ -170,7 +171,7 @@ class Property extends Model
     // Helper methods
     public function getPropertyTypeName(): string
     {
-        return match($this->prop_type) {
+        return match ($this->prop_type) {
             self::TYPE_MANSION => 'Mansion',
             self::TYPE_DUPLEX => 'Duplex',
             self::TYPE_FLAT => 'Flat',
@@ -180,6 +181,7 @@ class Property extends Model
             self::TYPE_FARM => 'Farm',
             self::TYPE_STORE => 'Store',
             self::TYPE_SHOP => 'Shop',
+            self::TYPE_SHOPPING_MALL => 'Shopping Mall',
             default => 'Unknown'
         };
     }

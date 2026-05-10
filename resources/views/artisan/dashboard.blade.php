@@ -39,29 +39,80 @@
         </div>
     </div>
     <div class="container-fluid">
+        <!-- Artisan Stats Cards -->
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-lg-3 col-md-6 col-sm-6">
                 <div class="card card-stats">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-5">
+                            <div class="col-5 col-md-4">
                                 <div class="icon-big text-center icon-warning">
-                                    <i class="nc-icon nc-settings-gear-65 text-warning"></i>
+                                    <i class="nc-icon nc-briefcase-24 text-primary"></i>
                                 </div>
                             </div>
-                            <div class="col-7">
+                            <div class="col-7 col-md-8">
                                 <div class="numbers">
-                                    <p class="card-category">Artisan Dashboard</p>
-                                    <h4 class="card-title">{{ auth()->user()->first_name }} {{ auth()->user()->last_name
-                                        }}</h4>
+                                    <p class="card-category">Total Bids</p>
+                                    <p class="card-title">{{ $stats['total_bids'] }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="card-footer">
-                        <hr>
-                        <div class="stats">
-                            <i class="fa fa-briefcase"></i> {{ auth()->user()->artisanCategory->name ?? 'Artisan' }}
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-5 col-md-4">
+                                <div class="icon-big text-center icon-warning">
+                                    <i class="nc-icon nc-time-alarm text-warning"></i>
+                                </div>
+                            </div>
+                            <div class="col-7 col-md-8">
+                                <div class="numbers">
+                                    <p class="card-category">Pending Bids</p>
+                                    <p class="card-title">{{ $stats['pending_bids'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-5 col-md-4">
+                                <div class="icon-big text-center icon-warning">
+                                    <i class="nc-icon nc-check-2 text-success"></i>
+                                </div>
+                            </div>
+                            <div class="col-7 col-md-8">
+                                <div class="numbers">
+                                    <p class="card-category">Accepted Bids</p>
+                                    <p class="card-title">{{ $stats['accepted_bids'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-5 col-md-4">
+                                <div class="icon-big text-center icon-warning">
+                                    <i class="nc-icon nc-trophy text-info"></i>
+                                </div>
+                            </div>
+                            <div class="col-7 col-md-8">
+                                <div class="numbers">
+                                    <p class="card-category">Completed Tasks</p>
+                                    <p class="card-title">{{ $stats['completed_tasks'] }}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -70,7 +121,7 @@
 
         <div class="row">
             <!-- Active Bids -->
-            <div class="col-md-8">
+            <div class="col-md-7">
                 <div class="card">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
@@ -83,7 +134,6 @@
                             <table class="table">
                                 <thead class="text-primary">
                                     <th>Task</th>
-                                    <th>Budget</th>
                                     <th>My Bid</th>
                                     <th>Status</th>
                                     <th>Date</th>
@@ -95,9 +145,9 @@
                                             <a href="{{ route('artisan.tasks.show', $bid->task) }}">
                                                 {{ Str::limit($bid->task->complaint->title, 30) }}
                                             </a>
+                                            <br>
+                                            <small class="text-muted">{{ $bid->task->complaint->category->name ?? 'General' }}</small>
                                         </td>
-                                        <td>{{ format_money($bid->task->budget_min) }} - {{
-                                            format_money($bid->task->budget_max) }}</td>
                                         <td>{{ format_money($bid->amount) }}</td>
                                         <td>
                                             <span
@@ -105,12 +155,11 @@
                                                 {{ ucfirst($bid->status) }}
                                             </span>
                                         </td>
-                                        <td>{{ $bid->created_at->format('M j, Y') }}</td>
+                                        <td>{{ $bid->created_at->format('M j') }}</td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="5" class="text-center py-4 text-muted">You haven't placed any bids
-                                            yet.</td>
+                                        <td colspan="4" class="text-center py-4 text-muted">You haven't placed any bids yet.</td>
                                     </tr>
                                     @endforelse
                                 </tbody>
@@ -120,54 +169,82 @@
                 </div>
             </div>
 
-            <!-- New Tasks in Market -->
-            <div class="col-md-4">
+            <!-- Opportunities -->
+            <div class="col-md-5">
                 <div class="card card-tasks">
                     <div class="card-header">
-                        <h4 class="card-title">Open Opportunities</h4>
-                        <p class="card-category">Newest tasks in {{ auth()->user()->artisanCategory->name ?? 'your area'
-                            }}</p>
+                        <h4 class="card-title">Discover Tasks</h4>
+                        <ul class="nav nav-pills nav-pills-primary mb-3" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="pill" href="#categoryTasks" role="tab">My Category</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="pill" href="#allTasks" role="tab">All Open</a>
+                            </li>
+                        </ul>
                     </div>
                     <div class="card-body">
-                        <div class="table-full-width table-responsive">
-                            <table class="table">
-                                <tbody>
-                                    @forelse($relevantTasks as $task)
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex flex-column">
-                                                <strong>{{ $task->complaint->title }}</strong>
-                                                <small class="text-muted">{{ Str::limit($task->description, 50)
-                                                    }}</small>
-                                                <div class="mt-2">
-                                                    <span class="badge badge-info badge-pill">{{
-                                                        format_money($task->budget_min) }} - {{
-                                                        format_money($task->budget_max) }}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="td-actions text-right">
-                                            <a href="{{ route('artisan.tasks.show', $task) }}"
-                                                class="btn btn-info btn-round btn-link btn-icon btn-sm"
-                                                title="View Details">
-                                                <i class="fa fa-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td class="text-center py-4 text-muted">No new tasks found.</td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                        <div class="tab-content">
+                            <!-- Category Tasks -->
+                            <div class="tab-pane active" id="categoryTasks" role="tabpanel">
+                                <div class="table-full-width table-responsive">
+                                    <table class="table">
+                                        <tbody>
+                                            @forelse($categoryTasks as $task)
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex flex-column">
+                                                        <strong>{{ $task->complaint->title }}</strong>
+                                                        <small class="text-muted">{{ Str::limit($task->description, 50) }}</small>
+                                                        <div class="mt-2">
+                                                            <span class="badge badge-info badge-pill">{{ format_money($task->budget_min) }} - {{ format_money($task->budget_max) }}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="td-actions text-right">
+                                                    <a href="{{ route('artisan.tasks.show', $task) }}" class="btn btn-info btn-round btn-link btn-icon btn-sm"><i class="fa fa-eye"></i></a>
+                                                </td>
+                                            </tr>
+                                            @empty
+                                            <tr><td class="text-center py-4 text-muted">No category-specific tasks.</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <!-- All Tasks -->
+                            <div class="tab-pane" id="allTasks" role="tabpanel">
+                                <div class="table-full-width table-responsive">
+                                    <table class="table">
+                                        <tbody>
+                                            @forelse($relevantTasks as $task)
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex flex-column">
+                                                        <strong>{{ $task->complaint->title }}</strong>
+                                                        <small class="text-muted">{{ $task->complaint->category->name ?? 'General' }}</small>
+                                                        <div class="mt-2">
+                                                            <span class="badge badge-info badge-pill">{{ format_money($task->budget_min) }} - {{ format_money($task->budget_max) }}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="td-actions text-right">
+                                                    <a href="{{ route('artisan.tasks.show', $task) }}" class="btn btn-info btn-round btn-link btn-icon btn-sm"><i class="fa fa-eye"></i></a>
+                                                </td>
+                                            </tr>
+                                            @empty
+                                            <tr><td class="text-center py-4 text-muted">No open tasks found.</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="card-footer">
                         <hr>
                         <div class="stats">
-                            <a href="{{ route('artisan.market') }}" class="btn btn-warning btn-block">Explore Task
-                                Marketplace</a>
+                            <a href="{{ route('artisan.market') }}" class="btn btn-warning btn-block">Explore Full Marketplace</a>
                         </div>
                     </div>
                 </div>

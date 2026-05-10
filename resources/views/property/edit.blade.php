@@ -76,7 +76,7 @@
                                     <label for="currency">Currency *</label>
                                     <select name="currency_id" id="currency" class="form-control" required>
                                         @foreach ($currencies as $currency)
-                                        <option value="{{ $currency->id }}" {{ $property->currency_id == $currency->id ? 'selected' : '' }}>
+                                        <option value="{{ $currency->id }}" data-code="{{ $currency->code }}" {{ $property->currency_id == $currency->id ? 'selected' : '' }}>
                                             {{ $currency->name }} ({{ $currency->symbol }})
                                         </option>
                                         @endforeach
@@ -169,6 +169,17 @@
                 if (preserveSelection && savedState) {
                     getCities(true);
                 }
+                
+                // Auto-select currency based on country unless we are preserving the initial load
+                if (!preserveSelection && data.currency_code) {
+                    const currencySelect = document.getElementById('currency');
+                    for (let i = 0; i < currencySelect.options.length; i++) {
+                        if (currencySelect.options[i].getAttribute('data-code') === data.currency_code) {
+                            currencySelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
             });
     }
 
@@ -183,12 +194,13 @@
         if (!selectedState || !cachedLocationData) return;
 
         const found = cachedLocationData.find(s => s.name === selectedState);
-        if (found && found.cities) {
-            found.cities.forEach(function (city) {
+        if (found && found.lgas) {
+            found.lgas.forEach(function (cityObj) {
+                const cityName = cityObj.name;
                 const option = document.createElement("option");
-                option.value = city;
-                option.textContent = city;
-                if (preserveSelection && city === savedCity) {
+                option.value = cityName;
+                option.textContent = cityName;
+                if (preserveSelection && cityName === savedCity) {
                     option.selected = true;
                 }
                 citySelect.appendChild(option);

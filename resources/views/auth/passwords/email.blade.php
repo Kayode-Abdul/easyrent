@@ -27,10 +27,10 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-image: url('{{ asset(' auth_background_premium_1772325387793.png') }}');
-        background-size: cover;
-        background-position: center;
-        filter: brightness(0.5);
+        background-image: url('{{ asset('assets/images/pagelayout.jpg') }}');
+        background-repeat: repeat;
+        background-size: 500px;
+        filter: brightness(0.6);
         z-index: -1;
     }
 
@@ -174,10 +174,10 @@
         </p>
 
         @if (session('status'))
-        <div class="alert alert-success border-0 mb-4"
-            style="background: #ecfdf5; color: #065f46; border-radius: 16px;">
-            {{ session('status') }}
-        </div>
+            <div class="alert alert-success border-0 mb-4"
+                style="background: #ecfdf5; color: #065f46; border-radius: 16px;">
+                {{ session('status') }}
+            </div>
         @endif
 
         <form method="POST" action="{{ route('password.email') }}">
@@ -188,12 +188,12 @@
                 <input type="email" name="email" class="form-control-premium @error('email') is-invalid @enderror"
                     value="{{ old('email') }}" required placeholder="your@email.com" autofocus>
                 @error('email')
-                <span class="text-danger small mt-2 d-block"><strong>{{ $message }}</strong></span>
+                    <span class="text-danger small mt-2 d-block"><strong>{{ $message }}</strong></span>
                 @enderror
             </div>
 
             <button type="submit" class="btn-premium-reset">
-                Send Reset Link <i class="fas fa-paper-plane"></i>
+                Send Reset Link <i class="fa fa-paper-plane"></i>
             </button>
         </form>
 

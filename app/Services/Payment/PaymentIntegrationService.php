@@ -141,6 +141,8 @@ class PaymentIntegrationService
 
             // Note: Invitation status update removed to avoid MySQL trigger conflict
             // The invitation will be marked as used in a separate operation if needed
+            // Mark invitation as used to prevent link reuse
+            $invitation->update(['status' => ApartmentInvitation::STATUS_USED]);
 
             // Clean up session data
             $this->cleanupSessionData($invitation);
@@ -658,6 +660,8 @@ class PaymentIntegrationService
 
             // Note: Invitation status update removed to avoid MySQL trigger conflict
             // The invitation will be marked as used in a separate operation if needed
+            // Actually, we NEED to mark it as used to prevent duplicate payments
+            $invitation->update(['status' => ApartmentInvitation::STATUS_USED]);
 
             // Clean session state
             $this->cleanupSessionData($invitation);

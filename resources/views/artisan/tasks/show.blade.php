@@ -8,12 +8,12 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h4 class="card-title">{{ $task->complaint->title }}</h4>
+                            <h4 class="card-title">{{ optional($task->complaint)->title ?? 'Untitled Task' }}</h4>
                             <span class="badge badge-{{ $task->status == 'open' ? 'success' : 'secondary' }}">
                                 {{ ucfirst($task->status) }}
                             </span>
                         </div>
-                        <p class="card-category">Category: {{ $task->complaint->category->name }}</p>
+                        <p class="card-category">Category: {{ optional(optional($task->complaint)->category)->name ?? 'Uncategorized' }}</p>
                     </div>
                     <div class="card-body">
                         <div class="mb-4">
@@ -42,7 +42,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label>My Quote (${window.currencySymbol})</label>
+                                        <label>My Quote ({{ format_money(0)->getSymbol() }})</label>
                                         <input type="number" name="amount" class="form-control"
                                             placeholder="Enter your price" required>
                                     </div>
@@ -130,7 +130,7 @@
                                         <td>
                                             <strong>{{ $bid->artisan->first_name }} {{ $bid->artisan->last_name
                                                 }}</strong><br>
-                                            <small class="text-muted">{{ $bid->artisan->artisanCategory->name }}</small>
+                                            <small class="text-muted">{{ optional($bid->artisan->artisanCategory)->name ?? 'Uncategorized' }}</small>
                                         </td>
                                         <td>{{ format_money($bid->amount) }}</td>
                                         <td>{{ $bid->duration }}</td>
@@ -175,7 +175,7 @@
                             <h5 class="title text-primary">{{ $task->landlord->first_name }} {{
                                 $task->landlord->last_name }}</h5>
                             <p class="description">
-                                Property: {{ $task->complaint->apartment->property->address }}
+                                Property: {{ optional(optional(optional($task->complaint)->apartment)->property)->address ?? 'Address Unavailable' }}
                             </p>
                         </div>
                         <p class="description text-center">

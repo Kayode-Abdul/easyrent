@@ -9,6 +9,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 @include('header')
 
+<script>
+    window.currencySymbol = '{{ $currencySymbol ?? "₦" }}';
+</script>
+
+
 <!-- Payment Success Modal -->
 @if(session('payment_congratulations'))
     <div class="modal fade" id="paymentSuccessModal" tabindex="-1" role="dialog" aria-labelledby="paymentSuccessModalLabel"
@@ -17,14 +22,14 @@
             <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
                 <div class="modal-header bg-success text-white border-0 py-4 text-center d-block">
                     <div class="mb-3">
-                        <i class="fas fa-check-circle fa-4x animate__animated animate__bounceIn"></i>
+                        <i class="fa fa-check-circle fa-4x animate__animated animate__bounceIn"></i>
                     </div>
                     <h3 class="modal-title w-100 fw-bold" id="paymentSuccessModalLabel">Congratulations!</h3>
                     <p class="mb-0 opacity-75">Your Apartment has been Secured</p>
                 </div>
                 <div class="modal-body p-4 text-center">
                     <div class="mb-4">
-                        <i class="fas fa-house-user fa-3x text-success mb-2"></i>
+                        <i class="fa fa-house-user fa-3x text-success mb-2"></i>
                         <h4 class="text-dark">Welcome to your new home!</h4>
                     </div>
                     <p class="lead text-muted mb-4">
@@ -34,11 +39,11 @@
                     <div class="d-grid gap-3 d-flex flex-column">
                         <a href="{{ route('payment.receipt', ['id' => session('congrats_payment_id')]) }}"
                             class="btn btn-success btn-lg mb-2 shadow-sm" style="border-radius: 12px;">
-                            <i class="fas fa-file-invoice-dollar me-2"></i> View Payment Receipt
+                            <i class="fa fa-file-invoice-dollar me-2"></i> View Payment Receipt
                         </a>
                         <a href="{{ route('dashboard.myproperty', ['mode' => 'tenant']) }}"
                             class="btn btn-primary btn-lg shadow-sm" style="border-radius: 12px;">
-                            <i class="fas fa-home me-2"></i> View Apartment Details
+                            <i class="fa fa-home me-2"></i> View Apartment Details
                         </a>
                     </div>
                 </div>
@@ -215,7 +220,7 @@
             height: 3px;
             background: rgba(255, 255, 255, 0.5);
             border-radius: 0 0 12px 12px;
-            animation: toastCountdown 180s linear forwards;
+            animation: toastCountdown 7s linear forwards;
         }
 
         @keyframes toastCountdown {
@@ -243,7 +248,7 @@
         // Auto-dismiss after 3 minutes (180000ms)
         setTimeout(function () {
             dismissWelcomeToast();
-        }, 180000);
+        }, 7000);
 
         function dismissWelcomeToast() {
             var toast = document.getElementById('welcomeToast');
@@ -469,6 +474,71 @@
         @endif
     </div>
 
+    <!-- Role Center & Quick Access -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card card-tasks" style="background: linear-gradient(145deg, #ffffff, #f0f7f8); border-left: 5px solid #51cbce;">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="nc-icon nc-badge text-primary mr-2"></i>
+                        Role Center
+                    </h5>
+                    <p class="card-category">Expand your reach and services on EasyRent</p>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Add New Roles</h6>
+                            <div class="d-flex flex-column gap-3">
+                                @if(!auth()->user()->isArtisan())
+                                    <button class="btn btn-outline-info btn-round btn-block mb-2 add-role-btn" data-role="Artisan">
+                                        <i class="nc-icon nc-settings-gear-65"></i> Become an Artisan
+                                    </button>
+                                @endif
+                                @if(!auth()->user()->hasRole('property_manager'))
+                                    <button class="btn btn-outline-primary btn-round btn-block add-role-btn" data-role="property_manager">
+                                        <i class="nc-icon nc-layout-11"></i> Become a Property Manager
+                                    </button>
+                                @endif
+                                @if(auth()->user()->isArtisan() && auth()->user()->hasRole('property_manager'))
+                                    <div class="text-center py-3 text-success">
+                                        <i class="nc-icon nc-check-2"></i> You have all active services!
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-md-6 border-left">
+                            <h6>Specialized Dashboards</h6>
+                            <div class="list-group list-group-flush">
+                                @if(auth()->user()->isArtisan())
+                                    <a href="{{ route('artisan.dashboard') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                        <span><i class="nc-icon nc-briefcase-24 mr-2"></i> Artisan Portal</span>
+                                        <span class="badge badge-primary badge-pill">GO</span>
+                                    </a>
+                                @endif
+                                <a href="{{ route('commissions.index') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <span><i class="nc-icon nc-money-coins mr-2 text-success"></i> My Referral Earnings</span>
+                                    <i class="nc-icon nc-minimal-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+             <div class="card" style="background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%); color: white;">
+                <div class="card-body text-center py-4">
+                    <h5 class="card-title text-white">Refer & Earn</h5>
+                    <p class="mb-4 opacity-8">Refer a landlord and earn commissions on every successful rent payment.</p>
+                    <a href="{{ route('commissions.index') }}" class="btn btn-white btn-round text-primary font-weight-bold">
+                        <i class="nc-icon nc-share-66"></i> My Referral Hub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Referral & Earnings Section -->
     @if(isset($referralData) && ($referralData['has_referrals'] ?? false))
         <div class="row">
@@ -476,7 +546,7 @@
                 <div class="card card-tasks">
                     <div class="card-header">
                         <h5 class="card-title">
-                            <i class="fas fa-bullhorn text-primary me-2"></i>
+                            <i class="fa fa-bullhorn text-primary me-2"></i>
                             Referral Program
                         </h5>
                         <p class="card-category">Invite landlords and earn commissions on every rent payment.</p>
@@ -489,18 +559,18 @@
                                     <input type="text" class="form-control bg-light" id="referralLinkInput"
                                         value="{{ $referralData['referral_link'] }}" readonly>
                                     <button class="btn btn-primary" type="button" onclick="copyReferralLinkDashboard()">
-                                        <i class="fas fa-copy me-1"></i> Copy Link
+                                        <i class="fa fa-copy me-1"></i> Copy Link
                                     </button>
                                 </div>
                             </div>
                             <div class="col-md-4 text-center">
                                 @if(!auth()->user()->isMarketer())
                                     <a href="{{ route('marketer.profile.create') }}" class="btn btn-outline-success">
-                                        <i class="fas fa-rocket me-1"></i> Join Marketer Hub
+                                        <i class="fa fa-rocket me-1"></i> Join Marketer Hub
                                     </a>
                                 @else
                                     <a href="{{ route('marketer.dashboard') }}" class="btn btn-outline-primary">
-                                        <i class="fas fa-tachometer-alt me-1"></i> Marketer Dashboard
+                                        <i class="fa fa-tachometer-alt me-1"></i> Marketer Dashboard
                                     </a>
                                 @endif
                             </div>
@@ -760,7 +830,7 @@
                                 </a>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <a href="/dashboard/payments" class="btn btn-warning btn-block">
+                                <a href="{{ route('billing.index') }}" class="btn btn-warning btn-block">
                                     <i class="nc-icon nc-money-coins"></i> View Payments
                                 </a>
                             </div>
@@ -779,7 +849,7 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <a href="/dashboard/payments" class="btn btn-warning btn-block">
+                                <a href="{{ route('billing.index') }}" class="btn btn-warning btn-block">
                                     <i class="nc-icon nc-money-coins"></i> Payment History
                                 </a>
                             </div>
@@ -1079,6 +1149,48 @@
                     console.log('Error response:', xhr.responseText);
                     $switch.prop('disabled', false);
                     alert('Error switching PM mode. Please check console for details.');
+                }
+            });
+        });
+
+        // Dynamic Role Addition
+        $('.add-role-btn').on('click', function () {
+            var role = $(this).data('role');
+            var $btn = $(this);
+            
+            Swal.fire({
+                title: 'Confirm New Role',
+                text: 'Are you sure you want to add the ' + role.replace('_', ' ') + ' role to your account?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, add it!',
+                confirmButtonColor: '#51cbce'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Adding...');
+                    
+                    $.ajax({
+                        url: '{{ route("roles.add") }}',
+                        method: 'POST',
+                        data: { role_name: role },
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire('Success!', res.message, 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                $btn.prop('disabled', false).html('Try Again');
+                                Swal.fire('Error', res.message, 'error');
+                            }
+                        },
+                        error: function (xhr) {
+                            $btn.prop('disabled', false).html('Try Again');
+                            Swal.fire('Error', 'Failed to add role. Please try again later.', 'error');
+                        }
+                    });
                 }
             });
         });

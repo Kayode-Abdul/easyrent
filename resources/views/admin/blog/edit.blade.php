@@ -5,8 +5,11 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Edit Blog Post</h4>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">Edit Blog Post</h4>
+                    <a href="{{ route('admin.blog.index') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa fa-arrow-left"></i> Back to Blog
+                    </a>
                 </div>
                 <div class="card-body">
                     <form action="{{ route('admin.blog.update', $post->id) }}" method="POST">

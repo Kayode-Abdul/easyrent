@@ -18,8 +18,6 @@ class RegionalCommissionController extends Controller
     public function __construct(RegionalRateManager $regionalRateManager)
     {
         $this->middleware('auth');
-        // Temporarily disable role middleware for testing
-        // $this->middleware('role:super_admin');
         $this->regionalRateManager = $regionalRateManager;
     }
 
@@ -444,19 +442,66 @@ class RegionalCommissionController extends Controller
     }
 
     /**
-     * Get available regions
+     * Get available regions grouped by country
      */
     private function getAvailableRegions()
     {
-        // This could be expanded to pull from a regions table or configuration
-        return [
-            'Lagos', 'Abuja', 'Port Harcourt', 'Kano', 'Ibadan', 'Kaduna',
-            'Jos', 'Ilorin', 'Aba', 'Onitsha', 'Warri', 'Calabar',
-            'Benin City', 'Akure', 'Abeokuta', 'Osogbo', 'Ado-Ekiti',
-            'Lokoja', 'Makurdi', 'Bauchi', 'Gombe', 'Yola', 'Minna',
-            'Sokoto', 'Katsina', 'Dutse', 'Damaturu', 'Maiduguri',
-            'Jalingo', 'Lafia', 'Asaba', 'Awka', 'Owerri', 'Umuahia',
-            'Abakaliki', 'Enugu', 'Uyo', 'Yenagoa'
+        // International regions grouped by country
+        $regionsByCountry = [
+            'Nigeria' => [
+                'Lagos', 'Abuja', 'Port Harcourt', 'Kano', 'Ibadan', 'Kaduna',
+                'Jos', 'Ilorin', 'Aba', 'Onitsha', 'Warri', 'Calabar',
+                'Benin City', 'Akure', 'Abeokuta', 'Osogbo', 'Ado-Ekiti',
+                'Lokoja', 'Makurdi', 'Bauchi', 'Gombe', 'Yola', 'Minna',
+                'Sokoto', 'Katsina', 'Dutse', 'Damaturu', 'Maiduguri',
+                'Jalingo', 'Lafia', 'Asaba', 'Awka', 'Owerri', 'Umuahia',
+                'Abakaliki', 'Enugu', 'Uyo', 'Yenagoa',
+            ],
+            'Ghana' => [
+                'Accra', 'Kumasi', 'Tamale', 'Takoradi', 'Cape Coast',
+                'Tema', 'Sunyani', 'Ho', 'Koforidua', 'Bolgatanga',
+            ],
+            'Kenya' => [
+                'Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret',
+                'Thika', 'Malindi', 'Nanyuki', 'Kitale', 'Garissa',
+            ],
+            'South Africa' => [
+                'Johannesburg', 'Cape Town', 'Durban', 'Pretoria', 'Port Elizabeth',
+                'Bloemfontein', 'East London', 'Polokwane', 'Nelspruit', 'Kimberley',
+            ],
+            'United Kingdom' => [
+                'London', 'Manchester', 'Birmingham', 'Leeds', 'Liverpool',
+                'Glasgow', 'Edinburgh', 'Bristol', 'Sheffield', 'Nottingham',
+            ],
+            'United States' => [
+                'New York', 'Los Angeles', 'Chicago', 'Houston', 'Miami',
+                'Atlanta', 'Dallas', 'San Francisco', 'Seattle', 'Boston',
+            ],
+            'United Arab Emirates' => [
+                'Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Ras Al Khaimah',
+            ],
         ];
+
+        // Also include any custom regions already in the database
+        $existingRegions = CommissionRate::distinct()->pluck('region')->toArray();
+
+        // Build flat list with country prefix for display
+        $allRegions = [];
+        foreach ($regionsByCountry as $country => $cities) {
+            foreach ($cities as $city) {
+                $allRegions[] = $city . ', ' . $country;
+            }
+        }
+
+        // Merge existing DB regions that might not be in the predefined list
+        foreach ($existingRegions as $region) {
+            if (!in_array($region, $allRegions)) {
+                $allRegions[] = $region;
+            }
+        }
+
+        sort($allRegions);
+
+        return $allRegions;
     }
 }

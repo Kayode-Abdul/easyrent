@@ -180,7 +180,7 @@
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
                                     <a class="dropdown-item" href="{{ url('/dashboard/user') }}">Profile</a>
                                     <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="#" onclick="handleLogout('logout-form')">
+                                    <a class="dropdown-item" href="#" onclick="handleLogout('logout-form', event)">
                                         Logout
                                     </a>
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST"

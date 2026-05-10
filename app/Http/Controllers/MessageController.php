@@ -93,6 +93,22 @@ class MessageController extends Controller
 
     public function send(Request $request)
     {
+        // Resolve receiver_id from manual input if provided
+        if ($request->filled('receiver_lookup') && !$request->filled('receiver_id')) {
+            $lookup = trim($request->receiver_lookup);
+            $recipient = User::where('user_id', $lookup)
+                ->orWhere('email', $lookup)
+                ->first();
+
+            if (!$recipient) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['receiver_lookup' => 'No user found with that ID or email address.']);
+            }
+
+            $request->merge(['receiver_id' => $recipient->user_id]);
+        }
+
         $request->validate([
             'receiver_id' => 'required|exists:users,user_id',
             'subject' => 'nullable|string|max:255',

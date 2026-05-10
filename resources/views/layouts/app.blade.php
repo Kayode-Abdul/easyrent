@@ -140,7 +140,7 @@
                                     <a class="dropdown-item" href="{{ url('/dashboard/user') }}">Profile</a>
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item" href="#"
-                                       onclick="handleLogout('logout-form')">
+                                       onclick="handleLogout('logout-form', event)">
                                         Logout
                                     </a>
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -203,7 +203,7 @@
     
     <!-- Global CSRF setup and Currency configuration -->
     <script>
-        window.currencySymbol = '₦'; // Default fallback
+        window.currencySymbol = "{!! format_money(0)->getSymbol() !!}";
         
         $.ajaxSetup({
             headers: {

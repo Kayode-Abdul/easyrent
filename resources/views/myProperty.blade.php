@@ -269,9 +269,10 @@
 
                 <!-- Managed Properties Card (for Property Managers in PM mode only) -->
                 @if(
-                        in_array(auth()->user()->role, [6, 8]) && session('dashboard_mode', 'property_manager') ===
-                        'property_manager'
+                        in_array(auth()->user()->role, [6, 8]) &&
+                        (session('dashboard_mode', 'property_manager') === 'property_manager' || $mode === 'landlord')
                     )
+
                     @php
                         $managedProperties = \App\Models\Property::where('agent_id', auth()->user()->user_id)
                             ->with(['owner', 'apartments'])
@@ -334,14 +335,14 @@
                                                             <td>
                                                                 <span
                                                                     class="font-weight-bold text-primary">{{ $property->property_id
-                                                                                                                                                                        }}</span>
+                                                                                                                                                                                                                                                                                                                                                            }}</span>
                                                             </td>
                                                             <td>
                                                                 <div>
                                                                     <strong>{{ $property->address }}</strong><br>
                                                                     <small class="text-muted">{{ $property->lga }},
                                                                         {{ $property->state
-                                                                                                                                                                            }}</small>
+                                                                                                                                                                                                                                                                                                                                                                }}</small>
                                                                 </div>
                                                             </td>
                                                             <td>
@@ -833,7 +834,7 @@
                                                                 <strong>{{ $apartment->apartment_id }}</strong><br>
                                                                 <small
                                                                     class="text-muted">{{ $apartment->apartment_type ?? 'N/A'
-                                                                                                                                                                                }}</small>
+                                                                                                                                                                                                                                                                                                                                                                    }}</small>
                                                             </div>
                                                         </td>
                                                         <td>{{ $apartment->property->address ?? '-' }}</td>
@@ -847,7 +848,7 @@
                                                                     <strong>{{ $apartment->range_start->format('M d, Y') }}</strong><br>
                                                                     <small class="text-muted">to
                                                                         {{ $apartment->range_end->format('M d,
-                                                                                                                                                                                                        Y') }}</small>
+                                                                                                                                                                                                                                                                                                                                                                                                                                Y') }}</small>
                                                                 </div>
                                                             @else
                                                                 <span class="text-muted">No lease period</span>
@@ -1056,6 +1057,7 @@
                                     <option value="5">Warehouse</option>
                                     <option value="8">Store</option>
                                     <option value="9">Shop</option>
+                                    <option value="10">Shopping Mall</option>
                                 </optgroup>
                                 <optgroup label="Land/Agricultural">
                                     <option value="6">Land</option>
@@ -1067,9 +1069,9 @@
                             <label for="country">Country</label>
                             <select name="country" id="country" class="form-control" onchange="getStatesForModal()"
                                 required>
-                                <option value="" disabled>Select Country</option>
+                                <option value="" selected>Select Country</option>
                                 @foreach ($countries as $c)
-                                                        <option value="{{ $c['name'] }}" {{ $c['name'] === 'Nigeria' ? 'selected' : '' }}>{{
+                                                        <option value="{{ $c['name'] }}">{{
                                     $c['name'] }}</option>
                                 @endforeach
                             </select>
@@ -1078,7 +1080,7 @@
                             <label for="currency">Currency *</label>
                             <select name="currency_id" id="currency" class="form-control" required>
                                 @foreach ($currencies as $currency)
-                                    <option value="{{ $currency->id }}" data-code="{{ $currency->code }}" {{ $currency->code === 'NGN' ? 'selected' : '' }}>
+                                    <option value="{{ $currency->id }}" data-code="{{ $currency->code }}" {{ $currency->code === 'USD' ? 'selected' : '' }}>
                                         {{ $currency->name }} ({{ $currency->symbol }})
                                     </option>
                                 @endforeach
@@ -1239,59 +1241,59 @@
 
                     <!-- Apartment Section -->
                     <!-- <div id="apartmentSection" style="display: none;">
-                                        <hr>
-                                        <h5>Add Apartments</h5>
-                                        <div id="apartmentMessage"></div>
-                                        <form id="apartmentForm" class="p-3">
-                                            @csrf
-                                            <input type="hidden" id="property-id" name="propertyId">
-                                            <div class="form-group row">
-                                                <div class="col-md-4">
-                                                    <label>Apartment/Unit Type</label>
-                                                    <select class="form-control" name="apartmentType" required>
-                                                        <option value="" disabled selected>-- Select Type --</option>
-                                                        <optgroup label="Residential Units">
-                                                            <option value="Studio">Studio</option>
-                                                            <option value="1 Bedroom">1 Bedroom</option>
-                                                            <option value="2 Bedroom">2 Bedroom</option>
-                                                            <option value="3 Bedroom">3 Bedroom</option>
-                                                            <option value="4 Bedroom">4 Bedroom</option>
-                                                            <option value="Penthouse">Penthouse</option>
-                                                            <option value="Duplex Unit">Duplex Unit</option>
-                                                        </optgroup>
-                                                        <optgroup label="Commercial Units">
-                                                            <option value="Shop Unit">Shop Unit</option>
-                                                            <option value="Store Unit">Store Unit</option>
-                                                            <option value="Office Unit">Office Unit</option>
-                                                            <option value="Restaurant Unit">Restaurant Unit</option>
-                                                            <option value="Warehouse Unit">Warehouse Unit</option>
-                                                            <option value="Showroom">Showroom</option>
-                                                        </optgroup>
-                                                        <optgroup label="Other">
-                                                            <option value="Storage Unit">Storage Unit</option>
-                                                            <option value="Parking Space">Parking Space</option>
-                                                            <option value="Other">Other</option>
-                                                        </optgroup>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="table-responsive">
-                                                <table class="table table-striped">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Unit Number</th>
-                                                            <th>Rent Amount</th>
-                                                            <th>Action</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody></tbody>
-                                                </table>
-                                            </div>
-                                            <button type="button" class="btn btn-success btn-sm" onclick="addApartmentRow()">
-                                                <i class="fa fa-plus"></i> Add Apartment
-                                            </button>
-                                        </form>
-                                    </div> -->
+                                                                            <hr>
+                                                                            <h5>Add Apartments</h5>
+                                                                            <div id="apartmentMessage"></div>
+                                                                            <form id="apartmentForm" class="p-3">
+                                                                                @csrf
+                                                                                <input type="hidden" id="property-id" name="propertyId">
+                                                                                <div class="form-group row">
+                                                                                    <div class="col-md-4">
+                                                                                        <label>Apartment/Unit Type</label>
+                                                                                        <select class="form-control" name="apartmentType" required>
+                                                                                            <option value="" disabled selected>-- Select Type --</option>
+                                                                                            <optgroup label="Residential Units">
+                                                                                                <option value="Studio">Studio</option>
+                                                                                                <option value="1 Bedroom">1 Bedroom</option>
+                                                                                                <option value="2 Bedroom">2 Bedroom</option>
+                                                                                                <option value="3 Bedroom">3 Bedroom</option>
+                                                                                                <option value="4 Bedroom">4 Bedroom</option>
+                                                                                                <option value="Penthouse">Penthouse</option>
+                                                                                                <option value="Duplex Unit">Duplex Unit</option>
+                                                                                            </optgroup>
+                                                                                            <optgroup label="Commercial Units">
+                                                                                                <option value="Shop Unit">Shop Unit</option>
+                                                                                                <option value="Store Unit">Store Unit</option>
+                                                                                                <option value="Office Unit">Office Unit</option>
+                                                                                                <option value="Restaurant Unit">Restaurant Unit</option>
+                                                                                                <option value="Warehouse Unit">Warehouse Unit</option>
+                                                                                                <option value="Showroom">Showroom</option>
+                                                                                            </optgroup>
+                                                                                            <optgroup label="Other">
+                                                                                                <option value="Storage Unit">Storage Unit</option>
+                                                                                                <option value="Parking Space">Parking Space</option>
+                                                                                                <option value="Other">Other</option>
+                                                                                            </optgroup>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="table-responsive">
+                                                                                    <table class="table table-striped">
+                                                                                        <thead>
+                                                                                            <tr>
+                                                                                                <th>Unit Number</th>
+                                                                                                <th>Rent Amount</th>
+                                                                                                <th>Action</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody></tbody>
+                                                                                    </table>
+                                                                                </div>
+                                                                                <button type="button" class="btn btn-success btn-sm" onclick="addApartmentRow()">
+                                                                                    <i class="fa fa-plus"></i> Add Apartment
+                                                                                </button>
+                                                                            </form>
+                                                                        </div> -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -1558,68 +1560,68 @@
                 success: function (response) {
                     if (response.success) {
                         let content = `
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <h6>Payment Information</h6>
-                                                <table class="table table-sm">
-                                                    <tr><td><strong>Amount:</strong></td><td>${response.payment.currency_symbol || ''}${parseFloat(response.payment.amount).toLocaleString()}</td></tr>
-                                                    <tr><td><strong>Property:</strong></td><td>${response.payment.property_address || 'N/A'}</td></tr>
-                                                    <tr><td><strong>Apartment:</strong></td><td>${response.payment.apartment_type || 'N/A'}</td></tr>
-                                                    <tr><td><strong>Tenant:</strong></td><td>${response.payment.tenant_name || 'N/A'}</td></tr>
-                                                    <tr><td><strong>Date:</strong></td><td>${response.payment.payment_date}</td></tr>
-                                                </table>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <h6>Commission Summary</h6>
-                                                <table class="table table-sm">
-                                                    <tr><td><strong>Total Commission:</strong></td><td class="text-warning">${response.payment.currency_symbol || ''}${parseFloat(response.commission_breakdown.total_commission || 0).toLocaleString()}</td></tr>
-                                                    <tr><td><strong>Commission %:</strong></td><td>${parseFloat(response.commission_breakdown.commission_percentage || 0).toFixed(2)}%</td></tr>
-                                                    <tr><td><strong>Net Amount:</strong></td><td class="text-success">${response.payment.currency_symbol || ''}${parseFloat(response.commission_breakdown.net_amount || response.payment.amount).toLocaleString()}</td></tr>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    `;
+                                                                            <div class="row">
+                                                                                <div class="col-md-6">
+                                                                                    <h6>Payment Information</h6>
+                                                                                    <table class="table table-sm">
+                                                                                        <tr><td><strong>Amount:</strong></td><td>${response.payment.currency_symbol || ''}${parseFloat(response.payment.amount).toLocaleString()}</td></tr>
+                                                                                        <tr><td><strong>Property:</strong></td><td>${response.payment.property_address || 'N/A'}</td></tr>
+                                                                                        <tr><td><strong>Apartment:</strong></td><td>${response.payment.apartment_type || 'N/A'}</td></tr>
+                                                                                        <tr><td><strong>Tenant:</strong></td><td>${response.payment.tenant_name || 'N/A'}</td></tr>
+                                                                                        <tr><td><strong>Date:</strong></td><td>${response.payment.payment_date}</td></tr>
+                                                                                    </table>
+                                                                                </div>
+                                                                                <div class="col-md-6">
+                                                                                    <h6>Commission Summary</h6>
+                                                                                    <table class="table table-sm">
+                                                                                        <tr><td><strong>Total Commission:</strong></td><td class="text-warning">${response.payment.currency_symbol || ''}${parseFloat(response.commission_breakdown.total_commission || 0).toLocaleString()}</td></tr>
+                                                                                        <tr><td><strong>Commission %:</strong></td><td>${parseFloat(response.commission_breakdown.commission_percentage || 0).toFixed(2)}%</td></tr>
+                                                                                        <tr><td><strong>Net Amount:</strong></td><td class="text-success">${response.payment.currency_symbol || ''}${parseFloat(response.commission_breakdown.net_amount || response.payment.amount).toLocaleString()}</td></tr>
+                                                                                    </table>
+                                                                                </div>
+                                                                            </div>
+                                                                        `;
 
                         if (response.commission_breakdown.breakdown && response.commission_breakdown.breakdown.length > 0) {
                             content += `
-                                            <hr>
-                                            <h6>Commission Distribution</h6>
-                                            <div class="table-responsive">
-                                                <table class="table table-striped">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Tier</th>
-                                                            <th>Recipient</th>
-                                                            <th>Amount</th>
-                                                            <th>Percentage</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                        `;
+                                                                                <hr>
+                                                                                <h6>Commission Distribution</h6>
+                                                                                <div class="table-responsive">
+                                                                                    <table class="table table-striped">
+                                                                                        <thead>
+                                                                                            <tr>
+                                                                                                <th>Tier</th>
+                                                                                                <th>Recipient</th>
+                                                                                                <th>Amount</th>
+                                                                                                <th>Percentage</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody>
+                                                                            `;
 
                             response.commission_breakdown.breakdown.forEach(function (item) {
                                 content += `
-                                                <tr>
-                                                    <td>${item.tier.replace('_', ' ').toUpperCase()}</td>
-                                                    <td>${item.recipient ? item.recipient.name : 'N/A'}</td>
-                                                    <td>${response.payment.currency_symbol || ''}${parseFloat(item.amount).toLocaleString()}</td>
-                                                    <td>${parseFloat(item.percentage).toFixed(2)}%</td>
-                                                </tr>
-                                            `;
+                                                                                    <tr>
+                                                                                        <td>${item.tier.replace('_', ' ').toUpperCase()}</td>
+                                                                                        <td>${item.recipient ? item.recipient.name : 'N/A'}</td>
+                                                                                        <td>${response.payment.currency_symbol || ''}${parseFloat(item.amount).toLocaleString()}</td>
+                                                                                        <td>${parseFloat(item.percentage).toFixed(2)}%</td>
+                                                                                    </tr>
+                                                                                `;
                             });
 
                             content += `
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        `;
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </div>
+                                                                            `;
                         } else {
                             content += `
-                                            <hr>
-                                            <div class="alert alert-info">
-                                                No commission breakdown available for this payment.
-                                            </div>
-                                        `;
+                                                                                <hr>
+                                                                                <div class="alert alert-info">
+                                                                                    No commission breakdown available for this payment.
+                                                                                </div>
+                                                                            `;
                         }
 
                         $('#commissionDetailsContent').html(content);
@@ -1645,16 +1647,16 @@
 
                         response.notifications.forEach(function (notification) {
                             content += `
-                                            <div class="list-group-item">
-                                                <div class="d-flex w-100 justify-content-between">
-                                                    <h6 class="mb-1">Commission Rate Update</h6>
-                                                    <small>${notification.created_at}</small>
-                                                </div>
-                                                <p class="mb-1">${notification.message}</p>
-                                                <small>Effective from: ${notification.effective_from}</small>
-                                                <br><small>Updated by: ${notification.created_by}</small>
-                                            </div>
-                                        `;
+                                                                                <div class="list-group-item">
+                                                                                    <div class="d-flex w-100 justify-content-between">
+                                                                                        <h6 class="mb-1">Commission Rate Update</h6>
+                                                                                        <small>${notification.created_at}</small>
+                                                                                    </div>
+                                                                                    <p class="mb-1">${notification.message}</p>
+                                                                                    <small>Effective from: ${notification.effective_from}</small>
+                                                                                    <br><small>Updated by: ${notification.created_by}</small>
+                                                                                </div>
+                                                                            `;
                         });
 
                         content += '</div>';
@@ -1742,33 +1744,52 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Data: ", data.success ? data.messages : data);
+                    console.log("Data: ", data);
                     if (data.success) {
+                        const successMsg = (data.messages && data.messages.message) ? data.messages.message : 'Property Listed Successfully!';
                         document.getElementById('propertyMessage').innerHTML = `
-                                    <div class="alert alert-success">
-                                        ${data.messages.message}
-                                    </div>
-                                `;
+                            <div class="alert alert-success">
+                                ${successMsg}
+                            </div>
+                        `;
                         // Close modal and reload table after short delay
                         setTimeout(() => {
                             $('#addPropertyModal').modal('hide');
                             window.location.reload();
                         }, 1200);
                     } else {
+                        let errorMessage = 'An error occurred while saving the property.';
+                        if (data.messages && data.messages.message) {
+                            errorMessage = data.messages.message;
+                        } else if (data.message) {
+                            errorMessage = data.message;
+                        }
+                        
+                        // Handle validation errors if present
+                        if (data.errors) {
+                            errorMessage += '<br><ul class="mb-0">';
+                            for (const field in data.errors) {
+                                data.errors[field].forEach(err => {
+                                    errorMessage += `<li>${err}</li>`;
+                                });
+                            }
+                            errorMessage += '</ul>';
+                        }
+
                         document.getElementById('propertyMessage').innerHTML = `
-                                    <div class="alert alert-danger">
-                                        ${data.messages.message}
-                                    </div>
-                                `;
+                            <div class="alert alert-danger">
+                                ${errorMessage}
+                            </div>
+                        `;
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     document.getElementById('propertyMessage').innerHTML = `
-                                <div class="alert alert-danger">
-                                    An error occurred while saving the property. Please try again.
-                                </div>
-                            `;
+                                                                    <div class="alert alert-danger">
+                                                                        An error occurred while saving the property. Please try again.
+                                                                    </div>
+                                                                `;
                 });
         });
 
@@ -1796,10 +1817,10 @@
                     console.log('Response:', data); // Log the response
                     if (data.success) {
                         document.getElementById('apartmentMessage').innerHTML = `
-                                    <div class="alert alert-success">
-                                        ${data.messages.message}
-                                    </div>
-                                `;
+                                                                        <div class="alert alert-success">
+                                                                            ${data.messages.message}
+                                                                        </div>
+                                                                    `;
                         // Reload the page after successful submission
                         setTimeout(() => {
                             window.location.reload();
@@ -1815,19 +1836,19 @@
                             errorMessage = data.messages;
                         }
                         document.getElementById('apartmentMessage').innerHTML = `
-                                    <div class="alert alert-danger">
-                                        ${errorMessage}
-                                    </div>
-                                `;
+                                                                        <div class="alert alert-danger">
+                                                                            ${errorMessage}
+                                                                        </div>
+                                                                    `;
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     document.getElementById('apartmentMessage').innerHTML = `
-                                <div class="alert alert-danger">
-                                    An error occurred while saving the apartments. Please try again.
-                                </div>
-                            `;
+                                                                    <div class="alert alert-danger">
+                                                                        An error occurred while saving the apartments. Please try again.
+                                                                    </div>
+                                                                `;
                 });
         });
     </script>
@@ -1840,7 +1861,7 @@
                 if (!$table.length) return 0;
 
                 let visibleRows = 0;
-                $table.find("tbody tr").each(function() {
+                $table.find("tbody tr").each(function () {
                     const $row = $(this);
                     const text = $row.text().toLowerCase();
                     const matches = text.indexOf(query) > -1;
@@ -1850,7 +1871,7 @@
                 return visibleRows;
             }
 
-            $("#searchInput").on("keyup", function () {
+            $("body").on("keyup", "#searchInput", function () {
                 const value = $(this).val().toLowerCase();
                 let totalVisible = 0;
 
@@ -1873,13 +1894,13 @@
 
             // If there's a different search input for tenant mode (form-based), 
             // ensure it's handled or the AJAX one is available there too.
-            const $tenantSearch = $('input[name="search"][placeholder*="Search"]');
-            if ($tenantSearch.length && $tenantSearch.attr('id') !== 'searchInput') {
-                $tenantSearch.on("keyup", function() {
+            const tenantSearchSelector = 'input[name="search"][placeholder*="Search"]';
+            $("body").on("keyup", tenantSearchSelector, function () {
+                if ($(this).attr('id') !== 'searchInput') {
                     const value = $(this).val().toLowerCase();
                     performSearch(value, 'tenancyTable');
-                });
-            }
+                }
+            });
         });
     </script>
 

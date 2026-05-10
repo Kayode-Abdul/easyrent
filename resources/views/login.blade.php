@@ -20,15 +20,15 @@
                     <p>Sign in to access your property management dashboard and continue your journey with us.</p>
                     <div class="features-list">
                         <div class="feature-item">
-                            <i class="fas fa-home"></i>
+                            <i class="fa fa-home"></i>
                             <span>Manage Properties</span>
                         </div>
                         <div class="feature-item">
-                            <i class="fas fa-users"></i>
+                            <i class="fa fa-users"></i>
                             <span>Connect with Tenants</span>
                         </div>
                         <div class="feature-item">
-                            <i class="fas fa-chart-line"></i>
+                            <i class="fa fa-chart-line"></i>
                             <span>Track Performance</span>
                         </div>
                     </div>
@@ -46,22 +46,34 @@
                     <!-- Messages -->
                     <div id="message">
                         @if (session('status'))
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
-                            {{ session('status') }}
-                        </div>
+                            <div class="alert alert-success">
+                                <i class="fa fa-check-circle"></i>
+                                {{ session('status') }}
+                            </div>
                         @endif
                         @if (session('message'))
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
-                            {{ session('message') }}
-                        </div>
+                            <div class="alert alert-success">
+                                <i class="fa fa-check-circle"></i>
+                                {{ session('message') }}
+                            </div>
+                        @endif
+                        @if (session('warning'))
+                            <div class="alert alert-warning" style="background: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 14px;">
+                                <i class="fa fa-exclamation-triangle"></i>
+                                {{ session('warning') }}
+                            </div>
+                        @endif
+                        @if (session('info'))
+                            <div class="alert alert-info" style="background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 14px;">
+                                <i class="fa fa-info-circle"></i>
+                                {{ session('info') }}
+                            </div>
                         @endif
                         @if (session('error'))
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle"></i>
-                            {{ session('error') }}
-                        </div>
+                            <div class="alert alert-danger">
+                                <i class="fa fa-exclamation-circle"></i>
+                                {{ session('error') }}
+                            </div>
                         @endif
                     </div>
 
@@ -70,7 +82,7 @@
 
                         <div class="input-group">
                             <div class="input-wrapper">
-                                <i class="fas fa-envelope input-icon"></i>
+                                <i class="fa fa-envelope input-icon"></i>
                                 <input name="email" class="form-input" type="email" placeholder="Email Address"
                                     required>
                                 <label class="floating-label">Email Address</label>
@@ -79,7 +91,7 @@
 
                         <div class="input-group">
                             <div class="input-wrapper">
-                                <i class="fas fa-lock input-icon"></i>
+                                <i class="fa fa-lock input-icon"></i>
                                 <input name="password" class="form-input" type="password" placeholder="Password"
                                     required>
                                 <label class="floating-label">Password</label>
@@ -100,7 +112,7 @@
 
                         <button type="submit" class="login-btn">
                             <span class="btn-text">Sign In</span>
-                            <i class="fas fa-arrow-right btn-icon"></i>
+                            <i class="fa fa-arrow-right btn-icon"></i>
                         </button>
 
                         <div class="divider">
@@ -569,7 +581,7 @@
 
                 submitBtn.disabled = true;
                 btnText.textContent = 'Signing In...';
-                btnIcon.className = 'fas fa-spinner fa-spin btn-icon';
+                btnIcon.className = 'fa fa-spinner fa-spin btn-icon';
             });
         });
     </script>
@@ -582,7 +594,7 @@
 
 <script src="assets/js/custom/login.js"></script>
 @if (auth()->check())
-<script>window.location = '/dashboard';</script>
+    <script>window.location = '/dashboard';</script>
 @endif
 <!-- Footer area start -->
 @include('footer')

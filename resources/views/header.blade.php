@@ -89,10 +89,13 @@
         })();
     </script>
 
-    @php $currentSegment = request()->segment(1);
-    $isDashboard = in_array($currentSegment, ['', 'contact', 'benefits', 'faq', 'login', 'password', 'register']);
+    @php
+    // $paymentPage = request()->segment(2);
+    // $forPayment = in_array($paymentPage, ['invite']);
+     $currentSegment = request()->segment(1);
+    $isDashboard = in_array($currentSegment, ['', 'contact', 'benefits', 'faq', 'login', 'password', 'register', 'apartment', 'payment']);
     @endphp
-    @if($isDashboard)
+    @if($isDashboard )
     <!-- Add CSRF Token meta tag -->
     <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:200,300,400,600,700,800,900&display=swap"
         rel="stylesheet">
@@ -281,7 +284,7 @@
                     </li>
                     <li class="nav-item d-none d-lg-block">
                         <a href="{{ route('register') }}" class="nav-link btn btn-primary text-white px-3 py-2"
-                            style="border-radius: 20px;">
+                            style="border-radius: 20px;color: #fff !important;">
                             <i class="bi bi-person-plus"></i> Sign Up
                         </a>
                     </li>
@@ -413,18 +416,19 @@
     <script>
         $(document).ready(function () {
             // Remove default Bootstrap collapse behavior and add custom functionality
-            $avbar - togglick').on('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
+            $('.navbar-toggler').on('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-            const $this = $(this);
-            const target = $this.attr('data-target'               const $collapse = $(target);
+                const $this = $(this);
+                const target = $this.attr('data-target');
+                const $collapse = $(target);
 
-            // Toggle aria-expanded
-            const isExpanded = $this.attr('aria-expanded') === 'true';
-            $this.attr('aria-expanded', ;
+                // Toggle aria-expanded
+                const isExpanded = $this.attr('aria-expanded') === 'true';
+                $this.attr('aria-expanded', !isExpanded);
 
-            // Toggle menu with smooth animation
+                // Toggle menu with smooth animation
             if (!isExpanded) {
                 // Open menu
                 $collapse.stop(true, true).slideDown(400, function () {
@@ -480,7 +484,7 @@
                 const $toggler = $('.navbar-toggler');
 
                 // Reset menu for desktop
-                $collapse.removeClassow').removeAttr('style').show();
+                $collapse.removeClass('show').removeAttr('style').show();
                 $toggler.attr('aria-expanded', 'false').removeClass('collapsed');
             }
         });
@@ -488,13 +492,16 @@
         // Smooth scroll for anchor links
         $('a[href^="#"]').on('click', function (e) {
             const href = this.getAttribute('href');
-            efault();
-            const target = $(href);
-            {
-                $('html, body').animate({
-                    target.offset().t                00);
+            if (href.length > 1) {
+                e.preventDefault();
+                const target = $(href);
+                if (target.length) {
+                    $('html, body').animate({
+                        scrollTop: target.offset().top - 70
+                    }, 800);
+                }
             }
-        }
+        });
             });
         });
     </script>
@@ -541,12 +548,12 @@
                     </li>
                     @endif
                     <!-- Messages Dropdown -->
-                    <li class="nav-item dropdown {{ request()->is('dashboard/messages/') ? 'active' : '' }}">
+                    <li class="nav-item dropdown {{ request()->is('dashboard/messages*') ? 'active' : '' }}">
                         <a href="#" class="nav-link dropdown-toggle" id="messagesDropdown" data-toggle="collapse"
                             data-target="#messagesMenu"
                             aria-expanded="{{ request()->is('dashboard/messages*') ? 'true' : 'false' }}"
                             aria-controls="messagesMenu">
-                            <i class="nc-icon nc-email-85"></i>
+                            <i class="nc-icon nc-chat-33"></i>
                             <p>Messages
                                 @php
                                 $unreadCount = auth()->check() ? Auth::user()->receivedMessages()->where('is_read', false)->count() : 0;
@@ -560,17 +567,24 @@
                             id="messagesMenu">
                             <ul class="nav flex-column ml-3">
                                 <li class="nav-item {{ request()->is('dashboard/messages/inbox') ? 'active' : '' }}">
-                                    <a class="nav-link" href="/dashboard/messages/inbox">Inbox
+                                    <a class="nav-link" href="/dashboard/messages/inbox">
+                                        <i class="nc-icon nc-email-85"></i>Inbox
                                         @if($unreadCount > 0)
                                         <span class="badge badge-danger ml-1">{{ $unreadCount }}</span>
                                         @endif
                                     </a>
                                 </li>
                                 <li class="nav-item {{ request()->is('dashboard/messages/sent') ? 'active' : '' }}">
-                                    <a class="nav-link" href="/dashboard/messages/sent">Sent</a>
+                                    
+                                    <a class="nav-link" href="/dashboard/messages/sent">
+                                        <i class="nc-icon nc-send"></i>
+                                        Sent
+                                    </a>
                                 </li>
                                 <li class="nav-item {{ request()->is('dashboard/messages/compose') ? 'active' : '' }}">
-                                    <a class="nav-link" href="/dashboard/messages/compose">Compose</a>
+                                    <a class="nav-link" href="/dashboard/messages/compose">
+                                        <i class="nc-icon nc-simple-add"></i>
+                                        Compose</a>
                                 </li>
                             </ul>
                         </div>
@@ -662,13 +676,13 @@
                             <p>Properties</p>
                         </a>
                     </li>
-                    <li class="{{ request()->is('admin/properties/pending') ? 'active' : '' }}">
-                        <a href="{{ route('admin.properties.pending') }}">
+                    <!-- <li class="{ request()->is('admin/properties/pending') ? 'active' : '' }}">
+                        <a href="{ route('admin.properties.pending') }">
                             <i class="nc-icon nc-time-alarm"></i>
                             <p>Pending Approvals</p>
                         </a>
-                    </li>
-                    <li class="{{ request()->is('dashboard/users') ? 'active' : '' }}">
+                    </li> -->
+                    <li class="{{ request()->is('dashboard/users')||  request()->is('admin/users') ? 'active' : '' }}">
                         <a href="/dashboard/users">
                             <i class="nc-icon nc-pin-3"></i>
                             <p>Users</p>
@@ -762,7 +776,7 @@
                     </li>
                     <li class="{{ request()->is('dashboard/regional/pending-approvals') ? 'active' : '' }}">
                         <a href="{{ route('regional.pending_approvals') }}">
-                            <i class="nc-icon nc-tag-content"></i>
+                            <i class="nc-icon nc-time-alarm"></i>
                             <p>Pending Approvals</p>
                         </a>
                     </li>
@@ -772,7 +786,7 @@
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                             @csrf
                         </form>
-                        <a href="#" onclick="handleLogout('logout-form')">
+                        <a href="#" onclick="handleLogout('logout-form', event)">
                             <i class="nc-icon nc-spaceship"></i>
                             <p>Log Out</p>
                         </a>
@@ -953,7 +967,7 @@
                                          <i class="nc-icon nc-settings-gear-65 mr-2"></i> Settings
                                      </a>
                                      <div class="dropdown-divider"></div>
-                                     <a class="dropdown-item text-danger" href="#" onclick="handleLogout('logout-form')">
+                                     <a class="dropdown-item text-danger" href="#" onclick="handleLogout('logout-form', event)">
                                          <i class="nc-icon nc-spaceship mr-2"></i> Sign Out
                                      </a>
                                  </div>

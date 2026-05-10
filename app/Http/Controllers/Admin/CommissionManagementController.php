@@ -7,6 +7,9 @@ use App\Models\CommissionRate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use App\Models\State;
+use App\Models\Lga;
 use Carbon\Carbon;
 
 class CommissionManagementController extends Controller
@@ -30,7 +33,9 @@ class CommissionManagementController extends Controller
             ->get()
             ->groupBy(['region', 'property_management_status', 'hierarchy_status']);
 
-        return view('admin.commission-management.index', compact('regions', 'commissionRates'));
+        $countries = json_decode(File::get(resource_path('/countries.json')), true);
+
+        return view('admin.commission-management.index', compact('regions', 'commissionRates', 'countries'));
     }
 
     /**
@@ -53,7 +58,9 @@ class CommissionManagementController extends Controller
      */
     public function edit(CommissionRate $commissionRate)
     {
-        return view('admin.commission-management.edit', compact('commissionRate'));
+        $countries = json_decode(File::get(resource_path('/countries.json')), true);
+        $states = State::where('country_name', 'Nigeria')->orderBy('name')->get();
+        return view('admin.commission-management.edit', compact('commissionRate', 'countries', 'states'));
     }
 
     /**
@@ -104,12 +111,14 @@ class CommissionManagementController extends Controller
      */
     public function create()
     {
-        $regions = ['default', 'lagos', 'abuja', 'kano', 'port_harcourt', 'ibadan'];
+        $countries = json_decode(File::get(resource_path('/countries.json')), true);
+        $states = State::where('country_name', 'Nigeria')->orderBy('name')->get();
         $propertyManagementStatuses = ['managed', 'unmanaged'];
         $hierarchyStatuses = ['with_super_marketer', 'without_super_marketer'];
 
         return view('admin.commission-management.create', compact(
-            'regions', 
+            'countries',
+            'states', 
             'propertyManagementStatuses', 
             'hierarchyStatuses'
         ));
@@ -272,8 +281,9 @@ class CommissionManagementController extends Controller
      */
     public function regionalManager()
     {
-        $states = State::orderBy('name')->get();
-        return view('admin.commission-management.regional-manager', compact('states'));
+        $countries = json_decode(File::get(resource_path('/countries.json')), true);
+        $states = State::where('country_name', 'Nigeria')->orderBy('name')->get();
+        return view('admin.commission-management.regional-manager', compact('countries', 'states'));
     }
 
     /**

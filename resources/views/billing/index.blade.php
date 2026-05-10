@@ -174,15 +174,12 @@
                                                         <span class="badge bg-warning text-dark">Pending</span>
                                                     </div>
                                                     <div class="d-flex justify-content-between align-items-center">
-                                                        <span class="fw-bold text-primary">{{ $pending->getFormattedAmount() }}</span>
+                                                        <span class="fw-bold text-primary">{{ format_money($pending->total) }}</span>
                                                         <a href="{{ route('proforma.view', $pending->id) }}" class="btn btn-sm btn-primary">
-                                                            <i class="fafa-credit-card me-1"></i> Pay Now
+                                                            <i class="fa fa-credit-card me-1"></i> Pay Now
                                                         </a>
                                                     </div>
-                                                    <small class="text-muted d-block mt-1">Due: {{ (isset($pending->due_date) &&
-                                    $pending->due_date
-                                    instanceof \Carbon\Carbon) ?
-                                    $pending->due_date->format('M d, Y') : 'N/A' }}</small>
+                                                    <small class="text-muted d-block mt-1">Generated: {{ $pending->created_at->format('M d, Y') }}</small>
                                                 </div>
                                 @endforeach
                                 <div class="mt-3">

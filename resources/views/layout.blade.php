@@ -10,6 +10,7 @@
 </head>
 <body>
 @include('header')
+    <script>window.currencySymbol = "{!! format_money(0)->getSymbol() !!}";</script>
 @yield('content')
 @include('footer')
 @stack('scripts')

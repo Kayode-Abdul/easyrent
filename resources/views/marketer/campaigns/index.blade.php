@@ -8,7 +8,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">My Campaigns</h5>
                     <a href="{{ route('marketer.campaigns.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Create Campaign
+                        <i class="fa fa-plus"></i> Create Campaign
                     </a>
                 </div>
                 <div class="card-body">
@@ -46,7 +46,7 @@
                                                 <code>{{ $campaign->campaign_code }}</code>
                                                 <button class="btn btn-sm btn-outline-primary ml-1" 
                                                         onclick="copyToClipboard('{{ $campaign->campaign_code }}')">
-                                                    <i class="fas fa-copy"></i>
+                                                    <i class="fa fa-copy"></i>
                                                 </button>
                                             </td>
                                             <td>
@@ -89,19 +89,19 @@
                                                 <div class="btn-group" role="group">
                                                     <a href="{{ route('marketer.campaigns.show', $campaign->id) }}" 
                                                        class="btn btn-sm btn-outline-primary" title="View">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="fa fa-eye"></i>
                                                     </a>
                                                     
                                                     @if($campaign->campaign_type === 'qr_code')
                                                         <button class="btn btn-sm btn-outline-info" 
                                                                 onclick="downloadQR('{{ $campaign->id }}')" title="Download QR">
-                                                            <i class="fas fa-qrcode"></i>
+                                                            <i class="fa fa-qrcode"></i>
                                                         </button>
                                                     @endif
                                                     
                                                     <button class="btn btn-sm btn-outline-success" 
                                                             onclick="copyLink('{{ $campaign->getReferralLink() }}')" title="Copy Link">
-                                                        <i class="fas fa-link"></i>
+                                                        <i class="fa fa-link"></i>
                                                     </button>
                                                     
                                                     @if($campaign->status === 'active')
@@ -111,7 +111,7 @@
                                                             @method('PATCH')
                                                             <button type="submit" class="btn btn-sm btn-outline-warning" 
                                                                     title="Pause" onclick="return confirm('Pause this campaign?')">
-                                                                <i class="fas fa-pause"></i>
+                                                                <i class="fa fa-pause"></i>
                                                             </button>
                                                         </form>
                                                     @elseif($campaign->status === 'paused')
@@ -121,7 +121,7 @@
                                                             @method('PATCH')
                                                             <button type="submit" class="btn btn-sm btn-outline-success" 
                                                                     title="Resume" onclick="return confirm('Resume this campaign?')">
-                                                                <i class="fas fa-play"></i>
+                                                                <i class="fa fa-play"></i>
                                                             </button>
                                                         </form>
                                                     @endif
@@ -136,11 +136,11 @@
                         {{ $campaigns->links() }}
                     @else
                         <div class="text-center py-5">
-                            <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                            <i class="fa fa-bullhorn fa-3x text-muted mb-3"></i>
                             <h5>No Campaigns Yet</h5>
                             <p class="text-muted">Create your first marketing campaign to start attracting landlords.</p>
                             <a href="{{ route('marketer.campaigns.create') }}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Create Your First Campaign
+                                <i class="fa fa-plus"></i> Create Your First Campaign
                             </a>
                         </div>
                     @endif

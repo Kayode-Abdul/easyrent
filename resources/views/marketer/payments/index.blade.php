@@ -47,23 +47,23 @@
                     <div>
                         <button class="btn btn-outline-primary" onclick="requestPayment()" 
                                 {{ $summary['pending_payment'] < 1000 ? 'disabled' : '' }}>
-                            <i class="fas fa-money-bill-wave"></i> Request Payment
+                            <i class="fa fa-money-bill-wave"></i> Request Payment
                         </button>
                         <a href="{{ route('marketer.dashboard') }}" class="btn btn-secondary ml-2">
-                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            <i class="fa fa-arrow-left"></i> Back to Dashboard
                         </a>
                     </div>
                 </div>
                 <div class="card-body">
                     @if($summary['pending_payment'] >= 1000)
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i>
+                            <i class="fa fa-info-circle"></i>
                             <strong>Payment Available!</strong> You have KSh {{ number_format($summary['pending_payment']) }} 
                             ready for payment. Click "Request Payment" to initiate the process.
                         </div>
                     @elseif($summary['pending_payment'] > 0)
                         <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
+                            <i class="fa fa-exclamation-triangle"></i>
                             <strong>Minimum Payment:</strong> You need at least KSh 1,000 to request a payment. 
                             Current pending amount: KSh {{ number_format($summary['pending_payment']) }}
                         </div>
@@ -149,20 +149,20 @@
                                                 <div class="btn-group" role="group">
                                                     <button class="btn btn-sm btn-outline-primary" 
                                                             onclick="viewPaymentDetails({{ $payment->id }})" title="View Details">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="fa fa-eye"></i>
                                                     </button>
                                                     
                                                     @if($payment->status === 'pending')
                                                         <button class="btn btn-sm btn-outline-danger" 
                                                                 onclick="cancelPayment({{ $payment->id }})" title="Cancel">
-                                                            <i class="fas fa-times"></i>
+                                                            <i class="fa fa-times"></i>
                                                         </button>
                                                     @endif
                                                     
                                                     @if($payment->status === 'failed')
                                                         <button class="btn btn-sm btn-outline-info" 
                                                                 onclick="retryPayment({{ $payment->id }})" title="Retry">
-                                                            <i class="fas fa-redo"></i>
+                                                            <i class="fa fa-redo"></i>
                                                         </button>
                                                     @endif
                                                 </div>
@@ -179,17 +179,17 @@
                         </div>
                     @else
                         <div class="text-center py-5">
-                            <i class="fas fa-wallet fa-3x text-muted mb-3"></i>
+                            <i class="fa fa-wallet fa-3x text-muted mb-3"></i>
                             <h5>No Payments Yet</h5>
                             <p class="text-muted">
                                 Once you start earning commissions, your payment history will appear here.
                             </p>
                             <div class="mt-3">
                                 <a href="{{ route('marketer.campaigns.index') }}" class="btn btn-primary mr-2">
-                                    <i class="fas fa-bullhorn"></i> View Campaigns
+                                    <i class="fa fa-bullhorn"></i> View Campaigns
                                 </a>
                                 <a href="{{ route('marketer.referrals.index') }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-users"></i> View Referrals
+                                    <i class="fa fa-users"></i> View Referrals
                                 </a>
                             </div>
                         </div>
@@ -305,7 +305,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane"></i> Submit Payment Request
+                        <i class="fa fa-paper-plane"></i> Submit Payment Request
                     </button>
                 </div>
             </form>
