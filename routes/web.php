@@ -238,6 +238,18 @@ Route::middleware(['auth'])->group(function () {
     // User lookup API for tenant ID validation
     Route::get('/api/user/lookup/{userId}', [UserController::class , 'lookup'])->name('user.lookup');
 
+    // Active proforma lookup API
+    Route::get('/api/apartment/{apartmentId}/active-proforma', function($apartmentId) {
+        $proforma = \App\Models\ProfomaReceipt::where('tenant_id', auth()->user()->user_id)
+            ->where('apartment_id', $apartmentId)
+            ->where('status', '!=', 'paid')
+            ->first();
+        return response()->json([
+            'success' => $proforma ? true : false,
+            'proforma_id' => $proforma ? $proforma->id : null
+        ]);
+    });
+
     // Payment routes (Standard history remains under auth but is filtered)
     Route::get('/dashboard/payments', [PaymentController::class , 'index'])->name('payments.index');
     Route::get('/dashboard/payments/{transactionId}/receipt/download', [App\Http\Controllers\PaymentReceiptController::class, 'download'])->name('payment.receipt.download');
@@ -615,6 +627,7 @@ Route::prefix('property-manager')->name('property-manager.')->middleware(['auth'
     Route::get('/property/{propertyId}/apartments', [App\Http\Controllers\PropertyManagerController::class , 'propertyApartments'])->name('property-apartments');
     Route::get('/payments', [App\Http\Controllers\PropertyManagerController::class , 'payments'])->name('payments');
     Route::get('/analytics', [App\Http\Controllers\PropertyManagerController::class , 'analytics'])->name('analytics');
+    Route::post('/property/{propertyId}/send-bulk-notification', [App\Http\Controllers\PropertyManagerController::class , 'sendBulkNotification'])->name('send-bulk-notification');
 });
 
 // Property Manager Dashboard Mode Switching

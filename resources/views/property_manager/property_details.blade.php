@@ -410,10 +410,10 @@
                             </a>
                         </div>
                         <div class="col-md-3">
-                            <button class="btn btn-outline-warning btn-block" onclick="alert('Feature coming soon!')">
+                            <a href="{{ route('property-manager.analytics') }}" class="btn btn-outline-warning btn-block">
                                 <i class="nc-icon nc-chart-bar-32"></i><br>
                                 Generate Report
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>

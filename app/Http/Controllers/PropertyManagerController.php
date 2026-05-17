@@ -195,6 +195,10 @@ class PropertyManagerController extends Controller
             });
         }
 
+        if ($request->filled('apartment_id')) {
+            $query->where('apartment_id', $request->get('apartment_id'));
+        }
+
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->get('date_from'));
         }
@@ -459,5 +463,62 @@ class PropertyManagerController extends Controller
                 ->where('status', 'completed')
                 ->sum('amount')
         ];
+    }
+
+    /**
+     * Send bulk notification to all tenants in a managed property
+     */
+    public function sendBulkNotification(Request $request, $propertyId)
+    {
+        $user = Auth::user();
+        
+        if (!$this->isPropertyManager($user)) {
+            return response()->json(['success' => false, 'message' => 'Access denied.'], 403);
+        }
+
+        $property = Property::where('property_id', $propertyId)
+            ->where('agent_id', $user->user_id)
+            ->firstOrFail();
+
+        $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+        ]);
+
+        $subject = $request->get('subject');
+        $messageBody = $request->get('message');
+
+        // Get all occupied apartments with tenants for this property
+        $apartments = Apartment::where('property_id', $propertyId)
+            ->where('occupied', true)
+            ->whereNotNull('tenant_id')
+            ->with('tenant')
+            ->get();
+
+        $sentCount = 0;
+        foreach ($apartments as $apartment) {
+            if ($apartment->tenant && $apartment->tenant->email) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($apartment->tenant->email)->send(
+                        new \App\Mail\PropertyBulkNotificationMail(
+                            $subject,
+                            $messageBody,
+                            $property,
+                            $apartment->tenant
+                        )
+                    );
+                    $sentCount++;
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to send bulk email to ' . $apartment->tenant->email, [
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully broadcasted notifications to {$sentCount} active tenants!"
+        ]);
     }
 }

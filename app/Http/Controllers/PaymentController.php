@@ -72,6 +72,11 @@ class PaymentController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Apply apartment filter
+        if ($request->filled('apartment_id')) {
+            $query->where('apartment_id', $request->apartment_id);
+        }
+
         // Apply payment method filter
         if ($request->filled('payment_method')) {
             $query->where('payment_method', $request->payment_method);

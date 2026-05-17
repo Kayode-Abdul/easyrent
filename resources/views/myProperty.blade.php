@@ -105,13 +105,33 @@
 
                 // Tenant action functions
                 function makePayment(apartmentId) {
-                    alert('Payment functionality for apartment ' + apartmentId + ' - Feature coming soon!');
-                    // TODO: Redirect to payment page or open payment modal
+                    $.ajax({
+                        url: '/api/apartment/' + apartmentId + '/active-proforma',
+                        method: 'GET',
+                        success: function(res) {
+                            if (res.success && res.proforma_id) {
+                                window.location.href = '/proforma/payment/' + res.proforma_id;
+                            } else {
+                                if (typeof Swal !== 'undefined') {
+                                    Swal.fire({
+                                        title: 'No Pending Payments',
+                                        text: 'There is no pending or unpaid invoice for this apartment at the moment.',
+                                        icon: 'info',
+                                        confirmButtonColor: '#ef8157'
+                                    });
+                                } else {
+                                    alert('No pending or unpaid invoice found for this apartment.');
+                                }
+                            }
+                        },
+                        error: function() {
+                            alert('Error retrieving payment details. Please try again.');
+                        }
+                    });
                 }
 
                 function viewPaymentHistory(apartmentId) {
-                    alert('Payment history for apartment ' + apartmentId + ' - Feature coming soon!');
-                    // TODO: Open payment history modal or redirect to payments page
+                    window.location.href = "{{ route('payments.index') }}?apartment_id=" + apartmentId;
                 }
 
                 function contactLandlord(email) {
@@ -978,13 +998,33 @@
 
             // Tenant action functions
             function makePayment(apartmentId) {
-                alert('Payment functionality for apartment ' + apartmentId + ' - Feature coming soon!');
-                // TODO: Redirect to payment page or open payment modal
+                $.ajax({
+                    url: '/api/apartment/' + apartmentId + '/active-proforma',
+                    method: 'GET',
+                    success: function(res) {
+                        if (res.success && res.proforma_id) {
+                            window.location.href = '/proforma/payment/' + res.proforma_id;
+                        } else {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    title: 'No Pending Payments',
+                                    text: 'There is no pending or unpaid invoice for this apartment at the moment.',
+                                    icon: 'info',
+                                    confirmButtonColor: '#ef8157'
+                                });
+                            } else {
+                                alert('No pending or unpaid invoice found for this apartment.');
+                            }
+                        }
+                    },
+                    error: function() {
+                        alert('Error retrieving payment details. Please try again.');
+                    }
+                });
             }
 
             function viewPaymentHistory(apartmentId) {
-                alert('Payment history for apartment ' + apartmentId + ' - Feature coming soon!');
-                // TODO: Open payment history modal or redirect to payments page
+                window.location.href = "{{ route('payments.index') }}?apartment_id=" + apartmentId;
             }
 
             function contactLandlord(email) {

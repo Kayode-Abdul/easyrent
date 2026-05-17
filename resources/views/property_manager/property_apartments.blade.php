@@ -322,23 +322,328 @@
     }
 
     function viewPaymentHistory(apartmentId) {
-        alert('Payment history for apartment ' + apartmentId + ' - Feature coming soon!');
+        window.location.href = "{{ route('property-manager.payments') }}?apartment_id=" + apartmentId;
     }
 
     function exportApartmentList() {
-        alert('Export apartment list - Feature coming soon!');
-    }
+        const table = document.getElementById('apartmentsTable');
+        if (!table) {
+            alert('No apartment data available to export.');
+            return;
+        }
 
-    function sendBulkNotification() {
-        if (confirm('Send notification to all tenants in this property?')) {
-            alert('Bulk notification feature coming soon!');
+        let csv = [];
+        const rows = table.querySelectorAll('tr');
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const cols = row.querySelectorAll('th, td');
+            let rowData = [];
+            
+            for (let j = 0; j < cols.length - 1; j++) { // exclude actions column
+                let text = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+                text = text.replace(/"/g, '""');
+                rowData.push('"' + text + '"');
+            }
+            csv.push(rowData.join(','));
+        }
+
+        const csvString = csv.join('\n');
+        const filename = 'apartment_list_{{ $property->property_id }}.csv';
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        
+        if (navigator.msSaveBlob) { 
+            navigator.msSaveBlob(blob, filename);
+        } else {
+            const link = document.createElement('a');
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+        
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Exported!',
+                text: 'Your apartment list has been successfully exported to CSV.',
+                icon: 'success',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        } else {
+            alert('Apartment list exported successfully!');
         }
     }
 
+    function sendBulkNotification() {
+        $('#bulkNotificationModal').modal('show');
+    }
+
+    function submitBulkNotification(e) {
+        e.preventDefault();
+        
+        const form = document.getElementById('bulkNotificationForm');
+        const subject = document.getElementById('broadcastSubject').value.trim();
+        const message = document.getElementById('broadcastMessage').value.trim();
+        const sendBtn = document.getElementById('sendBroadcastBtn');
+        
+        if (!subject || !message) {
+            alert('Please fill out all fields.');
+            return;
+        }
+
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Broadcasting...';
+
+        $.ajax({
+            url: "{{ route('property-manager.send-bulk-notification', $property->property_id) }}",
+            method: 'POST',
+            data: {
+                _token: "{{ csrf_token() }}",
+                subject: subject,
+                message: message
+            },
+            success: function(res) {
+                $('#bulkNotificationModal').modal('hide');
+                form.reset();
+                
+                if (res.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Broadcast Sent!',
+                            text: res.message,
+                            icon: 'success',
+                            confirmButtonColor: '#ef8157'
+                        });
+                    } else {
+                        alert(res.message);
+                    }
+                } else {
+                    alert(res.message || 'Failed to send broadcast.');
+                }
+            },
+            error: function(xhr) {
+                let errorMsg = 'Failed to broadcast notification.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                alert(errorMsg);
+            },
+            complete: function() {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fa fa-paper-plane mr-1"></i> Send Announcement';
+            }
+        });
+    }
+
     function generateOccupancyReport() {
-        alert('Generate occupancy report - Feature coming soon!');
+        $('#occupancyReportModal').modal('show');
+    }
+
+    function printOccupancyReport() {
+        window.print();
     }
 </script>
+
+<!-- Bulk Notification Modal -->
+<div class="modal fade" id="bulkNotificationModal" tabindex="-1" role="dialog" aria-labelledby="bulkNotificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #ef8157 0%, #f39c12 100%); border-top-left-radius: 15px; border-top-right-radius: 15px; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <h5 class="modal-title font-weight-bold" id="bulkNotificationModalLabel" style="margin: 0;">
+                    <i class="fa fa-broadcast-tower mr-2"></i> Broadcast Notice to Tenants
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="background: transparent; border: 0; font-size: 1.5rem; line-height: 1;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="bulkNotificationForm" onsubmit="submitBulkNotification(event)">
+                @csrf
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0 shadow-sm mb-4" style="background-color: #fff9f6; border-left: 4px solid #ef8157 !important; border-radius: 8px;">
+                        <small class="text-dark font-weight-bold">
+                            <i class="fa fa-info-circle mr-1 text-primary"></i> 
+                            This announcement will be broadcasted via email to all active tenants in occupied units at <strong>{{ $property->address }}</strong>.
+                        </small>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="broadcastSubject" class="text-secondary font-weight-bold small">Broadcast Subject</label>
+                        <input type="text" class="form-control border-light shadow-sm" id="broadcastSubject" name="subject" required placeholder="e.g. Scheduled Water Maintenance Notice" style="border-radius: 8px; padding: 12px; border: 1px solid #ddd;">
+                    </div>
+                    
+                    <div class="form-group mb-0">
+                        <label for="broadcastMessage" class="text-secondary font-weight-bold small">Message Body</label>
+                        <textarea class="form-control border-light shadow-sm" id="broadcastMessage" name="message" rows="5" required placeholder="Write details about the notice here..." style="border-radius: 8px; padding: 12px; resize: none; border: 1px solid #ddd;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0" style="border-bottom-left-radius: 15px; border-bottom-right-radius: 15px;">
+                    <button type="button" class="btn btn-outline-secondary btn-round" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-round px-4" id="sendBroadcastBtn" style="background-color: #ef8157; border-color: #ef8157;">
+                        <i class="fa fa-paper-plane mr-1"></i> Send Announcement
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Occupancy Report Modal -->
+<div class="modal fade" id="occupancyReportModal" tabindex="-1" role="dialog" aria-labelledby="occupancyReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #1f2251 0%, #3f479f 100%); border-top-left-radius: 15px; border-top-right-radius: 15px; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <h5 class="modal-title font-weight-bold" id="occupancyReportModalLabel" style="margin: 0;">
+                    <i class="fa fa-file-invoice mr-2"></i> Property Occupancy Scorecard
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="background: transparent; border: 0; font-size: 1.5rem; line-height: 1;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            
+            <div class="modal-body p-4" id="printableOccupancyReport">
+                <!-- Header block for print only -->
+                <div class="print-header d-none text-center mb-4">
+                    <img src="{{ asset('assets/images/logo-small.png') }}" alt="EasyRent Logo" style="max-width: 120px; margin-bottom: 10px;">
+                    <h3 class="font-weight-bold" style="color: #ef8157; margin-bottom: 5px;">Property Occupancy & Analytics Report</h3>
+                    <p class="text-secondary" style="font-size: 0.95rem;">
+                        <strong>Address:</strong> {{ $property->address }} | 
+                        <strong>Property ID:</strong> {{ $property->property_id }}<br>
+                        <strong>Generated On:</strong> {{ now()->format('F j, Y h:i A') }}
+                    </p>
+                    <hr style="border-top: 2px solid #ef8157; margin-top: 15px;">
+                </div>
+
+                <!-- Stats summary scorecards -->
+                <div class="row mb-4">
+                    <div class="col-md-3 col-sm-6 text-center mb-2">
+                        <div class="p-3 bg-light rounded shadow-sm border">
+                            <span class="text-secondary small d-block font-weight-bold">Total Units</span>
+                            <span class="h3 font-weight-bold text-dark d-block mt-1" style="margin: 5px 0 0 0;">{{ $apartments->total() }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 text-center mb-2">
+                        <div class="p-3 bg-light rounded shadow-sm border">
+                            <span class="text-secondary small d-block font-weight-bold">Occupied Units</span>
+                            <span class="h3 font-weight-bold text-success d-block mt-1" style="margin: 5px 0 0 0;">
+                                {{ $apartments->where('occupied', true)->count() }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 text-center mb-2">
+                        <div class="p-3 bg-light rounded shadow-sm border">
+                            <span class="text-secondary small d-block font-weight-bold">Vacant Units</span>
+                            <span class="h3 font-weight-bold text-warning d-block mt-1" style="margin: 5px 0 0 0;">
+                                {{ $apartments->where('occupied', false)->count() }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 text-center mb-2">
+                        <div class="p-3 bg-light rounded shadow-sm border">
+                            <span class="text-secondary small d-block font-weight-bold">Occupancy Rate</span>
+                            <span class="h3 font-weight-bold text-primary d-block mt-1" style="margin: 5px 0 0 0;">{{ $occupancyRate }}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Occupancy Rate Progress bar -->
+                <div class="mb-4">
+                    <label class="text-secondary font-weight-bold small mb-1">Visual Occupancy Density</label>
+                    <div class="progress" style="height: 18px; border-radius: 9px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.15); background-color: #e9ecef; overflow: hidden;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                             style="width: {{ $occupancyRate }}%; background: linear-gradient(90deg, #ef8157 0%, #28a745 100%); line-height: 18px; color: white; text-align: center; font-weight: bold; font-size: 0.85rem;" 
+                             aria-valuenow="{{ $occupancyRate }}" aria-valuemin="0" aria-valuemax="100">
+                             {{ $occupancyRate }}%
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Unit Roster breakdown tables -->
+                <div class="mb-4">
+                    <h6 class="font-weight-bold text-dark mb-2">
+                        <i class="fa fa-list mr-1 text-primary"></i> Occupied Unit Breakdown
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Apartment ID</th>
+                                    <th>Type</th>
+                                    <th>Tenant Name</th>
+                                    <th>Monthly Rent</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $totalPotential = 0; @endphp
+                                @forelse($apartments as $apartment)
+                                    @if($apartment->occupied)
+                                        @php $totalPotential += $apartment->amount; @endphp
+                                        <tr>
+                                            <td><strong>{{ $apartment->apartment_id }}</strong></td>
+                                            <td><span class="badge badge-light border">{{ $apartment->apartment_type ?? 'N/A' }}</span></td>
+                                            <td>{{ $apartment->tenant->first_name ?? 'N/A' }} {{ $apartment->tenant->last_name ?? '' }}</td>
+                                            <td class="text-success font-weight-bold">{{ format_money($apartment->amount, ($property->currency->code ?? null)) }}</td>
+                                        </tr>
+                                    @endif
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No occupied apartments.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <h6 class="font-weight-bold text-dark mb-2">
+                        <i class="fa fa-key mr-1 text-warning"></i> Vacant Unit Breakdown
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Apartment ID</th>
+                                    <th>Type</th>
+                                    <th>Target Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($apartments as $apartment)
+                                    @if(!$apartment->occupied)
+                                        <tr>
+                                            <td><strong>{{ $apartment->apartment_id }}</strong></td>
+                                            <td><span class="badge badge-light border">{{ $apartment->apartment_type ?? 'N/A' }}</span></td>
+                                            <td class="text-dark font-weight-bold">{{ format_money($apartment->amount, ($property->currency->code ?? null)) }}</td>
+                                        </tr>
+                                    @endif
+                                @empty
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">No vacant apartments.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer bg-light border-0" style="border-bottom-left-radius: 15px; border-bottom-right-radius: 15px;">
+                <button type="button" class="btn btn-outline-secondary btn-round" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-info btn-round px-4" onclick="printOccupancyReport()">
+                    <i class="fa fa-print mr-1"></i> Print Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
     .apartment-row {
@@ -355,6 +660,36 @@
 
     .btn-group-vertical .btn:last-child {
         margin-bottom: 0;
+    }
+
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #printableOccupancyReport, #printableOccupancyReport * {
+            visibility: visible;
+        }
+        #printableOccupancyReport {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            background: white;
+            z-index: 9999;
+        }
+        .print-header {
+            display: block !important;
+        }
+        .modal-content {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        @page {
+            size: auto;
+            margin: 15mm;
+        }
     }
 </style>
 @endsection

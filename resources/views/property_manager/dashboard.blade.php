@@ -321,10 +321,10 @@
                             </a>
                         </div>
                         <div class="col-md-3">
-                            <button class="btn btn-outline-warning btn-block" onclick="alert('Feature coming soon!')">
+                            <a href="{{ route('messages.inbox') }}" class="btn btn-outline-warning btn-block">
                                 <i class="nc-icon nc-bell-55"></i><br>
                                 Notifications
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>
