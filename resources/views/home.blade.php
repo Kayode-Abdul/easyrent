@@ -1,27 +1,102 @@
 @include('header')
+<link rel="stylesheet" href="/assets/css/search-hero.css">
 <div class="hero-wrap ftco-degree-bg" style="background-image: url('assets/images/bg_1.jpg');"
   data-stellar-background-ratio="0.5">
   <div class="overlay"></div>
   <div class="container">
     <div class="row no-gutters slider-text justify-content-center align-items-center">
-      <div class="col-lg-8 col-md-6 ftco-animate d-flex align-items-end" style="top: -170px;">
-        <div class="text text-center">
-          <h1 class="mb-4">The Smartest <br>Way for Property Owners to Collect Rent and Manage Property</h1>
-          <!-- <h1 class="mb-4">The Simplest <br>Way to Pay your rent</h1> -->
-          <!-- <p style="font-size: 18px;">A small river named Duden flows by their place and supplies it with the necessary regelialia. It is a paradisematic country, in which roasted parts</p> -->
-          <form action="#" class="search-location mt-md-5">
+      <div class="col-lg-10 col-md-12 ftco-animate d-flex align-items-center">
+        <div class="text text-center w-100">
+          <h1 class="mb-4 mt-5 mt-md-0">The Smartest <br>Way for Property Owners to Collect Rent and Manage Property
+          </h1>
+          <form action="{{ route('search.apartments') }}" method="GET" class="search-location mt-md-5">
             <div class="row justify-content-center">
-              <div class="col-lg-10 align-items-end">
-                <div class="form-group">
-                  <div class="form-field">
-                    <a href="https://easyrent.africa/register" class="btn btn-light btn-lg mr-3">
-                      <i class="nc-icon nc-simple-add"></i> Sign Up Now
-                    </a>
-                    <a href="https://easyrent.africa/contact" class="btn  btn-xl"
-                      style="background: rgb(239 123 98); color: white;">
-                      <i class="nc-icon nc-email-85"></i> Contact Us
-                    </a>
+              <div class="col-lg-12">
+                <div class="search-form-wrap p-4 bg-white shadow rounded">
+
+                  <!-- Advanced Fields (Toggled) -->
+                  <div class="row w-100 m-0 mb-3" id="advanced-location-fields" style="display: none;">
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label for="country">Country</label>
+                        <div class="form-field">
+                          <select name="country" id="country" class="form-control" onchange="loadStates(this.value)">
+                            <option value="">Any Country</option>
+                            @foreach($countries as $country)
+                              <option value="{{ $country }}">{{ $country }}</option>
+                            @endforeach
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label for="state">State</label>
+                        <div class="form-field">
+                          <select name="state" id="state" class="form-control" onchange="loadCities(this.value)">
+                            <option value="">Any State</option>
+                            @foreach($states as $state)
+                              <option value="{{ $state->name }}">{{ $state->name }}</option>
+                            @endforeach
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label for="lga">City/LGA</label>
+                        <div class="form-field">
+                          <select name="lga" id="lga" class="form-control">
+                            <option value="">Any City</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+
+                  <!-- Main Search Fields -->
+                  <div class="row w-100 m-0 align-items-end">
+                    <div class="col-md-5">
+                      <div class="form-group">
+                        <label for="apartment_type">Type</label>
+                        <div class="form-field">
+                          <select name="apartment_type" id="apartment_type" class="form-control">
+                            <option value="">Any Type</option>
+                            @foreach($apartmentTypes as $type)
+                              <option value="{{ $type->name }}">{{ $type->name }}</option>
+                            @endforeach
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-5">
+                      <div class="form-group">
+                        <label for="max_price">Max Price (₦)</label>
+                        <div class="form-field">
+                          <input type="number" name="max_price" class="form-control" placeholder="Max Price">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="w-100">
+                        <button type="submit" class="btn btn-primary py-3 btn-block"
+                          style="padding: 0 !important; height: 50px;">
+                          <i class="bi bi-search"></i> Search
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Toggle Button -->
+                  <div class="row w-100 m-0 mt-2">
+                    <div class="col-12 text-right px-0">
+                      <a href="javascript:void(0)" id="toggle-advanced-search"
+                        style="color: var(--primary-color, #3e8189); font-size: 14px; font-weight: 600; text-decoration: underline;">
+                        <i class="bi bi-sliders"></i> Advanced Search
+                      </a>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -87,73 +162,6 @@
   </div>
 </section>
 
-<!-- <section class="ftco-section goto-here">
-    	<div class="container">
-    		<div class="row justify-content-center">
-         <div class="col-md-12 heading-section text-center ftco-animate mb-5">
-         	<span class="subheading">What we offer</span>
-           <h2 class="mb-2">Exclusive Offer For You</h2>
-         </div>
-       </div>
-       <div class="row">
-       	<div class="col-md-4">
-       		<div class="property-wrap ftco-animate">
-       			<a href="#" class="img" style="background-image: url(assets/images/work-1.jpg);"></a>
-       			<div class="text">
-       				<p class="price"><span class="old-price">800,000</span><span class="orig-price">$3,050<small>/mo</small></span></p>
-       				<ul class="property_list">
-       					<li><span class="flaticon-bed"></span>3</li>
-       					<li><span class="flaticon-bathtub"></span>2</li>
-       					<li><span class="flaticon-floor-plan"></span>1,878 sqft</li>
-       				</ul>
-       				<h3><a href="#">The Blue Sky Home</a></h3>
-       				<span class="location">Oakland</span>
-       				<a href="#" class="d-flex align-items-center justify-content-center btn-custom">
-       					<span class="ion-ios-link"></span>
-       				</a>
-       			</div>
-       		</div>
-       	</div>
-       	<div class="col-md-4">
-       		<div class="property-wrap ftco-animate">
-       			<a href="#" class="img" style="background-image: url(assets/images/work-2.jpg);"></a>
-       			<div class="text">
-       				<p class="price"><span class="old-price">800,000</span><span class="orig-price">$3,050<small>/mo</small></span></p>
-       				<ul class="property_list">
-       					<li><span class="flaticon-bed"></span>3</li>
-       					<li><span class="flaticon-bathtub"></span>2</li>
-       					<li><span class="flaticon-floor-plan"></span>1,878 sqft</li>
-       				</ul>
-       				<h3><a href="#">The Blue Sky Home</a></h3>
-       				<span class="location">Oakland</span>
-       				<a href="#" class="d-flex align-items-center justify-content-center btn-custom">
-       					<span class="ion-ios-link"></span>
-       				</a>
-       			</div>
-       		</div>
-       	</div>
-       	<div class="col-md-4">
-       		<div class="property-wrap ftco-animate">
-       			<a href="#" class="img" style="background-image: url(assets/images/work-3.jpg);"></a>
-       			<div class="text">
-       				<p class="price"><span class="old-price">800,000</span><span class="orig-price">$3,050<small>/mo</small></span></p>
-       				<ul class="property_list">
-       					<li><span class="flaticon-bed"></span>3</li>
-       					<li><span class="flaticon-bathtub"></span>2</li>
-       					<li><span class="flaticon-floor-plan"></span>1,878 sqft</li>
-       				</ul>
-       				<h3><a href="#">The Blue Sky Home</a></h3>
-       				<span class="location">Oakland</span>
-       				<a href="#" class="d-flex align-items-center justify-content-center btn-custom">
-       					<span class="ion-ios-link"></span>
-       				</a>
-       			</div>
-       		</div>
-       	</div>
-       </div>
-    	</div>
-    </section> -->
-
 <section class="ftco-section ftco-degree-bg services-section img mx-md-5"
   style="background-image: url(assets/images/bg_2.jpg);">
   <div class="overlay"></div>
@@ -210,7 +218,7 @@
   </div>
 </section>
 
-<section class="ftco-section ftco-no-pb">
+<section class="ftco-section ftco-no-pb" style="background-color: antiquewhite">
   <div class="container">
     <div class="row no-gutters">
       <div class="col-md-6 p-md-5 img img-2 d-flex justify-content-center align-items-center"
@@ -381,64 +389,6 @@
   </div>
 </section>
 
-<!--<section class="ftco-section ftco-agent ftco-no-pt">-->
-<!--   	<div class="container">-->
-<!--   		<div class="row justify-content-center pb-5">-->
-<!--         <div class="col-md-12 heading-section text-center ftco-animate">-->
-<!--         	<span class="subheading">Property Managers</span>-->
-<!--           <h2 class="mb-4">Our Property Managers</h2>-->
-<!--         </div>-->
-<!--       </div>-->
-<!--       <div class="row">-->
-<!--       	<div class="col-md-3 ftco-animate">-->
-<!--       		<div class="agent">-->
-<!--   					<div class="img">-->
-<!--	    				<img src="assets/images/team-1.jpg" class="img-fluid" alt="Colorlib Template">-->
-<!--    				</div>-->
-<!--    				<div class="desc">-->
-<!--    					<h3><a href="properties.html">James Stallon</a></h3>-->
-<!--							<p class="h-info"><span class="location">Listing</span> <span class="details">&mdash; 10 Properties</span></p>-->
-<!--    				</div>-->
-<!--   				</div>-->
-<!--       	</div>-->
-<!--       	<div class="col-md-3 ftco-animate">-->
-<!--       		<div class="agent">-->
-<!--   					<div class="img">-->
-<!--	    				<img src="assets/images/team-2.jpg" class="img-fluid" alt="Colorlib Template">-->
-<!--    				</div>-->
-<!--    				<div class="desc">-->
-<!--    					<h3><a href="properties.html">James Stallon</a></h3>-->
-<!--							<p class="h-info"><span class="location">Listing</span> <span class="details">&mdash; 10 Properties</span></p>-->
-<!--    				</div>-->
-<!--   				</div>-->
-<!--       	</div>-->
-<!--       	<div class="col-md-3 ftco-animate">-->
-<!--       		<div class="agent">-->
-<!--   					<div class="img">-->
-<!--	    				<img src="assets/images/team-3.jpg" class="img-fluid" alt="Colorlib Template">-->
-<!--    				</div>-->
-<!--    				<div class="desc">-->
-<!--    					<h3><a href="properties.html">James Stallon</a></h3>-->
-<!--							<p class="h-info"><span class="location">Listing</span> <span class="details">&mdash; 10 Properties</span></p>-->
-<!--    				</div>-->
-<!--   				</div>-->
-<!--       	</div>-->
-<!--       	<div class="col-md-3 ftco-animate">-->
-<!--       		<div class="agent">-->
-<!--   					<div class="img">-->
-<!--	    				<img src="assets/images/team-4.jpg" class="img-fluid" alt="Colorlib Template">-->
-<!--    				</div>-->
-<!--    				<div class="desc">-->
-<!--    					<h3><a href="properties.html">James Stallon</a></h3>-->
-<!--							<p class="h-info"><span class="position">Listing</span> <span class="details">&mdash; 10 Properties</span></p>-->
-<!--    				</div>-->
-<!--   				</div>-->
-<!--       	</div>-->
-<!--       </div>-->
-<!--   	</div>-->
-<!--   </section>-->
-
-
 <section class="ftco-section ftco-no-pt">
   <div class="container">
     <div class="row justify-content-center mb-5">
@@ -542,3 +492,143 @@
 </section>
 <!-- Footer area start -->
 @include('footer')
+
+<script>
+  function loadStates(country) {
+    const stateSelect = document.getElementById('state');
+    const citySelect = document.getElementById('lga');
+
+    // Clear current options
+    stateSelect.innerHTML = '<option value="">Loading...</option>';
+    citySelect.innerHTML = '<option value="">Any City</option>';
+
+    if (!country) {
+      stateSelect.innerHTML = '<option value="">Any State</option>';
+      return Promise.resolve();
+    }
+
+    return fetch(`/api/location-data?country=${encodeURIComponent(country)}`)
+      .then(response => response.json())
+      .then(data => {
+        stateSelect.innerHTML = '<option value="">Any State</option>';
+        if (data.states && data.states.length > 0) {
+          data.states.forEach(state => {
+            const option = document.createElement('option');
+            option.value = state.name;
+            option.textContent = state.name;
+            // Store LGAs in a data attribute for easy access
+            option.setAttribute('data-lgas', JSON.stringify(state.lgas));
+            stateSelect.appendChild(option);
+          });
+        }
+
+        // Update currency symbol if applicable
+        if (data.currency_symbol) {
+          document.querySelectorAll('label[for="max_price"]').forEach(label => {
+            label.textContent = `Max Price (${data.currency_symbol})`;
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error loading states:', error);
+        stateSelect.innerHTML = '<option value="">Any State</option>';
+      });
+  }
+
+  function loadCities(stateName) {
+    const stateSelect = document.getElementById('state');
+    const citySelect = document.getElementById('lga');
+
+    citySelect.innerHTML = '<option value="">Any City</option>';
+
+    if (!stateName) return Promise.resolve();
+
+    const selectedOption = stateSelect.options[stateSelect.selectedIndex];
+    const lgas = JSON.parse(selectedOption.getAttribute('data-lgas') || '[]');
+
+    if (lgas.length > 0) {
+      lgas.forEach(lga => {
+        const option = document.createElement('option');
+        option.value = lga.name;
+        option.textContent = lga.name;
+        citySelect.appendChild(option);
+      });
+    } else {
+      // If no LGAs/Cities found in data attribute, maybe fetch them or show "Any City"
+      citySelect.innerHTML = '<option value="">Any City</option>';
+    }
+
+    return Promise.resolve();
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById('toggle-advanced-search');
+    const advancedFields = document.getElementById('advanced-location-fields');
+
+    // Toggle advanced search visibility
+    if (toggleBtn && advancedFields) {
+      toggleBtn.addEventListener('click', function () {
+        if (advancedFields.style.display === 'none') {
+          advancedFields.style.display = 'flex';
+          toggleBtn.innerHTML = '<i class="bi bi-chevron-up"></i> Simple Search';
+        } else {
+          advancedFields.style.display = 'none';
+          toggleBtn.innerHTML = '<i class="bi bi-sliders"></i> Advanced Search';
+        }
+      });
+    }
+
+    // Auto-fill logic
+    const countrySelect = document.getElementById('country');
+    const stateSelect = document.getElementById('state');
+    const lgaSelect = document.getElementById('lga');
+
+    // Helper to safely select an option if it exists (case-insensitive partial match)
+    function selectOption(selectElement, targetValue) {
+      if (!targetValue || !selectElement) return false;
+      const target = targetValue.toLowerCase();
+      for (let i = 0; i < selectElement.options.length; i++) {
+        const optVal = selectElement.options[i].value.toLowerCase();
+        if (optVal.includes(target) || target.includes(optVal)) {
+          selectElement.selectedIndex = i;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    @auth
+          // User is logged in - pull from profile
+          const userCountry = @json(auth()->user()->country_name ?? '');
+      const userState = @json(auth()->user()->state ?? '');
+      const userCity = @json(auth()->user()->lga ?? auth()->user()->city ?? '');
+
+      if (userCountry && selectOption(countrySelect, userCountry)) {
+        loadStates(countrySelect.value).then(() => {
+          if (userState && selectOption(stateSelect, userState)) {
+            loadCities(stateSelect.value).then(() => {
+              if (userCity) selectOption(lgaSelect, userCity);
+            });
+          }
+        });
+      }
+    @else
+      // Guest user - attempt IP geolocation
+      fetch('https://ipapi.co/json/')
+        .then(response => response.json())
+        .then(data => {
+          if (data.country_name && selectOption(countrySelect, data.country_name)) {
+            loadStates(countrySelect.value).then(() => {
+              if (data.region && selectOption(stateSelect, data.region)) {
+                loadCities(stateSelect.value).then(() => {
+                  if (data.city) selectOption(lgaSelect, data.city);
+                });
+              }
+            });
+          }
+        })
+        .catch(err => console.error('GeoIP check failed:', err));
+    @endauth
+  });
+
+</script>

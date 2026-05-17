@@ -324,4 +324,4 @@
             updateRemainingRate();
         });
     </script>
-@endsection
+@endpush

@@ -41,7 +41,23 @@ class PaymentController extends Controller
     }
     public function index(Request $request)
     {
+        $user = auth()->user();
         $query = Payment::query();
+
+        // Security: Filter by user role if not admin
+        if (!$user->isAdmin()) {
+            $query->where(function ($q) use ($user) {
+                $q->where('tenant_id', $user->user_id)
+                  ->orWhere('landlord_id', $user->user_id);
+                
+                // If the user is an agent/manager, allow them to see payments for properties they manage
+                if ($user->isAgent()) {
+                    $q->orWhereHas('apartment.property', function ($pq) use ($user) {
+                        $pq->where('agent_id', $user->user_id);
+                    });
+                }
+            });
+        }
 
         // Apply date filters
         if ($request->filled('start_date')) {
@@ -1153,7 +1169,7 @@ class PaymentController extends Controller
 
         // Ensure only the tenant or landlord can view the receipt
         $user = auth()->user();
-        if ($user->user_id !== $payment->tenant_id && $user->user_id !== $payment->landlord_id) {
+        if (!$user || ($user->user_id !== $payment->tenant_id && $user->user_id !== $payment->landlord_id)) {
             return redirect()->route('dashboard')->with('error', 'Unauthorized access');
         }
 
@@ -1170,9 +1186,10 @@ class PaymentController extends Controller
                 ->findOrFail($id);
 
             // Check if user is authorized to view this receipt
-            if (auth()->user()->user_id !== $payment->tenant_id &&
-                auth()->user()->user_id !== $payment->landlord_id &&
-                !auth()->user()->isAdmin()) {
+            $user = auth()->user();
+            if (!$user || ($user->user_id !== $payment->tenant_id &&
+                $user->user_id !== $payment->landlord_id &&
+                !$user->isAdmin())) {
                 abort(403);
             }
 
@@ -1263,7 +1280,24 @@ class PaymentController extends Controller
 
     public function analytics()
     {
-        $payments = Payment::where('status', 'completed')->with('currency')->get();
+        $user = auth()->user();
+        $query = Payment::where('status', 'completed');
+
+        // Security: Filter analytics by user role if not admin
+        if (!$user->isAdmin()) {
+            $query->where(function ($q) use ($user) {
+                $q->where('tenant_id', $user->user_id)
+                  ->orWhere('landlord_id', $user->user_id);
+                
+                if ($user->isAgent()) {
+                    $q->orWhereHas('apartment.property', function ($pq) use ($user) {
+                        $pq->where('agent_id', $user->user_id);
+                    });
+                }
+            });
+        }
+
+        $payments = $query->with('currency')->get();
         
         $totalRevenueByCurrency = $payments->groupBy('currency_id')->map(function ($group) {
             return [
@@ -1287,12 +1321,39 @@ class PaymentController extends Controller
             ];
         });
 
-        $pendingPayments = Payment::where('status', 'pending')->count();
+        $pendingQuery = Payment::where('status', 'pending');
+        if (!$user->isAdmin()) {
+            $pendingQuery->where(function ($q) use ($user) {
+                $q->where('tenant_id', $user->user_id)
+                  ->orWhere('landlord_id', $user->user_id);
+                
+                if ($user->isAgent()) {
+                    $q->orWhereHas('apartment.property', function ($pq) use ($user) {
+                        $pq->where('agent_id', $user->user_id);
+                    });
+                }
+            });
+        }
+        $pendingPayments = $pendingQuery->count();
 
-        // Get monthly revenue data (grouped by currency for more accuracy in future, but for now we'll stick to NGN or most common for the chart to avoid breaking it)
-        $revenueDataRaw = Payment::where('status', 'completed')
-            ->whereBetween('created_at', [Carbon::now()->subYear(), Carbon::now()])
-            ->select(
+        // Get monthly revenue data
+        $revenueDataQuery = Payment::where('status', 'completed')
+            ->whereBetween('created_at', [Carbon::now()->subYear(), Carbon::now()]);
+        
+        if (!$user->isAdmin()) {
+            $revenueDataQuery->where(function ($q) use ($user) {
+                $q->where('tenant_id', $user->user_id)
+                  ->orWhere('landlord_id', $user->user_id);
+                
+                if ($user->isAgent()) {
+                    $q->orWhereHas('apartment.property', function ($pq) use ($user) {
+                        $pq->where('agent_id', $user->user_id);
+                    });
+                }
+            });
+        }
+
+        $revenueDataRaw = $revenueDataQuery->select(
                 DB::raw('SUM(amount) as total'),
                 DB::raw('MONTH(created_at) as month'),
                 DB::raw('YEAR(created_at) as year'),
@@ -1319,8 +1380,21 @@ class PaymentController extends Controller
             $values[] = $monthData ? $monthData->total : 0;
         }
 
-        $paymentMethods = Payment::where('status', 'completed')
-            ->select('payment_method', DB::raw('COUNT(*) as count'))
+        $paymentMethodsQuery = Payment::where('status', 'completed');
+        if (!$user->isAdmin()) {
+            $paymentMethodsQuery->where(function ($q) use ($user) {
+                $q->where('tenant_id', $user->user_id)
+                  ->orWhere('landlord_id', $user->user_id);
+                
+                if ($user->isAgent()) {
+                    $q->orWhereHas('apartment.property', function ($pq) use ($user) {
+                        $pq->where('agent_id', $user->user_id);
+                    });
+                }
+            });
+        }
+        
+        $paymentMethods = $paymentMethodsQuery->select('payment_method', DB::raw('COUNT(*) as count'))
             ->groupBy('payment_method')
             ->get();
 

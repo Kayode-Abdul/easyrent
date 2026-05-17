@@ -258,7 +258,8 @@ footer {
     color: #6c757d;
     /* text-align: center;  */
     background: black;
-    border-top: 5px solid #28a745;
+    border-top: 5px solid rgb(12, 84, 85);
+    ;
 }
 
 figure {
@@ -12019,9 +12020,9 @@ h5,
 }
 
 .slider-text h1 {
-    font-size: 50px;
+    font-size: 45px;
     color: rgb(12 84 85);
-    line-height: 1.1;
+    line-height: 1.0;
     font-weight: 800;
 }
 
@@ -12112,7 +12113,7 @@ h5,
 
 .search-location .form-group .form-field .form-control {
     border: none;
-    height: 70px !important;
+    /* height: 70px !important; */
     -webkit-border-radius: 40px;
     -moz-border-radius: 40px;
     -ms-border-radius: 40px;
@@ -13390,7 +13391,7 @@ textarea.form-control {
     display: inline-block;
     margin-bottom: 0;
     color: rgb(12 84 85);
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 600;
     letter-spacing: 2px;
     text-transform: uppercase;

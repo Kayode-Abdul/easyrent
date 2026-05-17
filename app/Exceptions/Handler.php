@@ -85,12 +85,16 @@ class Handler extends ExceptionHandler
             if ($request->expectsJson()) {
                 return response()->json([
                     'error' => 'Session expired',
-                    'message' => 'Your session has expired. Please refresh the page and try again.'
+                    'message' => 'Your session has expired. Please refresh the page and try again.',
+                    'redirect' => route('login')
                 ], 419);
             }
 
-            return redirect()->route('login', ['expired' => 1])
-                ->with('warning', 'Your session has expired. Please login again.');
+            // Redirect back to the same page so a fresh CSRF token is generated.
+            // Preserve user input (except passwords) so they don't have to re-type everything.
+            return redirect($request->fullUrl())
+                ->withInput($request->except($this->dontFlash))
+                ->with('warning', 'Your session has expired. Please try again.');
         });
     }
 }

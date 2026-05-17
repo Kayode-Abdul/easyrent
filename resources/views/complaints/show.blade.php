@@ -10,9 +10,14 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h4 class="card-title mb-0">
-                                    <i class="nc-icon nc-support-17"></i>
-                                    Complaint #{{ $complaint->complaint_number }}
+                                <h4 class="card-title mb-0 d-flex align-items-center flex-wrap">
+                                    <a href="{{ route('complaints.index') }}" class="btn btn-outline-secondary btn-sm mr-3 mb-1">
+                                        <i class="fa fa-arrow-left mr-1"></i> Back
+                                    </a>
+                                    <span class="d-flex align-items-center mb-1">
+                                        <i class="nc-icon nc-support-17 mr-2"></i>
+                                        Complaint #{{ $complaint->complaint_number }}
+                                    </span>
                                 </h4>
                                 <div>
                                     <span class="badge badge-{{ $complaint->status_color }} badge-lg mr-2">
@@ -208,14 +213,20 @@
                                 @endif
 
                                 <!-- Assignment -->
-                                @if(auth()->user()->isLandlord() || auth()->user()->admin)
+                                @if((auth()->user()->isLandlord() || auth()->user()->admin) && !$complaint->assigned_to && (!$complaint->artisanTask || !in_array($complaint->artisanTask->status, ['assigned', 'completed'])))
                                     <form action="{{ route('complaints.assign', $complaint) }}" method="POST">
                                         @csrf
                                         <div class="form-group">
                                             <label for="assigned_to">Assign To:</label>
                                             <select name="assigned_to" id="assigned_to" class="form-control form-control-sm">
                                                 <option value="">Select assignee...</option>
-                                                <!-- You would populate this with agents/property managers -->
+                                                @if(isset($biddingArtisans) && $biddingArtisans->count() > 0)
+                                                    <optgroup label="Bidding Artisans">
+                                                        @foreach($biddingArtisans as $artisan)
+                                                            <option value="{{ $artisan->user_id }}">{{ $artisan->first_name }} {{ $artisan->last_name }} ({{ $artisan->occupation ?? 'Artisan' }})</option>
+                                                        @endforeach
+                                                    </optgroup>
+                                                @endif
                                             </select>
                                         </div>
                                         <button type="submit" class="btn btn-success btn-sm btn-block">
@@ -224,23 +235,79 @@
                                     </form>
                                 @endif
 
-                                <!-- Artisan Task Creation -->
-                                @if((auth()->user()->isLandlord() || auth()->user()->admin) && !$complaint->artisanTask)
+                                <!-- Assignment Active -->
+                                @if($complaint->assigned_to || ($complaint->artisanTask && $complaint->artisanTask->status == 'assigned'))
+                                    @php
+                                        $assignee = $complaint->assignedTo ?? ($complaint->artisanTask && $complaint->artisanTask->verificationCode ? $complaint->artisanTask->verificationCode->artisan : null);
+                                    @endphp
+
+                                    @if($assignee)
+                                        <div class="alert alert-info py-3 px-3 my-3">
+                                            <h6 class="alert-heading font-weight-bold mb-1" style="color: #0c5460;"><i class="fa fa-user-check mr-2"></i> Assignment Active</h6>
+                                            <p class="mb-2" style="font-size: 0.9rem; color: #0c5460;">This complaint is currently assigned to:</p>
+                                            <div class="d-flex align-items-center mb-2">
+                                                <span class="badge badge-info px-3 py-2 font-weight-bold" style="font-size: 1.1rem;">
+                                                    {{ $assignee->first_name }} {{ $assignee->last_name }}
+                                                </span>
+                                            </div>
+                                            <small class="text-dark d-block">Role: <strong>Artisan / Property Manager</strong></small>
+                                        </div>
+                                    @endif
+
+                                    <!-- Artisan Verification Code (if marketplace task exists) -->
+                                    @if($complaint->artisanTask && $complaint->artisanTask->verificationCode && $complaint->artisanTask->status == 'assigned')
+                                        <div class="alert alert-warning py-3 px-3 my-3">
+                                            <h6 class="alert-heading font-weight-bold mb-1" style="color: #856404;"><i class="fa fa-key mr-2"></i> Artisan Verification Code</h6>
+                                            <p class="mb-2" style="font-size: 0.9rem; color: #856404;">Present this code to verify the artisan upon arrival:</p>
+                                            <div class="d-flex align-items-center mb-2">
+                                                <span class="badge badge-warning px-3 py-2 font-weight-bold" style="font-size: 1.3rem; letter-spacing: 2px;">{{ $complaint->artisanTask->verificationCode->code }}</span>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <!-- Actions for Landlord / Admin -->
+                                    @if(auth()->user()->isLandlord() || auth()->user()->admin || auth()->user()->user_id == $complaint->tenant_id)
+                                        <div class="mt-3">
+                                            @if($complaint->artisanTask)
+                                                <button type="button" class="btn btn-success btn-sm btn-block mb-2" data-toggle="modal" data-target="#completeTaskModal">
+                                                    <i class="fa fa-check"></i> Mark Work as Completed
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-sm btn-block" data-toggle="modal" data-target="#cancelTaskModal">
+                                                    <i class="fa fa-times"></i> Cancel Assignment
+                                                </button>
+                                            @else
+                                                <button type="button" class="btn btn-danger btn-sm btn-block" data-toggle="modal" data-target="#cancelDirectAssignmentModal">
+                                                    <i class="fa fa-times"></i> Cancel Assignment
+                                                </button>
+                                            @endif
+                                        </div>
+                                    @endif
+                                @elseif($complaint->artisanTask && $complaint->artisanTask->status == 'completed')
+                                    <div class="alert alert-success py-2 px-3 my-3">
+                                        <small><i class="fa fa-check-circle"></i> Artisan task has been completed.</small>
+                                    </div>
+                                @endif
+
+                                <!-- Artisan request active details link -->
+                                @if($complaint->artisanTask)
+                                    <div class="mt-3">
+                                        <div class="alert alert-info py-2 px-3">
+                                            <small><i class="nc-icon nc-delivery-fast"></i> Artisan request active</small>
+                                            <br>
+                                            <a href="{{ route('artisan.tasks.show', $complaint->artisanTask) }}"
+                                                class="btn btn-link btn-sm p-0 text-white font-weight-bold">View Task Details</a>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- Get Artisan Button -->
+                                @if((auth()->user()->isLandlord() || auth()->user()->admin) && !$complaint->assigned_to && !$complaint->artisanTask)
                                     <div class="mt-3 card-footer">
                                         <label for="getArtisanModal">Find your Artisan:</label>
                                         <button type="button" class="btn btn-info btn-block" data-toggle="modal"
                                             data-target="#getArtisanModal">
                                             <i class="nc-icon nc-settings"></i> Get Artisan
                                         </button>
-                                    </div>
-                                @elseif($complaint->artisanTask)
-                                    <div class="mt-3">
-                                        <div class="alert alert-info py-2 px-3">
-                                            <small><i class="nc-icon nc-delivery-fast"></i> Artisan request active</small>
-                                            <br>
-                                            <a href="{{ route('artisan.tasks.show', $complaint->artisanTask) }}"
-                                                class="btn btn-link btn-sm p-0 text-white">View Task Details</a>
-                                        </div>
                                     </div>
                                 @endif
                             </div>
@@ -472,5 +539,123 @@
             </div>
         </div>
     @endif
+
+    @if($complaint->artisanTask)
+        <!-- Complete Task Modal -->
+        <div class="modal fade" id="completeTaskModal" tabindex="-1" role="dialog" aria-labelledby="completeTaskModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-weight-bold" id="completeTaskModalLabel">Complete Artisan Task & Rate</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="{{ route('artisan.tasks.complete', $complaint->artisanTask) }}" method="POST">
+                        @csrf
+                        <div class="modal-body text-left">
+                            <p>Are you sure you want to mark this task as completed? You can also rate the artisan's service below:</p>
+                            
+                            <div class="form-group">
+                                <label class="font-weight-bold">Select Rating (Optional)</label>
+                                <select name="rating" class="form-control">
+                                    <option value="">-- Rate Artisan --</option>
+                                    <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                                    <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                                    <option value="3">⭐⭐⭐ (3/5)</option>
+                                    <option value="2">⭐⭐ (2/5)</option>
+                                    <option value="1">⭐ (1/5)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold">Review Comment (Optional)</label>
+                                <textarea name="comment" class="form-control" rows="3" placeholder="Leave a review comment for the artisan..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">Complete & Rate</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cancel Task Modal -->
+        <div class="modal fade" id="cancelTaskModal" tabindex="-1" role="dialog" aria-labelledby="cancelTaskModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-weight-bold text-danger" id="cancelTaskModalLabel">Cancel Task Assignment</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="{{ route('artisan.tasks.cancel', $complaint->artisanTask) }}" method="POST">
+                        @csrf
+                        <div class="modal-body text-left">
+                            <p class="text-danger font-weight-bold"><i class="fa fa-exclamation-triangle"></i> Cancel task and submit a complaint about the artisan's service.</p>
+                            
+                            <div class="form-group">
+                                <label class="font-weight-bold text-danger">Reason for Cancellation / Complaint <span class="text-danger">*</span></label>
+                                <textarea name="reason" class="form-control" rows="3" placeholder="Enter reason or complaint details (required)..." required minlength="5"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold">Rate Artisan (Optional)</label>
+                                <select name="rating" class="form-control">
+                                    <option value="">-- Rate Artisan --</option>
+                                    <option value="1">⭐ Poor Service (1/5)</option>
+                                    <option value="2">⭐⭐ Fair (2/5)</option>
+                                    <option value="3">⭐⭐⭐ Good (3/5)</option>
+                                    <option value="4">⭐⭐⭐⭐ Very Good (4/5)</option>
+                                    <option value="5">⭐⭐⭐⭐⭐ Excellent (5/5)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold">Additional Comments (Optional)</label>
+                                <textarea name="comment" class="form-control" rows="2" placeholder="Any additional comments..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Cancel Direct Assignment Modal -->
+    <div class="modal fade" id="cancelDirectAssignmentModal" tabindex="-1" role="dialog" aria-labelledby="cancelDirectAssignmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold text-danger" id="cancelDirectAssignmentModalLabel">Cancel Assignment</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{{ route('complaints.unassign', $complaint) }}" method="POST">
+                    @csrf
+                    <div class="modal-body text-left">
+                        <p class="text-danger font-weight-bold"><i class="fa fa-exclamation-triangle"></i> Cancel the assignment to this user. Please provide a reason below.</p>
+                        
+                        <div class="form-group">
+                            <label class="font-weight-bold text-danger">Reason for Cancellation / Complaint <span class="text-danger">*</span></label>
+                            <textarea name="reason" class="form-control" rows="3" placeholder="Enter reason or complaint details (required)..." required minlength="5"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 @endsection

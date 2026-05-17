@@ -5,6 +5,7 @@ namespace App\Services\Commission;
 use App\Models\ReferralChain;
 use App\Models\Referral;
 use App\Models\User;
+use App\Models\RegionalScope;
 use App\Models\Role;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,104 @@ use Exception;
 
 class ReferralChainService
 {
+    /**
+     * Handle marketer promotion and chain creation when a landlord adds a property
+     *
+     * @param int $landlordId
+     * @param string|null $state
+     * @param string|null $lga
+     * @return ReferralChain|null
+     */
+    public function handleLandlordPropertyCreation(int $landlordId, ?string $state = null, ?string $lga = null): ?ReferralChain
+    {
+        try {
+            // 1. Find who referred this landlord
+            $referral = Referral::where('referred_id', $landlordId)->first();
+            if (!$referral) {
+                Log::info('No referral found for landlord on property creation', ['landlord_id' => $landlordId]);
+                return null;
+            }
+
+            $marketerId = $referral->referrer_id;
+            $marketer = User::find($marketerId);
+
+            if (!$marketer) {
+                Log::warning('Referrer not found for landlord', ['referrer_id' => $marketerId, 'landlord_id' => $landlordId]);
+                return null;
+            }
+
+            // 2. Automate Marketer Promotion
+            // If the referrer is not yet a marketer, promote them now
+            if (!$marketer->isMarketer()) {
+                Log::info('Promoting referrer to marketer on property creation', ['user_id' => $marketerId]);
+                $marketer->promoteToMarketer();
+                $marketer->refresh();
+            }
+
+            // 3. Resolve Super Marketer
+            // Check if this marketer was referred by a Super Marketer
+            $marketerReferral = Referral::where('referred_id', $marketerId)->first();
+            $superMarketerId = null;
+            if ($marketerReferral) {
+                $superReferrer = User::find($marketerReferral->referrer_id);
+                if ($superReferrer && $superReferrer->isSuperMarketer()) {
+                    $superMarketerId = $superReferrer->user_id;
+                }
+            }
+
+            // 4. Resolve Region
+            $region = 'default';
+            if ($state) {
+                $region = strtolower($state);
+            }
+
+            // 5. Create or Update Referral Chain
+            $existingChain = ReferralChain::where('landlord_id', $landlordId)->first();
+            if ($existingChain) {
+                return $existingChain;
+            }
+
+            return $this->createReferralChain($superMarketerId, $marketerId, $landlordId, $region);
+
+        } catch (Exception $e) {
+            Log::error('Error handling landlord property creation', [
+                'landlord_id' => $landlordId,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Resolve the Regional Manager for a specific location
+     *
+     * @param string|null $state
+     * @param string|null $lga
+     * @return User|null
+     */
+    public function resolveRegionalManager(?string $state, ?string $lga = null): ?User
+    {
+        if (!$state) return null;
+
+        // Try to find by LGA first (state::lga format)
+        if ($lga) {
+            $lgaScope = RegionalScope::where('scope_type', 'lga')
+                ->where('scope_value', $state . '::' . $lga)
+                ->first();
+            
+            if ($lgaScope && $lgaScope->manager) {
+                return $lgaScope->manager;
+            }
+        }
+
+        // Fallback to State scope
+        $stateScope = RegionalScope::where('scope_type', 'state')
+            ->where('scope_value', $state)
+            ->first();
+
+        return $stateScope ? $stateScope->manager : null;
+    }
+
     /**
      * Role IDs for validation
      */

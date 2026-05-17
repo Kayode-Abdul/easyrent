@@ -17,7 +17,12 @@
                                 <div class="card card-user border">
                                     <div class="card-body">
                                         <div class="author">
-                                            <h5 class="title text-primary">{{ $task->complaint->title }}</h5>
+                                            <h5 class="title text-primary">
+                                                @if(auth()->user() && auth()->user()->artisan_category_id == $task->complaint->category_id)
+                                                    <span class="badge badge-success px-2 py-1 mb-2 font-weight-bold" style="font-size: 0.75rem;"><i class="fa fa-star"></i> Matches Your Specialty</span><br>
+                                                @endif
+                                                {{ $task->complaint->title }}
+                                            </h5>
                                             <p class="description">
                                                 <i class="nc-icon nc-pin-3"></i> {{ $task->landlord->city ?? 'Location
                                                 not specified' }}
@@ -27,16 +32,22 @@
                                             {{ Str::limit($task->description, 100) }}
                                         </p>
                                         <div class="text-center mt-3">
-                                            <span class="badge badge-warning">Budget: {{ format_money($task->budget_min) }} - {{
-                                                format_money($task->budget_max) }}</span>
-                                            <span class="badge badge-info">{{ $task->duration }}</span>
+                                            @if($task->status == 'assigned')
+                                                <span class="badge badge-secondary p-2"><i class="fa fa-lock"></i> Assigned to an Artisan</span>
+                                            @else
+                                                <span class="badge badge-warning">Budget: {{ format_money($task->budget_min) }} - {{ format_money($task->budget_max) }}</span>
+                                                <span class="badge badge-info">{{ $task->duration }}</span>
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="card-footer">
                                         <hr>
                                         <div class="button-container text-center">
-                                            <a href="{{ route('artisan.tasks.show', $task) }}"
-                                                class="btn btn-primary btn-round">View Detail & Bid</a>
+                                            @if($task->status == 'assigned')
+                                                <button class="btn btn-secondary btn-round" disabled>Closed for Bidding</button>
+                                            @else
+                                                <a href="{{ route('artisan.tasks.show', $task) }}" class="btn btn-primary btn-round">View Detail & Bid</a>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

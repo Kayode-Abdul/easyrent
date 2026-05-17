@@ -143,7 +143,7 @@ class SearchController extends Controller
      */
     public function searchApartments(Request $request)
     {
-        $query = Apartment::with(['property:id,property_id,address,state,lga', 'tenant:user_id,first_name,last_name']);
+        $query = Apartment::with(['property:id,property_id,address,state,lga,country,country_name', 'images', 'currency']);
 
         // Text search (search in property details)
         if ($request->filled('q')) {
@@ -151,7 +151,17 @@ class SearchController extends Controller
             $query->whereHas('property', function($q) use ($searchTerm) {
                 $q->where('address', 'LIKE', "%{$searchTerm}%")
                   ->orWhere('state', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('lga', 'LIKE', "%{$searchTerm}%");
+                  ->orWhere('lga', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('country', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('country_name', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+
+        // Country filter
+        if ($request->filled('country')) {
+            $query->whereHas('property', function($q) use ($request) {
+                $q->where('country', $request->get('country'))
+                  ->orWhere('country_name', $request->get('country'));
             });
         }
 
@@ -182,9 +192,10 @@ class SearchController extends Controller
             });
         }
 
+        // LGA/City filter
         if ($request->filled('lga')) {
             $query->whereHas('property', function($q) use ($request) {
-                $q->where('lga', $request->get('lga'));
+                $q->where('lga', 'LIKE', "%{$request->get('lga')}%");
             });
         }
 
@@ -217,6 +228,24 @@ class SearchController extends Controller
         $perPage = min($request->get('per_page', 15), 50);
         $apartments = $query->paginate($perPage);
 
+        // Fetch filter data
+        $apartmentTypes = \App\Models\ApartmentType::active()->get();
+        
+        $selectedCountry = $request->get('country', 'Nigeria');
+        $states = \App\Models\State::where('country_name', $selectedCountry)->get();
+        
+        // Get all countries from JSON for the filter dropdown
+        $countries = [];
+        try {
+            $jsonPath = resource_path('countries.json');
+            if (\Illuminate\Support\Facades\File::exists($jsonPath)) {
+                $countriesData = json_decode(\Illuminate\Support\Facades\File::get($jsonPath), true);
+                $countries = collect($countriesData)->pluck('name')->toArray();
+            }
+        } catch (\Exception $e) {
+            $countries = Property::distinct()->whereNotNull('country')->pluck('country')->toArray();
+        }
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -231,7 +260,32 @@ class SearchController extends Controller
             ]);
         }
 
-        return view('search.apartments', compact('apartments'));
+        // Determine currency symbol for the selected country
+        $currencySymbol = '₦';
+        try {
+            $jsonPath = resource_path('countries.json');
+            if (\Illuminate\Support\Facades\File::exists($jsonPath)) {
+                $countriesData = json_decode(\Illuminate\Support\Facades\File::get($jsonPath), true);
+                $countryData = collect($countriesData)->firstWhere('name', $selectedCountry);
+                if ($countryData) {
+                    $currencySymbol = $countryData['currency_symbol'] ?? '₦';
+                }
+            }
+        } catch (\Exception $e) {}
+
+        return view('search.apartments', compact('apartments', 'apartmentTypes', 'states', 'countries', 'selectedCountry', 'currencySymbol'));
+    }
+
+    /**
+     * Show apartment details (public)
+     */
+    public function showApartment($apartment_id)
+    {
+        $apartment = Apartment::with(['property.images', 'property.mainImage', 'property.owner', 'images', 'currency'])
+            ->where('apartment_id', $apartment_id)
+            ->firstOrFail();
+            
+        return view('search.show', compact('apartment'));
     }
 
     /**

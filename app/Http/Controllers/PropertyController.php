@@ -9,6 +9,7 @@ use App\Models\Currency;
 use App\Models\Payment;
 use App\Models\State;
 use App\Models\Lga;
+use App\Models\PropertyImage;
 use App\Http\Requests\PropertyRequest;
 use App\Http\Requests\ApartmentRequest;
 use App\Http\Requests\SingleApartmentRequest;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use App\Services\Commission\ReferralChainService;
 
 class PropertyController extends Controller
 {
@@ -35,7 +37,7 @@ class PropertyController extends Controller
         return view('properties', compact('all_properties'));
     }
 
-    public function add(PropertyRequest $request): \Illuminate\View\View|JsonResponse
+    public function add(PropertyRequest $request, ReferralChainService $referralChainService): \Illuminate\View\View|JsonResponse
     {
         if (!$request->isMethod('post')) {
             $states = State::where('country_name', 'Nigeria')->with('lgas')->get();
@@ -71,6 +73,21 @@ class PropertyController extends Controller
                 'status' => 'pending',
                 'created_at' => now()
             ]);
+
+            // Handle Automated Marketer Promotion and Referral Chain creation
+            try {
+                $referralChainService->handleLandlordPropertyCreation(
+                    $userId, 
+                    $property->state, 
+                    $property->lga
+                );
+            } catch (\Exception $e) {
+                Log::error('Failed to process referral chain on property creation', [
+                    'property_id' => $property->property_id,
+                    'error' => $e->getMessage()
+                ]);
+                // We don't want to fail property creation if referral tracking fails
+            }
 
             // Save property-specific attributes based on property type
             $propType = (int)$request->propertyType;
@@ -140,8 +157,8 @@ class PropertyController extends Controller
                     $storagePath = str_replace('public/', '', $path);
 
                     PropertyImage::create([
-                        'property_id' => $property->id, // Use primary ID for FK
-                        'uploaded_by' => auth()->id(), // Use primary ID (id) not business ID (user_id)
+                        'property_id' => $property->property_id, // Use prop_id for FK
+                        'uploaded_by' => auth()->user()->user_id, // Use user_id
                         'file_name' => $fileName,
                         'file_path' => $storagePath,
                         'original_name' => $originalName,
@@ -153,6 +170,9 @@ class PropertyController extends Controller
                 }
             }
 
+            // Ensure no unexpected output (like PHP warnings) corrupts the JSON response
+            if (ob_get_length()) ob_clean();
+
             return response()->json([
                 'success' => true,
                 'messages' => [
@@ -161,8 +181,14 @@ class PropertyController extends Controller
                     'propId' => $property->property_id
                 ]
             ]);
-        } catch (\Exception $e) {
-            Log::error('Property creation failed: ' . $e->getMessage());
+        } catch (\Throwable $e) { // Use Throwable to catch all errors and warnings converted to exceptions
+            Log::error('Property creation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if (ob_get_length()) ob_clean();
+            
             return response()->json([
                 'success' => false,
                 'messages' => [
@@ -177,6 +203,7 @@ class PropertyController extends Controller
         try {
             Log::info('Apartment creation request data:', $request->all());
             $property = Property::where('property_id', $request->propertyId)->firstOrFail();
+            $this->authorizeProperty($property);
             
             $createdApartments = [];
             
@@ -297,6 +324,7 @@ class PropertyController extends Controller
         try {
             Log::info('Single apartment creation request data:', $request->all());
             $property = Property::where('property_id', $request->propertyId)->firstOrFail();
+            $this->authorizeProperty($property);
             
             // Generate unique apartment ID
             do {
@@ -355,6 +383,32 @@ class PropertyController extends Controller
                     'duration' => $apartment->duration,
                     'currency_id' => $apartment->currency_id,
                 ]);
+            }
+            
+            // Handle Apartment Image Uploads
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $index => $image) {
+                    $originalName = $image->getClientOriginalName();
+                    $extension = $image->getClientOriginalExtension();
+                    $fileName = 'apt_' . \Illuminate\Support\Str::random(10) . '_' . time() . '.' . $extension;
+                    $filePath = 'apartments/' . $apartmentId . '/images';
+                    
+                    $path = $image->storeAs('public/' . $filePath, $fileName);
+                    $storagePath = str_replace('public/', '', $path);
+
+                    \App\Models\PropertyImage::create([
+                        'property_id' => $property->property_id,
+                        'apartment_id' => $apartmentId,
+                        'uploaded_by' => auth()->user()->user_id,
+                        'file_name' => $fileName,
+                        'file_path' => $storagePath,
+                        'original_name' => $originalName,
+                        'file_size' => $image->getSize(),
+                        'mime_type' => $image->getMimeType(),
+                        'is_main' => ($index === 0),
+                        'order' => $index
+                    ]);
+                }
             }
             
             Log::info('Single apartment created successfully:', ['apartment_id' => $apartmentId]);
@@ -1062,6 +1116,8 @@ class PropertyController extends Controller
         $property = Property::where('property_id', $propId)
             ->with(['apartments.tenant', 'apartments.apartmentType', 'owner', 'agent', 'images'])
             ->firstOrFail();
+        
+        $this->authorizeProperty($property, true); // Allow tenants
         $userId = auth()->check() ? auth()->user()->user_id : null;
         
         // Load durations for the form
@@ -1126,6 +1182,7 @@ class PropertyController extends Controller
             }
 
             $property = Property::where('property_id', $propId)->firstOrFail();
+            $this->authorizeProperty($property);
             $property->agent_id = $agent->user_id;
             $property->save();
 
@@ -1186,6 +1243,7 @@ class PropertyController extends Controller
         $apartment = Apartment::where('apartment_id', $apartmentId)
             ->with(['property', 'tenant'])
             ->firstOrFail();
+        $this->authorizeApartment($apartment, true); // Allow tenants
         return view('apartment.show', compact('apartment'));
     }
 
@@ -1194,6 +1252,7 @@ class PropertyController extends Controller
         $apartment = Apartment::where('apartment_id', $apartmentId)
             ->with('property')
             ->firstOrFail();
+        $this->authorizeApartment($apartment);
             
         // Load durations for the form
         $durations = \App\Models\Duration::getActiveOrdered();
@@ -1206,7 +1265,8 @@ class PropertyController extends Controller
     public function updateApartment(Request $request, int $apartmentId): JsonResponse
     {
         try {
-            $apartment = Apartment::where('apartment_id', $apartmentId)->firstOrFail();
+            $apartment = Apartment::where('apartment_id', $apartmentId)->with('property')->firstOrFail();
+            $this->authorizeApartment($apartment);
             
             // Basic apartment fields
             $updateData = [
@@ -1244,6 +1304,32 @@ class PropertyController extends Controller
             
             $apartment->update($updateData);
             
+            // Handle Image Uploads
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $index => $image) {
+                    $originalName = $image->getClientOriginalName();
+                    $extension = $image->getClientOriginalExtension();
+                    $fileName = 'apt_' . Str::random(10) . '_' . time() . '.' . $extension;
+                    $filePath = 'apartments/' . $apartment->apartment_id . '/images';
+                    
+                    $path = $image->storeAs('public/' . $filePath, $fileName);
+                    $storagePath = str_replace('public/', '', $path);
+
+                    PropertyImage::create([
+                        'property_id' => $apartment->property_id,
+                        'apartment_id' => $apartment->apartment_id,
+                        'uploaded_by' => auth()->user()->user_id,
+                        'file_name' => $fileName,
+                        'file_path' => $storagePath,
+                        'original_name' => $originalName,
+                        'file_size' => $image->getSize(),
+                        'mime_type' => $image->getMimeType(),
+                        'is_main' => (!$apartment->images()->exists() && $index === 0),
+                        'order' => $apartment->images()->count() + $index
+                    ]);
+                }
+            }
+            
             return response()->json([
                 'success' => true,
                 'messages' => 'Apartment updated successfully!'
@@ -1259,7 +1345,8 @@ class PropertyController extends Controller
     public function destroyApartment(int $apartmentId): JsonResponse
     {
         try {
-            $apartment = Apartment::where('apartment_id', $apartmentId)->firstOrFail();
+            $apartment = Apartment::where('apartment_id', $apartmentId)->with('property')->firstOrFail();
+            $this->authorizeApartment($apartment);
             $apartment->delete();
             return response()->json([
                 'success' => true,
@@ -1280,6 +1367,7 @@ class PropertyController extends Controller
     {
         try {
             $property = Property::where('property_id', $propId)->firstOrFail();
+            $this->authorizeProperty($property);
             $property->agent_id = null;
             $property->save();
             return response()->json([
@@ -1330,6 +1418,7 @@ class PropertyController extends Controller
             return view('auth.login');
         }
         $property = Property::where('property_id', $propId)->firstOrFail();
+        $this->authorizeProperty($property);
         $countries = json_decode(File::get(resource_path('/countries.json')), true);
         
         // Find the specific country the property belongs to, or default to empty
@@ -1345,6 +1434,7 @@ class PropertyController extends Controller
     {
         try {
             $property = Property::where('property_id', $propId)->firstOrFail();
+            $this->authorizeProperty($property);
             $property->update([
                 'prop_type' => $request->propertyType,
                 'address' => $request->address,
@@ -1357,6 +1447,32 @@ class PropertyController extends Controller
                 'no_of_apartment' => $request->noOfApartment,
                 'currency_id' => $request->currency_id
             ]);
+
+            // Handle Image Uploads
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $index => $image) {
+                    $originalName = $image->getClientOriginalName();
+                    $extension = $image->getClientOriginalExtension();
+                    $fileName = 'prop_' . Str::random(10) . '_' . time() . '.' . $extension;
+                    $filePath = 'properties/' . $property->property_id . '/images';
+                    
+                    $path = $image->storeAs('public/' . $filePath, $fileName);
+                    $storagePath = str_replace('public/', '', $path);
+
+                    PropertyImage::create([
+                        'property_id' => $property->property_id,
+                        'uploaded_by' => auth()->user()->user_id,
+                        'file_name' => $fileName,
+                        'file_path' => $storagePath,
+                        'original_name' => $originalName,
+                        'file_size' => $image->getSize(),
+                        'mime_type' => $image->getMimeType(),
+                        'is_main' => (!$property->images()->exists() && $index === 0),
+                        'order' => $property->images()->count() + $index
+                    ]);
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'messages' => 'Property updated successfully!',
@@ -1375,13 +1491,6 @@ class PropertyController extends Controller
         try {
             $property = Property::where('property_id', $propId)->firstOrFail();
             
-            // Security check: Only owner or admin can delete
-            if ($property->user_id !== auth()->id() && !auth()->user()->isAdmin()) {
-                return response()->json([
-                    'success' => false,
-                    'messages' => 'Unauthorized: You do not own this property.'
-                ], 403);
-            }
 
             $property->delete();
             
@@ -1490,6 +1599,41 @@ class PropertyController extends Controller
     }
 
     /**
+     * Delete an individual property/apartment image.
+     */
+    public function deleteImage(int $id): JsonResponse
+    {
+        try {
+            $image = PropertyImage::findOrFail($id);
+            
+            // Security check: Only owner or admin can delete
+            $property = null;
+            if ($image->property_id) {
+                $property = Property::where('property_id', $image->property_id)->first();
+            } elseif ($image->apartment_id) {
+                $apartment = Apartment::where('apartment_id', $image->apartment_id)->first();
+                if ($apartment) {
+                    $property = Property::where('property_id', $apartment->property_id)->first();
+                }
+            }
+
+            $this->authorizeProperty($property);
+
+            $image->delete(); // Model boot method handles file deletion
+            
+            return response()->json([
+                'success' => true,
+                'messages' => 'Image deleted successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'messages' => 'Failed to delete image: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * AJAXDestroy method
      * TODO: Implement this method
      */
@@ -1505,12 +1649,7 @@ class PropertyController extends Controller
                 ], 404);
             }
             
-            if ($property->user_id !== auth()->id() && !auth()->user()->isAdmin()) {
-                return response()->json([
-                    'success' => false,
-                    'messages' => 'Unauthorized: You do not have permission to delete this property.'
-                ], 403);
-            }
+            $this->authorizeProperty($property);
 
             $hasActiveLeases = $property->apartments()->where('occupied', true)->exists();
             if ($hasActiveLeases) {
@@ -1545,13 +1684,14 @@ class PropertyController extends Controller
     {
         $countryName = $request->input('country', 'Nigeria');
         
-        // Try to get from database first to ensure we have valid IDs for validation
+        // 1. Try to get states and LGAs from database
         $dbStates = State::where('country_name', $countryName)
             ->with(['lgas' => function($query) {
                 $query->select('id', 'name', 'state_id');
             }])
             ->get(['id', 'name']);
 
+        $states = [];
         if ($dbStates->isNotEmpty()) {
             $states = $dbStates->map(function($state) {
                 return [
@@ -1561,41 +1701,93 @@ class PropertyController extends Controller
                         return ['id' => $lga->id, 'name' => $lga->name];
                     })
                 ];
-            });
-            
-            // Still need currency from JSON if possible
-            $countries = json_decode(File::get(resource_path('/countries.json')), true);
-            $countryData = collect($countries)->firstWhere('name', $countryName);
-            
-            return response()->json([
-                'states' => $states,
-                'currency_code' => $countryData['currency_code'] ?? null,
-                'currency_symbol' => $countryData['currency_symbol'] ?? null
-            ]);
-        }
+            })->toArray();
+        } else {
+            // 2. Fallback: Try to get from countries.json
+            try {
+                $jsonPath = resource_path('countries.json');
+                if (File::exists($jsonPath)) {
+                    $countries = json_decode(File::get($jsonPath), true);
+                    $countryData = collect($countries)->firstWhere('name', $countryName);
 
-        // Fallback for other countries from JSON
-        $countries = json_decode(File::get(resource_path('/countries.json')), true);
-        $countryData = collect($countries)->firstWhere('name', $countryName);
-
-        $states = [];
-        if ($countryData && isset($countryData['states'])) {
-            foreach ($countryData['states'] as $stateData) {
-                $states[] = [
-                    'id' => $stateData['name'],
-                    'name' => $stateData['name'],
-                    'lgas' => isset($stateData['cities']) ? array_map(function($city) {
-                        return ['id' => $city, 'name' => $city];
-                    }, $stateData['cities']) : []
-                ];
+                    if ($countryData && isset($countryData['states'])) {
+                        foreach ($countryData['states'] as $stateData) {
+                            $states[] = [
+                                'id' => $stateData['name'],
+                                'name' => $stateData['name'],
+                                'lgas' => isset($stateData['cities']) ? array_map(function($city) {
+                                    return ['id' => $city, 'name' => $city];
+                                }, $stateData['cities']) : []
+                            ];
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('JSON Location Load Error: ' . $e->getMessage());
             }
         }
 
+        // 3. Get currency info
+        $currencyInfo = ['code' => 'USD', 'symbol' => '$'];
+        try {
+            $jsonPath = resource_path('countries.json');
+            if (File::exists($jsonPath)) {
+                $countries = json_decode(File::get($jsonPath), true);
+                $countryData = collect($countries)->firstWhere('name', $countryName);
+                if ($countryData) {
+                    $currencyInfo['code'] = $countryData['currency_code'] ?? 'USD';
+                    $currencyInfo['symbol'] = $countryData['currency_symbol'] ?? '$';
+                }
+            }
+        } catch (\Exception $e) {}
+
         return response()->json([
+            'success' => true,
             'states' => $states,
-            'currency_code' => $countryData['currency_code'] ?? null,
-            'currency_symbol' => $countryData['currency_symbol'] ?? null
+            'currency_code' => $currencyInfo['code'],
+            'currency_symbol' => $currencyInfo['symbol']
         ]);
     }
 
+
+    /**
+     * Authorize access to a property.
+     */
+    private function authorizeProperty($property, $allowTenant = false)
+    {
+        if (!$property) {
+            abort(404, 'Property not found.');
+        }
+        $user = auth()->user();
+        if ($user->isAdmin()) return;
+
+        // Ensure we compare the custom user_id, not the primary key id
+        if ((string)$property->user_id === (string)$user->user_id) return;
+        if ((string)$property->agent_id === (string)$user->user_id) return;
+
+        if ($allowTenant) {
+            if ($property->apartments()->where('tenant_id', $user->user_id)->exists()) return;
+        }
+
+        abort(403, 'Unauthorized access to this property.');
+    }
+
+    /**
+     * Authorize access to an apartment.
+     */
+    private function authorizeApartment($apartment, $allowTenant = false)
+    {
+        $user = auth()->user();
+        if ($user->isAdmin()) return;
+
+        $property = $apartment->property;
+        if (!$property) abort(404, 'Property not found for this apartment.');
+
+        if ((string)$property->user_id === (string)$user->user_id) return;
+        if ((string)$property->agent_id === (string)$user->user_id) return;
+
+        if ($allowTenant && (string)$apartment->tenant_id === (string)$user->user_id) return;
+
+        abort(403, 'Unauthorized access to this apartment.');
+    }
 }

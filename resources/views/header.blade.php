@@ -241,14 +241,7 @@
                 <img src="/assets/images/logo-small.png" alt="EasyRent Logo">
             </a>
             <div class="d-flex align-items-center ml-auto d-lg-none">
-                {{-- Mobile: Sign Up Link (When Not Logged In) --}}
-                @guest
-                <a href="{{ route('register') }}" class="btn btn-sm btn-primary mr-2">Sign Up</a>
-                @endguest
-
-
-
-                <button class="navbar-toggler d-flex align-items-center justify-content-center ml-2" type="button"
+               <button class="navbar-toggler d-flex align-items-center justify-content-center ml-2" type="button"
                     data-toggle="collapse" data-target="#ftco-nav" aria-controls="ftco-nav" aria-expanded="false"
                     aria-label="Toggle navigation">
                     <i class="bi bi-list"></i>
@@ -273,16 +266,14 @@
                     </li>
                     <li class="nav-item {{ $currentSegment === 'contact' ? 'active' : '' }}">
                         <a href="/contact" class="nav-link">Contact</a>
-                    </li>
-
-                    {{-- Desktop: Login/Signup Links (When Not Logged In) --}}
-                    @guest
-                    <li class="nav-item d-none d-lg-block">
+                    </li> 
+                     @guest
+                    <li class="nav-item">
                         <a href="{{ route('login') }}" class="nav-link">
                             <i class="bi bi-box-arrow-in-right"></i> Login
                         </a>
                     </li>
-                    <li class="nav-item d-none d-lg-block">
+                    <li class="nav-item">
                         <a href="{{ route('register') }}" class="nav-link btn btn-primary text-white px-3 py-2"
                             style="border-radius: 20px;color: #fff !important;">
                             <i class="bi bi-person-plus"></i> Sign Up
@@ -662,7 +653,7 @@
                     </li>
                     @endif
 
-                    @if(auth()->check() && Auth::user()->admin)
+                    @if(auth()->check() && auth()->user()->isAdmin())
                     <li class="{{ request()->is('dashboard/payments') ? 'active' : '' }}">
                         <a href="{{ route('payments.index') }}">
                             <i class="nc-icon nc-money-coins"></i>
@@ -676,12 +667,13 @@
                             <p>Properties</p>
                         </a>
                     </li>
-                    <!-- <li class="{ request()->is('admin/properties/pending') ? 'active' : '' }}">
-                        <a href="{ route('admin.properties.pending') }">
+                    <li class="{{ request()->is('admin/pending-approvals') ? 'active' : '' }}">
+                        <a href="{{ route('admin.approvals.index') }}">
                             <i class="nc-icon nc-time-alarm"></i>
                             <p>Pending Approvals</p>
                         </a>
-                    </li> -->
+                    </li>
+
                     <li class="{{ request()->is('dashboard/users')||  request()->is('admin/users') ? 'active' : '' }}">
                         <a href="/dashboard/users">
                             <i class="nc-icon nc-pin-3"></i>

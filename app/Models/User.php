@@ -214,6 +214,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(\App\Models\AgentRating::class , 'agent_id', 'user_id');
     }
 
+    public function artisanRatings()
+    {
+        return $this->hasMany(\App\Models\ArtisanRating::class , 'artisan_id', 'user_id');
+    }
+
     public function givenRatings()
     {
         return $this->hasMany(\App\Models\AgentRating::class , 'user_id', 'user_id');
@@ -440,6 +445,28 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasRole($roleName)
     {
         return $this->roles()->where('name', $roleName)->exists();
+    }
+
+    /**
+     * Check if the user is an administrator.
+     */
+    public function isAdmin(): bool
+    {
+        // Support both boolean flag and role-based check
+        return (bool)($this->admin ?? false) || $this->hasRole('admin');
+    }
+
+    /**
+     * Check if the user is the owner of a resource or an administrator.
+     */
+    public function isOwnerOrAdmin($targetUserId): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        // Handle both numeric and string IDs
+        return (string)$this->user_id === (string)$targetUserId;
     }
 
     // Super Marketer role methods (Task 3.1)

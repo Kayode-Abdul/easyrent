@@ -20,6 +20,9 @@
     </style>
 </head>
 <body>
+<div style="text-align: center; padding: 20px 0; background-color: #ffffff; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px;">
+    <img src="{{ asset('assets/images/logo-small.png') }}" alt="EasyRent Logo" style="height: 45px; width: auto; max-width: 200px; object-fit: contain;">
+</div>
     <div class="container">
         <div class="header">
             <h1>🎉 Payment Completed!</h1>

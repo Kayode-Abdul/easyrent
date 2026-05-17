@@ -79,16 +79,3 @@ Options -Indexes
     Deny from all
 </FilesMatch>
 
-# ============================================================================
-# Protect Storage Directory
-# ============================================================================
-
-<Directory "storage">
-    Order allow,deny
-    Deny from all
-</Directory>
-
-<Directory "bootstrap/cache">
-    Order allow,deny
-    Deny from all
-</Directory>

@@ -18,6 +18,7 @@ use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\TenantReminderController;
 
 /*
  |--------------------------------------------------------------------------
@@ -31,7 +32,22 @@ use App\Http\Controllers\SettingsController;
  */
 
 Route::get('/', function () {
-    return view('home');
+    $apartmentTypes = \App\Models\ApartmentType::active()->get();
+    $states = \App\Models\State::where('country_name', 'Nigeria')->get();
+    
+    // Get all countries from JSON for the filter dropdown
+    $countries = [];
+    try {
+        $jsonPath = resource_path('countries.json');
+        if (\Illuminate\Support\Facades\File::exists($jsonPath)) {
+            $countriesData = json_decode(\Illuminate\Support\Facades\File::get($jsonPath), true);
+            $countries = collect($countriesData)->pluck('name')->toArray();
+        }
+    } catch (\Exception $e) {
+        $countries = \App\Models\Property::distinct()->whereNotNull('country')->pluck('country')->toArray();
+    }
+    
+    return view('home', compact('apartmentTypes', 'states', 'countries'));
 });
 Route::get('/about', function () {
     return view('about');
@@ -75,6 +91,8 @@ Route::put('/dashboard/property/{propId}', [PropertyController::class , 'update'
 Route::delete('/dashboard/property/{propId}', [PropertyController::class , 'destroy']);
 // AJAX property delete endpoint
 Route::delete('/dashboard/property/{propId}/ajax', [PropertyController::class , 'ajaxDestroy']);
+// Image management
+Route::delete('/dashboard/property/image/{id}', [PropertyController::class , 'deleteImage'])->middleware('auth')->name('property.image.delete');
 // Keep original routes for backward compatibility
 Route::get('/dashboard/property/{propId}', [PropertyController::class , 'show'])->name('property.show');
 Route::get('/property/{propId}/edit', [PropertyController::class , 'edit']);
@@ -100,6 +118,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard/properties', [PropertyController::class , 'properties'])->name('properties.all');
     Route::get('/dashboard/users', [UserController::class , 'allUsers'])->name('users.all');
     Route::get('/dashboard/tenant/{id}', [UserController::class , 'getTenantDetails'])->name('tenant.details');
+
+    // Admin Payment Analytics
+    Route::get('/dashboard/payments/analytics', [PaymentController::class , 'analytics'])->name('payments.analytics');
 
     // Reminders
     Route::post('/admin/reminders/send-overdue', [TenantReminderController::class , 'sendOverdueReminders'])->name('admin.reminders.overdue');
@@ -177,6 +198,7 @@ Route::get('/api/session-status', function () {
 Route::middleware(['auth'])->group(function () {
     Route::put('/user/{id}', [UserController::class , 'update'])->name('user.update');
     Route::post('/user/{id}', [UserController::class , 'update']);
+    // Profile view is now authorized at controller level (Admin or Owner)
     Route::get('/dashboard/users/profile/{id}', [UserController::class , 'show'])->name('users.profile');
     Route::post('/dashboard/users/profile/{id}', [UserController::class , 'show'])->name('users.profile.update');
 });
@@ -216,9 +238,8 @@ Route::middleware(['auth'])->group(function () {
     // User lookup API for tenant ID validation
     Route::get('/api/user/lookup/{userId}', [UserController::class , 'lookup'])->name('user.lookup');
 
-    // Payment routes
+    // Payment routes (Standard history remains under auth but is filtered)
     Route::get('/dashboard/payments', [PaymentController::class , 'index'])->name('payments.index');
-    Route::get('/dashboard/payments/analytics', [PaymentController::class , 'analytics'])->name('payments.analytics');
     Route::get('/dashboard/payments/{transactionId}/receipt/download', [App\Http\Controllers\PaymentReceiptController::class, 'download'])->name('payment.receipt.download');
 
     // Enhanced rental calculation routes
@@ -234,6 +255,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{complaint}/comment', [ComplaintController::class , 'addComment'])->name('comment');
             Route::post('/{complaint}/status', [ComplaintController::class , 'updateStatus'])->name('status');
             Route::post('/{complaint}/assign', [ComplaintController::class , 'assign'])->name('assign');
+            Route::post('/{complaint}/unassign', [ComplaintController::class , 'unassign'])->name('unassign');
             Route::get('/landlord/dashboard', [ComplaintController::class , 'landlordDashboard'])->name('landlord.dashboard');
         }
         );
@@ -245,6 +267,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/tasks/{task}', [App\Http\Controllers\ArtisanTaskController::class , 'show'])->name('tasks.show');
             Route::post('/bids/{bid}/accept', [App\Http\Controllers\ArtisanTaskController::class , 'acceptBid'])->name('bids.accept');
             Route::post('/tasks/{task}/complete', [App\Http\Controllers\ArtisanTaskController::class , 'completeTask'])->name('tasks.complete');
+            Route::post('/tasks/{task}/cancel', [App\Http\Controllers\ArtisanTaskController::class , 'cancelTask'])->name('tasks.cancel');
 
             // Artisan actions
             Route::get('/dashboard', [App\Http\Controllers\ArtisanTaskController::class , 'artisanDashboard'])->name('dashboard');
@@ -345,6 +368,7 @@ Route::get('/proforma/payment/success/{payment}', [PaymentController::class , 'p
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/dashboard/agent/rate', [\App\Http\Controllers\AgentRatingController::class , 'store'])->name('agent.rate');
+    Route::post('/dashboard/artisan/rate', [\App\Http\Controllers\ArtisanRatingController::class , 'store'])->name('artisan.rate');
     Route::get('/dashboard/agent/{agentId}/ratings', [\App\Http\Controllers\AgentRatingController::class , 'show'])->name('agent.ratings');
     Route::get('/proforma/view/{id}', [ProfomaController::class , 'view'])->name('proforma.view');
     Route::post('/proforma/{id}/accept', [ProfomaController::class , 'accept'])->name('proforma.accept.post');
@@ -554,6 +578,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin/dashboard')->name('admin.')-
     Route::post('/roles/audits/prune', [App\Http\Controllers\Admin\RoleManagementController::class , 'pruneAudits'])->name('roles.audits.prune');
 });
 
+// Admin Pending Approvals (Properties, Artisans, Property Managers)
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.approvals.')->group(function () {
+    Route::get('/pending-approvals', [App\Http\Controllers\Admin\AdminController::class , 'pendingApprovals'])->name('index');
+    Route::post('/pending-approvals/property/{propId}/approve', [App\Http\Controllers\Admin\AdminController::class , 'approveProperty'])->name('property.approve');
+    Route::post('/pending-approvals/property/{propId}/reject', [App\Http\Controllers\Admin\AdminController::class , 'rejectProperty'])->name('property.reject');
+    Route::post('/pending-approvals/artisan/{user}/toggle', [App\Http\Controllers\Admin\AdminController::class , 'toggleArtisanVerification'])->name('artisan.toggle');
+    Route::post('/pending-approvals/pm/{user}/approve', [App\Http\Controllers\Admin\AdminController::class , 'approvePropertyManager'])->name('pm.approve');
+});
+
 // Canonical Regional Manager routes under /dashboard/regional
 Route::middleware(['auth'])
     ->prefix('dashboard/regional')
@@ -645,19 +678,16 @@ Route::prefix('apartment/invite')->name('apartment.invite.')->group(function () 
             return redirect()->route('apartment.invite.show', $token)->with('info', 'Please use the application form below to apply for this apartment.');
         }
         )->name('apply.redirect');
-        Route::post('/store-session', [App\Http\Controllers\ApartmentInvitationController::class , 'storeSession'])->name('store-session');
-        Route::get('/{token}/payment/{payment}', [App\Http\Controllers\ApartmentInvitationController::class , 'payment'])->name('payment');
-        Route::get('/{token}/payment', [App\Http\Controllers\ApartmentInvitationController::class , 'paymentDirect'])->name('payment.direct');
-        Route::post('/{token}/payment/callback', [App\Http\Controllers\ApartmentInvitationController::class , 'paymentCallback'])->name('payment.callback');
-        Route::get('/{token}/success', [App\Http\Controllers\ApartmentInvitationController::class , 'success'])->name('invite.success');
+    Route::post('/store-session', [App\Http\Controllers\ApartmentInvitationController::class , 'storeSession'])->name('store-session');
+    Route::get('/{token}/payment/{payment}', [App\Http\Controllers\ApartmentInvitationController::class , 'payment'])->name('payment');
+    Route::get('/{token}/not-found', function ($token) {
+        return view('apartment.invite.not-found', compact('token'));
+    })->name('not-found');
+});
 
-        // Error pages
-        Route::get('/{token}/expired', [App\Http\Controllers\ApartmentInvitationController::class , 'expired'])->name('expired');
-        Route::get('/{token}/not-found', function ($token) {
-            return view('apartment.invite.not-found', compact('token'));
-        }
-        )->name('not-found');
-    });
+// Public Search Routes
+Route::get('/search/apartments', [App\Http\Controllers\SearchController::class, 'searchApartments'])->name('search.apartments');
+Route::get('/apartment/{apartment_id}', [App\Http\Controllers\SearchController::class, 'showApartment'])->name('apartment.show.public');
 
 // Landlord routes for generating invitation links (requires authentication)
 Route::middleware(['auth'])->group(function () {

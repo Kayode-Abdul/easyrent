@@ -83,18 +83,6 @@ class AdminController extends Controller
         return view('admin.properties', compact('properties', 'stats'));
     }
 
-    /**
-     * Pending Property Approvals (Global Oversight)
-     */
-    public function pendingApprovals()
-    {
-        $properties = Property::with(['user', 'apartments'])
-            ->where('status', 'pending')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-
-        return view('admin.pending_approvals', compact('properties'));
-    }
 
     /**
      * Bulk Action for Property Approval
@@ -823,5 +811,140 @@ class AdminController extends Controller
         }
 
         return round($bytes, $precision) . ' ' . $units[$i];
+    }
+
+    /**
+     * Unified Pending Approvals Page (Properties, Artisans, Property Managers)
+     */
+    public function pendingApprovals()
+    {
+        $pendingProperties = Property::with(['user', 'apartments'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20, ['*'], 'properties_page');
+
+        $artisanRoleId = DB::table('roles')->where('name', 'Artisan')->value('id');
+        $pendingArtisans = collect();
+        if ($artisanRoleId) {
+            $pendingArtisans = User::withRole('Artisan')
+                ->where('is_artisan_verified', false)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
+        $pmRoleId = DB::table('roles')->where('name', 'property_manager')->value('id');
+        $vpmRoleId = DB::table('roles')->where('name', 'Verified_Property_Manager')->value('id');
+        $pendingPMs = collect();
+        if ($pmRoleId) {
+            $pendingPMs = User::withRole('property_manager')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
+        return view('admin.pending_approvals', compact(
+            'pendingProperties', 'pendingArtisans', 'pendingPMs', 'vpmRoleId'
+        ));
+    }
+
+    /**
+     * Approve or revoke artisan verification
+     */
+    public function toggleArtisanVerification(User $user)
+    {
+        $newStatus = !$user->is_artisan_verified;
+        $user->is_artisan_verified = $newStatus;
+        $user->save();
+
+        $action = $newStatus ? 'approved' : 'revoked';
+
+        AuditLogController::logActivity(
+            'artisan_verification_' . $action,
+            ucfirst($action) . ' artisan verification for: ' . $user->first_name . ' ' . $user->last_name,
+            User::class,
+            $user->user_id,
+            ['is_artisan_verified' => !$newStatus],
+            ['is_artisan_verified' => $newStatus]
+        );
+
+        return redirect()->back()->with('success', 'Artisan account ' . $action . ' successfully.');
+    }
+
+    /**
+     * Approve a Property Manager (upgrade to Verified Property Manager)
+     */
+    public function approvePropertyManager(User $user)
+    {
+        $vpmRoleId = DB::table('roles')->where('name', 'Verified_Property_Manager')->value('id');
+        if (!$vpmRoleId) {
+            return redirect()->back()->with('error', 'Verified Property Manager role not found in system.');
+        }
+
+        $oldRole = $user->role;
+        $user->role = $vpmRoleId;
+        $user->save();
+
+        AuditLogController::logActivity(
+            'property_manager_approved',
+            'Approved property manager: ' . $user->first_name . ' ' . $user->last_name,
+            User::class,
+            $user->user_id,
+            ['role' => $oldRole],
+            ['role' => $vpmRoleId]
+        );
+
+        return redirect()->back()->with('success', 'Property Manager approved and upgraded to Verified status.');
+    }
+
+    /**
+     * Approve a single property
+     */
+    public function approveProperty($propId)
+    {
+        $property = Property::where('property_id', $propId)->first();
+        if (!$property) {
+            return redirect()->back()->with('error', 'Property not found.');
+        }
+
+        $property->status = 'approved';
+        $property->approved_at = now();
+        $property->rejected_at = null;
+        $property->save();
+
+        AuditLogController::logActivity(
+            'property_approved',
+            'Approved property: ' . ($property->prop_name ?? $property->property_id),
+            Property::class,
+            $property->property_id,
+            ['status' => 'pending'],
+            ['status' => 'approved']
+        );
+
+        return redirect()->back()->with('success', 'Property approved successfully.');
+    }
+
+    /**
+     * Reject a single property
+     */
+    public function rejectProperty($propId)
+    {
+        $property = Property::where('property_id', $propId)->first();
+        if (!$property) {
+            return redirect()->back()->with('error', 'Property not found.');
+        }
+
+        $property->status = 'rejected';
+        $property->rejected_at = now();
+        $property->save();
+
+        AuditLogController::logActivity(
+            'property_rejected',
+            'Rejected property: ' . ($property->prop_name ?? $property->property_id),
+            Property::class,
+            $property->property_id,
+            ['status' => 'pending'],
+            ['status' => 'rejected']
+        );
+
+        return redirect()->back()->with('success', 'Property rejected.');
     }
 }

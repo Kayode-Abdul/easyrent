@@ -75,7 +75,12 @@ $types = [
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h4 class="card-title mb-2">Property Details</h4>
+                            <h4 class="card-title mb-2">
+                                Property Details
+                                @if($property->status === 'approved')
+                                    <span class="er-badge er-badge-verified" title="Verified Property"><i class="fa fa-check"></i></span>
+                                @endif
+                            </h4>
                             @if($property->agent_id)
                             <button type="button" class="btn btn-info btn-sm"
                                 onclick="viewAgent('{{ $property->agent_id }}')">
@@ -196,7 +201,24 @@ $types = [
                             <div class="form-group">
                                 <label>Owner</label>
                                 <div class="d-flex align-items-center">
-                                    <span class="mr-2">{{ $property->owner ? $property->owner->first_name . ' ' . $property->owner->last_name : 'N/A' }}</span>
+                                    <span class="mr-2">
+                                        {{ $property->owner ? $property->owner->first_name . ' ' . $property->owner->last_name : 'N/A' }}
+                                        @if($property->owner)
+                                            @if($property->owner->isArtisan())
+                                                @if($property->owner->is_artisan_verified)
+                                                    <span class="er-badge er-badge-verified" title="Verified Artisan"><i class="fa fa-check"></i></span>
+                                                @else
+                                                    <span class="er-badge er-badge-unverified" title="Unverified Artisan"></span>
+                                                @endif
+                                            @elseif($property->owner->isAgent())
+                                                @if($property->owner->hasRole('Verified_Property_Manager'))
+                                                    <span class="er-badge er-badge-verified" title="Verified Property Manager"><i class="fa fa-check"></i></span>
+                                                @else
+                                                    <span class="er-badge er-badge-unverified" title="Property Manager"></span>
+                                                @endif
+                                            @endif
+                                        @endif
+                                    </span>
 
                                 </div>
                             </div>
@@ -575,6 +597,18 @@ $types = [
                                 </div>
                                 <input type="text" class="form-control" name="amount" id="apartmentPriceInput"
                                     placeholder="Enter rental price" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Apartment Images</label>
+                            <div id="apartmentImagesDropzone" class="dropzone">
+                                <div class="dz-message">
+                                    <div class="icon"><i class="fa fa-images"></i></div>
+                                    <h5>Drag & Drop Images Here</h5>
+                                    <small class="text-muted">Optional: add photos specific to this unit</small>
+                                    <small class="text-info d-block mt-2"><i class="fa fa-info-circle"></i> Max size: 2MB per image</small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1071,13 +1105,26 @@ $types = [
             var priceInput = $('#apartmentPriceInput');
             var rawPrice = priceInput.val().replace(/,/g, '');
             priceInput.val(rawPrice);
-            var formData = form.serialize();
+            
+            // Use FormData to include images
+            var formData = new FormData(form[0]);
+            
+            // Append images from Dropzone
+            if (apartmentDropzone) {
+                apartmentDropzone.getAcceptedFiles().forEach((file, index) => {
+                    formData.append('images[' + index + ']', file);
+                });
+            }
+
             // Restore formatted price for user
             priceInput.val(Number(rawPrice).toLocaleString());
+            
             $.ajax({
                 url: form.attr('action'),
                 method: 'POST',
                 data: formData,
+                processData: false,
+                contentType: false,
                 success: function (response) {
                     if (response.success) {
                         $('#apartmentMessage').html('<div class="alert alert-success">' + (response.message || 'Apartment added successfully!') + '</div>');
@@ -1218,9 +1265,10 @@ $types = [
             method: 'GET',
             data: { property_id: propId },
             success: function (data) {
+                var badgeHtml = data.is_verified ? '<span class="er-badge er-badge-verified" title="Verified Property Manager"><i class="fa fa-check"></i></span>' : '<span class="er-badge er-badge-unverified" title="Property Manager"></span>';
                 var html = '<div class="p-2 text-center">';
                 html += '<img src="' + (data.photo || '/assets/images/default-avatar.png') + '" alt="Property Manager Photo" style="width:90px;height:90px;border-radius:50%;object-fit:cover;margin-bottom:10px;">';
-                html += '<h5 class="mt-2">' + (data.first_name || '') + ' ' + (data.last_name || '') + '</h5>';
+                html += '<h5 class="mt-2 d-flex justify-content-center align-items-center">' + (data.first_name || '') + ' ' + (data.last_name || '') + badgeHtml + '</h5>';
                 html += '<div><strong>Email:</strong> ' + (data.email || 'N/A') + '</div>';
                 html += '<div><strong>Phone:</strong> ' + (data.phone || 'N/A') + '</div>';
                 html += '<div><strong>Location:</strong> ' + (data.lga ? data.lga + ', ' : '') + (data.state || '') + '</div>';
@@ -1400,8 +1448,24 @@ $types = [
 </script>
 
 <script>
-    // Tenant ID lookup - Display tenant name when ID is entered
+    // Initialize Apartment Dropzone
+    Dropzone.autoDiscover = false;
+    let apartmentDropzone;
+
     $(document).ready(function () {
+        if ($("#apartmentImagesDropzone").length) {
+            apartmentDropzone = new Dropzone("#apartmentImagesDropzone", {
+                url: "/apartment/single",
+                autoProcessQueue: false,
+                uploadMultiple: true,
+                parallelUploads: 5,
+                maxFiles: 5,
+                acceptedFiles: "image/*",
+                addRemoveLinks: true,
+                dictRemoveFile: "Remove"
+            });
+        }
+
         let tenantLookupTimeout;
 
         $('#tenantIdInput').on('input', function () {

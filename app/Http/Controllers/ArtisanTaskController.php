@@ -6,6 +6,8 @@ use App\Models\ArtisanTask;
 use App\Models\Complaint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ArtisanAssignedMail;
 
 class ArtisanTaskController extends Controller
 {
@@ -73,8 +75,28 @@ class ArtisanTaskController extends Controller
      */
     public function market()
     {
-        $tasks = ArtisanTask::where('status', 'open')
-            ->with(['complaint.category', 'landlord'])
+        $user = Auth::user();
+
+        $tasksQuery = ArtisanTask::whereIn('status', ['open', 'assigned'])
+            ->whereHas('complaint.apartment.property', function($query) use ($user) {
+                $query->where(function($q) use ($user) {
+                    if ($user->state) {
+                        $q->where('state', $user->state);
+                    }
+                    if ($user->city) {
+                        $q->orWhere('lga', $user->city);
+                    }
+                });
+            });
+
+        // Float tasks that match the artisan's primary category to the top
+        if ($user->artisan_category_id) {
+            $tasksQuery->orderByRaw('CASE WHEN exists (
+                select 1 from complaints where complaints.id = artisan_tasks.complaint_id and complaints.category_id = ?
+            ) THEN 0 ELSE 1 END', [$user->artisan_category_id]);
+        }
+
+        $tasks = $tasksQuery->with(['complaint.category', 'landlord'])
             ->latest()
             ->paginate(15);
 
@@ -197,7 +219,15 @@ class ArtisanTaskController extends Controller
         // Notify complaint system
         $task->complaint->addComment(Auth::user(), "Artisan bid from {$bid->artisan->first_name} for " . format_money($bid->amount, $task->complaint->apartment->currency) . " has been accepted.");
 
-        return back()->with('success', 'Bid accepted. The artisan has been notified.');
+        // Send Email Alert
+        try {
+            Mail::to($bid->artisan->email)->send(new ArtisanAssignedMail($task, $code));
+        } catch (\Exception $e) {
+            // Log error but don't crash
+            \Illuminate\Support\Facades\Log::error("Failed to send artisan assignment email: " . $e->getMessage());
+        }
+
+        return back()->with('success', 'Bid accepted. The artisan has been notified via email.');
     }
 
     /**
@@ -214,8 +244,28 @@ class ArtisanTaskController extends Controller
             return back()->with('error', 'Only assigned tasks can be marked as completed.');
         }
 
+        $request->validate([
+            'rating' => 'nullable|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:1000'
+        ]);
+
         $task->update(['status' => 'completed']);
         $acceptedBid = $task->bids()->where('status', 'accepted')->first();
+
+        // Save Rating if provided
+        if ($acceptedBid && $request->rating) {
+            try {
+                \App\Models\ArtisanRating::create([
+                    'artisan_id' => $acceptedBid->artisan_id,
+                    'user_id' => $user->user_id,
+                    'task_id' => $task->id,
+                    'rating' => $request->rating,
+                    'comment' => $request->comment,
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to save artisan rating on task completion: " . $e->getMessage());
+            }
+        }
 
         // Rent Set-off Logic
         if ($task->request_setoff && $task->tenant_id && $acceptedBid) {
@@ -240,5 +290,57 @@ class ArtisanTaskController extends Controller
         $task->complaint->addComment($user, "Artisan task marked as completed.");
 
         return back()->with('success', 'Task marked as completed successfully.');
+    }
+
+    /**
+     * Cancel an assigned task
+     */
+    public function cancelTask(Request $request, ArtisanTask $task)
+    {
+        $user = Auth::user();
+        if ($user->user_id != $task->landlord_id && $user->user_id != $task->tenant_id && !$user->admin) {
+            return back()->with('error', 'Unauthorized action.');
+        }
+
+        if ($task->status !== 'assigned') {
+            return back()->with('error', 'Only assigned tasks can be cancelled.');
+        }
+
+        $request->validate([
+            'reason' => 'required|string|min:5',
+            'rating' => 'nullable|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:1000'
+        ]);
+
+        $acceptedBid = $task->bids()->where('status', 'accepted')->first();
+
+        // 1. Mark accepted bid as cancelled
+        if ($acceptedBid) {
+            $acceptedBid->update(['status' => 'cancelled']);
+        }
+
+        // 2. Rate the artisan if rating is provided
+        if ($acceptedBid && $request->rating) {
+            \App\Models\ArtisanRating::create([
+                'artisan_id' => $acceptedBid->artisan_id,
+                'user_id' => $user->user_id,
+                'task_id' => $task->id,
+                'rating' => $request->rating,
+                'comment' => $request->comment ?? $request->reason,
+            ]);
+        }
+
+        // 3. Log the cancellation and reason as a comment/update on complaint
+        $task->complaint->addComment($user, "Artisan task assignment cancelled. Reason/Complaint: " . $request->reason);
+
+        // 4. Reset task status back to 'open' so other artisans can bid / be assigned
+        $task->update(['status' => 'open']);
+
+        // 5. Delete verification code
+        if ($task->verificationCode) {
+            $task->verificationCode->delete();
+        }
+
+        return back()->with('success', 'Artisan assignment has been cancelled and complaint registered.');
     }
 }

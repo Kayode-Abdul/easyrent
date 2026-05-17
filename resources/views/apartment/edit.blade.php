@@ -45,6 +45,112 @@
     border-color: #5a67d8;
     box-shadow: 0 0 0 0.2rem rgba(90, 103, 216, 0.25);
 }
+
+    .image-container {
+        position: relative;
+        transition: transform 0.2s;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .image-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+    .delete-image-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        z-index: 10;
+    }
+    .delete-image-btn:hover {
+        background: #dc3545;
+    }
+    
+    /* Modern Upload Zone */
+    .upload-zone {
+        border: 2px dashed #3e8189;
+        border-radius: 15px;
+        padding: 40px 20px;
+        text-align: center;
+        background: #f8fbff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+        background: #eff7f8;
+        border-color: #51cbce;
+    }
+    .upload-zone i {
+        font-size: 48px;
+        color: #3e8189;
+        margin-bottom: 15px;
+    }
+    .upload-zone h5 {
+        margin-bottom: 5px;
+        color: #333;
+    }
+    .upload-zone p {
+        color: #777;
+        font-size: 14px;
+    }
+    
+    /* Preview Container */
+    .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    .preview-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #fff;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .preview-item .remove-preview {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(0,0,0,0.5);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .preview-item .remove-preview:hover {
+        background: #000;
+    }
+    #imageGallery .card {
+        border: none;
+        background: none;
+    }
 </style>
 
 <div class="content">
@@ -275,6 +381,64 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Apartment Images Section -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <h5 class="mb-3"><i class="fa fa-images mr-2"></i>Existing Photos</h5>
+                                <div class="row" id="imageGallery">
+                                    @if($apartment->images->count() > 0)
+                                        @foreach($apartment->images as $image)
+                                        <div class="col-6 col-md-3 col-lg-2 mb-4" id="image-container-{{ $image->id }}">
+                                            <div class="image-container h-100">
+                                                <img src="{{ asset('storage/' . $image->file_path) }}" class="w-100" style="height: 140px; object-fit: cover;">
+                                                <button type="button" class="delete-image-btn" onclick="deleteImage({{ $image->id }})" title="Delete Image">
+                                                    <i class="fa fa-times"></i>
+                                                </button>
+                                                @if($image->is_main)
+                                                    <div class="badge badge-primary position-absolute" style="bottom: 5px; left: 5px; opacity: 0.9;">Main</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    @else
+                                        <div class="col-12">
+                                            <div class="alert alert-light border text-center py-4">
+                                                <p class="text-muted mb-0"><i class="fa fa-info-circle mr-2"></i>No specific images uploaded for this apartment yet. (Inheriting from property)</p>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <h5 class="mb-3"><i class="fa fa-plus-circle mr-2"></i>Add New Photos</h5>
+                                
+                                <div class="upload-zone" id="dropzone" onclick="document.getElementById('images').click()">
+                                    <i class="fa fa-cloud-upload-alt"></i>
+                                    <h5>Click or Drag & Drop Images Here</h5>
+                                    <p class="mb-0">You can select multiple photos at once (Max 2MB per image)</p>
+                                    <input type="file" name="images[]" id="images" class="d-none" multiple accept="image/*" onchange="handleFileSelect(this)">
+                                </div>
+
+                                <div id="previewContainer" class="d-none">
+                                    <h6 class="text-muted mb-2">New Images to Upload:</h6>
+                                    <div class="preview-grid" id="imagePreviews">
+                                        <!-- Previews will appear here -->
+                                    </div>
+                                    <div class="text-right mt-2">
+                                        <button type="button" class="btn btn-sm btn-link text-danger" onclick="clearSelectedImages()">
+                                            <i class="fa fa-trash-alt mr-1"></i> Clear all selected
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row mt-4">
                             <div class="col-md-12">
                                 <div id="updateMessage"></div>
@@ -324,6 +488,34 @@ function calculateEndDate(startDate, duration) {
 }
 
 $(document).ready(function() {
+    // Setup Drag and Drop
+    const dropzone = document.getElementById('dropzone');
+    if (dropzone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            const input = document.getElementById('images');
+            input.files = files;
+            handleFileSelect(input);
+        }, false);
+    }
     // Auto-update end date when start date or duration changes
     $('#fromRange').on('change', function() {
         const startDate = $(this).val();
@@ -432,15 +624,23 @@ $(document).ready(function() {
     // Initialize calculated rates
     updateCalculatedRates();
 
-    // Existing AJAX form submit logic
+    // Handle apartment update
     $('#editApartmentForm').off('submit').on('submit', function(e) {
         e.preventDefault();
         const form = $(this);
-        const formData = form.serialize();
+        const formData = new FormData(this);
+        
+        // Show loading state
+        const submitBtn = form.find('button[type="submit"]');
+        const originalBtnHtml = submitBtn.html();
+        submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Updating...');
+
         $.ajax({
             url: '/dashboard/apartment/{{ $apartment->apartment_id }}',
             type: 'POST',
             data: formData,
+            contentType: false,
+            processData: false,
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                 'Accept': 'application/json',
@@ -457,15 +657,102 @@ $(document).ready(function() {
                         }
                     }, 1500);
                 } else {
+                    submitBtn.prop('disabled', false).html(originalBtnHtml);
                     $('#updateMessage').html('<div class="alert alert-danger">' + data.messages + '</div>');
                 }
             },
             error: function(xhr) {
-                $('#updateMessage').html('<div class="alert alert-danger">An error occurred while updating the apartment. Please try again.</div>');
+                submitBtn.prop('disabled', false).html(originalBtnHtml);
+                let errorMsg = 'An error occurred while updating the apartment. Please try again.';
+                if (xhr.status === 419) {
+                    errorMsg = 'Session expired. The page will reload to refresh your session.';
+                    setTimeout(() => window.location.reload(), 2000);
+                }
+                $('#updateMessage').html('<div class="alert alert-danger">' + errorMsg + '</div>');
             }
         });
     });
 });
+
+let selectedFiles = [];
+
+function handleFileSelect(input) {
+    const previewContainer = document.getElementById('previewContainer');
+    const imagePreviews = document.getElementById('imagePreviews');
+    
+    if (!input.files || input.files.length === 0) {
+        previewContainer.classList.add('d-none');
+        return;
+    }
+
+    previewContainer.classList.remove('d-none');
+    imagePreviews.innerHTML = '';
+    
+    selectedFiles = Array.from(input.files);
+    
+    selectedFiles.forEach((file, index) => {
+        if (!file.type.startsWith('image/')) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const div = document.createElement('div');
+            div.className = 'preview-item';
+            div.innerHTML = `
+                <img src="${e.target.result}">
+                <button type="button" class="remove-preview" onclick="removeSelectedFile(${index})">
+                    <i class="fa fa-times"></i>
+                </button>
+            `;
+            imagePreviews.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function removeSelectedFile(index) {
+    selectedFiles.splice(index, 1);
+    
+    // Re-sync input files
+    const dt = new DataTransfer();
+    selectedFiles.forEach(file => dt.items.add(file));
+    document.getElementById('images').files = dt.files;
+    
+    // Refresh previews
+    handleFileSelect(document.getElementById('images'));
+}
+
+function clearSelectedImages() {
+    document.getElementById('images').value = '';
+    selectedFiles = [];
+    handleFileSelect(document.getElementById('images'));
+}
+
+function deleteImage(imageId) {
+    if (!confirm('Are you sure you want to delete this image?')) return;
+
+    $.ajax({
+        url: '/dashboard/property/image/' + imageId,
+        type: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (data) {
+            if (data.success) {
+                $('#image-container-' + imageId).fadeOut(300, function() {
+                    $(this).remove();
+                    if ($('#imageGallery .image-container').length === 0) {
+                        $('#imageGallery').html('<div class="col-12"><p class="text-muted italic">No specific images uploaded for this apartment yet.</p></div>');
+                    }
+                });
+            } else {
+                alert(data.messages || 'Failed to delete image');
+            }
+        },
+        error: function () {
+            alert('An error occurred while deleting the image.');
+        }
+    });
+}
 </script>
 
 @include('footer')

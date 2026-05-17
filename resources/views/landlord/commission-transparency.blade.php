@@ -515,4 +515,4 @@ $('#commissionHistoryModal').on('show.bs.modal', function() {
     });
 });
 </script>
-@endsection
+@endpush

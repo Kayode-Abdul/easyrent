@@ -226,26 +226,6 @@
         cursor: pointer;
     }
 
-    .artisan-panel {
-        background: #f0f7ff;
-        border: 1.5px solid #bfdbfe;
-        border-radius: 20px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        animation: fadeIn 0.4s ease-out;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: scale(0.98);
-        }
-
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
 
     .btn-premium-register {
         background: var(--primary-gradient);
@@ -388,30 +368,7 @@
                     value="{{ old('phone') }}" required placeholder="+234...">
             </div>
 
-            <div class="custom-checkbox-wrapper">
-                <label class="custom-checkbox">
-                    <input type="checkbox" name="is_artisan" id="is-artisan-checkbox" onchange="toggleArtisanFields()">
-                    <span class="fw-semibold" style="color: var(--text-primary)">I am an Artisan / Service
-                        Provider</span>
-                </label>
-            </div>
 
-            <div id="artisan-fields" style="display: none;" class="artisan-panel">
-                <div class="input-group-premium">
-                    <label>Craft Category</label>
-                    <select name="artisan_category_id" id="artisan-category" class="form-control-premium">
-                        <option value="">Select your specialty</option>
-                        @foreach(\App\Models\ComplaintCategory::all() as $category)
-                            <option value="{{ $category->id }}">{{ $category->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="input-group-premium mb-0">
-                    <label>Service Description</label>
-                    <textarea name="artisan_bio" class="form-control-premium" rows="2"
-                        placeholder="Tell us about your services..."></textarea>
-                </div>
-            </div>
 
             <div class="row g-3">
                 <div class="col-md-6">
@@ -467,24 +424,6 @@
             passwordField.type = 'password';
             toggleIcon.classList.remove('fa-eye', 'fas');
             toggleIcon.classList.add('fa-eye-slash', 'far');
-        }
-    }
-
-    function toggleArtisanFields() {
-        const isArtisan = document.getElementById('is-artisan-checkbox').checked;
-        const artisanFields = document.getElementById('artisan-fields');
-        const artisanCategory = document.getElementById('artisan-category');
-        const userRole = document.getElementById('user-role');
-        const artisanRoleId = "{{ \App\Models\User::getRoleId('Artisan') }}";
-
-        if (isArtisan) {
-            artisanFields.style.display = 'block';
-            artisanCategory.required = true;
-            if (artisanRoleId) userRole.value = artisanRoleId;
-        } else {
-            artisanFields.style.display = 'none';
-            artisanCategory.required = false;
-            userRole.value = "1";
         }
     }
 

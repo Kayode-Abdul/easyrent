@@ -56,7 +56,22 @@
                                             <span class="username">{{ $user->username }}</span>
                                         </div>
                                     </td>
-                                    <td class="product">{{ $user->first_name.' '.$user->last_name }} </td>
+                                    <td class="product">
+                                        {{ $user->first_name.' '.$user->last_name }} 
+                                        @if($user->isArtisan())
+                                            @if($user->is_artisan_verified)
+                                                <span class="er-badge er-badge-verified" title="Verified Artisan"><i class="fa fa-check"></i></span>
+                                            @else
+                                                <span class="er-badge er-badge-unverified" title="Unverified Artisan"></span>
+                                            @endif
+                                        @elseif($user->isAgent())
+                                            @if($user->hasRole('Verified_Property_Manager'))
+                                                <span class="er-badge er-badge-verified" title="Verified Property Manager"><i class="fa fa-check"></i></span>
+                                            @else
+                                                <span class="er-badge er-badge-unverified" title="Property Manager"></span>
+                                            @endif
+                                        @endif
+                                    </td>
                                     <td class="stock">
                                         {{ $user->email }}
                                     </td>

@@ -124,6 +124,46 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    @if($user->isArtisan())
+                                        <div class="row">
+                                            <div class="col-md-6 pr-1">
+                                                <div class="form-group">
+                                                    <label class="font-weight-bold text-primary">Primary Service Category</label>
+                                                    <select name="artisan_category_id" class="form-control" style="background-color: #fff9f6; border: 1px solid #ef8157; color: #ef8157; font-weight: bold;">
+                                                        <option value="">-- Select Service Category --</option>
+                                                        @foreach($categories as $cat)
+                                                            <option value="{{ $cat->id }}" {{ $user->artisan_category_id == $cat->id ? 'selected' : '' }}>
+                                                                {{ $cat->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <small class="text-muted">This helps match you with relevant complaint tasks in your area.</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 pl-1">
+                                                <div class="form-group">
+                                                    <label class="font-weight-bold text-primary">Specialty / Type of Artisan</label>
+                                                    <input type="text" name="occupation" class="form-control" list="specialtySuggestions" placeholder="e.g. Carpenter, Plumber, Painter" value="{{ $user->occupation }}">
+                                                    <datalist id="specialtySuggestions">
+                                                        <option value="Carpenter">
+                                                        <option value="Plumber">
+                                                        <option value="Electrician">
+                                                        <option value="Painter">
+                                                        <option value="Mason / Bricklayer">
+                                                        <option value="Mechanic">
+                                                        <option value="Lawyer">
+                                                        <option value="Roofer">
+                                                        <option value="AC / Refrigerator Technician">
+                                                        <option value="Generator Repairer">
+                                                        <option value="Welder">
+                                                    </datalist>
+                                                    <small class="text-muted">Type or select your specific trade specialty.</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
                                     <div class="row">
                                         <div class="col-md-12">
                                             <div class="form-group">

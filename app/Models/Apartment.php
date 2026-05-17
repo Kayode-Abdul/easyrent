@@ -16,12 +16,12 @@ class Apartment extends Model
      */
     public function images()
     {
-        return $this->hasMany(PropertyImage::class, 'apartment_id');
+        return $this->hasMany(PropertyImage::class, 'apartment_id', 'apartment_id');
     }
 
     public function mainImage()
     {
-        return $this->hasOne(PropertyImage::class, 'apartment_id')->where('is_main', true);
+        return $this->hasOne(PropertyImage::class, 'apartment_id', 'apartment_id')->where('is_main', true);
     }
     
     /**
@@ -131,7 +131,43 @@ class Apartment extends Model
     // Helper methods
     public function isActive(): bool
     {
-        return $this->range_end->isFuture();
+        return $this->range_end && $this->range_end->isFuture();
+    }
+
+    /**
+     * Get the first available image for this apartment.
+     * Priority: Apartment specific image -> Property main image -> Property any image -> Default placeholder
+     */
+    public function getFirstAvailableImage(): string
+    {
+        // 1. Check for apartment-specific main image
+        $image = $this->images()->where('is_main', true)->first();
+        if ($image) {
+            return asset('storage/' . $image->file_path);
+        }
+
+        // 2. Check for any apartment-specific image
+        $image = $this->images()->first();
+        if ($image) {
+            return asset('storage/' . $image->file_path);
+        }
+
+        // 3. Check for property main image
+        if ($this->property) {
+            $propMain = $this->property->mainImage;
+            if ($propMain) {
+                return asset('storage/' . $propMain->file_path);
+            }
+
+            // 4. Check for any property image
+            $propAny = $this->property->images()->first();
+            if ($propAny) {
+                return asset('storage/' . $propAny->file_path);
+            }
+        }
+
+        // 5. Default fallback
+        return asset('assets/images/property-1.jpg');
     }
 
     public function getDurationInDays(): int

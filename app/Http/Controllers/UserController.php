@@ -64,6 +64,11 @@ class UserController extends Controller
             // Use user_id field to find the user
             $user = User::where('user_id', $id)->firstOrFail();
 
+            // Security: Authorize access (Only Admin or the user themselves)
+            if (!auth()->user()->isOwnerOrAdmin($user->user_id)) {
+                abort(403, 'Unauthorized access to this profile.');
+            }
+
             return view('user.profile', [
                 'user' => $user
             ]);
@@ -92,7 +97,7 @@ class UserController extends Controller
                     }
                     );
                 })
-            ->with('managedProperties.apartments')
+            ->with(['managedProperties.apartments', 'agentRatings.user'])
             ->firstOrFail();
 
         return view('user.agent', [
@@ -317,6 +322,13 @@ class UserController extends Controller
             }
         }
 
+        $isVerified = false;
+        try {
+            if (method_exists($agent, 'hasRole') && $agent->hasRole('Verified_Property_Manager')) {
+                $isVerified = true;
+            }
+        } catch (\Throwable $t) {}
+
         return response()->json([
             'id' => $agent->user_id,
             'first_name' => $agent->first_name,
@@ -328,6 +340,7 @@ class UserController extends Controller
             'state' => $agent->state,
             'photo' => $agent->photo ? asset($agent->photo) : asset('assets/images/default-avatar.png'),
             'can_remove' => $canRemove,
+            'is_verified' => $isVerified,
         ]);
     }
 
@@ -405,6 +418,8 @@ class UserController extends Controller
             'state' => 'nullable|string|max:255',
             'password' => 'nullable|string|min:8|confirmed',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'artisan_category_id' => 'nullable|exists:complaint_categories,id',
+            'occupation' => 'nullable|string|max:255',
         ]);
 
         if (!auth()->check()) {
@@ -433,6 +448,14 @@ class UserController extends Controller
         $user->country_name = $request->input('country_name') ?? $user->country_name;
         $user->lga = $request->input('lga') ?? $user->lga;
         $user->state = $request->input('state') ?? $user->state;
+
+        // Save artisan-specific fields
+        if ($request->has('artisan_category_id')) {
+            $user->artisan_category_id = $request->input('artisan_category_id');
+        }
+        if ($request->has('occupation')) {
+            $user->occupation = $request->input('occupation');
+        }
 
         if (!empty($request->input('password'))) {
             $user->password = Hash::make($request->input('password'));

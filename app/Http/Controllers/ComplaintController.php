@@ -179,6 +179,13 @@ class ComplaintController extends Controller
             'attachments.uploadedBy'
         ]);
 
+        // Get bidding artisans
+        $biddingArtisans = collect();
+        if ($complaint->artisanTask) {
+            $complaint->artisanTask->load('bids.artisan');
+            $biddingArtisans = $complaint->artisanTask->bids->map->artisan;
+        }
+
         // Get public updates for tenant/landlord, all updates for agents/admins
         $updates = $complaint->updates();
         if (!($user->isAgent() || $user->admin)) {
@@ -186,7 +193,7 @@ class ComplaintController extends Controller
         }
         $updates = $updates->orderBy('created_at', 'asc')->get();
 
-        return view('complaints.show', compact('complaint', 'updates'));
+        return view('complaints.show', compact('complaint', 'updates', 'biddingArtisans'));
     }
 
     /**
@@ -271,8 +278,74 @@ class ComplaintController extends Controller
         $assignee = User::where('user_id', $request->assigned_to)->firstOrFail();
         $complaint->assignTo($assignee, $user);
 
+        // If there is an active artisan task, let's sync its assignment status, accept the bid, and generate verification code!
+        if ($complaint->artisanTask) {
+            $bid = $complaint->artisanTask->bids()->where('artisan_id', $assignee->user_id)->first();
+            if ($bid) {
+                // 1. Update bid status
+                $bid->update([
+                    'status' => 'accepted',
+                    'is_read' => false
+                ]);
+
+                // 2. Reject other bids
+                $complaint->artisanTask->bids()->where('id', '!=', $bid->id)->update(['status' => 'rejected']);
+
+                // 3. Update task status
+                $complaint->artisanTask->update(['status' => 'assigned']);
+
+                // 4. Generate Verification Code
+                $code = strtoupper(substr(md5(uniqid(rand(), true)), 0, 6));
+                \App\Models\ArtisanVerificationCode::create([
+                    'task_id' => $complaint->artisanTask->id,
+                    'code' => $code,
+                    'landlord_id' => $complaint->artisanTask->landlord_id,
+                    'tenant_id' => $complaint->artisanTask->tenant_id,
+                    'artisan_id' => $bid->artisan_id,
+                    'expires_at' => now()->addDays(7),
+                ]);
+
+                // 5. Send Email Alert
+                try {
+                    \Illuminate\Support\Facades\Mail::to($bid->artisan->email)->send(new \App\Mail\ArtisanAssignedMail($complaint->artisanTask, $code));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to send artisan assignment email from dropdown: " . $e->getMessage());
+                }
+            }
+        }
+
         return redirect()->route('complaints.show', $complaint)
             ->with('success', 'Complaint assigned successfully.');
+    }
+
+    /**
+     * Unassign a complaint
+     */
+    public function unassign(Request $request, Complaint $complaint)
+    {
+        $user = Auth::user();
+        if (!($user->isLandlord() || $user->isAgent() || $user->admin)) {
+            abort(403, 'You do not have permission to unassign complaints.');
+        }
+
+        $request->validate([
+            'reason' => 'required|string|min:5'
+        ]);
+
+        $oldAssignee = $complaint->assignedTo;
+        $complaint->update(['assigned_to' => null]);
+
+        $assigneeName = $oldAssignee ? ($oldAssignee->first_name . ' ' . $oldAssignee->last_name) : 'Assignee';
+
+        $complaint->updates()->create([
+            'user_id' => $user->user_id,
+            'update_type' => 'assignment',
+            'message' => "Assignment to {$assigneeName} cancelled. Reason: " . $request->reason,
+            'old_value' => $assigneeName,
+            'new_value' => 'Unassigned'
+        ]);
+
+        return back()->with('success', 'Assignment cancelled successfully.');
     }
 
     /**

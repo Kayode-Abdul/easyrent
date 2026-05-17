@@ -23,7 +23,7 @@ class PropertyRequest extends FormRequest
             'currency_id' => 'nullable|exists:currencies,id',
             'aboveOne' => 'nullable|boolean',
             'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120'
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ];
     }
 
@@ -34,7 +34,8 @@ class PropertyRequest extends FormRequest
             'propertyType.between' => 'Invalid property type selected',
             'address.required' => 'Please enter the property address',
             'state.required' => 'Please select a state',
-            'city.required' => 'Please select a city'
+            'city.required' => 'Please select a city',
+            'images.*.max' => 'Each image must not exceed 2MB'
         ];
     }
 } 

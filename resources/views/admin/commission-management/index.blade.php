@@ -406,4 +406,4 @@
             }
         });
     </script>
-@endsection
+@endpush

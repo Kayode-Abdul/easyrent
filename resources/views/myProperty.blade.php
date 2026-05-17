@@ -1105,6 +1105,17 @@
                             <textarea class="form-control" name="address" id="propertyAdd" rows="3"
                                 placeholder="Enter full property address"></textarea>
                         </div>
+                        <div class="form-group">
+                            <label>Property Images</label>
+                            <div id="propertyImagesDropzone" class="dropzone">
+                                <div class="dz-message">
+                                    <div class="icon"><i class="fa fa-cloud-upload-alt"></i></div>
+                                    <h5>Drag & Drop Images Here</h5>
+                                    <p class="text-muted">or click to select files from your computer</p>
+                                    <small class="text-info">Maximum 10 images allowed (JPG, PNG)</small>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Number of Apartments (for residential properties only) -->
                         <div class="form-group" id="apartments-field-modal" style="display: none;">
@@ -1635,6 +1646,30 @@
             });
         }
 
+        // Initialize Property Dropzone
+        Dropzone.autoDiscover = false;
+        let propertyDropzone;
+
+        $(document).ready(function() {
+            if ($("#propertyImagesDropzone").length) {
+                propertyDropzone = new Dropzone("#propertyImagesDropzone", {
+                    url: "/listing", // This is just for Dropzone's internal requirements, we'll submit via fetch
+                    autoProcessQueue: false,
+                    uploadMultiple: true,
+                    parallelUploads: 10,
+                    maxFiles: 10,
+                    acceptedFiles: "image/*",
+                    addRemoveLinks: true,
+                    dictRemoveFile: "Remove",
+                    init: function() {
+                        this.on("addedfile", function(file) {
+                            // Logic for added file
+                        });
+                    }
+                });
+            }
+        });
+
         function loadCommissionNotifications() {
             $('#commissionNotificationsModal').modal('show');
 
@@ -1733,6 +1768,13 @@
 
             const form = document.getElementById('propertyForm');
             const formData = new FormData(form);
+
+            // Append images from Dropzone
+            if (propertyDropzone) {
+                propertyDropzone.getAcceptedFiles().forEach((file, index) => {
+                    formData.append('images[' + index + ']', file);
+                });
+            }
 
             fetch('/listing', {
                 method: 'POST',

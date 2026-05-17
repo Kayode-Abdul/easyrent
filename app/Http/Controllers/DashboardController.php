@@ -43,7 +43,7 @@ class DashboardController extends Controller
         }
 
         $userId = $user->user_id;
-        $isAdmin = ($user->admin == 1 || $user->role == 7);
+        $isAdmin = $user->isAdmin();
         $userRole = $user->role;
 
         // Mode-based redirects/views
@@ -591,7 +591,7 @@ class DashboardController extends Controller
                     'description' => "Received {$currencySymbol}" . number_format($payment->amount, 2) . " for property rent",
                     'time' => $payment->created_at,
                     'time_for_humans' => $payment->created_at->diffForHumans(),
-                    'link' => '/payments/' . $payment->id,
+                    'link' => route('payment.receipt', $payment->id),
                 ]);
             });
 
@@ -622,7 +622,7 @@ class DashboardController extends Controller
                     'description' => "Made payment of {$currencySymbol}" . number_format($payment->amount, 2) . " - Status: {$payment->status}",
                     'time' => $payment->created_at,
                     'time_for_humans' => $payment->created_at->diffForHumans(),
-                    'link' => '/payments/' . $payment->id,
+                    'link' => route('payment.receipt', $payment->id),
                 ]);
             });
 

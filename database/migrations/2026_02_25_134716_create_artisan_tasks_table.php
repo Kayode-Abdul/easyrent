@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->decimal('budget_max', 15, 2)->nullable();
             $table->string('duration')->nullable();
             $table->text('description')->nullable();
-            $table->enum('status', ['open', 'awarded', 'completed', 'cancelled'])->default('open');
+            $table->enum('status', ['open', 'awarded', 'assigned', 'completed', 'cancelled'])->default('open');
             $table->timestamps();
         });
     }

@@ -21,7 +21,8 @@ class SettingsController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return view('dashboard.settings', compact('user'));
+        $categories = \App\Models\ComplaintCategory::active()->get();
+        return view('dashboard.settings', compact('user', 'categories'));
     }
 
     /**

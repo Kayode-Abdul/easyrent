@@ -1,0 +1,97 @@
+.search-form-wrap {
+    background: rgb(11 84 85 / 39%) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 30px !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important;
+    margin-top: 30px;
+}
+
+.search-form-wrap label {
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #3e8189;
+    margin-bottom: 8px;
+}
+
+.search-form-wrap .form-control {
+    height: 50px !important;
+    background: #f8f9fa !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 8px !important;
+    padding: 10px 15px !important;
+    font-size: 15px !important;
+    color: #495057 !important;
+    transition: all 0.3s ease;
+}
+
+.search-form-wrap .form-control:focus {
+    background: #fff !important;
+    border-color: #3e8189 !important;
+    box-shadow: 0 0 0 0.2rem rgba(62, 129, 137, 0.1) !important;
+}
+
+.search-form-wrap .btn-primary {
+    background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    transition: all 0.3s ease !important;
+    height: 50px !important;
+}
+
+.search-form-wrap .btn-primary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 15px rgba(62, 129, 137, 0.3) !important;
+}
+
+/* Dark mode support */
+html[data-chrome-dark="true"] .search-form-wrap {
+    background: rgba(30, 30, 30, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+html[data-chrome-dark="true"] .search-form-wrap .form-control {
+    background: #252525 !important;
+    border-color: #333 !important;
+    color: #eee !important;
+}
+
+html[data-chrome-dark="true"] .search-form-wrap label {
+    color: #51cbce;
+}
+
+/* Hero Section dynamic height fix */
+.hero-wrap {
+    height: auto !important;
+    min-height: 850px;
+    /* display: flex; */
+    align-items: center;
+    /* padding: 120px 0; */
+}
+
+.hero-wrap .overlay {
+    height: 100% !important;
+    min-height: 850px;
+}
+
+.slider-text {
+    height: auto !important;
+    min-height: 500px;
+}
+
+@media (max-width: 767.98px) {
+    .hero-wrap {
+        min-height: 100vh;
+        padding: 80px 0;
+    }
+
+    .search-form-wrap {
+        padding: 20px !important;
+        margin-top: 15px;
+    }
+}
