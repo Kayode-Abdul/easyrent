@@ -837,6 +837,9 @@ class AdminController extends Controller
         $pendingPMs = collect();
         if ($pmRoleId) {
             $pendingPMs = User::withRole('property_manager')
+                ->whereDoesntHave('roles', function ($query) {
+                    $query->where('name', 'Verified_Property_Manager');
+                })
                 ->orderBy('created_at', 'desc')
                 ->get();
         }

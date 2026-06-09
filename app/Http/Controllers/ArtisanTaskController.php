@@ -192,42 +192,101 @@ class ArtisanTaskController extends Controller
             return back()->with('error', 'Unauthorized action.');
         }
 
-        // Update bid status
-        $bid->update([
-            'status' => 'accepted',
-            'is_read' => false
+        // Calculate costs
+        $platform_fee = $bid->amount * 0.02;
+        $gateway_fee = $bid->amount * 0.015;
+        $total_amount_paid = $bid->amount + $platform_fee + $gateway_fee;
+
+        // Update task with payment pending
+        $payment_reference = 'ARTISAN-' . strtoupper(uniqid());
+        
+        $task->update([
+            'payment_status' => 'pending',
+            'payment_reference' => $payment_reference,
+            'platform_fee' => $platform_fee,
+            'gateway_fee' => $gateway_fee,
+            'total_amount_paid' => $total_amount_paid
         ]);
 
-        // Reject other bids
-        $task->bids()->where('id', '!=', $bid->id)->update(['status' => 'rejected']);
-
-        // Update task status
-        $task->update(['status' => 'assigned']);
-
-        // Generate Verification Code
-        $code = strtoupper(substr(md5(uniqid(rand(), true)), 0, 6)); // E.g., A4B9C2
-
-        \App\Models\ArtisanVerificationCode::create([
-            'task_id' => $task->id,
-            'code' => $code,
-            'landlord_id' => $task->landlord_id,
-            'tenant_id' => $task->tenant_id,
-            'artisan_id' => $bid->artisan_id,
-            'expires_at' => now()->addDays(7), // Good for 7 days
-        ]);
-
-        // Notify complaint system
-        $task->complaint->addComment(Auth::user(), "Artisan bid from {$bid->artisan->first_name} for " . format_money($bid->amount, $task->complaint->apartment->currency) . " has been accepted.");
-
-        // Send Email Alert
+        // Send to Paystack
+        $data = [
+            'amount' => $total_amount_paid * 100, // Paystack is in kobo
+            'email' => $user->email,
+            'reference' => $payment_reference,
+            'callback_url' => route('artisan.payment.callback'),
+            'metadata' => [
+                'type' => 'artisan_task',
+                'task_id' => $task->id,
+                'bid_id' => $bid->id,
+            ]
+        ];
+        
         try {
-            Mail::to($bid->artisan->email)->send(new ArtisanAssignedMail($task, $code));
+            return \Unicodeveloper\Paystack\Facades\Paystack::getAuthorizationUrl($data)->redirectNow();
         } catch (\Exception $e) {
-            // Log error but don't crash
-            \Illuminate\Support\Facades\Log::error("Failed to send artisan assignment email: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Paystack Error: " . $e->getMessage());
+            return back()->with('error', 'The paystack token has expired or an error occurred. Please refresh the page and try again.');
         }
+    }
 
-        return back()->with('success', 'Bid accepted. The artisan has been notified via email.');
+    /**
+     * Handle payment callback from Paystack
+     */
+    public function paymentCallback(Request $request)
+    {
+        try {
+            $paymentDetails = \Unicodeveloper\Paystack\Facades\Paystack::getPaymentData();
+
+            if ($paymentDetails['status']) {
+                $metadata = $paymentDetails['data']['metadata'];
+                if(isset($metadata['type']) && $metadata['type'] === 'artisan_task') {
+                    $task = ArtisanTask::find($metadata['task_id']);
+                    $bid = \App\Models\ArtisanBid::find($metadata['bid_id']);
+
+                    if ($task && $bid && $task->payment_status === 'pending') {
+                        // Update task status
+                        $task->update([
+                            'payment_status' => 'escrowed',
+                            'status' => 'assigned'
+                        ]);
+
+                        // Update bid status
+                        $bid->update([
+                            'status' => 'accepted',
+                            'is_read' => false
+                        ]);
+
+                        // Reject other bids
+                        $task->bids()->where('id', '!=', $bid->id)->update(['status' => 'rejected']);
+
+                        // Generate Verification Code
+                        $code = strtoupper(substr(md5(uniqid(rand(), true)), 0, 6));
+
+                        \App\Models\ArtisanVerificationCode::create([
+                            'task_id' => $task->id,
+                            'code' => $code,
+                            'landlord_id' => $task->landlord_id,
+                            'tenant_id' => $task->tenant_id,
+                            'artisan_id' => $bid->artisan_id,
+                            'expires_at' => now()->addDays(7),
+                        ]);
+
+                        $task->complaint->addComment(Auth::user(), "Artisan bid from {$bid->artisan->first_name} for " . format_money($bid->amount, $task->complaint->apartment->currency) . " has been accepted and funds secured in escrow.");
+
+                        try {
+                            Mail::to($bid->artisan->email)->send(new ArtisanAssignedMail($task, $code));
+                        } catch (\Exception $e) {}
+
+                        return redirect()->route('artisan.tasks.show', $task->id)->with('success', 'Payment successful. The artisan has been notified via email and funds are in escrow.');
+                    }
+                }
+            }
+
+            return redirect()->route('dashboard')->with('error', 'Payment failed or was cancelled.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Paystack Callback Error: " . $e->getMessage());
+            return redirect()->route('dashboard')->with('error', 'Payment verification failed. If you were debited, please contact support.');
+        }
     }
 
     /**
@@ -267,8 +326,28 @@ class ArtisanTaskController extends Controller
             }
         }
 
-        // Rent Set-off Logic
-        if ($task->request_setoff && $task->tenant_id && $acceptedBid) {
+        // Handle Escrow Payout Logic
+        if ($task->payment_status === 'escrowed' && $acceptedBid) {
+            $task->update([
+                'payment_status' => 'released'
+            ]);
+
+            // Notify Admin for Manual Payout Disbursement
+            // This assumes admin manually transfers the funds to the artisan's bank account
+            // using the platform's Paystack Dashboard, since API transfers aren't fully implemented
+            $adminEmail = env('ADMIN_EMAIL', 'admin@easyrent.com');
+            try {
+                Mail::raw("Task #{$task->id} has been completed. Please disburse " . format_money($acceptedBid->amount) . " to Artisan {$acceptedBid->artisan->first_name} (Bank: {$acceptedBid->artisan->bank_name}, Acct: {$acceptedBid->artisan->bank_account_number}).", function ($message) use ($adminEmail) {
+                    $message->to($adminEmail)->subject('Artisan Payout Required');
+                });
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to send admin payout notification: " . $e->getMessage());
+            }
+
+            $task->complaint->addComment($user, "Task completed. Funds are being released to the artisan's bank account.");
+        } 
+        // Rent Set-off Logic (Legacy fallback)
+        elseif ($task->request_setoff && $task->tenant_id && $acceptedBid) {
             $complaint = $task->complaint;
 
             \App\Models\Payment::create([
@@ -285,9 +364,9 @@ class ArtisanTaskController extends Controller
             ]);
 
             $task->complaint->addComment($user, "Rent set-off of " . format_money($acceptedBid->amount, $task->complaint->apartment->currency) . " has been recorded.");
+        } else {
+            $task->complaint->addComment($user, "Artisan task marked as completed.");
         }
-
-        $task->complaint->addComment($user, "Artisan task marked as completed.");
 
         return back()->with('success', 'Task marked as completed successfully.');
     }

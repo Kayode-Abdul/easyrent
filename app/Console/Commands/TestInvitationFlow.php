@@ -40,7 +40,7 @@ class TestInvitationFlow extends Command
         DB::beginTransaction();
         try {
             // 1. Pull an existing apartment that isn't occupied
-            $apartment = Apartment::where('status', 'vacant')->orWhere('occupied', 0)->first();
+            $apartment = Apartment::where('occupied', 0)->first();
             if (!$apartment) {
                 // fallback
                 $apartment = Apartment::first();
@@ -59,7 +59,7 @@ class TestInvitationFlow extends Command
                 'prospect_email' => 'test_tenant@easyrent.africa',
                 'prospect_name' => 'Test Guest Tenant',
                 'invitation_token' => $token,
-                'status' => ApartmentInvitation::STATUS_PENDING,
+                'status' => ApartmentInvitation::STATUS_ACTIVE,
                 'expires_at' => now()->addDays(7)
             ]);
             $this->info("Generated Invitation! Token: " . substr($token, 0, 8));

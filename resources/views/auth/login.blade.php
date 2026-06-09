@@ -102,7 +102,7 @@
         color: var(--text-muted);
         text-align: center;
         margin-bottom: 2.5rem;
-        font-size: 1.1rem;
+        font-size: 15px
     }
 
     .input-group-premium {
@@ -112,7 +112,7 @@
 
     .input-group-premium label {
         display: block;
-        font-size: 0.875rem;
+        font-size: 15px;
         font-weight: 600;
         color: var(--text-primary);
         margin-bottom: 0.5rem;
@@ -162,7 +162,7 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 2rem;
-        font-size: 0.875rem;
+        font-size: 15px;
     }
 
     .custom-checkbox {
@@ -221,7 +221,7 @@
         padding: 1rem;
         width: 100%;
         font-weight: 600;
-        font-size: 1.125rem;
+    font-size: 15px
         cursor: pointer;
         transition: all 0.3s;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -267,7 +267,7 @@
         padding: 1rem;
         border-radius: 16px;
         margin-bottom: 1.5rem;
-        font-size: 0.875rem;
+        font-size: 15px;
         display: flex;
         align-items: center;
         gap: 0.75rem;

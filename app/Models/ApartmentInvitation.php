@@ -130,14 +130,15 @@ class ApartmentInvitation extends Model
 
     public function isExpired(): bool
     {
-        // If already marked as expired, it's expired
-        if ($this->status === self::STATUS_EXPIRED) {
+        // If already marked as expired or cancelled, it's considered expired/invalid
+        if (in_array($this->status, [self::STATUS_EXPIRED, self::STATUS_CANCELLED])) {
             return true;
         }
 
         // Check expires_at with a 2-hour grace period to prevent race conditions during payment
         if ($this->expires_at) {
-            return $this->expires_at->addHours(2)->isPast();
+            // Use copy() to avoid mutating the original instance
+            return $this->expires_at->copy()->addHours(2)->isPast();
         }
 
         return false;

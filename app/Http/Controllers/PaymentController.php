@@ -103,6 +103,40 @@ class PaymentController extends Controller
             return redirect()->back()->with('error', 'Unauthorized access');
         }
 
+        // Validate amount and currency against apartment pricing before displaying
+        $apartment = $proforma->apartment;
+        if ($apartment) {
+            $calculationResult = $this->paymentCalculationService->calculatePaymentTotal(
+                $apartment->amount,
+                $proforma->duration ?? 12,
+                $apartment->getPricingType()
+            );
+            if ($calculationResult->isValid) {
+                $expectedAmount = $calculationResult->totalAmount;
+                if (abs($expectedAmount - $proforma->amount) > 0.01) {
+                    Log::error('Proforma amount mismatch', [
+                        'proforma_id' => $proforma->id,
+                        'expected' => $expectedAmount,
+                        'actual' => $proforma->amount,
+                    ]);
+                    return redirect()->back()->with('error', 'Payment amount mismatch. Please contact support.');
+                }
+                // Ensure currency consistency
+                $currencyCode = $apartment->currency_code ?? $apartment->property->currency_code ?? 'NGN';
+                if (($proforma->currency ?? 'NGN') !== $currencyCode) {
+                    Log::error('Proforma currency mismatch', [
+                        'proforma_id' => $proforma->id,
+                        'apartment_currency' => $currencyCode,
+                        'proforma_currency' => $proforma->currency ?? 'NGN',
+                    ]);
+                    return redirect()->back()->with('error', 'Currency mismatch for payment. Please contact support.');
+                }
+            } else {
+                Log::error('Proforma calculation invalid', ['proforma_id' => $proforma->id, 'error' => $calculationResult->errorMessage]);
+                return redirect()->back()->with('error', 'Unable to calculate payment. Please contact support.');
+            }
+        }
+
         return view('proforma.payment', compact('proforma'));
     }
 
@@ -695,6 +729,10 @@ class PaymentController extends Controller
                 elseif ($result['success']) {
                     return redirect()->route('register', ['invitation_token' => $result['invitation']->invitation_token])
                         ->with('success', 'Payment completed. Please register to finalize your apartment.');
+                }
+                elseif (!empty($result['gateway_confirmed'])) {
+                    return redirect()->route('dashboard')
+                        ->with('success', 'Payment received! Your apartment is being set up. Our team will finalize your assignment shortly.');
                 }
 
                 return redirect('/dashboard')->with('error', 'Payment was received but apartment assignment failed: ' . ($result['error'] ?? 'Unknown error'));
@@ -2216,7 +2254,7 @@ class PaymentController extends Controller
                 ->findOrFail($paymentId);
 
             // Verify user owns this payment (either as tenant or landlord)
-            if ($payment->tenant_id !== auth()->user()->user_id && $payment->landlord_id !== auth()->user()->user_id) {
+            if ($payment->tenant_id != auth()->user()->user_id && $payment->landlord_id != auth()->user()->user_id) {
                 abort(403, 'Unauthorized access to this payment');
             }
 

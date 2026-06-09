@@ -8,6 +8,7 @@
     <!-- Dropzone.js -->
     <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
     <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+    <link href="{{ asset('assets/css/currency-scroll.css') }}" rel="stylesheet" />
     <style>
         .dropzone {
             border: 2px dashed #007bff !important;
@@ -44,5 +45,6 @@
 @yield('content')
 @include('footer')
 @stack('scripts')
+<script src="{{ asset('assets/js/currency-scroll.js') }}"></script>
 </body>
 </html>

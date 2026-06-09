@@ -15,7 +15,12 @@ class ArtisanTask extends Model
         'duration',
         'description',
         'status',
-        'request_setoff'
+        'request_setoff',
+        'payment_status',
+        'payment_reference',
+        'platform_fee',
+        'gateway_fee',
+        'total_amount_paid'
     ];
 
     public function complaint()

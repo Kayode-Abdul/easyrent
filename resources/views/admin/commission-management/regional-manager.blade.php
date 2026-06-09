@@ -699,4 +699,4 @@
                 });
         }
     </script>
-@endsection
+@endpush

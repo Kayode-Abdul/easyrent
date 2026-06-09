@@ -46,8 +46,6 @@ class PaymentIntegrationService
         ]);
 
         try {
-            DB::beginTransaction();
-
             Log::info('Processing invitation-based payment', [
                 'payment_id' => $payment->id,
                 'transaction_id' => $payment->transaction_id,
@@ -74,7 +72,8 @@ class PaymentIntegrationService
                 throw new \Exception('Related apartment invitation not found for payment');
             }
 
-            // Update payment status
+            // Update payment status as confirmed FIRST.
+            // Do NOT put this inside a transaction that could rollback on assignment failures.
             $payment->update([
                 'status' => Payment::STATUS_COMPLETED,
                 'paid_at' => now(),
@@ -113,8 +112,6 @@ class PaymentIntegrationService
                     'payment_id' => $payment->id
                 ]);
 
-                DB::commit();
-
                 return [
                     'success' => true,
                     'payment' => $payment,
@@ -139,10 +136,9 @@ class PaymentIntegrationService
                 'apartment_assigned' => true
             ]);
 
-            // Note: Invitation status update removed to avoid MySQL trigger conflict
-            // The invitation will be marked as used in a separate operation if needed
-            // Mark invitation as used to prevent link reuse
-            $invitation->update(['status' => ApartmentInvitation::STATUS_USED]);
+            // Use markPaymentCompleted which sets both status and payment_completed_at
+            // This guarantees the MySQL trigger works atomicly.
+            $invitation->markPaymentCompleted();
 
             // Clean up session data
             $this->cleanupSessionData($invitation);
@@ -169,8 +165,6 @@ class PaymentIntegrationService
                 'payment_amount' => $payment->amount
             ]);
 
-            DB::commit();
-
             Log::info('Invitation payment processed successfully', [
                 'payment_id' => $payment->id,
                 'invitation_id' => $invitation->id,
@@ -187,21 +181,22 @@ class PaymentIntegrationService
             ];
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            
             Log::error('Failed to process invitation payment', [
                 'payment_id' => $payment->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
-            // Handle payment failure with state preservation
-            $this->handlePaymentFailure($payment, $e->getMessage());
+            // Handle payment failure with state preservation.
+            // If the gateway confirmed it, we pass true to avoid downgrading to FAILED.
+            $gatewayConfirmed = ($payment->status === Payment::STATUS_COMPLETED);
+            $this->handlePaymentFailure($payment, $e->getMessage(), $gatewayConfirmed);
 
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
                 'payment' => $payment,
+                'gateway_confirmed' => $gatewayConfirmed,
                 'state_preserved' => true
             ];
         }
@@ -516,18 +511,25 @@ class PaymentIntegrationService
     /**
      * Handle payment failures with state preservation
      */
-    protected function handlePaymentFailure(Payment $payment, string $errorMessage): void
+    protected function handlePaymentFailure(Payment $payment, string $errorMessage, bool $gatewayConfirmed = false): void
     {
         try {
-            // Update payment status to failed
-            $payment->update([
-                'status' => Payment::STATUS_FAILED,
+            // Update payment meta with failure reason.
+            // ONLY update status to failed if gateway did not confirm it.
+            $updateData = [
                 'payment_meta' => array_merge($payment->payment_meta ?? [], [
                     'failure_reason' => $errorMessage,
                     'failed_at' => now()->toISOString(),
-                    'state_preserved' => true
+                    'state_preserved' => true,
+                    'assignment_failed' => $gatewayConfirmed
                 ])
-            ]);
+            ];
+            
+            if (!$gatewayConfirmed) {
+                $updateData['status'] = Payment::STATUS_FAILED;
+            }
+            
+            $payment->update($updateData);
 
             // Find related invitation and preserve application state
             $invitation = $this->findRelatedInvitation($payment);

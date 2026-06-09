@@ -202,7 +202,7 @@ class ProfomaController extends Controller
         }
         
         $isPaid = $proforma->hasSuccessfulPayment();
-        $isOccupied = $proforma->apartment->tenant_id && $proforma->apartment->tenant_id != $proforma->tenant_id;
+        $isOccupied = $proforma->apartment && $proforma->apartment->tenant_id && $proforma->apartment->tenant_id != $proforma->tenant_id;
         $payment = $isPaid ? $proforma->getSuccessfulPayment() : null;
 
         return view('proforma.template', compact('proforma', 'isPaid', 'isOccupied', 'payment'));

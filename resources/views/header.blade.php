@@ -93,7 +93,7 @@
     // $paymentPage = request()->segment(2);
     // $forPayment = in_array($paymentPage, ['invite']);
      $currentSegment = request()->segment(1);
-    $isDashboard = in_array($currentSegment, ['', 'contact', 'benefits', 'faq', 'login', 'password', 'register', 'apartment', 'payment']);
+    $isDashboard = in_array($currentSegment, ['', 'contact', 'benefits', 'faq', 'login', 'password', 'register', 'apartment', 'payment','benefactor']);
     @endphp
     @if($isDashboard )
     <!-- Add CSRF Token meta tag -->
@@ -231,6 +231,80 @@
     <script src="/assets/js/csrf-token-refresh.js"></script>
     @yield('styles')
     @stack('styles')
+
+    <!-- Google Translate Widget CSS -->
+    <style>
+        /* Hide the annoying top banner from Google Translate */
+        .skiptranslate iframe {
+            display: none !important;
+        }
+        body {
+            top: 0px !important; 
+        }
+        
+        /* Style the dropdown */
+        #google_translate_element select {
+            background-color: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            padding: 2px 8px;
+            font-size: 13px;
+            height: 30px;
+            outline: none;
+            cursor: pointer;
+            margin: 0;
+            line-height: normal;
+        }
+
+        #google_translate_element {
+            margin: 0;
+            padding: 0;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Hide the spacing/tracking images that inflate the navbar */
+        #google_translate_element img {
+            display: none !important;
+        }
+        
+        html[data-chrome-dark="true"] #google_translate_element select {
+            background-color: #333;
+            color: #fff;
+            border-color: #555;
+        }
+
+        .goog-te-gadget {
+            color: transparent !important;
+            font-size: 0px;
+        }
+
+        .goog-te-gadget .goog-te-combo {
+            margin: 0;
+        }
+        
+        .goog-logo-link {
+            display:none !important;
+        } 
+        
+        .goog-te-gadget {
+            color: transparent !important;
+        }
+    </style>
+
+    <!-- Google Translate Script -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,fr,de,ar,pt,hi,zh-CN',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </head>
 
 <body>
@@ -261,12 +335,18 @@
                     <li class="nav-item {{ $currentSegment === 'benefits' ? 'active' : '' }}">
                         <a href="{{ route('benefits') }}" class="nav-link">Benefits</a>
                     </li>
+                    <li class="nav-item {{ $currentSegment === 'blog' ? 'active' : '' }}">
+                        <a href="#blog " class="nav-link">Blog</a>
+                    </li>
                     <li class="nav-item {{ $currentSegment === 'faq' ? 'active' : '' }}">
                         <a href="{{ route('faq') }}" class="nav-link">FAQ</a>
                     </li>
                     <li class="nav-item {{ $currentSegment === 'contact' ? 'active' : '' }}">
                         <a href="/contact" class="nav-link">Contact</a>
                     </li> 
+                    <li class="nav-item d-flex align-items-center px-2">
+                        <div id="google_translate_element"></div>
+                    </li>
                      @guest
                     <li class="nav-item">
                         <a href="{{ route('login') }}" class="nav-link">
@@ -874,6 +954,9 @@
                         @endif
 
                         <ul class="navbar-nav">
+                             <li class="nav-item d-flex align-items-center pr-3">
+                                 <div id="google_translate_element"></div>
+                             </li>
                              <li class="nav-item">
                                  <a class="nav-link btn-magnify" href="javascript:;">
                                      <i class="nc-icon nc-layout-11"></i>

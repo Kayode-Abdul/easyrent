@@ -30,6 +30,8 @@
                                             <option value="8">Store</option>
                                             <option value="9">Shop</option>
                                             <option value="10">Other</option>
+                                            <option value="11">Mall</option>
+                                            <option value="12">Event Center</option>
                                         </select>
                                     </div>
                                 </div>
@@ -165,7 +167,13 @@
             .then(data => {
                 if (data.success) {
                     $('#propertyMessage').html('<div class="alert alert-success">Property listed successfully! Redirecting...</div>');
-                    setTimeout(() => window.location.href = '/dashboard/property', 2000);
+                    setTimeout(() => {
+                        if (data.messages && data.messages.propId) {
+                            window.location.href = '/dashboard/property/' + data.messages.propId;
+                        } else {
+                            window.location.href = '/dashboard/property';
+                        }
+                    }, 2000);
                 } else {
                     btn.prop('disabled', false).text('List Property');
                     $('#propertyMessage').html('<div class="alert alert-danger">' + (data.message || 'Error occurred') + '</div>');

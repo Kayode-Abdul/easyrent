@@ -56,21 +56,14 @@
                                     Size: <strong>{{ $stats['database_size'] ?? 'Unknown' }}</strong></p>
                             </div>
                             <div class="col-md-4 text-right">
-                                @if(isset($stats['company_commission_total']) && is_array($stats['company_commission_total']))
-                                    @foreach($stats['company_commission_total'] as $code => $data)
-                                        <h4 class="mb-0">{{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</h4>
-                                    @endforeach
-                                @else
-                                    <h4>{{ format_money(0) }}</h4>
-                                @endif
+                                <x-currency-scroll :currencies="$stats['company_commission_total'] ?? []" class="mb-0 h4" />
                                 <small>EasyRent Total Commission</small>
                                 <div class="mt-2">
                                     @if(isset($stats['company_commission_this_month']) && is_array($stats['company_commission_this_month']))
-                                        @foreach($stats['company_commission_this_month'] as $code => $data)
-                                            <span class="badge badge-success">
-                                                {{ $data['symbol'] }}{{ number_format($data['amount'], 0) }} this month
-                                            </span>
-                                        @endforeach
+                                        <div class="badge badge-success d-inline-flex align-items-center">
+                                            <x-currency-scroll :currencies="$stats['company_commission_this_month']" class="mb-0 mr-1" />
+                                            <span> this month</span>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -155,14 +148,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Revenue Today</p>
-                                    @if(isset($stats['revenue_today_by_currency']) && is_array($stats['revenue_today_by_currency']))
-                                        @foreach($stats['revenue_today_by_currency'] as $code => $data)
-                                            <p class="card-title" style="font-size: 1.1rem; margin-bottom: 0;">
-                                                {{ $data['symbol'] }}{{ number_format($data['amount'], 2) }}</p>
-                                        @endforeach
-                                    @else
-                                        <p class="card-title">{{ format_money(0) }}</p>
-                                    @endif
+                                    <x-currency-scroll :currencies="$stats['revenue_today_by_currency'] ?? []" decimals="2" />
                                 </div>
                             </div>
                         </div>
@@ -344,14 +330,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Commission Today</p>
-                                    @if(isset($stats['company_commission_today']) && is_array($stats['company_commission_today']))
-                                        @foreach($stats['company_commission_today'] as $code => $data)
-                                            <p class="card-title" style="font-size: 1.1rem; margin-bottom: 0;">
-                                                {{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
-                                        @endforeach
-                                    @else
-                                        <p class="card-title">{{ format_money(0) }}</p>
-                                    @endif
+                                    <x-currency-scroll :currencies="$stats['company_commission_today'] ?? []" />
                                 </div>
                             </div>
                         </div>
@@ -378,14 +357,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Commission This Month</p>
-                                    @if(isset($stats['company_commission_this_month']) && is_array($stats['company_commission_this_month']))
-                                        @foreach($stats['company_commission_this_month'] as $code => $data)
-                                            <p class="card-title" style="font-size: 1.1rem; margin-bottom: 0;">
-                                                {{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
-                                        @endforeach
-                                    @else
-                                        <p class="card-title">{{ format_money(0) }}</p>
-                                    @endif
+                                    <x-currency-scroll :currencies="$stats['company_commission_this_month'] ?? []" />
                                 </div>
                             </div>
                         </div>
@@ -417,14 +389,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Total Commission</p>
-                                    @if(isset($stats['company_commission_total']) && is_array($stats['company_commission_total']))
-                                        @foreach($stats['company_commission_total'] as $code => $data)
-                                            <p class="card-title" style="font-size: 1.1rem; margin-bottom: 0;">
-                                                {{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
-                                        @endforeach
-                                    @else
-                                        <p class="card-title">{{ format_money(0) }}</p>
-                                    @endif
+                                    <x-currency-scroll :currencies="$stats['company_commission_total'] ?? []" />
                                 </div>
                             </div>
                         </div>

@@ -1097,7 +1097,8 @@
                                     <option value="5">Warehouse</option>
                                     <option value="8">Store</option>
                                     <option value="9">Shop</option>
-                                    <option value="10">Shopping Mall</option>
+                                    <option value="11">Mall</option>
+                                    <option value="12">Event Center</option>
                                 </optgroup>
                                 <optgroup label="Land/Agricultural">
                                     <option value="6">Land</option>
@@ -1799,6 +1800,14 @@
                 document.getElementById('store-fields-modal').style.display = 'block';
                 document.getElementById('size_value_modal').setAttribute('required', 'required');
                 // Store/Shop doesn't need apartments field
+            } else if (propType === 11) { // Mall
+                document.getElementById('apartments-field-modal').style.display = 'block';
+                document.getElementById('noOfApartment_modal').setAttribute('required', 'required');
+                document.getElementById('size-fields-modal').style.display = 'block';
+                document.getElementById('store-fields-modal').style.display = 'block';
+            } else if (propType === 12) { // Event Center
+                document.getElementById('size-fields-modal').style.display = 'block';
+                document.getElementById('size_value_modal').setAttribute('required', 'required');
             }
         });
 
@@ -1837,7 +1846,11 @@
                         // Close modal and reload table after short delay
                         setTimeout(() => {
                             $('#addPropertyModal').modal('hide');
-                            window.location.reload();
+                            if (data.messages && data.messages.propId) {
+                                window.location.href = '/dashboard/property/' + data.messages.propId;
+                            } else {
+                                window.location.reload();
+                            }
                         }, 1200);
                     } else {
                         let errorMessage = 'An error occurred while saving the property.';

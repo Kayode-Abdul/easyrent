@@ -169,9 +169,8 @@
                         <span class="amount-big">
                             @php
                                 $currency = $payment->currency ?? ($payment->apartment && $payment->apartment->currency ? $payment->apartment->currency : null);
-                                $symbol = $currency ? $currency->symbol : '₦';
                             @endphp
-                            {{ $symbol }}{{ number_format($payment->amount, 2) }}
+                            {{ format_money($payment->amount, $currency) }}
                         </span>
                     </td>
                 </tr>

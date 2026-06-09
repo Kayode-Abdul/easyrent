@@ -19,6 +19,7 @@
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" />
     <link href="{{ asset('assets/paper-dashboard.css') }}" rel="stylesheet" />
     <link href="{{ asset('assets/css/dashboard-mobile-logo.css') }}" rel="stylesheet" />
+    <link href="{{ asset('assets/css/currency-scroll.css') }}" rel="stylesheet" />
     
     <!-- Custom CSS -->
     <style>
@@ -296,6 +297,9 @@
             });
         }
     </script>
+    
+    <!-- Currency Scroll Component -->
+    <script src="{{ asset('assets/js/currency-scroll.js') }}"></script>
     
     @yield('scripts')
 </body>

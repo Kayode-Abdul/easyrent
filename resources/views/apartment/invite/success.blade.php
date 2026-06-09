@@ -41,7 +41,7 @@
                                             <li><strong>Location:</strong>
                                                 {{ $invitation->apartment->property->prop_address }}</li>
                                             <li><strong>Monthly Rent:</strong>
-                                                {{ format_money($invitation->apartment->amount, ($invitation->apartment->property->currency->code ?? null)) }}
+                                                {{ format_money($invitation->apartment->amount, ($invitation->apartment->currency->code ?? $invitation->apartment->property->currency->code ?? null)) }}
                                             </li>
                                         </ul>
                                     </div>
@@ -69,7 +69,7 @@
                                                 {{ \Carbon\Carbon::parse($invitation->move_in_date)->addMonths($invitation->lease_duration)->format('M d, Y') }}
                                             </li>
                                             <li><strong>Total Paid:</strong> <span
-                                                    class="text-success fw-bold">{{ format_money($invitation->total_amount, ($invitation->apartment->property->currency->code ?? null)) }}</span>
+                                                    class="text-success fw-bold">{{ format_money($invitation->total_amount, ($invitation->apartment->currency->code ?? $invitation->apartment->property->currency->code ?? null)) }}</span>
                                             </li>
                                         </ul>
                                     </div>

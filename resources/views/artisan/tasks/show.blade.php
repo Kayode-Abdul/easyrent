@@ -17,6 +17,11 @@
                             <span class="badge badge-{{ $task->status == 'open' ? 'success' : 'secondary' }}">
                                 {{ ucfirst($task->status) }}
                             </span>
+                            @if($task->payment_status === 'escrowed')
+                            <span class="badge badge-warning ml-2" title="Funds are held securely by EasyRent until work is completed">
+                                <i class="fa fa-lock"></i> Funds in Escrow
+                            </span>
+                            @endif
                         </div>
                         <p class="card-category">Category: {{ optional(optional($task->complaint)->category)->name ?? 'Uncategorized' }}</p>
                     </div>
@@ -219,11 +224,12 @@
                                         <td>
                                             @if($bid->status == 'pending')
                                             <form action="{{ route('artisan.bids.accept', $bid) }}" method="POST"
-                                                class="d-inline">
+                                                class="d-inline"
+                                                onsubmit="return confirm('You will be redirected to Paystack to secure the funds for this task. A 3.5% processing and platform fee will be added to the bid amount. Do you want to proceed?');">
                                                 @csrf
                                                 <button type="submit" class="btn btn-success btn-sm btn-link"
                                                     title="Accept Bid">
-                                                    <i class="fa fa-check"></i> Accept
+                                                    <i class="fa fa-check"></i> Accept & Pay
                                                 </button>
                                             </form>
                                             @else

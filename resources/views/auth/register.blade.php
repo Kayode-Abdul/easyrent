@@ -19,6 +19,7 @@
     }
 @endphp
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
@@ -112,7 +113,7 @@
         color: var(--text-muted);
         text-align: center;
         margin-bottom: 2.5rem;
-        font-size: 1.1rem;
+        font-size: 15px
     }
 
     .social-grid {
@@ -151,7 +152,7 @@
         text-align: center;
         margin: 2rem 0;
         color: var(--text-muted);
-        font-size: 0.875rem;
+        font-size: 15px;
         font-weight: 500;
     }
 
@@ -172,7 +173,7 @@
 
     .input-group-premium label {
         display: block;
-        font-size: 0.875rem;
+        font-size: 15px;
         font-weight: 600;
         color: var(--text-primary);
         margin-bottom: 0.5rem;
@@ -235,7 +236,7 @@
         padding: 1rem;
         width: 100%;
         font-weight: 600;
-        font-size: 1.125rem;
+    font-size: 15px
         cursor: pointer;
         transition: all 0.3s;
         box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.2);
@@ -324,9 +325,9 @@
             <div class="btn-social-premium" onclick="socialLogin('facebook')">
                 <i class="fab fa-facebook text-primary"></i> FB
             </div>
-            <div class="btn-social-premium" onclick="socialLogin('github')">
+            <!-- <div class="btn-social-premium" onclick="socialLogin('github')">
                 <i class="fab fa-github"></i> GitHub
-            </div>
+            </div> -->
         </div>
 
         <div class="divider">
@@ -344,6 +345,9 @@
                         <input type="text" name="first_name"
                             class="form-control-premium @error('first_name') is-invalid @enderror"
                             value="{{ old('first_name') }}" required placeholder="John">
+                        @error('first_name')
+                            <span class="text-danger small mt-1 d-block">{{ $message }}</span>
+                        @enderror
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -352,6 +356,9 @@
                         <input type="text" name="last_name"
                             class="form-control-premium @error('last_name') is-invalid @enderror"
                             value="{{ old('last_name') }}" required placeholder="Doe">
+                        @error('last_name')
+                            <span class="text-danger small mt-1 d-block">{{ $message }}</span>
+                        @enderror
                     </div>
                 </div>
             </div>
@@ -360,12 +367,18 @@
                 <label>Email Address</label>
                 <input type="email" name="email" class="form-control-premium @error('email') is-invalid @enderror"
                     value="{{ old('email') }}" required placeholder="john@example.com">
+                @error('email')
+                    <span class="text-danger small mt-1 d-block">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="input-group-premium">
                 <label>Phone Number</label>
                 <input type="tel" name="phone" class="form-control-premium @error('phone') is-invalid @enderror"
                     value="{{ old('phone') }}" required placeholder="+234...">
+                @error('phone')
+                    <span class="text-danger small mt-1 d-block">{{ $message }}</span>
+                @enderror
             </div>
 
 
@@ -375,13 +388,16 @@
                     <div class="input-group-premium">
                         <label>Password</label>
                         <div class="password-wrapper">
-                            <input type="password" name="password" id="password" class="form-control-premium" required
+                            <input type="password" name="password" id="password" class="form-control-premium @error('password') is-invalid @enderror" required
                                 placeholder="••••••••">
                             <button type="button" class="password-toggle"
                                 onclick="togglePasswordVisibility('password')">
                                 <i class="far fa-eye-slash" id="password-toggle-icon"></i>
                             </button>
                         </div>
+                        @error('password')
+                            <span class="text-danger small mt-1 d-block">{{ $message }}</span>
+                        @enderror
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -433,5 +449,4 @@
     }
 </script>
 
-<script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
 @include('footer')

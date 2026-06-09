@@ -11,27 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('complaint_attachments', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('complaint_id');
-            $table->unsignedBigInteger('uploaded_by');
-            $table->string('file_name');
-            $table->string('file_path', 500);
-            $table->string('original_name');
-            $table->unsignedInteger('file_size');
-            $table->string('mime_type', 100);
-            $table->string('file_hash', 64)->nullable(); // For duplicate detection
-            $table->timestamps();
-            
-            // Foreign key constraints
-            $table->foreign('complaint_id')->references('id')->on('complaints')->onDelete('cascade');
-            $table->foreign('uploaded_by')->references('user_id')->on('users')->onDelete('cascade');
-            
-            // Indexes
-            $table->index(['complaint_id', 'created_at']);
-            $table->index(['uploaded_by']);
-            $table->index(['file_hash']);
-        });
+        if (!Schema::hasTable('complaint_attachments')) {
+            Schema::create('complaint_attachments', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('complaint_id');
+                $table->unsignedBigInteger('uploaded_by');
+                $table->string('file_name');
+                $table->string('file_path', 500);
+                $table->string('original_name');
+                $table->unsignedInteger('file_size');
+                $table->string('mime_type', 100);
+                $table->string('file_hash', 64)->nullable(); // For duplicate detection
+                $table->timestamps();
+                
+                // Foreign key constraints
+                $table->foreign('complaint_id')->references('id')->on('complaints')->onDelete('cascade');
+                $table->foreign('uploaded_by')->references('user_id')->on('users')->onDelete('cascade');
+                
+                // Indexes
+                $table->index(['complaint_id', 'created_at']);
+                $table->index(['uploaded_by']);
+                $table->index(['file_hash']);
+            });
+        }
     }
 
     /**

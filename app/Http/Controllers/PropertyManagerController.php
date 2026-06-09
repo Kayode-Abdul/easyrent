@@ -253,7 +253,7 @@ class PropertyManagerController extends Controller
      */
     private function isPropertyManager($user)
     {
-        return in_array($user->role, [6, 8]); // Property manager roles (6 = property_manager, 8 = Verified_Property_Manager)
+        return in_array($user->role, [6, 8]) || (method_exists($user, 'hasRole') && ($user->hasRole('property_manager') || $user->hasRole('Verified_Property_Manager')));
     }
 
     /**

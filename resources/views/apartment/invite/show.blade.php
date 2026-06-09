@@ -78,7 +78,7 @@
                                     <li class="mb-2">
                                         <strong>{{ $apartment->getPricingType() === 'total' ? 'Total Price' : 'Monthly Rent' }}:</strong>
                                         <span
-                                            class="text-success fw-bold">{{ format_money($apartment->amount, ($property->currency->code ?? null)) }}</span>
+                                            class="text-success fw-bold">{{ format_money($apartment->amount, ($apartment->currency->code ?? $property->currency->code ?? null)) }}</span>
                                         @if($apartment->getPricingType() === 'total')
                                             <small class="text-muted">(Total for entire lease)</small>
                                         @endif
@@ -283,7 +283,7 @@
                                                     @endif
                                                 </span>
                                                 <span
-                                                    class="fw-bold">{{ format_money($apartment->amount, ($property->currency->code ?? null)) }}</span>
+                                                    class="fw-bold">{{ format_money($apartment->amount, ($apartment->currency->code ?? $property->currency->code ?? null)) }}</span>
                                             </div>
                                             @if(isset($proformaData['pricing_type']))
                                                 <div class="d-flex justify-content-between mb-2">
@@ -323,7 +323,7 @@
                                                     style="background: rgba(0,123,255,0.05); border-radius: 6px; border-left: 3px solid #007bff;">
                                                     <small class="text-muted d-block mb-1">Calculation Breakdown:</small>
                                                     <small class="d-flex justify-content-between">
-                                                        <span>{{ $property->currency->symbol ?? format_money(0)->getSymbol() }}{{ number_format($apartment->amount) }}
+                                                        <span>{{ $apartment->currency->symbol ?? $property->currency->symbol ?? format_money(0)->getSymbol() }}{{ number_format($apartment->amount) }}
                                                             × <span id="calc-duration">12</span> months</span>
                                                         <span>=</span>
                                                     </small>
@@ -334,7 +334,7 @@
                                             <div class="d-flex justify-content-between">
                                                 <span class="fw-bold text-success fs-6">Total Amount:</span>
                                                 <span id="total-amount"
-                                                    class="fw-bold text-success fs-4">{{ format_money($proformaData['total_amount'] ?? ($apartment->amount * 12), ($property->currency->code ?? null)) }}</span>
+                                                    class="fw-bold text-success fs-4">{{ format_money($proformaData['total_amount'] ?? ($apartment->amount * 12), ($apartment->currency->code ?? $property->currency->code ?? null)) }}</span>
                                             </div>
 
                                             <!-- Error display area -->
@@ -456,7 +456,7 @@
                                                 @endif
                                             </span>
                                             <span
-                                                class="fw-bold text-success">{{ format_money($apartment->amount, ($property->currency->code ?? null)) }}</span>
+                                                class="fw-bold text-success">{{ format_money($apartment->amount, ($apartment->currency->code ?? $property->currency->code ?? null)) }}</span>
                                         </div>
                                         <div class="d-flex justify-content-between">
                                             <span class="text-muted">Location:</span>
@@ -661,7 +661,7 @@
     // Duration mapping for proper display
     const durationNames = @json($durationOptions);
     // Currency symbol
-    const currencySymbol = "{{ $property->currency->symbol ?? format_money(0)->getSymbol() }}";
+    const currencySymbol = "{{ $apartment->currency->symbol ?? $property->currency->symbol ?? format_money(0)->getSymbol() }}";
 
     // Calculation display and error handling functions
     function updateCalculationDisplay(duration, isUnauthenticated = false) {

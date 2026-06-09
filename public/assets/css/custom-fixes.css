@@ -479,3 +479,77 @@ nav[role="navigation"] {
   width: 12px;
   height: 12px;
 }
+
+/* =============================================
+   Frosted Glassmorphic Top Navbar Styling
+   ============================================= */
+.ftco-navbar-light {
+  background: rgba(255, 255, 255, 0.35) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Scrolled state for Navbar */
+.ftco-navbar-light.scrolled {
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(25px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06) !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+/* Ensure brand and toggler shadow pop on the glass background */
+.ftco-navbar-light .navbar-brand {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Glassmorphic Dropdowns for submenus to match */
+.ftco-navbar-light .navbar-nav > .nav-item .dropdown-menu {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Mobile responsive menu glassmorphism enhancements */
+@media (max-width: 991.98px) {
+  .ftco-navbar-light {
+    background: rgba(255, 255, 255, 0.25) !important;
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+  }
+  
+  /* Mobile navbar collapse dropdown container */
+  .ftco_navbar .navbar-collapse {
+    background: rgba(12, 84, 85, 0.65) !important; /* Premium dark teal matching brand theme */
+    backdrop-filter: blur(25px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25) !important;
+    margin-top: 15px !important;
+  }
+  
+  /* Ensure clean text visibility in the mobile glass menu */
+  .ftco_navbar .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+  
+  .ftco_navbar .navbar-nav .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+  }
+  
+  /* Dark mode filter adaptive support */
+  html[data-chrome-dark="true"] .ftco_navbar .navbar-collapse {
+    background: rgba(0, 0, 0, 0.65) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+}

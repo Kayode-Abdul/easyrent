@@ -9,16 +9,16 @@
         <div class="text text-center w-100">
           <h1 class="mb-4 mt-5 mt-md-0">The Smartest <br>Way for Property Owners to Collect Rent and Manage Property
           </h1>
-          <form action="{{ route('search.apartments') }}" method="GET" class="search-location mt-md-5">
+          <form action="{{ route('search.apartments') }}" method="GET" class="search-location">
             <div class="row justify-content-center">
               <div class="col-lg-12">
-                <div class="search-form-wrap p-4 bg-white shadow rounded">
+                <div class="search-form-wrap p-4 pt-0 bg-white shadow rounded">
 
                   <!-- Advanced Fields (Toggled) -->
                   <div class="row w-100 m-0 mb-3" id="advanced-location-fields" style="display: none;">
                     <div class="col-md-4">
                       <div class="form-group">
-                        <label for="country">Country</label>
+                        <!--<label for="country">Country</label>-->
                         <div class="form-field">
                           <select name="country" id="country" class="form-control" onchange="loadStates(this.value)">
                             <option value="">Any Country</option>
@@ -31,7 +31,7 @@
                     </div>
                     <div class="col-md-4">
                       <div class="form-group">
-                        <label for="state">State</label>
+                        <!--<label for="state">State</label>-->
                         <div class="form-field">
                           <select name="state" id="state" class="form-control" onchange="loadCities(this.value)">
                             <option value="">Any State</option>
@@ -44,7 +44,7 @@
                     </div>
                     <div class="col-md-4">
                       <div class="form-group">
-                        <label for="lga">City/LGA</label>
+                        <!--<label for="lga">City/LGA</label>-->
                         <div class="form-field">
                           <select name="lga" id="lga" class="form-control">
                             <option value="">Any City</option>
@@ -58,7 +58,7 @@
                   <div class="row w-100 m-0 align-items-end">
                     <div class="col-md-5">
                       <div class="form-group">
-                        <label for="apartment_type">Type</label>
+                        <!--<label for="apartment_type">Type</label>-->
                         <div class="form-field">
                           <select name="apartment_type" id="apartment_type" class="form-control">
                             <option value="">Any Type</option>
@@ -71,7 +71,7 @@
                     </div>
                     <div class="col-md-5">
                       <div class="form-group">
-                        <label for="max_price">Max Price (₦)</label>
+                        <!--<label for="max_price">Max Price (₦)</label>-->
                         <div class="form-field">
                           <input type="number" name="max_price" class="form-control" placeholder="Max Price">
                         </div>
@@ -91,7 +91,7 @@
                   <div class="row w-100 m-0 mt-2">
                     <div class="col-12 text-right px-0">
                       <a href="javascript:void(0)" id="toggle-advanced-search"
-                        style="color: var(--primary-color, #3e8189); font-size: 14px; font-weight: 600; text-decoration: underline;">
+                        style="color: #fff; font-size: 14px; font-weight: 600; text-decoration: underline;">
                         <i class="bi bi-sliders"></i> Advanced Search
                       </a>
                     </div>
@@ -390,7 +390,7 @@
 </section>
 
 <section class="ftco-section ftco-no-pt">
-  <div class="container">
+  <div class="container" id="blog">
     <div class="row justify-content-center mb-5">
       <div class="col-md-7 heading-section text-center ftco-animate">
         <span class="subheading">Blog</span>
@@ -598,8 +598,8 @@
     }
 
     @auth
-          // User is logged in - pull from profile
-          const userCountry = @json(auth()->user()->country_name ?? '');
+              // User is logged in - pull from profile
+              const userCountry = @json(auth()->user()->country_name ?? '');
       const userState = @json(auth()->user()->state ?? '');
       const userCity = @json(auth()->user()->lga ?? auth()->user()->city ?? '');
 

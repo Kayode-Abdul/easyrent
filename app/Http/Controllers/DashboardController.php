@@ -70,8 +70,9 @@ class DashboardController extends Controller
         }
 
         // 4. Property Manager Mode wins if active
-
-
+        if (($user->hasRole('property_manager') || $user->hasRole('Verified_Property_Manager') || in_array($user->role, [6, 8])) && session('dashboard_mode') === 'property_manager') {
+            return redirect()->route('property-manager.dashboard');
+        }
         // Fallback: Personal Dashboard (Landlord/Tenant view)
         $stats = [];
         $chartData = [];
@@ -218,6 +219,14 @@ class DashboardController extends Controller
                 'monthly_revenue_by_currency' => Payment::where('landlord_id', $userId)
                     ->where('status', 'completed')
                     ->whereMonth('created_at', Carbon::now()->month)
+                    ->select('currency_id', DB::raw('SUM(amount) as total'))
+                    ->groupBy('currency_id')
+                    ->with('currency')
+                    ->get()
+                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->toArray(),
+                'total_revenue_by_currency' => Payment::where('landlord_id', $userId)
+                    ->where('status', 'completed')
                     ->select('currency_id', DB::raw('SUM(amount) as total'))
                     ->groupBy('currency_id')
                     ->with('currency')

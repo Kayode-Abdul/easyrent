@@ -11,12 +11,18 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->unsignedBigInteger('artisan_category_id')->nullable()->after('role');
-            $table->boolean('is_artisan_verified')->default(false)->after('artisan_category_id');
-            $table->text('artisan_bio')->nullable()->after('is_artisan_verified');
-            $table->string('city')->nullable()->after('lga');
-
-        // Note: address, state, lga already exist in users table
+            if (!Schema::hasColumn('users', 'artisan_category_id')) {
+                $table->unsignedBigInteger('artisan_category_id')->nullable()->after('role');
+            }
+            if (!Schema::hasColumn('users', 'is_artisan_verified')) {
+                $table->boolean('is_artisan_verified')->default(false)->after('artisan_category_id');
+            }
+            if (!Schema::hasColumn('users', 'artisan_bio')) {
+                $table->text('artisan_bio')->nullable()->after('is_artisan_verified');
+            }
+            if (!Schema::hasColumn('users', 'city')) {
+                $table->string('city')->nullable()->after('lga');
+            }
         });
     }
 

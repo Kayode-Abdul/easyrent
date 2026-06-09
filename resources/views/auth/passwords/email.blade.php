@@ -89,7 +89,7 @@
         text-align: center;
         line-height: 1.6;
         margin-bottom: 3rem;
-        font-size: 1.05rem;
+        font-size: 15px
     }
 
     .input-group-premium {
@@ -98,7 +98,7 @@
 
     .input-group-premium label {
         display: block;
-        font-size: 0.875rem;
+        font-size: 15px;
         font-weight: 600;
         color: var(--text-primary);
         margin-bottom: 0.6rem;
@@ -128,7 +128,7 @@
         padding: 1.1rem;
         width: 100%;
         font-weight: 600;
-        font-size: 1.1rem;
+        font-size: 15px
         cursor: pointer;
         transition: all 0.3s;
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);

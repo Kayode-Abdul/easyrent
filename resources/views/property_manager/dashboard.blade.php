@@ -1,7 +1,37 @@
 @extends('layout')
 @section('content')
 <div class="content">
-    <!-- Dashboard Mode Toggle -->
+    @php
+        $isUnverifiedPM = !auth()->user()->hasRole('Verified_Property_Manager');
+    @endphp
+
+    @if ($isUnverifiedPM)
+        <!-- Verification Required Modal -->
+        <div class="modal fade show" id="verificationModal" tabindex="-1" role="dialog" style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1050;">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-white">
+                        <h5 class="modal-title">Verification Required</h5>
+                    </div>
+                    <div class="modal-body text-center">
+                        <i class="nc-icon nc-alert-circle-i text-warning" style="font-size: 50px; margin-bottom: 15px;"></i>
+                        <h4>Account Pending Verification</h4>
+                        <p>Your property manager account is currently under review by our administration team. You will not be able to manage properties or receive payments until your account is verified.</p>
+                        <p class="text-muted">Please contact support if you have any questions.</p>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-primary" onclick="$('#propertyManagerDashboardSwitch').prop('checked', false).trigger('change');">Return to Personal Dashboard</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            document.body.style.overflow = 'hidden';
+        </script>
+    @endif
+
+    <div class="dashboard-wrapper {{ $isUnverifiedPM ? 'unverified-blur' : '' }}">
+        <!-- Dashboard Mode Toggle -->
     <div class="container-fluid mb-3">
         <div class="d-flex justify-content-end align-items-center">
             <div>
@@ -127,13 +157,8 @@
                         </div>
                         <div class="col-7 col-md-8">
                             <div class="numbers">
-                                @if(isset($stats['monthly_revenue']) && is_array($stats['monthly_revenue']))
-                                    @foreach($stats['monthly_revenue'] as $code => $data)
-                                        <p class="card-title" style="font-size: 1.1rem; margin-bottom:0;">{{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
-                                    @endforeach
-                                @else
-                                    <p class="card-title">{{ format_money(0) }}</p>
-                                @endif
+                                <p class="card-category">Monthly Revenue</p>
+                                <x-currency-scroll :currencies="$stats['monthly_revenue'] ?? []" />
                             </div>
                         </div>
                     </div>
@@ -331,9 +356,15 @@
             </div>
         </div>
     </div>
+    </div>
 </div>
 
 <style>
+    .unverified-blur {
+        filter: blur(4px);
+        pointer-events: none;
+        user-select: none;
+    }
     .timeline {
         position: relative;
         padding-left: 30px;

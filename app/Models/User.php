@@ -444,7 +444,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function hasRole($roleName)
     {
-        return $this->roles()->where('name', $roleName)->exists();
+        $roleId = self::getRoleId($roleName);
+        $legacy = strtolower((string)$this->role);
+        
+        return $this->roles()->where('name', $roleName)->exists() || 
+               (is_numeric($this->role) && (int)$this->role === (int)$roleId) ||
+               $legacy === strtolower($roleName);
     }
 
     /**

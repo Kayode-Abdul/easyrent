@@ -331,15 +331,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Monthly Revenue</p>
-                                    @if(isset($stats['monthly_revenue_by_currency']) && count($stats['monthly_revenue_by_currency']) > 0)
-                                        @foreach($stats['monthly_revenue_by_currency'] as $code => $data)
-                                            <p class="card-title" style="font-size: 1.2rem; margin-bottom: 0;">
-                                                {{ format_money($data['amount'], $data['symbol']) }}
-                                            </p>
-                                        @endforeach
-                                    @else
-                                        <p class="card-title">{{ format_money(0) }}</p>
-                                    @endif
+                                    <x-currency-scroll :currencies="$stats['monthly_revenue_by_currency'] ?? []" />
                                 </div>
                             </div>
                         </div>
@@ -349,6 +341,33 @@
                         <div class="stats">
                             <i class="fa fa-calendar"></i>
                             This month
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-5 col-md-4">
+                                <div class="icon-big text-center icon-warning">
+                                    <i class="nc-icon nc-diamond text-success"></i>
+                                </div>
+                            </div>
+                            <div class="col-7 col-md-8">
+                                <div class="numbers">
+                                    <p class="card-category">Total Revenue</p>
+                                    <x-currency-scroll :currencies="$stats['total_revenue_by_currency'] ?? []" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <hr>
+                        <div class="stats">
+                            <i class="fa fa-line-chart"></i>
+                            All time
                         </div>
                     </div>
                 </div>
@@ -395,15 +414,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Paid This Month</p>
-                                    @if(isset($stats['payments_this_month_by_currency']) && count($stats['payments_this_month_by_currency']) > 0)
-                                        @foreach($stats['payments_this_month_by_currency'] as $code => $data)
-                                            <p class="card-title" style="font-size: 1.2rem; margin-bottom: 0;">
-                                                {{ format_money($data['amount'], $data['symbol']) }}
-                                            </p>
-                                        @endforeach
-                                    @else
-                                        <p class="card-title">{{ format_money(0) }}</p>
-                                    @endif
+                                    <x-currency-scroll :currencies="$stats['payments_this_month_by_currency'] ?? []" />
                                 </div>
                             </div>
                         </div>
@@ -477,7 +488,8 @@
     <!-- Role Center & Quick Access -->
     <div class="row">
         <div class="col-md-8">
-            <div class="card card-tasks" style="background: linear-gradient(145deg, #ffffff, #f0f7f8); border-left: 5px solid #51cbce;">
+            <div class="card card-tasks"
+                style="background: linear-gradient(145deg, #ffffff, #f0f7f8); border-left: 5px solid #51cbce;">
                 <div class="card-header">
                     <h5 class="card-title">
                         <i class="nc-icon nc-badge text-primary mr-2"></i>
@@ -490,13 +502,20 @@
                         <div class="col-md-6">
                             <h6>Add New Roles</h6>
                             <div class="d-flex flex-column gap-3">
+                                @if(!auth()->user()->isLandlord())
+                                    <a href="{{ route('dashboard.myproperty', ['mode' => 'landlord']) }}" class="btn btn-outline-success btn-round btn-block mb-2">
+                                        <i class="nc-icon nc-bank"></i> Become a Landlord
+                                    </a>
+                                @endif
                                 @if(!auth()->user()->isArtisan())
-                                    <button class="btn btn-outline-info btn-round btn-block mb-2 add-role-btn" data-role="Artisan">
+                                    <button class="btn btn-outline-info btn-round btn-block mb-2 add-role-btn"
+                                        data-role="Artisan">
                                         <i class="nc-icon nc-settings-gear-65"></i> Become an Artisan
                                     </button>
                                 @endif
                                 @if(!auth()->user()->hasRole('property_manager'))
-                                    <button class="btn btn-outline-primary btn-round btn-block add-role-btn" data-role="property_manager">
+                                    <button class="btn btn-outline-primary btn-round btn-block add-role-btn"
+                                        data-role="property_manager">
                                         <i class="nc-icon nc-layout-11"></i> Become a Property Manager
                                     </button>
                                 @endif
@@ -511,13 +530,16 @@
                             <h6>Specialized Dashboards</h6>
                             <div class="list-group list-group-flush">
                                 @if(auth()->user()->isArtisan())
-                                    <a href="{{ route('artisan.dashboard') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <a href="{{ route('artisan.dashboard') }}"
+                                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                         <span><i class="nc-icon nc-briefcase-24 mr-2"></i> Artisan Portal</span>
                                         <span class="badge badge-primary badge-pill">GO</span>
                                     </a>
                                 @endif
-                                <a href="{{ route('commissions.index') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                    <span><i class="nc-icon nc-money-coins mr-2 text-success"></i> My Referral Earnings</span>
+                                <a href="{{ route('commissions.index') }}"
+                                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <span><i class="nc-icon nc-money-coins mr-2 text-success"></i> My Referral
+                                        Earnings</span>
                                     <i class="nc-icon nc-minimal-right"></i>
                                 </a>
                             </div>
@@ -527,11 +549,13 @@
             </div>
         </div>
         <div class="col-md-4">
-             <div class="card" style="background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%); color: white;">
+            <div class="card" style="background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%); color: white;">
                 <div class="card-body text-center py-4">
                     <h5 class="card-title text-white">Refer & Earn</h5>
-                    <p class="mb-4 opacity-8">Refer a landlord and earn commissions on every successful rent payment.</p>
-                    <a href="{{ route('commissions.index') }}" class="btn btn-white btn-round text-primary font-weight-bold">
+                    <p class="mb-4 opacity-8">Refer a landlord and earn commissions on every successful rent payment.
+                    </p>
+                    <a href="{{ route('commissions.index') }}"
+                        class="btn btn-white btn-round text-primary font-weight-bold">
                         <i class="nc-icon nc-share-66"></i> My Referral Hub
                     </a>
                 </div>
@@ -1157,7 +1181,7 @@
         $('.add-role-btn').on('click', function () {
             var role = $(this).data('role');
             var $btn = $(this);
-            
+
             Swal.fire({
                 title: 'Confirm New Role',
                 text: 'Are you sure you want to add the ' + role.replace('_', ' ') + ' role to your account?',
@@ -1168,7 +1192,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Adding...');
-                    
+
                     $.ajax({
                         url: '{{ route("roles.add") }}',
                         method: 'POST',
@@ -1195,6 +1219,36 @@
             });
         });
     });
+
+    @if(session('dashboard_mode') == 'tenant' && !auth()->user()->tenantLeases()->exists())
+    $(document).ready(function() {
+        if(!sessionStorage.getItem('referralModalShown')) {
+            Swal.fire({
+                title: 'Refer Your Landlord!',
+                html: '<p>You currently do not have any active tenancies. Refer your landlord to EasyRent and earn rewards!</p>' +
+                      '<div class="mt-3">' +
+                      '<strong>Your Referral Link:</strong><br>' +
+                      '<div class="input-group mt-2">' +
+                      '<input type="text" id="refLink" class="form-control" value="{{ auth()->user()->getReferralLink() }}" readonly>' +
+                      '<div class="input-group-append">' +
+                      '<button class="btn btn-outline-primary m-0" onclick="copyRefLink()" style="margin:0;" type="button"><i class="fa fa-copy"></i> Copy</button>' +
+                      '</div></div></div>',
+                icon: 'info',
+                confirmButtonText: 'Got it!',
+                confirmButtonColor: '#51cbce'
+            });
+            sessionStorage.setItem('referralModalShown', 'true');
+        }
+    });
+
+    window.copyRefLink = function() {
+        var copyText = document.getElementById("refLink");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        Swal.fire('Copied!', 'Referral link copied to clipboard.', 'success');
+    }
+    @endif
 </script>
 
 @include('footer')

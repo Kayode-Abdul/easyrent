@@ -15,6 +15,10 @@ class ArtisanVerificationCode extends Model
         'expires_at'
     ];
 
+    protected $casts = [
+        'expires_at' => 'datetime',
+    ];
+
     public function task()
     {
         return $this->belongsTo(ArtisanTask::class , 'task_id');

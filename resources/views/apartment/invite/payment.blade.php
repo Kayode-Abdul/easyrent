@@ -13,34 +13,36 @@
 @section('content')
     <div class="container py-5">
         <div class="row justify-content-center">
+           
             <div class="col-lg-8">
                 <!-- Payment Header -->
+                  <h4 class="mb-0  text-info" >
+                <i class="fa fa-credit-card me-2"></i><strong>Complete Your Payment</strong>
+            </h4>
                 <div class="card shadow mb-4">
                     <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">
-                            <i class="fa fa-credit-card me-2"></i>Complete Your Payment
-                        </h4>
-                        <p class="mb-0 opacity-75">Secure your apartment with payment</p>
+                        
+                        <div class="mb-0 opacity-75">Secure your apartment with payment</div>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <h6 class="text-primary mb-3">
-                                    <i class="fa fa-home me-2"></i>Apartment Details
-                                </h6>
+                                <h5 class="text-info mb-3">
+                                    <i class="fa fa-home me-2"></i><strong>Apartment Details</strong>
+                                </h5>
                                 <ul class="list-unstyled">
                                     <li><strong>Property:</strong> {{ $invitation->apartment->property->prop_name }}</li>
                                     <li><strong>Type:</strong> {{ $invitation->apartment->apartment_type }}</li>
                                     <li><strong>Location:</strong> {{ $invitation->apartment->property->prop_address }}</li>
-                                    <li><strong>Monthly Rent:</strong>
-                                        {{ format_money($invitation->apartment->amount, ($invitation->apartment->property->currency->code ?? null)) }}
-                                    </li>
+                                    <!-- <li><strong>Monthly Rent:</strong>
+                                         format_money($invitation->apartment->amount, ($invitation->apartment->currency->code ?? $invitation->apartment->property->currency->code ?? null)) }}
+                                    </li> -->
                                 </ul>
                             </div>
                             <div class="col-md-6">
-                                <h6 class="text-primary mb-3">
-                                    <i class="fa fa-calendar me-2"></i>Lease Details
-                                </h6>
+                                <h5 class="text-info mb-3">
+                                    <i class="fa fa-calendar me-2"></i><strong>Lease Details</strong>
+                                </h5>
                                 <ul class="list-unstyled">
                                     <li><strong>Duration:</strong>
                                         @php
@@ -56,7 +58,7 @@
                                     <li><strong>Move-in Date:</strong> {{
         \Carbon\Carbon::parse($invitation->move_in_date)->format('M d, Y') }}</li>
                                     <li><strong>Total Amount:</strong> <span
-                                            class="text-success fw-bold">{{ format_money($invitation->total_amount, ($invitation->apartment->property->currency->code ?? null)) }}</span>
+                                            class="text-success fw-bold">{{ format_money($invitation->total_amount, ($invitation->apartment->currency->code ?? $invitation->apartment->property->currency->code ?? null)) }}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -67,9 +69,9 @@
                 <!-- Payment Form -->
                 <div class="card shadow">
                     <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">
+                        <span class="mb-0 text-semibold">
                             <i class="fa fa-lock me-2"></i>Secure Payment
-                        </h5>
+                                    </span>
                     </div>
                     <div class="card-body">
                         @if(session('success'))
@@ -84,141 +86,23 @@
                             </div>
                         @endif
 
-                        <!-- Payment Summary -->
-                        <div class="card bg-light mb-4 payment-summary-card"
-                            data-apartment-amount="{{ $invitation->apartment->amount }}"
-                            data-apartment-id="{{ $invitation->apartment->apartment_id }}"
-                            data-pricing-type="{{ $invitation->apartment->getPricingType() }}">
-                            <div class="card-body">
-                                <h6 class="card-title">
-                                    <i class="fa fa-receipt me-2"></i>Payment Summary
-                                </h6>
-
-                                <!-- Rental Duration Selection -->
-                                <div class="mb-4">
-                                    <h6 class="mb-3 fw-semibold">
-                                        <i class="fa fa-calendar-alt me-2 text-primary"></i>Select Rental Duration
-                                    </h6>
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label for="duration_type" class="form-label">Duration Type</label>
-                                            <select class="form-select" id="duration_type" name="duration_type" required>
-                                                <option value="">Choose duration type...</option>
-                                                <option value="daily">Daily</option>
-                                                <option value="weekly">Weekly</option>
-                                                <option value="monthly" selected>Monthly</option>
-                                                <option value="quarterly">Quarterly (3 months)</option>
-                                                <option value="semi_annually">Semi-Annually (6 months)</option>
-                                                <option value="yearly">Yearly (12 months)</option>
-                                                <option value="bi_annually">Bi-Annually (24 months)</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="duration_quantity" class="form-label">Quantity</label>
-                                            <input type="number" class="form-control" id="duration_quantity"
-                                                name="duration_quantity" value="{{ $invitation->lease_duration ?? 1 }}"
-                                                min="1" max="999" required>
-                                            <div class="form-text">Number of periods to rent</div>
-                                        </div>
-                                    </div>
-                                    <div class="mt-3">
-                                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                            id="calculate_rental_btn">
-                                            <i class="fa fa-calculator me-2"></i>Calculate Total
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span id="rate_label">
-                                                @if($invitation->apartment->getPricingType() === 'total')
-                                                    Total Rent:
-                                                @else
-                                                    Monthly Rent:
-                                                @endif
-                                            </span>
-                                            <span
-                                                id="rate_amount">{{ format_money($invitation->apartment->amount, ($invitation->apartment->property->currency->code ?? null)) }}</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span>Duration:</span>
-                                            <span id="duration_display">
-                                                @php
-                                                    $duration = \App\Models\Duration::where(
-                                                        'duration_months',
-                                                        $invitation->lease_duration
-                                                    )
-                                                        ->where('is_active', true)
-                                                        ->first();
-                                                    echo $duration ? $duration->name : $invitation->lease_duration . ' months';
-                                                @endphp
-                                            </span>
-                                        </div>
-
-                                        <!-- Pricing structure information -->
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span>Pricing Type:</span>
-                                            <span class="text-info" id="pricing_type_display">
-                                                {{ ucfirst($invitation->apartment->getPricingType()) }}
-                                                @if($invitation->apartment->getPricingType() === 'total')
-                                                    <small class="text-muted">(Fixed amount)</small>
-                                                @else
-                                                    <small class="text-muted">(Per month)</small>
-                                                @endif
-                                            </span>
-                                        </div>
-
-                                        <!-- Calculation breakdown -->
-                                        <div class="calculation-breakdown mb-2 p-2" id="calculation_breakdown"
-                                            style="background: rgba(0,123,255,0.05); border-radius: 6px; border-left: 3px solid #007bff;">
-                                            <small class="text-muted d-block mb-1">Calculation:</small>
-                                            <small class="d-flex justify-content-between" id="calculation_details">
-                                                <span>{{ $invitation->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}{{ number_format($invitation->apartment->amount) }}
-                                                    × {{
-        $invitation->lease_duration }} months</span>
-                                                <span>=
-                                                    {{ $invitation->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}{{ number_format($invitation->total_amount) }}</span>
-                                            </small>
-                                        </div>
-
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span>Subtotal:</span>
-                                            <span
-                                                id="subtotal_amount">{{ format_money($invitation->total_amount, ($invitation->apartment->property->currency->code ?? null)) }}</span>
-                                        </div>
-                                        <hr>
-                                        <div class="d-flex justify-content-between">
-                                            <span class="fw-bold text-success">Total Amount:</span>
-                                            <span class="fw-bold text-success fs-5"
-                                                id="total_amount">{{ format_money($invitation->total_amount, ($invitation->apartment->property->currency->code ?? null)) }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 text-center">
-                                        <i class="fa fa-shield-alt fa-3x text-success mb-2"></i>
-                                        <p class="small text-muted mb-0">SSL Encrypted</p>
-                                        <p class="small text-muted">Secure Payment</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                       
 
                         <!-- Payment Gateway Selection -->
                         <div class="mb-4">
-                            <h6 class="mb-3 fw-semibold">
-                                <i class="fa fa-credit-card me-2 text-primary"></i>Choose Payment Gateway
-                            </h6>
+                            <h5 class="mb-3 fw-bold">
+                                <i class="fa fa-credit-card me-2 text-primary"></i><strong>Choose Payment Gateway</strong>
+                            </h5>
                             <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="card border-primary payment-method-card selected" data-method="paystack"
+                                <div class="col-md-6">
+                                    <div class="card border-primary bg-success payment-method-card selected" data-method="paystack"
                                         style="cursor: pointer; transition: all 0.3s ease;">
                                         <div class="card-body text-center p-4">
                                             <div class="mb-3">
-                                                <i class="fa fa-credit-card fa-3x text-primary"></i>
+                                                <i class="fa fa-credit-card fa-3x text-info"></i>
                                             </div>
-                                            <h6 class="fw-semibold">Paystack</h6>
-                                            <p class="small text-muted mb-3">Card & Transfer</p>
+                                            <span class="fw-semibold text-white">Paystack</span>
+                                            <p class="small text-white mb-3">Card & Transfer</p>
                                             <div class="form-check d-flex justify-content-center">
                                                 <input class="form-check-input" type="radio" name="payment_method"
                                                     id="paystack_gateway" value="paystack" checked>
@@ -226,14 +110,14 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="card border-secondary payment-method-card" data-method="flutterwave"
+                                <div class="col-md-6">
+                                    <div class="card border-secondary bg-warning payment-method-card" data-method="flutterwave"
                                         style="cursor: pointer; transition: all 0.3s ease;">
                                         <div class="card-body text-center p-4">
                                             <div class="mb-3">
                                                 <i class="fa fa-credit-card fa-3x text-warning"></i>
                                             </div>
-                                            <h6 class="fw-semibold">Flutterwave</h6>
+                                            <span class="fw-semibold">Flutterwave</span>
                                             <p class="small text-muted mb-3">Card & USSD</p>
                                             <div class="form-check d-flex justify-content-center">
                                                 <input class="form-check-input" type="radio" name="payment_method"
@@ -242,7 +126,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <!-- <div class="col-md-4">
                                     <div class="card border-secondary payment-method-card" data-method="googlepay"
                                         style="cursor: pointer; transition: all 0.3s ease;">
                                         <div class="card-body text-center p-4">
@@ -257,7 +141,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
 
@@ -265,12 +149,13 @@
                         <div class="alert alert-info border-0"
                             style="background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);">
                             <div class="form-check d-flex align-items-start">
-                                <input class="form-check-input mt-1" type="checkbox" id="terms_agreement" required
-                                    style="transform: scale(1.2);">
+                               
                                 <label class="form-check-label ms-3" for="terms_agreement">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="fa fa-shield-check text-info me-2"></i>
-                                        <span class="fw-semibold">Agreement & Security</span>
+                                    <div class="align-items-center mb-2">
+                                         <input class="mt-1" type="checkbox" id="terms_agreement" required
+                                    style="transform: scale(1.2);">
+                                        <i class="fa fa-shield-check text-info"></i>
+                                        <span class="fw-semibold"> Agreement & Security</span>
                                     </div>
                                     <div class="small">
                                         I agree to the <a href="#" class="text-decoration-none fw-semibold">Terms and
@@ -286,7 +171,7 @@
                             <button type="button" class="btn btn-success btn-lg py-3" id="proceedPaymentBtn"
                                 onclick="initiatePayment()" style="border-radius: 12px; font-weight: 600; font-size: 18px;">
                                 <i class="fa fa-lock me-2"></i>Pay <span
-                                    id="btn_total_amount_wrapper">{{ $invitation->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}<span
+                                    id="btn_total_amount_wrapper">{{ $invitation->apartment->currency->symbol ?? $invitation->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}<span
                                         id="btn_total_amount">{{
         number_format($invitation->total_amount) }}</span></span> Securely
                             </button>
@@ -585,7 +470,7 @@
                     email = guestEmail;
                 }
 
-                const currency = @json($invitation->apartment->property->currency->code ?? 'NGN');
+                const currency = @json($invitation->apartment->currency->code ?? $invitation->apartment->property->currency->code ?? 'NGN');
                 const metadata = {
                     invitation_token: @json($invitation->invitation_token),
                     apartment_id: @json($invitation->apartment_id),
@@ -703,7 +588,7 @@
                     email = guestEmail;
                 }
 
-                const currency = @json($invitation->apartment->property->currency->code ?? 'NGN');
+                const currency = @json($invitation->apartment->currency->code ?? $invitation->apartment->property->currency->code ?? 'NGN');
                 const metadata = {
                     invitation_token: @json($invitation->invitation_token),
                     apartment_id: @json($invitation->apartment_id),
@@ -944,7 +829,7 @@
             updateButtonState(); // Initial state
 
             // Currency symbol
-            const currencySymbol = "{{ $invitation->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}";
+            const currencySymbol = "{{ $invitation->apartment->currency->symbol ?? $invitation->apartment->property->currency->symbol ?? format_money(0)->getSymbol() }}";
 
             // Enhanced rental calculation functionality
             const durationTypeSelect = document.getElementById('duration_type');

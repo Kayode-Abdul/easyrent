@@ -111,13 +111,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/apartment/{id}/edit', [PropertyController::class , 'editApartment']);
     Route::put('/apartment/{id}', [PropertyController::class , 'updateApartment']);
     Route::delete('/apartment/{id}', [PropertyController::class , 'destroyApartment']);
+    
+    // Allow landlords and property managers to view tenant details
+    Route::get('/dashboard/tenant/{id}', [UserController::class , 'getTenantDetails'])->name('tenant.details');
 });
 
 // Restricted Admin/Manager routes
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard/properties', [PropertyController::class , 'properties'])->name('properties.all');
     Route::get('/dashboard/users', [UserController::class , 'allUsers'])->name('users.all');
-    Route::get('/dashboard/tenant/{id}', [UserController::class , 'getTenantDetails'])->name('tenant.details');
 
     // Admin Payment Analytics
     Route::get('/dashboard/payments/analytics', [PaymentController::class , 'analytics'])->name('payments.analytics');
@@ -278,6 +280,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/tasks', [App\Http\Controllers\ArtisanTaskController::class , 'store'])->name('tasks.store');
             Route::get('/tasks/{task}', [App\Http\Controllers\ArtisanTaskController::class , 'show'])->name('tasks.show');
             Route::post('/bids/{bid}/accept', [App\Http\Controllers\ArtisanTaskController::class , 'acceptBid'])->name('bids.accept');
+            Route::get('/payment/callback', [App\Http\Controllers\ArtisanTaskController::class , 'paymentCallback'])->name('payment.callback');
             Route::post('/tasks/{task}/complete', [App\Http\Controllers\ArtisanTaskController::class , 'completeTask'])->name('tasks.complete');
             Route::post('/tasks/{task}/cancel', [App\Http\Controllers\ArtisanTaskController::class , 'cancelTask'])->name('tasks.cancel');
 

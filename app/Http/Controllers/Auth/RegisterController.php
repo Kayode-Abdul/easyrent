@@ -149,6 +149,12 @@ class RegisterController extends Controller
 
         $user = $this->create($data);
 
+        // For invitation-based registration, mark email as verified automatically
+        // This prevents the Registered event from sending a verification email to a potentially non-existent or unverified address
+        if (session('invitation_token') || $request->has('invitation_token') || session('easyrent_invitation_token') || $request->has('token')) {
+            $user->markEmailAsVerified();
+        }
+
         // Log user registration
         $this->logger->logRegistration($request, $user, session()->has('invitation_token'));
 
@@ -514,7 +520,10 @@ class RegisterController extends Controller
                 return null;
             }
             
-            // For invitation-based registration, skip email verification and login directly
+            // For invitation-based registration, mark email as verified automatically
+            $user->markEmailAsVerified();
+            
+            // Login directly
             $this->guard()->login($user);
             
             // Transfer session data to authenticated user session

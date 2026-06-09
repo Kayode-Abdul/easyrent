@@ -11,27 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('complaint_updates', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('complaint_id');
-            $table->unsignedBigInteger('user_id');
-            $table->enum('update_type', ['comment', 'status_change', 'assignment', 'escalation', 'priority_change'])->default('comment');
-            $table->text('message');
-            $table->string('old_value')->nullable();
-            $table->string('new_value')->nullable();
-            $table->boolean('is_internal')->default(false); // Internal notes vs public updates
-            $table->json('metadata')->nullable(); // For additional context
-            $table->timestamps();
-            
-            // Foreign key constraints
-            $table->foreign('complaint_id')->references('id')->on('complaints')->onDelete('cascade');
-            $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
-            
-            // Indexes
-            $table->index(['complaint_id', 'created_at']);
-            $table->index(['user_id', 'created_at']);
-            $table->index(['update_type']);
-        });
+        if (!Schema::hasTable('complaint_updates')) {
+            Schema::create('complaint_updates', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('complaint_id');
+                $table->unsignedBigInteger('user_id');
+                $table->enum('update_type', ['comment', 'status_change', 'assignment', 'escalation', 'priority_change'])->default('comment');
+                $table->text('message');
+                $table->string('old_value')->nullable();
+                $table->string('new_value')->nullable();
+                $table->boolean('is_internal')->default(false); // Internal notes vs public updates
+                $table->json('metadata')->nullable(); // For additional context
+                $table->timestamps();
+                
+                // Foreign key constraints
+                $table->foreign('complaint_id')->references('id')->on('complaints')->onDelete('cascade');
+                $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
+                
+                // Indexes
+                $table->index(['complaint_id', 'created_at']);
+                $table->index(['user_id', 'created_at']);
+                $table->index(['update_type']);
+            });
+        }
     }
 
     /**

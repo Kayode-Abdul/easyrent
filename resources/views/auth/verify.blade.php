@@ -101,7 +101,7 @@
         color: var(--text-muted);
         line-height: 1.7;
         margin-bottom: 3rem;
-        font-size: 1.05rem;
+        font-size: 10px
     }
 
     .btn-premium-verify {
@@ -112,7 +112,7 @@
         padding: 1.1rem;
         width: 100%;
         font-weight: 600;
-        font-size: 1.1rem;
+        font-size: 15px
         cursor: pointer;
         transition: all 0.3s;
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);

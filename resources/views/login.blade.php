@@ -96,7 +96,7 @@
                                     required>
                                 <label class="floating-label">Password</label>
                                 <button type="button" class="password-toggle" onclick="togglePassword()">
-                                    <i class="bi bi-eye"></i>
+                                    <i class="bi bi-eye" id="passwordToggleIcon"></i>
                                 </button>
                             </div>
                         </div>
@@ -362,8 +362,14 @@
             border: none;
             color: #999;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 18px;
             padding: 5px;
+            z-index: 3;
+        }
+
+        /* Ensure password input has right padding for the toggle icon */
+        .input-group:last-of-type .form-input {
+            padding-right: 48px;
         }
 
         .password-toggle:hover {
@@ -544,16 +550,16 @@
     <script>
         function togglePassword() {
             const passwordInput = document.querySelector('input[name="password"]');
-            const toggleIcon = document.querySelector('.password-toggle i');
+            const toggleIcon = document.getElementById('passwordToggleIcon');
 
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                toggleIcon.classList.remove('fa-eye');
-                toggleIcon.classList.add('fa-eye-slash');
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
             } else {
                 passwordInput.type = 'password';
-                toggleIcon.classList.remove('fa-eye-slash');
-                toggleIcon.classList.add('fa-eye');
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
             }
         }
 

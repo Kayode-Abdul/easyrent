@@ -254,7 +254,8 @@ class ApartmentInvitationController extends Controller
                         'range_end',
                         'tenant_id',
                         'user_id',
-                        'occupied'
+                        'occupied',
+                        'currency_id'
                     ]);
             },
                 'apartment.apartmentType:id,name',
@@ -265,7 +266,8 @@ class ApartmentInvitationController extends Controller
                         'state',
                         'lga',
                         'prop_type',
-                        'user_id'
+                        'user_id',
+                        'currency_id'
                     ]);
             },
                 'landlord:user_id,first_name,last_name,email,phone'
@@ -671,18 +673,21 @@ class ApartmentInvitationController extends Controller
             // Store using session manager
             $this->sessionManager->storeApplicationData($token, $applicationData);
 
-            // Skip backend payment creation - let frontend JavaScript handle payment
-            Log::info('Guest flow: application stored, redirecting to JavaScript payment page', [
+            Log::info('Guest flow: application stored, redirecting to registration before payment', [
                 'invitation_id' => $invitation->id
             ]);
 
-            return redirect()->route('apartment.invite.payment.direct', [
-                'token' => $token
-            ])->with('success', 'Please complete payment to secure your apartment.');
+            return redirect()->route('register', ['invitation_token' => $token])
+                ->with('success', 'Please register or log in to complete your payment and secure the apartment.');
         }
 
         $user = Auth::user();
         $apartment = $invitation->apartment;
+
+        if (!$user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice')
+                ->with('error', 'Please verify your email address before applying for an apartment.');
+        }
 
         // Check if user has stored application data from previous attempt
         $storedApplicationData = session('easyrent_application_data') ?? session('application_attempt_data');
@@ -835,6 +840,17 @@ class ApartmentInvitationController extends Controller
             return redirect()->route('apartment.invite.show', $token);
         }
 
+        // Ensure user is authenticated and verified before proceeding to payment
+        if (!Auth::check()) {
+            return redirect()->route('register', ['invitation_token' => $token])
+                ->with('error', 'You must be registered and logged in to proceed with the payment.');
+        }
+
+        if (!Auth::user()->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice')
+                ->with('error', 'Please verify your email address before proceeding with the payment.');
+        }
+
         // Ensure invitation has required data for payment
         if (!$invitation->total_amount || $invitation->total_amount <= 0) {
             Log::warning('Invitation missing total_amount for payment', [
@@ -889,6 +905,17 @@ class ApartmentInvitationController extends Controller
         // Verify payment is tied to this invitation
         if ($payment->payment_reference !== 'easyrent_' . $token || $payment->apartment_id !== $invitation->apartment_id) {
             abort(403, 'Unauthorized access to this payment');
+        }
+
+        // Ensure user is authenticated and verified before proceeding to payment
+        if (!Auth::check()) {
+            return redirect()->route('register', ['invitation_token' => $token])
+                ->with('error', 'You must be registered and logged in to proceed with the payment.');
+        }
+
+        if (!Auth::user()->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice')
+                ->with('error', 'Please verify your email address before proceeding with the payment.');
         }
 
         // Ensure invitation has required data for payment
