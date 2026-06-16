@@ -114,7 +114,7 @@ class ArtisanTaskController extends Controller
             return redirect()->route('dashboard')->with('error', 'Access denied. For artisans only.');
         }
 
-        $myBids = $user->artisanBids()->with('task.complaint.category')->latest()->get();
+        $myBids = $user->artisanBids()->with(['task.complaint.category', 'task.complaint.apartment.currency'])->latest()->get();
         
         $stats = [
             'total_bids' => $myBids->count(),
@@ -124,6 +124,23 @@ class ArtisanTaskController extends Controller
                 ->whereIn('id', $myBids->where('status', 'accepted')->pluck('task_id'))
                 ->count(),
         ];
+
+        // Calculate total earnings by currency for accepted bids
+        $earningsByCurrency = [];
+        foreach ($myBids->where('status', 'accepted') as $bid) {
+            $currency = $bid->task->complaint->apartment->currency ?? null;
+            if ($currency) {
+                $code = $currency->code;
+                if (!isset($earningsByCurrency[$code])) {
+                    $earningsByCurrency[$code] = [
+                        'currency' => $currency,
+                        'total' => 0
+                    ];
+                }
+                $earningsByCurrency[$code]['total'] += $bid->amount;
+            }
+        }
+        $stats['earnings_by_currency'] = $earningsByCurrency;
 
         // Tasks in artisan's category
         $categoryTasks = ArtisanTask::where('status', 'open')

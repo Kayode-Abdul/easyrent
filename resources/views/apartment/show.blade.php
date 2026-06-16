@@ -47,7 +47,7 @@
                                 <p class="card-title">
                                     @if($apartment->tenant_id)
                                         <a href="javascript:void(0)" onclick="showTenantDetails('{{ $apartment->tenant_id }}')">
-                                            Veiw Tenant
+                                            View Tenant
                                         </a>
                                     @else
                                         Vacant

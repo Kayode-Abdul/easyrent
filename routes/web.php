@@ -30,7 +30,12 @@ use App\Http\Controllers\TenantReminderController;
  | contains the "web" middleware group. Now create something great!
  |
  */
+// use Illuminate\Support\Facades\Artisan;
 
+// Route::get('/__migrate', function () {
+//     Artisan::call('migrate', ['--force' => true]);
+//     return Artisan::output();
+// });
 Route::get('/', function () {
     $apartmentTypes = \App\Models\ApartmentType::active()->get();
     $states = \App\Models\State::where('country_name', 'Nigeria')->get();
@@ -255,6 +260,7 @@ Route::middleware(['auth'])->group(function () {
     // Payment routes (Standard history remains under auth but is filtered)
     Route::get('/dashboard/payments', [PaymentController::class , 'index'])->name('payments.index');
     Route::get('/dashboard/payments/{transactionId}/receipt/download', [App\Http\Controllers\PaymentReceiptController::class, 'download'])->name('payment.receipt.download');
+    Route::get('/dashboard/payments/{id}/commissions', [PaymentController::class, 'showCommissionBreakdown'])->name('payment.commissions');
 
     // Enhanced rental calculation routes
     Route::post('/api/payment/calculate-rental', [PaymentController::class , 'calculateEnhancedRentalPayment'])->name('payment.calculate.rental');
@@ -482,6 +488,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             Route::post('/payments/{payment}/complete', [App\Http\Controllers\Admin\MarketerManagementController::class , 'completePayment'])->name('payments.complete');
 
             // Analytics
+            Route::get('/payments/breakdown', [\App\Http\Controllers\Admin\PaymentBreakdownController::class, 'index'])->name('payments.breakdown');
             Route::get('/analytics/reports', [App\Http\Controllers\Admin\MarketerManagementController::class , 'analytics'])->name('analytics');
         }
         );

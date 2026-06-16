@@ -21,8 +21,7 @@ class BenefactorPaymentController extends Controller
     {
         $invitation = PaymentInvitation::where('token', $token)->firstOrFail();
 
-        // Allow guest payment: if the user is not logged in, they can provide an email address in the payment form.
-        // No authentication or email verification is required at this stage.
+        // Auth check removed to allow guests to pay
 
         // Check if expired
         if ($invitation->isExpired()) {
@@ -271,16 +270,6 @@ class BenefactorPaymentController extends Controller
      */
     public function paymentGateway($paymentId)
     {
-        // Ensure user is authenticated and verified before showing gateway page
-        if (!Auth::check()) {
-            return redirect()->route('register')
-                ->with('error', 'You must be registered and logged in to proceed with the payment.');
-        }
-        if (!Auth::user()->hasVerifiedEmail()) {
-            return redirect()->route('verification.notice')
-                ->with('error', 'Please verify your email address before proceeding with the payment.');
-        }
-
         $payment = BenefactorPayment::with(['benefactor', 'tenant'])->findOrFail($paymentId);
 
         return view('benefactor.gateway', compact('payment'));

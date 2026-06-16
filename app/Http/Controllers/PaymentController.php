@@ -87,8 +87,68 @@ class PaymentController extends Controller
             return $this->exportPayments($query, $request->export_format);
         }
 
+        // Calculate total received per currency
+        $completedPayments = (clone $query)->whereIn('status', ['success', 'completed'])->with(['currency', 'apartment.currency'])->get();
+        $totalsByCurrency = [];
+        foreach ($completedPayments as $payment) {
+            $currency = $payment->currency ?? ($payment->apartment && $payment->apartment->currency ? $payment->apartment->currency : null);
+            $currencyCode = $currency ? $currency->code : 'NGN';
+            $currencySymbol = $currency ? $currency->symbol : '₦';
+            
+            if (!isset($totalsByCurrency[$currencyCode])) {
+                $totalsByCurrency[$currencyCode] = [
+                    'symbol' => $currencySymbol,
+                    'amount' => 0
+                ];
+            }
+            $totalsByCurrency[$currencyCode]['amount'] += $payment->amount;
+        }
+
         $payments = $query->latest()->paginate(15);
-        return view('payments.index', compact('payments'));
+        return view('payments.index', compact('payments', 'totalsByCurrency'));
+    }
+
+    /**
+     * Show commission breakdown for a specific payment
+     */
+    public function showCommissionBreakdown($id)
+    {
+        $user = auth()->user();
+        
+        // Ensure only admin can view this
+        if (!$user->isAdmin()) {
+            return redirect('/dashboard')->with('error', 'Unauthorized access.');
+        }
+
+        $payment = Payment::with(['currency', 'apartment.property'])->findOrFail($id);
+        
+        // Get marketer chain commissions
+        $commissionPayments = \App\Models\CommissionPayment::whereHas('referralChain', function($q) use ($payment) {
+            $q->where('landlord_id', $payment->landlord_id);
+        })
+        ->where('created_at', '>=', $payment->created_at->subMinutes(5)) // Match roughly the same time
+        ->where('created_at', '<=', $payment->created_at->addMinutes(5))
+        ->with('marketer')
+        ->get();
+        
+        // If no referral chain, maybe standard referrals
+        if ($commissionPayments->isEmpty()) {
+            $commissionPayments = \App\Models\CommissionPayment::where('commission_tier', 'standard_referrer')
+                ->where('created_at', '>=', $payment->created_at->subMinutes(5))
+                ->where('created_at', '<=', $payment->created_at->addMinutes(5))
+                ->with('marketer')
+                ->get();
+        }
+
+        $totalPlatformFee = $payment->amount * 0.025;
+        $totalDistributed = $commissionPayments->sum('total_amount');
+        $companyRetained = $totalPlatformFee - $totalDistributed;
+        
+        if ($companyRetained < 0) {
+            $companyRetained = 0;
+        }
+
+        return view('payments.commissions', compact('payment', 'commissionPayments', 'totalPlatformFee', 'totalDistributed', 'companyRetained'));
     }
 
     /**
@@ -686,10 +746,14 @@ class PaymentController extends Controller
                     ]);
                 }
 
+                $currencyCode = $paymentData['currency'] ?? 'NGN';
+                $currencyModel = \App\Models\Currency::where('code', $currencyCode)->first() ?? \App\Models\Currency::where('is_default', true)->first();
+
                 $payment = new Payment();
                 $payment->transaction_id = $reference;
                 $payment->payment_reference = 'easyrent_' . $invitationToken;
                 $payment->amount = $amount;
+                $payment->currency_id = $currencyModel ? $currencyModel->id : null;
                 $payment->tenant_id = $tenantId;
                 $payment->landlord_id = !empty($metadata['landlord_id']) && is_numeric($metadata['landlord_id'])
                     ? (int)$metadata['landlord_id']
@@ -830,11 +894,16 @@ class PaymentController extends Controller
         // Use the relationship to get the apartment (proforma.apartment_id refers to apartments.apartment_id)
         $apartment = $proforma->apartment;
 
+        // Fallback: in some cases, the internal ID is stored in apartment_id instead of the public apartment_id
+        if (!$apartment && $proforma->apartment_id) {
+            $apartment = \App\Models\Apartment::find($proforma->apartment_id);
+        }
+
         if (!$apartment) {
             Log::error('Apartment not found for proforma', [
                 'proforma_id' => $proforma->id,
                 'proforma_apartment_id' => $proforma->apartment_id,
-                'note' => 'proforma.apartment_id should reference apartments.apartment_id'
+                'note' => 'proforma.apartment_id should reference apartments.apartment_id or apartments.id'
             ]);
             return redirect('/dashboard')->with('error', 'Payment verification failed: Apartment not found for proforma');
         }
@@ -930,10 +999,14 @@ class PaymentController extends Controller
             // Use DB transaction to ensure data consistency
             DB::beginTransaction();
 
+            $currencyCode = $paymentData['currency'] ?? 'NGN';
+            $currencyModel = \App\Models\Currency::where('code', $currencyCode)->first() ?? \App\Models\Currency::where('is_default', true)->first();
+
             $payment = new Payment();
             $payment->transaction_id = $reference;
             $payment->payment_reference = $reference;
             $payment->amount = $actualPaidAmount; // Use actual paid amount, not recalculated
+            $payment->currency_id = $currencyModel ? $currencyModel->id : null;
             $payment->tenant_id = $proforma->tenant_id;
             $payment->landlord_id = $proforma->user_id;
             // Store the apartment's apartment_id field (the unique identifier)
@@ -988,9 +1061,6 @@ class PaymentController extends Controller
 
                 if ($result['success']) {
                     DB::commit();
-
-                    // Trigger commission distribution
-                    $this->distributeCommissionForPayment($payment);
 
                     Log::info('Invitation payment processed successfully', [
                         'payment_id' => $payment->id,
@@ -1055,9 +1125,13 @@ class PaymentController extends Controller
             // Try to save a minimal payment record for debugging
             try {
                 Log::info('Attempting to save minimal payment record for debugging');
+                $currencyCode = $paymentData['currency'] ?? 'NGN';
+                $currencyModel = \App\Models\Currency::where('code', $currencyCode)->first() ?? \App\Models\Currency::where('is_default', true)->first();
+
                 $debugPayment = new Payment();
                 $debugPayment->transaction_id = $reference . '_debug';
                 $debugPayment->amount = $amount;
+                $debugPayment->currency_id = $currencyModel ? $currencyModel->id : null;
                 $debugPayment->tenant_id = $proforma->tenant_id ?? 0;
                 $debugPayment->landlord_id = $proforma->user_id ?? 0;
                 $debugPayment->apartment_id = $apartment ? $apartment->apartment_id : 0;
@@ -2223,10 +2297,14 @@ class PaymentController extends Controller
                 return;
             }
 
+            $currencyCode = 'NGN'; // Default for fallback
+            $currencyModel = \App\Models\Currency::where('code', $currencyCode)->first() ?? \App\Models\Currency::where('is_default', true)->first();
+
             $fallbackPayment = new Payment();
             $fallbackPayment->transaction_id = $reference . '_fallback';
             $fallbackPayment->payment_reference = $reference;
             $fallbackPayment->amount = 0; // Unknown amount
+            $fallbackPayment->currency_id = $currencyModel ? $currencyModel->id : null;
             $fallbackPayment->tenant_id = $user->user_id;
             $fallbackPayment->landlord_id = $user->user_id;
             $fallbackPayment->apartment_id = $apartment->apartment_id;
@@ -2293,37 +2371,63 @@ class PaymentController extends Controller
                 ->where('status', \App\Models\ReferralChain::STATUS_ACTIVE)
                 ->first();
 
-            if (!$chain) {
-                return;
-            }
-
             $distributionService = app(\App\Services\Commission\PaymentDistributionService::class);
-            
-            $referralChainArray = [];
-            if ($chain->super_marketer_id) {
-                $referralChainArray[] = $chain->super_marketer_id;
-            }
-            if ($chain->marketer_id) {
-                $referralChainArray[] = $chain->marketer_id;
-            }
-            $referralChainArray[] = $chain->landlord_id;
-            
-            $region = $chain->region ?? $payment->apartment->property->state ?? 'Default';
-
             $commissionPool = $payment->amount * 0.025;
-            
-            $distributionService->distributeMultiTierCommission(
-                $commissionPool,
-                $referralChainArray,
-                $region,
-                $chain->id
-            );
-            
-            \Illuminate\Support\Facades\Log::info('Commission successfully distributed for payment', [
-                'payment_id' => $payment->id,
-                'commission_pool' => $commissionPool,
-                'referral_chain_id' => $chain->id
-            ]);
+            $region = $payment->apartment->property->state ?? 'Default';
+            $commissionPool = $payment->amount * 0.025;
+            $region = $payment->apartment->property->state ?? 'Default';
+
+            if ($chain) {
+                $referralChainArray = [];
+                if ($chain->super_marketer_id) {
+                    $referralChainArray[] = $chain->super_marketer_id;
+                }
+                if ($chain->marketer_id) {
+                    $referralChainArray[] = $chain->marketer_id;
+                }
+                $referralChainArray[] = $chain->landlord_id;
+                
+                $region = $chain->region ?? $region;
+
+                $distributionService->distributeMultiTierCommission(
+                    $commissionPool,
+                    $referralChainArray,
+                    $region,
+                    $chain->id,
+                    $payment
+                );
+                
+                \Illuminate\Support\Facades\Log::info('Commission successfully distributed for payment via ReferralChain', [
+                    'payment_id' => $payment->id,
+                    'commission_pool' => $commissionPool,
+                    'referral_chain_id' => $chain->id
+                ]);
+            } else {
+                // No chain found, check for a standard referral (e.g. Tenant referring Landlord)
+                $referral = \App\Models\Referral::where('referred_id', $payment->landlord_id)
+                    ->where('referral_status', 'active')
+                    ->first();
+
+                if ($referral && $referral->referrer) {
+                    $referrerRole = $referral->referrer->role; 
+                    $rateManager = app(\App\Services\Commission\RegionalRateManager::class);
+                    $rate = $rateManager->getActiveRate($region, $referrerRole);
+                    
+                    $distributionService->distributeStandardReferralCommission(
+                        $commissionPool,
+                        $referral,
+                        $region,
+                        $rate,
+                        $payment
+                    );
+
+                    \Illuminate\Support\Facades\Log::info('Commission successfully distributed for payment via Standard Referral', [
+                        'payment_id' => $payment->id,
+                        'commission_pool' => $commissionPool,
+                        'referral_id' => $referral->id
+                    ]);
+                }
+            }
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Commission distribution failed', [

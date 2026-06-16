@@ -671,9 +671,18 @@ class DashboardController extends Controller
         $totalApartments = Apartment::count();
         $occupiedApartments = Apartment::whereNotNull('tenant_id')->count();
 
-        $monthlyRevenue = Payment::where('status', 'completed')
+        $monthlyRevenueQuery = Payment::where('status', 'completed')
             ->whereMonth('created_at', Carbon::now()->month)
-            ->sum('amount');
+            ->whereYear('created_at', Carbon::now()->year);
+            
+        $monthlyRevenue = collect($this->calculateRevenueByCurrency($monthlyRevenueQuery))->map(function($data, $code) {
+            return $data['symbol'] . number_format($data['amount'], 2);
+        })->implode(' | ');
+
+        // If no revenue, default to 0
+        if (empty($monthlyRevenue)) {
+            $monthlyRevenue = '0.00';
+        }
 
         $pendingPayments = Payment::where('status', 'pending')->count();
 
@@ -720,10 +729,18 @@ class DashboardController extends Controller
         $occupiedApartments = Apartment::whereIn('property_id', $propertyIds)
             ->whereNotNull('tenant_id')->count();
 
-        $monthlyRevenue = Payment::where('landlord_id', $user->user_id)
+        $monthlyRevenueQuery = Payment::where('landlord_id', $user->user_id)
             ->where('status', 'completed')
             ->whereMonth('created_at', Carbon::now()->month)
-            ->sum('amount');
+            ->whereYear('created_at', Carbon::now()->year);
+            
+        $monthlyRevenue = collect($this->calculateRevenueByCurrency($monthlyRevenueQuery))->map(function($data, $code) {
+            return $data['symbol'] . number_format($data['amount'], 2);
+        })->implode(' | ');
+
+        if (empty($monthlyRevenue)) {
+            $monthlyRevenue = '0.00';
+        }
 
         $pendingPayments = Payment::where('landlord_id', $user->user_id)
             ->where('status', 'pending')->count();
@@ -764,9 +781,16 @@ class DashboardController extends Controller
         $apartmentIds = $rentedApartments->pluck('apartment_id');
 
         $totalRentals = $rentedApartments->count();
-        $totalPaid = Payment::where('tenant_id', $user->user_id)
-            ->where('status', 'completed')
-            ->sum('amount');
+        $totalPaidQuery = Payment::where('tenant_id', $user->user_id)
+            ->where('status', 'completed');
+            
+        $totalPaid = collect($this->calculateRevenueByCurrency($totalPaidQuery))->map(function($data, $code) {
+            return $data['symbol'] . number_format($data['amount'], 2);
+        })->implode(' | ');
+
+        if (empty($totalPaid)) {
+            $totalPaid = '0.00';
+        }
 
         $pendingPayments = Payment::where('tenant_id', $user->user_id)
             ->where('status', 'pending')->count();
@@ -813,14 +837,36 @@ class DashboardController extends Controller
     }
 
     /**
+     * Helper to calculate revenue grouped by currency
+     */
+    private function calculateRevenueByCurrency($query)
+    {
+        $payments = (clone $query)->with(['currency', 'apartment.currency'])->get();
+        $totals = [];
+        foreach ($payments as $payment) {
+            $currency = $payment->currency ?? ($payment->apartment && $payment->apartment->currency ? $payment->apartment->currency : null);
+            $code = $currency ? $currency->code : 'NGN';
+            $symbol = $currency ? $currency->symbol : '₦';
+            
+            if (!isset($totals[$code])) {
+                $totals[$code] = ['symbol' => $symbol, 'amount' => 0];
+            }
+            $totals[$code]['amount'] += $payment->amount;
+        }
+        return $totals;
+    }
+
+    /**
      * Switch dashboard mode for property managers
      */
     public function switchPropertyManagerMode(Request $request)
     {
         $user = Auth::user();
 
+        $isPropertyManager = in_array($user->role, [6, 8]) || (method_exists($user, 'hasRole') && ($user->hasRole('property_manager') || $user->hasRole('Verified_Property_Manager')));
+
         // Verify user is a property manager
-        if (!in_array($user->role, [6, 8])) {
+        if (!$isPropertyManager) {
             return response()->json(['success' => false, 'message' => 'Access denied']);
         }
 

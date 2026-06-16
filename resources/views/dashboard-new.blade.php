@@ -126,7 +126,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Monthly Revenue</p>
-                                    <p class="card-title">{{ format_money($monthlyRevenue) }}</p>
+                                    <p class="card-title">{{ $monthlyRevenue }}</p>
                                 </div>
                             </div>
                         </div>
@@ -229,7 +229,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Monthly Revenue</p>
-                                    <p class="card-title">{{ format_money($monthlyRevenue) }}</p>
+                                    <p class="card-title">{{ $monthlyRevenue }}</p>
                                 </div>
                             </div>
                         </div>
@@ -281,7 +281,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Total Paid</p>
-                                    <p class="card-title">{{ format_money($totalPaid) }}</p>
+                                    <p class="card-title">{{ $totalPaid }}</p>
                                 </div>
                             </div>
                         </div>
@@ -371,7 +371,7 @@
                         </div>
                         <hr>
                         <div class="card-stats">
-                            <i class="fa fa-check"></i> Data updated in real-time
+                            <i class="fa fa-check"></i> Data updated in real-time (Unconverted across currencies)
                         </div>
                     </div>
                 </div>
@@ -416,7 +416,7 @@
                         </div>
                         <hr>
                         <div class="card-stats">
-                            <i class="fa fa-check"></i> Payment history
+                            <i class="fa fa-check"></i> Payment history (Unconverted across currencies)
                         </div>
                     </div>
                 </div>

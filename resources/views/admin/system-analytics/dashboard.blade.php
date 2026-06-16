@@ -157,7 +157,9 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <h4 class="card-title">{{ format_money($commissionMetrics['total_commissions']) }}</h4>
+                                <h4 class="card-title">
+                                    <x-currency-carousel :currencies="$commissionMetrics['total_commissions']" id="carousel-total-commissions" />
+                                </h4>
                                 <p class="card-text">Total Commissions</p>
                             </div>
                             <div class="align-self-center">
@@ -264,7 +266,8 @@
                             </div>
                             <div class="col-6">
                                 <h3 class="text-success">
-                                    {{ format_money($chainEffectiveness['average_commission_per_chain']) }}</h3>
+                                    <x-currency-carousel :currencies="$chainEffectiveness['average_commission_per_chain']" id="carousel-avg-commission-per-chain" />
+                                </h3>
                                 <p class="text-muted">Avg Commission per Chain</p>
                             </div>
                         </div>
@@ -310,8 +313,8 @@
                                         <tr>
                                             <td><strong>{{ $region->region ?: 'Unknown' }}</strong></td>
                                             <td>{{ number_format($region->total_payments) }}</td>
-                                            <td>{{ format_money($region->total_amount) }}</td>
-                                            <td>{{ format_money($region->avg_amount) }}</td>
+                                            <td>{{ format_money($region->total_amount, $region->currency_id ?? null) }}</td>
+                                            <td>{{ format_money($region->avg_amount, $region->currency_id ?? null) }}</td>
                                             <td>
                                                 <span
                                                     class="badge bg-{{ $region->success_rate >= 90 ? 'success' : ($region->success_rate >= 70 ? 'warning' : 'danger') }}">

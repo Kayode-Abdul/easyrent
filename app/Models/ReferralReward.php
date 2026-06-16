@@ -17,10 +17,12 @@ class ReferralReward extends Model
         'amount',
         'description',
         'status',
+        'source_payment_id',
         'processed_at',
         'processed_by',
         'payment_reference',
-        'reward_details'
+        'reward_details',
+        'currency_id'
     ];
 
     protected $casts = [
@@ -46,6 +48,22 @@ class ReferralReward extends Model
     public function marketer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'marketer_id', 'user_id');
+    }
+
+    /**
+     * Get the currency for the reward
+     */
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class, 'currency_id');
+    }
+
+    /**
+     * Get the source payment for the reward
+     */
+    public function sourcePayment(): BelongsTo
+    {
+        return $this->belongsTo(Payment::class, 'source_payment_id');
     }
 
     /**

@@ -165,6 +165,9 @@ class PaymentIntegrationService
                 'payment_amount' => $payment->amount
             ]);
 
+            // Distribute commission for the payment
+            $this->distributeCommission($payment);
+
             Log::info('Invitation payment processed successfully', [
                 'payment_id' => $payment->id,
                 'invitation_id' => $invitation->id,
@@ -588,6 +591,7 @@ class PaymentIntegrationService
             'landlord_id' => $invitation->landlord_id,
             'apartment_id' => $apartment->apartment_id,
             'amount' => $totalAmount,
+            'currency_id' => $apartment->currency_id ?? $apartment->property->currency_id ?? \App\Models\Currency::where('is_default', true)->value('id'),
             'duration' => $duration,
             'status' => Payment::STATUS_PENDING,
             'payment_method' => 'card',
@@ -625,6 +629,7 @@ class PaymentIntegrationService
             'landlord_id' => $invitation->landlord_id,
             'apartment_id' => $apartment->apartment_id,
             'amount' => $totalAmount,
+            'currency_id' => $apartment->currency_id ?? $apartment->property->currency_id ?? \App\Models\Currency::where('is_default', true)->value('id'),
             'duration' => $duration,
             'status' => Payment::STATUS_PENDING,
             'payment_method' => 'card',
@@ -794,5 +799,87 @@ class PaymentIntegrationService
             'average_invitation_payment' => Payment::whereNotNull('payment_meta->invitation_token')
                 ->where('status', Payment::STATUS_COMPLETED)->avg('amount')
         ];
+    }
+
+    /**
+     * Distribute commission for the payment
+     */
+    protected function distributeCommission(Payment $payment): void
+    {
+        try {
+            // Check if commission was already distributed for this payment
+            $existingCommission = \App\Models\CommissionPayment::where('source_payment_id', $payment->id)->exists();
+            if ($existingCommission) {
+                Log::info('Commission already distributed for payment', ['payment_id' => $payment->id]);
+                return;
+            }
+
+            // Find the active referral chain for this landlord/property
+            $chain = \App\Models\ReferralChain::where('landlord_id', $payment->landlord_id)
+                ->where('status', \App\Models\ReferralChain::STATUS_ACTIVE)
+                ->first();
+
+            $distributionService = app(\App\Services\Commission\PaymentDistributionService::class);
+            $commissionPool = $payment->amount * 0.025;
+            $region = $payment->apartment->property->state ?? 'Default';
+
+            if ($chain) {
+                $referralChainArray = [];
+                if ($chain->super_marketer_id) {
+                    $referralChainArray[] = $chain->super_marketer_id;
+                }
+                if ($chain->marketer_id) {
+                    $referralChainArray[] = $chain->marketer_id;
+                }
+                $referralChainArray[] = $chain->landlord_id;
+                
+                $region = $chain->region ?? $region;
+
+                $distributionService->distributeMultiTierCommission(
+                    $commissionPool,
+                    $referralChainArray,
+                    $region,
+                    $chain->id,
+                    $payment
+                );
+                
+                Log::info('Commission successfully distributed for payment via ReferralChain', [
+                    'payment_id' => $payment->id,
+                    'commission_pool' => $commissionPool,
+                    'referral_chain_id' => $chain->id
+                ]);
+            } else {
+                // No chain found, check for a standard referral (e.g. Tenant referring Landlord)
+                $referral = \App\Models\Referral::where('referred_id', $payment->landlord_id)
+                    ->where('referral_status', 'active')
+                    ->first();
+
+                if ($referral && $referral->referrer) {
+                    $referrerRole = $referral->referrer->role; 
+                    $rateManager = app(\App\Services\Commission\RegionalRateManager::class);
+                    $rate = $rateManager->getActiveRate($region, $referrerRole);
+                    
+                    $distributionService->distributeStandardReferralCommission(
+                        $commissionPool,
+                        $referral,
+                        $region,
+                        $rate,
+                        $payment
+                    );
+
+                    Log::info('Commission successfully distributed for payment via Standard Referral', [
+                        'payment_id' => $payment->id,
+                        'commission_pool' => $commissionPool,
+                        'referral_id' => $referral->id
+                    ]);
+                }
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Commission distribution failed', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }

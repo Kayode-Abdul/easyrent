@@ -107,10 +107,16 @@
                             <p>Users</p>
                         </a>
                     </li>
-                    <li class="{{ request()->is('admin/payments*') ? 'active' : '' }}">
+                    <li class="{{ request()->is('admin/payments*') && !request()->routeIs('payments.breakdown') ? 'active' : '' }}">
                         <a href="{{ url('/admin/payments') }}">
                             <i class="nc-icon nc-money-coins"></i>
                             <p>Payments</p>
+                        </a>
+                    </li>
+                    <li class="{{ request()->routeIs('payments.breakdown') ? 'active' : '' }}">
+                        <a href="{{ route('payments.breakdown') }}">
+                            <i class="nc-icon nc-zoom-split"></i>
+                            <p>Payment Breakdown</p>
                         </a>
                     </li>
                     <li class="{{ request()->is('admin/regional-managers*') ? 'active' : '' }}">

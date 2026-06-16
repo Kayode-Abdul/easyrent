@@ -30,7 +30,8 @@ class CommissionPayment extends Model
         'commission_tier',
         'parent_payment_id',
         'regional_rate_applied',
-        'region'
+        'region',
+        'source_payment_id'
     ];
 
     protected $casts = [
@@ -118,6 +119,14 @@ class CommissionPayment extends Model
     public function childPayments(): HasMany
     {
         return $this->hasMany(CommissionPayment::class, 'parent_payment_id');
+    }
+
+    /**
+     * Get source payment
+     */
+    public function sourcePayment(): BelongsTo
+    {
+        return $this->belongsTo(Payment::class, 'source_payment_id');
     }
 
     /**

@@ -95,7 +95,25 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="card-title">Total Earnings</h6>
-                                <h3 class="mb-0">{{ format_money($stats['total_commission'] ?? 0) }}</h3>
+                                <div id="carouselDashboardTotalEarned" class="carousel slide" data-ride="carousel" data-interval="false">
+                                    @if($stats['total_earned']->count() > 1)
+                                    <a href="#carouselDashboardTotalEarned" role="button" data-slide="prev" class="text-white position-absolute" style="left: -15px; top: 50%; transform: translateY(-50%);"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
+                                    @endif
+                                    <div class="carousel-inner">
+                                        @forelse($stats['total_earned'] as $index => $stat)
+                                        <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
+                                            <h3 class="mb-0">{{ $stat->currency ? $stat->currency->symbol : '' }}{{ number_format($stat->total, 2) }}</h3>
+                                        </div>
+                                        @empty
+                                        <div class="carousel-item active">
+                                            <h3 class="mb-0">{{ format_money(0) }}</h3>
+                                        </div>
+                                        @endforelse
+                                    </div>
+                                    @if($stats['total_earned']->count() > 1)
+                                    <a href="#carouselDashboardTotalEarned" role="button" data-slide="next" class="text-white position-absolute" style="right: 15px; top: 50%; transform: translateY(-50%);"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
+                                    @endif
+                                </div>
                                 <small class="opacity-75">Paid commissions</small>
                             </div>
                             <div class="align-self-center">
@@ -111,7 +129,25 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="card-title">Pending Commission</h6>
-                                <h3 class="mb-0">{{ format_money($stats['pending_commission'] ?? 0) }}</h3>
+                                <div id="carouselDashboardPendingApproval" class="carousel slide" data-ride="carousel" data-interval="false">
+                                    @if($stats['pending_approval']->count() > 1)
+                                    <a href="#carouselDashboardPendingApproval" role="button" data-slide="prev" class="text-white position-absolute" style="left: -15px; top: 50%; transform: translateY(-50%);"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
+                                    @endif
+                                    <div class="carousel-inner">
+                                        @forelse($stats['pending_approval'] as $index => $stat)
+                                        <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
+                                            <h3 class="mb-0">{{ $stat->currency ? $stat->currency->symbol : '' }}{{ number_format($stat->total, 2) }}</h3>
+                                        </div>
+                                        @empty
+                                        <div class="carousel-item active">
+                                            <h3 class="mb-0">{{ format_money(0) }}</h3>
+                                        </div>
+                                        @endforelse
+                                    </div>
+                                    @if($stats['pending_approval']->count() > 1)
+                                    <a href="#carouselDashboardPendingApproval" role="button" data-slide="next" class="text-white position-absolute" style="right: 15px; top: 50%; transform: translateY(-50%);"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
+                                    @endif
+                                </div>
                                 <small class="opacity-75">Awaiting payment</small>
                             </div>
                             <div class="align-self-center">
@@ -324,7 +360,7 @@
                                         @foreach($recentPayments->take(5) as $payment)
                                             <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
                                                 <div>
-                                                    <div class="fw-medium">{{ format_money($payment->amount) }}</div>
+                                                    <div class="fw-medium">{{ $payment->currency ? $payment->currency->symbol : '' }}{{ number_format($payment->amount ?? $payment->total_amount, 2) }}</div>
                                                     <small class="text-muted">{{ $payment->created_at->format('M d, Y') }}</small>
                                                 </div>
                                                 <div class="text-end">
@@ -345,7 +381,7 @@
                                             </div>
                                         @endforeach
                                         <div class="text-center mt-3">
-                                            <a href="{{ route('marketer.payments') }}" class="btn btn-sm btn-outline-primary">
+                                            <a href="{{ route('marketer.payments.index') }}" class="btn btn-sm btn-outline-primary">
                                                 View All Payments
                                             </a>
                                         </div>
@@ -394,7 +430,7 @@
                             <i class="fa fa-user-plus text-success me-2"></i>
                             Recent Referrals
                         </h6>
-                        <a href="{{ route('marketer.referrals') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                        <a href="{{ route('marketer.referrals.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
                     </div>
                     <div class="card-body p-0">
                         @if($recentReferrals->count() > 0)
@@ -439,7 +475,7 @@
                             <i class="fa fa-bullhorn text-warning me-2"></i>
                             Active Campaigns
                         </h6>
-                        <a href="{{ route('marketer.campaigns') }}" class="btn btn-sm btn-outline-primary">Manage</a>
+                        <a href="{{ route('marketer.campaigns.index') }}" class="btn btn-sm btn-outline-primary">Manage</a>
                     </div>
                     <div class="card-body p-0">
                         @if($activeCampaigns->count() > 0)
@@ -526,13 +562,13 @@
                                     </button>
                                 </div>
                                 <div class="col-md-3">
-                                    <a href="{{ route('marketer.profile') }}" class="btn btn-outline-info w-100">
+                                    <a href="{{ route('marketer.profile.show') }}" class="btn btn-outline-info w-100">
                                         <i class="fa fa-user me-2"></i>Update Profile
                                     </a>
                                 </div>
                                 <div class="col-md-3">
-                                    <a href="{{ route('marketer.payments') }}" class="btn btn-outline-warning w-100">
-                                        <i class="fa fa-credit-card me-2"></i>View Payments
+                                    <a href="{{ route('marketer.payments.index') }}" class="btn btn-outline-warning w-100">
+                                        <i class="fa fa-wallet me-1"></i> Request Payout
                                     </a>
                                 </div>
                             </div>
@@ -650,7 +686,7 @@
 
         function viewSuperMarketerDetails() {
             $.ajax({
-                url: '{{ route("marketer.super-marketer-info") }}',
+                url: '/marketer/super-marketer-info',
                 method: 'GET',
                 success: function (response) {
                     if (response.success) {
@@ -734,7 +770,7 @@
 
         function viewFullChain() {
             $.ajax({
-                url: '{{ route("marketer.referral-chain") }}',
+                url: '/marketer/referral-chain',
                 method: 'GET',
                 success: function (response) {
                     if (response.success) {
@@ -791,7 +827,7 @@
 
         function refreshCommissionBreakdown() {
             $.ajax({
-                url: '{{ route("marketer.commission-breakdown") }}',
+                url: '/marketer/commission-breakdown',
                 method: 'GET',
                 success: function (response) {
                     if (response.success) {
@@ -898,7 +934,7 @@
 
                 html += `
                 <div class="text-center mt-3">
-                    <a href="{{ route('marketer.payments') }}" class="btn btn-sm btn-outline-primary">
+                    <a href="{{ route('marketer.payments.index') }}" class="btn btn-sm btn-outline-primary">
                         View All Payments
                     </a>
                 </div>
@@ -930,7 +966,7 @@
         `);
 
             $.ajax({
-                url: '{{ route("marketer.performance-comparison") }}',
+                url: '/marketer/performance-comparison',
                 method: 'GET',
                 data: { period: period },
                 success: function (response) {
@@ -1068,4 +1104,4 @@
             }, 1000);
         });
     </script>
-@endsection
+@endpush

@@ -218,10 +218,24 @@
                         </div>
                         <div class="col-7 col-md-8">
                             <div class="numbers">
-                                @if(isset($propertyStats['monthly_revenue']) && is_array($propertyStats['monthly_revenue']))
-                                    @foreach($propertyStats['monthly_revenue'] as $code => $data)
-                                        <p class="card-title" style="font-size: 1.1rem; margin-bottom:0;">{{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
-                                    @endforeach
+                                @if(isset($propertyStats['monthly_revenue']) && is_array($propertyStats['monthly_revenue']) && count($propertyStats['monthly_revenue']) > 0)
+                                    <div id="carouselPropertyMonthlyRevenue" class="carousel slide d-flex align-items-center justify-content-between" data-ride="carousel" data-interval="false">
+                                        @if(count($propertyStats['monthly_revenue']) > 1)
+                                        <a href="#carouselPropertyMonthlyRevenue" role="button" data-slide="prev" class="text-muted"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
+                                        @endif
+                                        <div class="carousel-inner text-center flex-grow-1">
+                                            @php $i = 0; @endphp
+                                            @foreach($propertyStats['monthly_revenue'] as $code => $data)
+                                                <div class="carousel-item {{ $i == 0 ? 'active' : '' }}">
+                                                    <p class="card-title" style="font-size: 1.1rem; margin-bottom:0;">{{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
+                                                </div>
+                                                @php $i++; @endphp
+                                            @endforeach
+                                        </div>
+                                        @if(count($propertyStats['monthly_revenue']) > 1)
+                                        <a href="#carouselPropertyMonthlyRevenue" role="button" data-slide="next" class="text-muted"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
+                                        @endif
+                                    </div>
                                 @else
                                     <p class="card-title">{{ format_money(0) }}</p>
                                 @endif
@@ -243,10 +257,24 @@
                         </div>
                         <div class="col-7 col-md-8">
                             <div class="numbers">
-                                @if(isset($propertyStats['total_revenue']) && is_array($propertyStats['total_revenue']))
-                                    @foreach($propertyStats['total_revenue'] as $code => $data)
-                                        <p class="card-title" style="font-size: 1.1rem; margin-bottom:0;">{{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
-                                    @endforeach
+                                @if(isset($propertyStats['total_revenue']) && is_array($propertyStats['total_revenue']) && count($propertyStats['total_revenue']) > 0)
+                                    <div id="carouselPropertyTotalRevenue" class="carousel slide d-flex align-items-center justify-content-between" data-ride="carousel" data-interval="false">
+                                        @if(count($propertyStats['total_revenue']) > 1)
+                                        <a href="#carouselPropertyTotalRevenue" role="button" data-slide="prev" class="text-muted"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
+                                        @endif
+                                        <div class="carousel-inner text-center flex-grow-1">
+                                            @php $i = 0; @endphp
+                                            @foreach($propertyStats['total_revenue'] as $code => $data)
+                                                <div class="carousel-item {{ $i == 0 ? 'active' : '' }}">
+                                                    <p class="card-title" style="font-size: 1.1rem; margin-bottom:0;">{{ $data['symbol'] }}{{ number_format($data['amount'], 0) }}</p>
+                                                </div>
+                                                @php $i++; @endphp
+                                            @endforeach
+                                        </div>
+                                        @if(count($propertyStats['total_revenue']) > 1)
+                                        <a href="#carouselPropertyTotalRevenue" role="button" data-slide="next" class="text-muted"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
+                                        @endif
+                                    </div>
                                 @else
                                     <p class="card-title">{{ format_money(0) }}</p>
                                 @endif

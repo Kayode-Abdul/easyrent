@@ -24,7 +24,29 @@
                             <div class="col-7">
                                 <div class="numbers">
                                     <p class="card-category">Total Earned</p>
-                                    <h4 class="card-title">{{ format_money($stats['total_earned']) }}</h4>
+                                    <h4 class="card-title">
+                                        <div id="carouselTotalEarned" class="carousel slide d-flex align-items-center justify-content-between" data-ride="carousel" data-interval="false">
+                                            @if($stats['total_earned']->count() > 1)
+                                            <a href="#carouselTotalEarned" role="button" data-slide="prev" class="text-muted"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
+                                            @endif
+
+                                            <div class="carousel-inner text-center flex-grow-1">
+                                                @forelse($stats['total_earned'] as $index => $stat)
+                                                <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
+                                                    <span>{{ $stat->currency ? $stat->currency->symbol : '' }}{{ number_format($stat->total, 2) }}</span>
+                                                </div>
+                                                @empty
+                                                <div class="carousel-item active">
+                                                    <span>{{ format_money(0) }}</span>
+                                                </div>
+                                                @endforelse
+                                            </div>
+
+                                            @if($stats['total_earned']->count() > 1)
+                                            <a href="#carouselTotalEarned" role="button" data-slide="next" class="text-muted"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
+                                            @endif
+                                        </div>
+                                    </h4>
                                 </div>
                             </div>
                         </div>
@@ -43,7 +65,29 @@
                             <div class="col-7">
                                 <div class="numbers">
                                     <p class="card-category">Pending Approval</p>
-                                    <h4 class="card-title">{{ format_money($stats['pending_approval']) }}</h4>
+                                    <h4 class="card-title">
+                                        <div id="carouselPendingApproval" class="carousel slide d-flex align-items-center justify-content-between" data-ride="carousel" data-interval="false">
+                                            @if($stats['pending_approval']->count() > 1)
+                                            <a href="#carouselPendingApproval" role="button" data-slide="prev" class="text-muted"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
+                                            @endif
+
+                                            <div class="carousel-inner text-center flex-grow-1">
+                                                @forelse($stats['pending_approval'] as $index => $stat)
+                                                <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
+                                                    <span>{{ $stat->currency ? $stat->currency->symbol : '' }}{{ number_format($stat->total, 2) }}</span>
+                                                </div>
+                                                @empty
+                                                <div class="carousel-item active">
+                                                    <span>{{ format_money(0) }}</span>
+                                                </div>
+                                                @endforelse
+                                            </div>
+
+                                            @if($stats['pending_approval']->count() > 1)
+                                            <a href="#carouselPendingApproval" role="button" data-slide="next" class="text-muted"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
+                                            @endif
+                                        </div>
+                                    </h4>
                                 </div>
                             </div>
                         </div>
@@ -83,6 +127,7 @@
                             <table class="table table-hover">
                                 <thead class="text-primary">
                                     <th>Date</th>
+                                    <th>Commission Type</th>
                                     <th>Referred Landlord</th>
                                     <th>Apartment/Transaction</th>
                                     <th>Amount</th>
@@ -93,7 +138,24 @@
                                     <tr>
                                         <td>{{ $reward->created_at->format('M j, Y') }}</td>
                                         <td>
-                                            <strong>{{ $reward->landlord->first_name }} {{ $reward->landlord->last_name }}</strong>
+                                            @php
+                                                $desc = $reward->description ?? 'Referral Commission';
+                                                // Convert e.g., "Commission (super_marketer)" to "Super Marketer Referral Commission"
+                                                if (preg_match('/\((.*?)\)/', $desc, $matches)) {
+                                                    $tier = ucwords(str_replace('_', ' ', $matches[1]));
+                                                    $displayType = $tier . ' Referral Commission';
+                                                } else {
+                                                    $displayType = ucwords(str_replace('_', ' ', $desc));
+                                                }
+                                            @endphp
+                                            <span class="badge badge-info">{{ $displayType }}</span>
+                                        </td>
+                                        <td>
+                                            @if($reward->referral && $reward->referral->referred)
+                                                <strong>{{ $reward->referral->referred->first_name }} {{ $reward->referral->referred->last_name }}</strong>
+                                            @else
+                                                <strong>Unknown Landlord</strong>
+                                            @endif
                                         </td>
                                         <td>
                                             @if($reward->referral && $reward->referral->referred)
@@ -102,7 +164,7 @@
                                                 Direct Referral
                                             @endif
                                         </td>
-                                        <td><span class="text-success font-weight-bold">{{ format_money($reward->amount) }}</span></td>
+                                        <td><span class="text-success font-weight-bold">{{ $reward->currency ? $reward->currency->symbol : '' }}{{ format_money($reward->amount) }}</span></td>
                                         <td>
                                             @php
                                                 $badgeClass = 'secondary';
@@ -117,7 +179,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="5" class="text-center py-5 text-muted">
+                                        <td colspan="6" class="text-center py-5 text-muted">
                                             <i class="nc-icon nc-zoom-split fa-3x mb-3 d-block"></i>
                                             <p>No commissions found. Start referring landlords to earn rewards!</p>
                                             <a href="{{ route('dashboard') }}" class="btn btn-primary btn-round">Get Started</a>

@@ -40,7 +40,8 @@ class PaymentDistributionService
         float $totalAmount,
         array $referralChain,
         string $region,
-        ?int $referralChainId = null
+        ?int $referralChainId = null,
+        ?\App\Models\Payment $sourcePayment = null
     ): array {
         DB::beginTransaction();
         
@@ -56,7 +57,8 @@ class PaymentDistributionService
             $paymentRecords = $this->createPaymentRecords(
                 $commissionBreakdown,
                 $region,
-                $referralChainId
+                $referralChainId,
+                $sourcePayment
             );
 
             // Link parent-child payment relationships
@@ -88,6 +90,107 @@ class PaymentDistributionService
     }
 
     /**
+     * Distribute commission for standard referrals (e.g. Tenant referring Landlord)
+     *
+     * @param float $totalAmount Total available commission amount (e.g. 2.5% of rent)
+     * @param \App\Models\Referral $referral
+     * @param string $region
+     * @param float $ratePercentage 
+     */
+    public function distributeStandardReferralCommission(
+        float $totalAmount,
+        \App\Models\Referral $referral,
+        string $region,
+        float $ratePercentage,
+        ?\App\Models\Payment $sourcePayment = null
+    ): void {
+        DB::beginTransaction();
+        
+        try {
+            $referralChainArray = [];
+            
+            // Try to find super marketer for the referrer
+            $referrer = $referral->referrer;
+            if ($referrer) {
+                $superMarketer = $referrer->referringSuperMarketer();
+                if ($superMarketer) {
+                    $referralChainArray[] = $superMarketer->user_id;
+                }
+            }
+            
+            $referralChainArray[] = $referral->referrer_id;
+            $referralChainArray[] = $referral->referred_id;
+
+            $commissionBreakdown = $this->calculator->calculateCommissionSplit(
+                $totalAmount,
+                $referralChainArray,
+                $region
+            );
+
+            $paymentRecords = [];
+            foreach ($commissionBreakdown as $breakdown) {
+                if ($breakdown['tier'] === MultiTierCommissionCalculator::TIER_COMPANY || !$breakdown['user_id']) {
+                    continue;
+                }
+
+                $paymentRecord = CommissionPayment::create([
+                    'marketer_id' => $breakdown['user_id'],
+                    'total_amount' => $breakdown['amount'],
+                    'payment_method' => CommissionPayment::METHOD_BANK_TRANSFER,
+                    'payment_status' => CommissionPayment::STATUS_PENDING,
+                    'referral_chain_id' => null,
+                    'commission_tier' => $breakdown['tier'],
+                    'regional_rate_applied' => $breakdown['rate_percentage'],
+                    'region' => $region,
+                    'source_payment_id' => $sourcePayment ? $sourcePayment->id : null,
+                    'payment_details' => [
+                        'tier' => $breakdown['tier'],
+                        'rate_percentage' => $breakdown['rate_percentage'],
+                        'calculated_at' => now()->toISOString()
+                    ]
+                ]);
+                $paymentRecords[] = $paymentRecord;
+
+                if ($breakdown['user_id'] == $referral->referrer_id && $breakdown['tier'] === MultiTierCommissionCalculator::TIER_MARKETER) {
+                    $referral->increment('commission_amount', $breakdown['amount']);
+                    $referral->commission_status = 'pending';
+                    $referral->save();
+                }
+                
+                \App\Models\ReferralReward::create([
+                    'marketer_id' => $breakdown['user_id'],
+                    'referral_id' => $referral->id,
+                    'reward_type' => 'commission',
+                    'amount' => $breakdown['amount'],
+                    'currency_id' => $sourcePayment ? $sourcePayment->currency_id : null,
+                    'source_payment_id' => $sourcePayment ? $sourcePayment->id : null,
+                    'description' => 'Rent commission (' . $breakdown['tier'] . ')',
+                    'status' => 'approved' 
+                ]);
+            }
+
+            $this->linkPaymentHierarchy($paymentRecords);
+
+            DB::commit();
+
+            Log::info('Standard referral commission distributed successfully', [
+                'total_amount' => $totalAmount,
+                'region' => $region,
+                'referral_id' => $referral->id,
+                'referrer_id' => $referral->referrer_id,
+                'payment_count' => count($paymentRecords)
+            ]);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to distribute standard referral commission', [
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
      * Create payment records for commission breakdown
      *
      * @param array $commissionBreakdown
@@ -98,7 +201,8 @@ class PaymentDistributionService
     public function createPaymentRecords(
         array $commissionBreakdown,
         string $region,
-        ?int $referralChainId = null
+        ?int $referralChainId = null,
+        ?\App\Models\Payment $sourcePayment = null
     ): array {
         $paymentRecords = [];
 
@@ -109,14 +213,15 @@ class PaymentDistributionService
                 continue;
             }
 
-            $payment = $this->createSinglePaymentRecord(
+            $paymentRecord = $this->createSinglePaymentRecord(
                 $breakdown,
                 $region,
-                $referralChainId
+                $referralChainId,
+                $sourcePayment
             );
 
-            if ($payment) {
-                $paymentRecords[] = $payment;
+            if ($paymentRecord) {
+                $paymentRecords[] = $paymentRecord;
             }
         }
 
@@ -320,7 +425,8 @@ class PaymentDistributionService
     private function createSinglePaymentRecord(
         array $breakdown,
         string $region,
-        ?int $referralChainId = null
+        ?int $referralChainId = null,
+        ?\App\Models\Payment $sourcePayment = null
     ): ?CommissionPayment {
         if ($breakdown['amount'] <= 0) {
             return null;
@@ -335,6 +441,7 @@ class PaymentDistributionService
             'commission_tier' => $breakdown['tier'],
             'regional_rate_applied' => $breakdown['rate_percentage'],
             'region' => $region,
+            'source_payment_id' => $sourcePayment ? $sourcePayment->id : null,
             'payment_details' => [
                 'tier' => $breakdown['tier'],
                 'rate_percentage' => $breakdown['rate_percentage'],
@@ -361,9 +468,11 @@ class PaymentDistributionService
                     \App\Models\ReferralReward::create([
                         'marketer_id' => $breakdown['user_id'],
                         'referral_id' => $referral->id,
-                        'reward_type' => 'rent_commission',
+                        'reward_type' => 'commission',
                         'amount' => $breakdown['amount'],
-                        'description' => 'Rent commission (' . $breakdown['tier'] . ')',
+                        'currency_id' => $sourcePayment ? $sourcePayment->currency_id : null,
+                        'source_payment_id' => $sourcePayment ? $sourcePayment->id : null,
+                        'description' => 'Commission (' . $breakdown['tier'] . ')',
                         'status' => 'approved' 
                     ]);
                 }

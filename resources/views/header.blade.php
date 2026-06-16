@@ -272,7 +272,8 @@
         
         html[data-chrome-dark="true"] #google_translate_element select {
             background-color: #333;
-            color: #fff;
+            color: #ffffff !important;
+            font-weight: bold;
             border-color: #555;
         }
 
@@ -602,6 +603,12 @@
                         <a href="/dashboard/myproperty">
                             <i class="nc-icon nc-tile-56"></i>
                             <p>My Property(s)</p>
+                        </a>
+                    </li>
+                     <li class="{{ request()->is('commissions') ? 'active' : '' }}">
+                        <a href="/commissions">
+                            <i class="nc-icon nc-time-alarm"></i>
+                            <p>My Commission</p>
                         </a>
                     </li>
                     <li class="{{ request()->is('dashboard/billing*') ? 'active' : '' }}">

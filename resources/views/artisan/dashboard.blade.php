@@ -120,6 +120,29 @@
         </div>
 
         <div class="row">
+            <!-- Earnings by Currency -->
+            @if(isset($stats['earnings_by_currency']) && count($stats['earnings_by_currency']) > 0)
+            <div class="col-md-12 mb-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Total Earnings (Accepted Bids)</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach($stats['earnings_by_currency'] as $earning)
+                            <div class="col-md-3">
+                                <div class="alert alert-success text-center mb-0">
+                                    <h4 class="mb-0">{{ $earning['currency']->symbol }} {{ number_format($earning['total']) }}</h4>
+                                    <small>{{ $earning['currency']->code }}</small>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <!-- Active Bids -->
             <div class="col-md-7">
                 <div class="card">

@@ -46,8 +46,60 @@ class RegionalManagerController extends Controller
         else {
             $properties->whereRaw('1=0'); // none if no scopes
         }
-        $propertyCount = $properties->count();
-        return view('regional_manager.dashboard', compact('scopes', 'propertyCount'));
+        $propertyIds = $properties->pluck('property_id');
+        $propertyCount = $propertyIds->count();
+        
+        // Active Marketers in Region
+        // We use the same scope logic as the marketers() method, but simplified for count
+        $activeMarketersCount = 0;
+        if ($scopes->count()) {
+            $stateScopes = $scopes->where('scope_type', 'state')->pluck('scope_value')->filter();
+            $lgaScopes = $scopes->where('scope_type', 'lga')->pluck('scope_value')->filter();
+
+            $activeMarketersCount = User::where('role', 3)
+                ->where(function ($q) use ($stateScopes, $lgaScopes) {
+                    $hasCondition = false;
+                    foreach ($stateScopes as $state) {
+                        if ($hasCondition) $q->orWhere('state', $state);
+                        else { $q->where('state', $state); $hasCondition = true; }
+                    }
+                    foreach ($lgaScopes as $scopeValue) {
+                        if (strpos($scopeValue, '::') !== false) {
+                            [$state, $lga] = explode('::', $scopeValue, 2);
+                            if ($hasCondition) $q->orWhere(function ($inner) use ($state, $lga) { $inner->where('state', $state)->where('lga', $lga); });
+                            else { $q->where('state', $state)->where('lga', $lga); $hasCondition = true; }
+                        } else {
+                            if ($hasCondition) $q->orWhere('state', $scopeValue);
+                            else { $q->where('state', $scopeValue); $hasCondition = true; }
+                        }
+                    }
+                    if (!$hasCondition) $q->whereRaw('1=0');
+                })->count();
+        }
+
+        $pendingApprovals = 0; // Placeholder until pending approvals logic is defined
+
+        // Total Revenue by Currency in Region
+        $totalRevenueByCurrency = [];
+        if ($propertyCount > 0) {
+            $totalRevenueByCurrency = \App\Models\Payment::whereIn('status', ['completed', 'success'])
+                ->whereHas('apartment', function ($q) use ($propertyIds) {
+                    $q->whereIn('property_id', $propertyIds);
+                })
+                ->select('currency_id', DB::raw('SUM(amount) as total'))
+                ->groupBy('currency_id')
+                ->with('currency')
+                ->get()
+                ->mapWithKeys(fn($item) => [
+                    $item->currency->code ?? 'NGN' => [
+                        'amount' => $item->total,
+                        'symbol' => $item->currency->symbol ?? '₦'
+                    ]
+                ])
+                ->toArray();
+        }
+
+        return view('regional_manager.dashboard', compact('scopes', 'propertyCount', 'activeMarketersCount', 'pendingApprovals', 'totalRevenueByCurrency'));
     }
 
     public function properties(Request $request)

@@ -34,7 +34,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="card-title">Total Paid</h6>
-                                <h6 class="mb-0">{{ format_money($totalPaid) }}</h6>
+                                <x-currency-carousel :currencies="$totalPaidByCurrency ?? []" id="carousel-total-paid" />
                                 <small class="opacity-75">All time payments</small>
                             </div>
                             <div class="align-self-center">
@@ -48,7 +48,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="card-title">Pending Amount</h6>
-                                <h6 class="mb-0">{{ format_money($totalPending) }}</h6>
+                                <x-currency-carousel :currencies="$totalPendingByCurrency ?? []" id="carousel-pending-amount" />
                                 <small class="opacity-75">Outstanding bills</small>
                             </div>
                             <div class="align-self-center">
@@ -60,41 +60,7 @@
             </div>
         </div>
 
-        <!-- Summary Cards -->
-        <!-- <div class="row mb-4">
-                                                    <div class="col-md-6">
-                                                        <div class="card bg-success text-white">
-                                                            <div class="card-body">
-                                                                <div class="d-flex justify-content-between">
-                                                                    <div>
-                                                                        <h6 class="card-title">Total Paid</h6>
-                                                                        <h3 class="mb-0">{{ format_money($totalPaid) }}</h3>
-                                                                        <small class="opacity-75">All time payments</small>
-                                                                    </div>
-                                                                    <div class="align-self-center">
-                                                                        <i class="fafa-money-bill-wave fa-2x opacity-75"></i>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="card bg-warning text-white">
-                                                            <div class="card-body">
-                                                                <div class="d-flex justify-content-between">
-                                                                    <div>
-                                                                        <h6 class="card-title">Pending Amount</h6>
-                                                                        <h3 class="mb-0">{ format_money($totalPending) }}</h3>
-                                                                        <small class="opacity-75">Outstanding bills</small>
-                                                                    </div>
-                                                                    <div class="align-self-center">
-                                                                        <i class="fafa-clock fa-2x opacity-75"></i>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div> -->
+
 
         <div class="row">
             <!-- Payment History -->
@@ -174,7 +140,7 @@
                                                         <span class="badge bg-warning text-dark">Pending</span>
                                                     </div>
                                                     <div class="d-flex justify-content-between align-items-center">
-                                                        <span class="fw-bold text-primary">{{ format_money($pending->total) }}</span>
+                                                        <span class="fw-bold text-primary">{{ $pending->currency ? $pending->currency->symbol : format_money(0)->getSymbol() }}{{ number_format($pending->total, 2) }}</span>
                                                         <a href="{{ route('proforma.view', $pending->id) }}" class="btn btn-sm btn-primary">
                                                             <i class="fa fa-credit-card me-1"></i> Pay Now
                                                         </a>

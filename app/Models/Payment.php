@@ -56,6 +56,16 @@ class Payment extends Model
         return $this->belongsTo(Apartment::class, 'apartment_id', 'apartment_id');
     }
 
+    public function commissionPayments()
+    {
+        return $this->hasMany(CommissionPayment::class, 'source_payment_id');
+    }
+
+    public function referralRewards()
+    {
+        return $this->hasMany(ReferralReward::class, 'source_payment_id');
+    }
+
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class);

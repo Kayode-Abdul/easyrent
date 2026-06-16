@@ -176,6 +176,10 @@
                                     <input type="text" class="form-control" name="apartmentType" id="apartmentType" value="{{ $apartment->apartment_type }}" required>
                                 </div>
                                 <div class="form-group">
+                                    <label for="tenantId">Tenant User ID</label>
+                                    <input type="text" class="form-control" name="tenantId" id="tenantId" value="{{ $apartment->tenant_id }}" placeholder="Enter tenant ID or leave empty if vacant">
+                                </div>
+                                <div class="form-group">
                                     <label for="duration">Duration</label>
                                     <select class="form-control" name="duration" id="duration" required>
                                         @foreach($durationOptions as $durationValue => $durationName)

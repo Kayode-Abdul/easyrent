@@ -229,16 +229,23 @@ class ProfomaController extends Controller
         $proforma->save();
         
         // Create notification message for landlord
-        $propertyName = 'property';
-        if ($proforma->apartment && $proforma->apartment->property) {
-            $propertyName = $proforma->apartment->property->name ?: 'property';
+        $propertyName = 'a property';
+        $apartmentName = '';
+        if ($proforma->apartment) {
+            if ($proforma->apartment->property && $proforma->apartment->property->name) {
+                $propertyName = $proforma->apartment->property->name;
+            }
+            if ($proforma->apartment->name) {
+                $apartmentName = " (Apartment: " . $proforma->apartment->name . ")";
+            }
         }
+        $tenantName = $user->first_name . ' ' . $user->last_name;
         
         Message::create([
             'sender_id' => $user->user_id,
             'receiver_id' => $proforma->user_id,
             'subject' => 'Proforma Accepted',
-            'body' => "Your proforma receipt for " . $propertyName . " has been accepted by the tenant."
+            'body' => "Your proforma receipt for {$propertyName}{$apartmentName} has been accepted by the tenant, {$tenantName}."
         ]);
         
         // Return JSON with payment URL for AJAX handling
@@ -271,16 +278,23 @@ class ProfomaController extends Controller
         $proforma->save();
         
         // Create notification message for landlord
-        $propertyName = 'property';
-        if ($proforma->apartment && $proforma->apartment->property) {
-            $propertyName = $proforma->apartment->property->name ?: 'property';
+        $propertyName = 'a property';
+        $apartmentName = '';
+        if ($proforma->apartment) {
+            if ($proforma->apartment->property && $proforma->apartment->property->name) {
+                $propertyName = $proforma->apartment->property->name;
+            }
+            if ($proforma->apartment->name) {
+                $apartmentName = " (Apartment: " . $proforma->apartment->name . ")";
+            }
         }
+        $tenantName = $user->first_name . ' ' . $user->last_name;
         
         Message::create([
             'sender_id' => $user->user_id,
             'receiver_id' => $proforma->user_id,
             'subject' => 'Proforma Rejected',
-            'body' => "Your proforma receipt for " . $propertyName . " has been rejected by the tenant."
+            'body' => "Your proforma receipt for {$propertyName}{$apartmentName} has been rejected by the tenant, {$tenantName}."
         ]);
         
         return response()->json([

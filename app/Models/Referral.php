@@ -30,6 +30,14 @@ class Referral extends Model
         'authenticity_verified',
     ];
 
+    protected $casts = [
+        'conversion_date' => 'datetime',
+        'fraud_checked_at' => 'datetime',
+        'is_flagged' => 'boolean',
+        'authenticity_verified' => 'boolean',
+        'tracking_data' => 'array',
+    ];
+
     public function referrer()
     {
         return $this->belongsTo(User::class, 'referrer_id', 'user_id');

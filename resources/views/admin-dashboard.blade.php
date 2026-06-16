@@ -56,12 +56,12 @@
                                     Size: <strong>{{ $stats['database_size'] ?? 'Unknown' }}</strong></p>
                             </div>
                             <div class="col-md-4 text-right">
-                                <x-currency-scroll :currencies="$stats['company_commission_total'] ?? []" class="mb-0 h4" />
+                                <x-currency-carousel :currencies="$stats['company_commission_total'] ?? []" id="carousel-company-total" />
                                 <small>EasyRent Total Commission</small>
                                 <div class="mt-2">
                                     @if(isset($stats['company_commission_this_month']) && is_array($stats['company_commission_this_month']))
                                         <div class="badge badge-success d-inline-flex align-items-center">
-                                            <x-currency-scroll :currencies="$stats['company_commission_this_month']" class="mb-0 mr-1" />
+                                            <x-currency-carousel :currencies="$stats['company_commission_this_month']" id="carousel-company-month" />
                                             <span> this month</span>
                                         </div>
                                     @endif
@@ -148,7 +148,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Revenue Today</p>
-                                    <x-currency-scroll :currencies="$stats['revenue_today_by_currency'] ?? []" decimals="2" />
+                                    <x-currency-carousel :currencies="$stats['revenue_today_by_currency'] ?? []" id="carousel-revenue-today" />
                                 </div>
                             </div>
                         </div>
@@ -330,7 +330,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Commission Today</p>
-                                    <x-currency-scroll :currencies="$stats['company_commission_today'] ?? []" />
+                                    <x-currency-carousel :currencies="$stats['company_commission_today'] ?? []" id="carousel-commission-today" />
                                 </div>
                             </div>
                         </div>
@@ -357,7 +357,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Commission This Month</p>
-                                    <x-currency-scroll :currencies="$stats['company_commission_this_month'] ?? []" />
+                                    <x-currency-carousel :currencies="$stats['company_commission_this_month'] ?? []" id="carousel-commission-month" />
                                 </div>
                             </div>
                         </div>
@@ -389,7 +389,7 @@
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
                                     <p class="card-category">Total Commission</p>
-                                    <x-currency-scroll :currencies="$stats['company_commission_total'] ?? []" />
+                                    <x-currency-carousel :currencies="$stats['company_commission_total'] ?? []" id="carousel-commission-total-2" />
                                 </div>
                             </div>
                         </div>

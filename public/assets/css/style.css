@@ -11824,7 +11824,7 @@ h5,
 
 .ftco-navbar-light .navbar-toggler {
     border: none;
-    color: rgba(255, 255, 255, 0.5) !important;
+    color: rgb(182 53 53 / 50%) !important;
     cursor: pointer;
     padding-right: 0;
     text-transform: uppercase;
@@ -12541,6 +12541,10 @@ h5,
 @media (min-width: 768px) {
     .property-wrap .text {
         width: 75%;
+    }
+
+    .slider-text h1 {
+        font-size: 40px;
     }
 }
 

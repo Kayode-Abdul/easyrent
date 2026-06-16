@@ -3,6 +3,32 @@
 @section('content')
 
     <div class="content mt-5">
+        @if(isset($totalsByCurrency) && count($totalsByCurrency) > 0)
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Total Received</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach($totalsByCurrency as $code => $data)
+                            <div class="col-md-3 col-sm-6">
+                                <div class="card card-stats bg-light mb-3">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title mb-1 text-success">{{ $data['symbol'] }}{{ number_format($data['amount'], 2) }}</h5>
+                                        <p class="card-category text-muted mb-0 font-weight-bold">{{ $code }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
@@ -64,6 +90,12 @@
                                                         class="btn btn-sm btn-info">
                                                         <i class="fa fa-download"></i> View Receipt
                                                     </a>
+                                                    @if(auth()->user()->role === 7)
+                                                        <a href="{{ route('payment.commissions', ['id' => $payment->id]) }}"
+                                                            class="btn btn-sm btn-warning mt-1">
+                                                            <i class="fa fa-eye"></i> Commissions
+                                                        </a>
+                                                    @endif
                                                 </td>
                                             </tr>
                                         @endforeach

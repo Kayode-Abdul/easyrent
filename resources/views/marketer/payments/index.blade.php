@@ -9,7 +9,25 @@
                 <div class="col-md-3">
                     <div class="card bg-primary text-white">
                         <div class="card-body text-center">
-                            <h4>KSh {{ number_format($summary['total_earned']) }}</h4>
+                            <div id="carouselMarketerTotalEarned" class="carousel slide d-flex align-items-center justify-content-between" data-ride="carousel" data-interval="false">
+                                @if($summary['total_earned']->count() > 1)
+                                <a href="#carouselMarketerTotalEarned" role="button" data-slide="prev" class="text-white"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
+                                @endif
+                                <div class="carousel-inner text-center flex-grow-1">
+                                    @forelse($summary['total_earned'] as $index => $stat)
+                                    <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
+                                        <h4>{{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}</h4>
+                                    </div>
+                                    @empty
+                                    <div class="carousel-item active">
+                                        <h4>KSh 0</h4>
+                                    </div>
+                                    @endforelse
+                                </div>
+                                @if($summary['total_earned']->count() > 1)
+                                <a href="#carouselMarketerTotalEarned" role="button" data-slide="next" class="text-white"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
+                                @endif
+                            </div>
                             <p class="mb-0">Total Earned</p>
                         </div>
                     </div>
@@ -17,7 +35,25 @@
                 <div class="col-md-3">
                     <div class="card bg-success text-white">
                         <div class="card-body text-center">
-                            <h4>KSh {{ number_format($summary['total_paid']) }}</h4>
+                            <div id="carouselMarketerTotalPaid" class="carousel slide d-flex align-items-center justify-content-between" data-ride="carousel" data-interval="false">
+                                @if($summary['total_paid']->count() > 1)
+                                <a href="#carouselMarketerTotalPaid" role="button" data-slide="prev" class="text-white"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
+                                @endif
+                                <div class="carousel-inner text-center flex-grow-1">
+                                    @forelse($summary['total_paid'] as $index => $stat)
+                                    <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
+                                        <h4>{{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}</h4>
+                                    </div>
+                                    @empty
+                                    <div class="carousel-item active">
+                                        <h4>KSh 0</h4>
+                                    </div>
+                                    @endforelse
+                                </div>
+                                @if($summary['total_paid']->count() > 1)
+                                <a href="#carouselMarketerTotalPaid" role="button" data-slide="next" class="text-white"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
+                                @endif
+                            </div>
                             <p class="mb-0">Total Paid</p>
                         </div>
                     </div>
@@ -25,7 +61,25 @@
                 <div class="col-md-3">
                     <div class="card bg-warning text-white">
                         <div class="card-body text-center">
-                            <h4>KSh {{ number_format($summary['pending_payment']) }}</h4>
+                            <div id="carouselMarketerPendingPayment" class="carousel slide d-flex align-items-center justify-content-between" data-ride="carousel" data-interval="false">
+                                @if($summary['pending_payment']->count() > 1)
+                                <a href="#carouselMarketerPendingPayment" role="button" data-slide="prev" class="text-white"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
+                                @endif
+                                <div class="carousel-inner text-center flex-grow-1">
+                                    @forelse($summary['pending_payment'] as $index => $stat)
+                                    <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
+                                        <h4>{{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}</h4>
+                                    </div>
+                                    @empty
+                                    <div class="carousel-item active">
+                                        <h4>KSh 0</h4>
+                                    </div>
+                                    @endforelse
+                                </div>
+                                @if($summary['pending_payment']->count() > 1)
+                                <a href="#carouselMarketerPendingPayment" role="button" data-slide="next" class="text-white"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
+                                @endif
+                            </div>
                             <p class="mb-0">Pending Payment</p>
                         </div>
                     </div>
@@ -46,7 +100,7 @@
                     <h5 class="mb-0">Payment History</h5>
                     <div>
                         <button class="btn btn-outline-primary" onclick="requestPayment()" 
-                                {{ $summary['pending_payment'] < 1000 ? 'disabled' : '' }}>
+                                {{ $summary['pending_payment']->sum('total') < 1000 ? 'disabled' : '' }}>
                             <i class="fa fa-money-bill-wave"></i> Request Payment
                         </button>
                         <a href="{{ route('marketer.dashboard') }}" class="btn btn-secondary ml-2">
@@ -55,17 +109,23 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if($summary['pending_payment'] >= 1000)
+                    @if($summary['pending_payment']->sum('total') >= 1000)
                         <div class="alert alert-info">
                             <i class="fa fa-info-circle"></i>
-                            <strong>Payment Available!</strong> You have KSh {{ number_format($summary['pending_payment']) }} 
+                            <strong>Payment Available!</strong> You have 
+                            @foreach($summary['pending_payment'] as $stat)
+                                {{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}
+                            @endforeach
                             ready for payment. Click "Request Payment" to initiate the process.
                         </div>
-                    @elseif($summary['pending_payment'] > 0)
+                    @elseif($summary['pending_payment']->sum('total') > 0)
                         <div class="alert alert-warning">
                             <i class="fa fa-exclamation-triangle"></i>
-                            <strong>Minimum Payment:</strong> You need at least KSh 1,000 to request a payment. 
-                            Current pending amount: KSh {{ number_format($summary['pending_payment']) }}
+                            <strong>Minimum Payment:</strong> You need at least 1,000 to request a payment. 
+                            Current pending amount: 
+                            @foreach($summary['pending_payment'] as $stat)
+                                {{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}
+                            @endforeach
                         </div>
                     @endif
 
@@ -78,6 +138,7 @@
                                         <th>Reference</th>
                                         <th>Amount</th>
                                         <th>Method</th>
+                                        <th>Type</th>
                                         <th>Bank Details</th>
                                         <th>Status</th>
                                         <th>Actions</th>
@@ -95,7 +156,7 @@
                                                 <code>{{ $payment->payment_reference }}</code>
                                             </td>
                                             <td>
-                                                <strong class="text-success">KSh {{ number_format($payment->amount) }}</strong>
+                                                <strong class="text-success">KSh {{ number_format($payment->total_amount) }}</strong>
                                             </td>
                                             <td>
                                                 @switch($payment->payment_method)
@@ -113,16 +174,23 @@
                                                 @endswitch
                                             </td>
                                             <td>
+                                                @if($payment->commission_tier)
+                                                    <span class="badge badge-info">{{ ucwords(str_replace('_', ' ', $payment->commission_tier)) }} Commission</span>
+                                                @else
+                                                    <span class="badge badge-secondary">Withdrawal Request</span>
+                                                @endif
+                                            </td>
+                                            <td>
                                                 <div>
-                                                    <strong>{{ $payment->bank_name }}</strong>
+                                                    <strong>{{ $payment->payment_details['bank_name'] ?? 'N/A' }}</strong>
                                                     <br>
-                                                    <small class="text-muted">{{ $payment->account_number }}</small>
+                                                    <small class="text-muted">{{ $payment->payment_details['account_number'] ?? '' }}</small>
                                                     <br>
-                                                    <small class="text-muted">{{ $payment->account_name }}</small>
+                                                    <small class="text-muted">{{ $payment->payment_details['account_name'] ?? '' }}</small>
                                                 </div>
                                             </td>
                                             <td>
-                                                @switch($payment->status)
+                                                @switch($payment->payment_status)
                                                     @case('pending')
                                                         <span class="badge badge-warning">Pending</span>
                                                         @break
@@ -152,14 +220,14 @@
                                                         <i class="fa fa-eye"></i>
                                                     </button>
                                                     
-                                                    @if($payment->status === 'pending')
+                                                    @if($payment->payment_status === 'pending')
                                                         <button class="btn btn-sm btn-outline-danger" 
                                                                 onclick="cancelPayment({{ $payment->id }})" title="Cancel">
                                                             <i class="fa fa-times"></i>
                                                         </button>
                                                     @endif
                                                     
-                                                    @if($payment->status === 'failed')
+                                                    @if($payment->payment_status === 'failed')
                                                         <button class="btn btn-sm btn-outline-info" 
                                                                 onclick="retryPayment({{ $payment->id }})" title="Retry">
                                                             <i class="fa fa-redo"></i>
@@ -218,9 +286,9 @@
                                 <tbody>
                                     @foreach($pendingRewards as $reward)
                                         <tr>
-                                            <td>{{ $reward->landlord->name }}</td>
+                                            <td>{{ $reward->referral && $reward->referral->referred ? $reward->referral->referred->name : 'Unknown Landlord' }}</td>
                                             <td>{{ $reward->calculation_date ? $reward->calculation_date->format('M d, Y') : 'N/A' }}</td>
-                                            <td><strong>KSh {{ number_format($reward->commission_amount ?? $reward->amount ?? 0) }}</strong></td>
+                                            <td><strong>{{ $reward->currency ? $reward->currency->symbol : '' }} {{ number_format($reward->commission_amount ?? $reward->amount ?? 0) }}</strong></td>
                                             <td>
                                                 <span class="badge badge-warning">{{ ucfirst($reward->status) }}</span>
                                             </td>
@@ -257,7 +325,10 @@
                 @csrf
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <strong>Amount to be paid:</strong> KSh {{ number_format($summary['pending_payment']) }}
+                        <strong>Amount to be paid:</strong> 
+                        @foreach($summary['pending_payment'] as $stat)
+                            {{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}@if(!$loop->last), @endif
+                        @endforeach
                     </div>
                     
                     <div class="form-group">
@@ -376,15 +447,19 @@ function viewPaymentDetails(paymentId) {
                                 </tr>
                                 <tr>
                                     <td><strong>Amount:</strong></td>
-                                    <td><strong class="text-success">KSh ${payment.amount.toLocaleString()}</strong></td>
+                                    <td><strong class="text-success">KSh ${payment.total_amount.toLocaleString()}</strong></td>
                                 </tr>
                                 <tr>
                                     <td><strong>Method:</strong></td>
                                     <td>${payment.payment_method.replace('_', ' ').toUpperCase()}</td>
                                 </tr>
                                 <tr>
+                                    <td><strong>Type:</strong></td>
+                                    <td>${payment.commission_tier ? payment.commission_tier.replace('_', ' ').toUpperCase() + ' COMMISSION' : 'WITHDRAWAL REQUEST'}</td>
+                                </tr>
+                                <tr>
                                     <td><strong>Status:</strong></td>
-                                    <td><span class="badge badge-${getPaymentStatusColor(payment.status)}">${payment.status.toUpperCase()}</span></td>
+                                    <td><span class="badge badge-${getPaymentStatusColor(payment.payment_status)}">${payment.payment_status.toUpperCase()}</span></td>
                                 </tr>
                             </table>
                         </div>
@@ -393,15 +468,15 @@ function viewPaymentDetails(paymentId) {
                             <table class="table table-borderless">
                                 <tr>
                                     <td><strong>Bank:</strong></td>
-                                    <td>${payment.bank_name}</td>
+                                    <td>${payment.payment_details && payment.payment_details.bank_name ? payment.payment_details.bank_name : 'N/A'}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Account:</strong></td>
-                                    <td>${payment.account_number}</td>
+                                    <td>${payment.payment_details && payment.payment_details.account_number ? payment.payment_details.account_number : ''}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Name:</strong></td>
-                                    <td>${payment.account_name}</td>
+                                    <td>${payment.payment_details && payment.payment_details.account_name ? payment.payment_details.account_name : ''}</td>
                                 </tr>
                             </table>
                         </div>

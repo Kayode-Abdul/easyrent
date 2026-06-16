@@ -158,7 +158,7 @@
                         <div class="col-7 col-md-8">
                             <div class="numbers">
                                 <p class="card-category">Monthly Revenue</p>
-                                <x-currency-scroll :currencies="$stats['monthly_revenue'] ?? []" />
+                                <x-currency-carousel :currencies="$stats['monthly_revenue'] ?? []" id="carousel-pm-monthly-revenue" />
                             </div>
                         </div>
                     </div>

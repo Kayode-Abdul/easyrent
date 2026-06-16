@@ -90,15 +90,33 @@ class RegionalRateManager
      * @param int $roleId
      * @return float
      */
-    public function getActiveRate(string $region, int $roleId): float
+    public function getActiveRate(string $region, $roleIdentifier): float
     {
-        $rate = CommissionRate::active()
-            ->forRegion($region)
-            ->forRole($roleId)
-            ->orderBy('effective_from', 'desc')
-            ->first();
+        // For backwards compatibility and string identifiers
+        $roleId = null;
+        if (is_numeric($roleIdentifier)) {
+            $roleId = (int) $roleIdentifier;
+        } else {
+            $roleName = $roleIdentifier;
+        }
 
-        return $rate ? (float) $rate->commission_percentage : 0.0;
+        // Default to unmanaged and without_super_marketer as a base scenario
+        $rateConfig = CommissionRate::getRateForScenario($region, 'unmanaged', 'without_super_marketer');
+        
+        if (!$rateConfig) {
+            return 0.0;
+        }
+
+        // Map role ID or name to the correct column with default fallbacks
+        if ((isset($roleId) && $roleId === 4) || (isset($roleName) && $roleName === 'super_marketer')) {
+            return (float) ($rateConfig->super_marketer_rate ?? 0.5);
+        } elseif ((isset($roleId) && $roleId === 3) || (isset($roleName) && $roleName === 'marketer')) {
+            return (float) ($rateConfig->marketer_rate ?? 0.75);
+        } elseif ((isset($roleId) && $roleId === 9) || (isset($roleName) && $roleName === 'regional_manager')) {
+            return (float) ($rateConfig->regional_manager_rate ?? 0.1);
+        }
+
+        return 0.0;
     }
 
     /**

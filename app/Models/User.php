@@ -365,22 +365,18 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return [
-            'total_referrals' => $this->referrals()->count(),
-            'successful_referrals' => $this->referrals()->whereHas('referred', function ($q) {
-            $q->where('role', 2); // Landlords only
-        })->count(),
-            'total_commission' => $this->referralRewards()->where('status', 'paid')->sum('amount'),
-            'pending_commission' => $this->referralRewards()->where('status', 'approved')->sum('amount'),
-            'total_clicks' => $this->referralCampaigns()->sum('clicks'),
-            'total_conversions' => $this->referralCampaigns()->sum('conversions'),
-            'conversion_rate' => $this->calculateConversionRate()
+            'total_campaigns' => $this->referralCampaigns()->count(),
+            'total_clicks' => $this->referralCampaigns()->sum('clicks_count'),
+            'total_conversions' => $this->referralCampaigns()->sum('conversions_count'),
+            'total_commission' => $this->referralCampaigns()->sum('total_commission'),
+            'conversion_rate' => $this->getConversionRateAttribute()
         ];
     }
 
-    private function calculateConversionRate()
+    public function getConversionRateAttribute()
     {
-        $totalClicks = $this->referralCampaigns()->sum('clicks');
-        $totalConversions = $this->referralCampaigns()->sum('conversions');
+        $totalClicks = $this->referralCampaigns()->sum('clicks_count');
+        $totalConversions = $this->referralCampaigns()->sum('conversions_count');
 
         return $totalClicks > 0 ? round(($totalConversions / $totalClicks) * 100, 2) : 0;
     }

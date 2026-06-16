@@ -164,7 +164,7 @@ class CommissionAuditService
 
         // Calculate expected vs actual totals
         $expectedTotal = 0;
-        $actualTotal = $payments->sum('amount');
+        $actualTotal = $payments->sum('total_amount');
         $discrepancyCount = 0;
 
         foreach ($payments as $payment) {
@@ -174,7 +174,7 @@ class CommissionAuditService
                 $discrepancyCount++;
                 $reconciliationResults['discrepancies'][] = [
                     'payment_id' => $payment->id,
-                    'amount' => $payment->amount,
+                    'amount' => $payment->total_amount,
                     'errors' => $verification['errors'],
                     'marketer_id' => $payment->marketer_id
                 ];
@@ -184,12 +184,12 @@ class CommissionAuditService
             $expectedAmount = $this->recalculateExpectedAmount($payment);
             $expectedTotal += $expectedAmount;
 
-            if (abs($expectedAmount - $payment->amount) > 0.01) {
+            if (abs($expectedAmount - $payment->total_amount) > 0.01) {
                 $reconciliationResults['discrepancies'][] = [
                     'payment_id' => $payment->id,
                     'expected_amount' => $expectedAmount,
-                    'actual_amount' => $payment->amount,
-                    'difference' => $expectedAmount - $payment->amount,
+                    'actual_amount' => $payment->total_amount,
+                    'difference' => $expectedAmount - $payment->total_amount,
                     'type' => 'amount_mismatch'
                 ];
             }
@@ -448,7 +448,7 @@ class CommissionAuditService
 
         // Recalculate expected amount
         $expectedAmount = $this->recalculateExpectedAmount($payment);
-        $actualAmount = $payment->amount;
+        $actualAmount = $payment->total_amount;
         $tolerance = 0.01; // 1 cent tolerance
 
         if (abs($expectedAmount - $actualAmount) > $tolerance) {
@@ -517,11 +517,11 @@ class CommissionAuditService
         // Get the base amount (this would typically come from the rent payment)
         // For audit purposes, we'll reverse-calculate from the commission amount and rate
         if ($payment->regional_rate_applied > 0) {
-            $baseAmount = $payment->amount / ($payment->regional_rate_applied / 100);
+            $baseAmount = $payment->total_amount / ($payment->regional_rate_applied / 100);
             return round($baseAmount * ($payment->regional_rate_applied / 100), 2);
         }
 
-        return $payment->amount;
+        return $payment->total_amount;
     }
 
     /**

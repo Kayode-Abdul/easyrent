@@ -343,7 +343,7 @@ class PricingConfigurationController extends Controller
             ->orderBy('created_at', 'desc');
         
         if ($apartmentId) {
-            $query->where('auditable_id', $apartmentId);
+            $query->where('model_id', $apartmentId);
         }
         
         if ($dateFrom) {
@@ -380,8 +380,8 @@ class PricingConfigurationController extends Controller
         AuditLog::create([
             'user_id' => Auth::id(),
             'action' => 'pricing_configuration_updated',
-            'auditable_type' => Apartment::class,
-            'auditable_id' => $apartment->apartment_id,
+            'model_type' => Apartment::class,
+            'model_id' => $apartment->apartment_id,
             'old_values' => $originalData,
             'new_values' => $newData,
             'url' => request()->fullUrl(),

@@ -42,17 +42,23 @@ class MarketerController extends Controller
         
         // Fetch rewards earned by this user (could be marketer or just a tenant who referred someone)
         $rewards = \App\Models\ReferralReward::where('marketer_id', $user->user_id)
-            ->with(['referral.referred', 'landlord'])
+            ->with(['referral.referred'])
             ->latest()
             ->paginate(15);
             
         $stats = [
             'total_earned' => \App\Models\ReferralReward::where('marketer_id', $user->user_id)
                 ->whereIn('status', ['approved', 'paid'])
-                ->sum('amount'),
+                ->selectRaw('currency_id, SUM(amount) as total')
+                ->with('currency')
+                ->groupBy('currency_id')
+                ->get(),
             'pending_approval' => \App\Models\ReferralReward::where('marketer_id', $user->user_id)
                 ->where('status', 'pending')
-                ->sum('amount'),
+                ->selectRaw('currency_id, SUM(amount) as total')
+                ->with('currency')
+                ->groupBy('currency_id')
+                ->get(),
             'total_referrals' => \App\Models\Referral::where('referrer_id', $user->user_id)->count(),
         ];
 
@@ -69,6 +75,24 @@ class MarketerController extends Controller
         
         // Get marketer statistics
         $stats = $marketer->getMarketerStats();
+        
+        // Add currency grouped earnings for the dashboard carousels
+        $stats['total_earned'] = $marketer->referralRewards()
+            ->where('status', 'approved')
+            ->selectRaw('currency_id, sum(amount) as total')
+            ->groupBy('currency_id')
+            ->with('currency')
+            ->get();
+            
+        $stats['pending_approval'] = $marketer->referralRewards()
+            ->where('status', 'pending')
+            ->selectRaw('currency_id, sum(amount) as total')
+            ->groupBy('currency_id')
+            ->with('currency')
+            ->get();
+            
+        $stats['total_referrals'] = $marketer->referrals()->count();
+        $stats['successful_referrals'] = $marketer->referrals()->where('referral_status', 'active')->count();
         
         // Recent referrals
         $recentReferrals = $marketer->referrals()
@@ -411,21 +435,30 @@ class MarketerController extends Controller
         
         $pendingPayment = $marketer->referralRewards()
             ->where('status', 'approved')
-            ->sum('amount');
+            ->selectRaw('currency_id, SUM(amount) as total')
+            ->with('currency')
+            ->groupBy('currency_id')
+            ->get();
             
         $totalEarned = $marketer->referralRewards()
             ->whereIn('status', ['approved', 'paid'])
-            ->sum('amount');
+            ->selectRaw('currency_id, SUM(amount) as total')
+            ->with('currency')
+            ->groupBy('currency_id')
+            ->get();
 
-        $totalPaid = $marketer->commissionPayments()
-            ->where('status', 'completed')
-            ->sum('amount');
+        $totalPaid = $marketer->referralRewards()
+            ->where('status', 'paid')
+            ->selectRaw('currency_id, SUM(amount) as total')
+            ->with('currency')
+            ->groupBy('currency_id')
+            ->get();
 
         $totalReferrals = $marketer->referrals()->count();
 
         $pendingRewards = $marketer->referralRewards()
             ->where('status', 'pending')
-            ->with(['landlord', 'referral.campaign'])
+            ->with(['referral.referred', 'referral.campaign'])
             ->latest()
             ->limit(10)
             ->get();
@@ -468,15 +501,17 @@ class MarketerController extends Controller
 
         CommissionPayment::create([
             'marketer_id' => $marketer->id,
-            'amount' => $pendingAmount,
+            'total_amount' => $pendingAmount,
             'payment_method' => $request->payment_method,
             'payment_reference' => $paymentReference,
-            'bank_name' => $request->bank_name ?? $marketer->bank_name,
-            'account_number' => $request->account_number ?? $marketer->account_number,
-            'account_name' => $request->account_name ?? $marketer->account_name,
-            'mobile_number' => $request->mobile_number,
-            'status' => 'pending',
-            'notes' => $request->notes
+            'payment_status' => 'pending',
+            'notes' => $request->notes,
+            'payment_details' => [
+                'bank_name' => $request->bank_name ?? $marketer->bank_name,
+                'account_number' => $request->account_number ?? $marketer->account_number,
+                'account_name' => $request->account_name ?? $marketer->account_name,
+                'mobile_number' => $request->mobile_number,
+            ]
         ]);
 
         return back()->with('success', 'Payment request submitted successfully! Reference: ' . $paymentReference);
@@ -503,10 +538,10 @@ class MarketerController extends Controller
     {
         $marketer = Auth::user();
         $payment = $marketer->commissionPayments()
-            ->where('status', 'pending')
+            ->where('payment_status', 'pending')
             ->findOrFail($id);
         
-        $payment->update(['status' => 'cancelled']);
+        $payment->update(['payment_status' => 'cancelled']);
         
         return response()->json(['success' => true]);
     }

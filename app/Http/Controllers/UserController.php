@@ -442,7 +442,7 @@ class UserController extends Controller
 
         $user->first_name = $request->input('first_name');
         $user->last_name = $request->input('last_name');
-        $user->username = $request->input('username');
+        $user->username = $request->input('username') ?? $user->username;
         $user->phone = $request->input('phone') ?? $user->phone;
         $user->address = $request->input('address') ?? $user->address;
         $user->country_name = $request->input('country_name') ?? $user->country_name;

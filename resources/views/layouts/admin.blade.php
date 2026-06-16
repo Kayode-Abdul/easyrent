@@ -23,7 +23,7 @@
     <!-- Custom Admin CSS -->
     <link href="/assets/css/bootstrap/paper-dashboard.css?v=2.0.1" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/css/custom-fixes.css">
-    <link href="{{ asset('assets/css/currency-scroll.css') }}" rel="stylesheet" />
+
 
     <style>
         body {
@@ -259,7 +259,7 @@
     </script>
 
     <!-- Currency Scroll Component -->
-    <script src="{{ asset('assets/js/currency-scroll.js') }}"></script>
+
 
     @stack('scripts')
 </body>

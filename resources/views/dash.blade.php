@@ -41,7 +41,7 @@
                             class="btn btn-success btn-lg mb-2 shadow-sm" style="border-radius: 12px;">
                             <i class="fa fa-file-invoice-dollar me-2"></i> View Payment Receipt
                         </a>
-                        <a href="{{ route('dashboard.myproperty', ['mode' => 'tenant']) }}"
+                        <a href="{{ url('/dashboard/apartment/' . session('congrats_apartment_id')) }}"
                             class="btn btn-primary btn-lg shadow-sm" style="border-radius: 12px;">
                             <i class="fa fa-home me-2"></i> View Apartment Details
                         </a>
@@ -276,7 +276,7 @@
                             </div>
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
-                                    <p class="card-category">My Properties</p>
+                                    <p class="card-category"><a href="{{ route('dashboard.myproperty', ['mode' => 'landlord']) }}" class="text-secondary">My Properties</a></p>
                                     <p class="card-title">{{ $stats['my_properties'] ?? 0 }}</p>
                                 </div>
                             </div>
@@ -303,7 +303,7 @@
                             </div>
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
-                                    <p class="card-category">Occupied Units</p>
+                                    <p class="card-category"><a href="{{ route('dashboard.myproperty', ['mode' => 'landlord', 'status' => 'occupied']) }}" class="text-secondary">Occupied Units</a></p>
                                     <p class="card-title">{{ $stats['occupied_apartments'] ?? 0 }}</p>
                                 </div>
                             </div>
@@ -330,8 +330,8 @@
                             </div>
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
-                                    <p class="card-category">Monthly Revenue</p>
-                                    <x-currency-scroll :currencies="$stats['monthly_revenue_by_currency'] ?? []" />
+                                    <p class="card-category"><a href="{{ route('payments.index') }}" class="text-secondary">Monthly Revenue</a></p>
+                                    <x-currency-carousel :currencies="$stats['monthly_revenue_by_currency'] ?? []" id="carousel-monthly-revenue" />
                                 </div>
                             </div>
                         </div>
@@ -357,8 +357,8 @@
                             </div>
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
-                                    <p class="card-category">Total Revenue</p>
-                                    <x-currency-scroll :currencies="$stats['total_revenue_by_currency'] ?? []" />
+                                    <p class="card-category"><a href="{{ route('payments.index') }}" class="text-secondary">Total Revenue</a></p>
+                                    <x-currency-carousel :currencies="$stats['total_revenue_by_currency'] ?? []" id="carousel-total-revenue" />
                                 </div>
                             </div>
                         </div>
@@ -374,6 +374,35 @@
             </div>
 
         @else
+            <!-- Shared Link Viewer -->
+            <div class="col-md-12 mb-4">
+                <div class="card shadow-sm" style="border-left: 5px solid #51cbce; border-radius: 12px;">
+                    <div class="card-body py-3">
+                        <h6 class="card-title text-primary fw-bold mb-1"><i class="fa fa-link me-2"></i>Open Shared Link</h6>
+                        <p class="text-muted small mb-3">Received an invitation or payment link? Paste it here to view it directly.</p>
+                        <div class="input-group">
+                            <input type="text" id="sharedLinkInput" class="form-control bg-light" placeholder="https://easyrent.africa/..." style="border-radius: 8px 0 0 8px;">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary m-0 px-4" type="button" onclick="openSharedLink()" style="border-radius: 0 8px 8px 0; padding-top: 10px; padding-bottom: 10px;">
+                                    <i class="fa fa-arrow-right"></i> Go
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script>
+                function openSharedLink() {
+                    var link = document.getElementById('sharedLinkInput').value.trim();
+                    if(link) {
+                        if(!link.startsWith('http')) {
+                            link = 'https://' + link;
+                        }
+                        window.location.href = link;
+                    }
+                }
+            </script>
+
             <!-- Tenant Dashboard Stats -->
             <div class="col-lg-3 col-md-6 col-sm-6 col-6">
                 <div class="card card-stats">
@@ -386,7 +415,7 @@
                             </div>
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
-                                    <p class="card-category">Current Rentals</p>
+                                    <p class="card-category"><a href="{{ route('dashboard.myproperty', ['mode' => 'tenant']) }}" class="text-secondary">Current Rentals</a></p>
                                     <p class="card-title">{{ $stats['my_rentals'] ?? 0 }}</p>
                                 </div>
                             </div>
@@ -413,8 +442,8 @@
                             </div>
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
-                                    <p class="card-category">Paid This Month</p>
-                                    <x-currency-scroll :currencies="$stats['payments_this_month_by_currency'] ?? []" />
+                                    <p class="card-category"><a href="{{ route('payments.index') }}" class="text-secondary">Paid This Month</a></p>
+                                    <x-currency-carousel :currencies="$stats['payments_this_month_by_currency'] ?? []" id="carousel-tenant-monthly" />
                                 </div>
                             </div>
                         </div>
@@ -440,7 +469,7 @@
                             </div>
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
-                                    <p class="card-category">Pending Payments</p>
+                                    <p class="card-category"><a href="{{ route('payments.index', ['status' => 'pending']) }}" class="text-secondary">Pending Payments</a></p>
                                     <p class="card-title">{{ $stats['my_pending_payments'] ?? 0 }}</p>
                                 </div>
                             </div>
@@ -467,7 +496,7 @@
                             </div>
                             <div class="col-7 col-md-8">
                                 <div class="numbers">
-                                    <p class="card-category">New Messages</p>
+                                    <p class="card-category"><a href="#" class="text-secondary">New Messages</a></p>
                                     <p class="card-title">{{ $stats['unread_messages'] ?? 0 }}</p>
                                 </div>
                             </div>
@@ -552,7 +581,7 @@
             <div class="card" style="background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%); color: white;">
                 <div class="card-body text-center py-4">
                     <h5 class="card-title text-white">Refer & Earn</h5>
-                    <p class="mb-4 opacity-8">Refer a landlord and earn commissions on every successful rent payment.
+                    <p class="mb-4 opacity-8">Refer a landlord and earn commissions on every successful rent paid.
                     </p>
                     <a href="{{ route('commissions.index') }}"
                         class="btn btn-white btn-round text-primary font-weight-bold">

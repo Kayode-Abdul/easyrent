@@ -95,14 +95,20 @@ class SystemAnalyticsController extends Controller
      */
     public function getCommissionPerformanceMetrics(Carbon $startDate, Carbon $endDate): array
     {
-        // Total commission volume
+        // Total commission volume by currency
         $totalCommissions = CommissionPayment::whereBetween('created_at', [$startDate, $endDate])
-            ->sum('total_amount');
+            ->select('currency_id', DB::raw('SUM(total_amount) as total'))
+            ->groupBy('currency_id')
+            ->with('currency')
+            ->get()
+            ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+            ->toArray();
 
         // Commission by tier
         $commissionByTier = CommissionPayment::whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('commission_tier, COUNT(*) as count, SUM(total_amount) as total_amount')
-            ->groupBy('commission_tier')
+            ->selectRaw('commission_tier, currency_id, COUNT(*) as count, SUM(total_amount) as total_amount')
+            ->groupBy('commission_tier', 'currency_id')
+            ->with('currency')
             ->get();
 
         // Daily commission trends
@@ -112,9 +118,14 @@ class SystemAnalyticsController extends Controller
             ->orderBy('date')
             ->get();
 
-        // Average commission per payment
+        // Average commission per payment by currency
         $avgCommission = CommissionPayment::whereBetween('created_at', [$startDate, $endDate])
-            ->avg('total_amount');
+            ->select('currency_id', DB::raw('AVG(total_amount) as avg_amount'))
+            ->groupBy('currency_id')
+            ->with('currency')
+            ->get()
+            ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->avg_amount, 'symbol' => $item->currency->symbol ?? '₦']])
+            ->toArray();
 
         // Commission success rate
         $successfulCommissions = CommissionPayment::whereBetween('created_at', [$startDate, $endDate])
@@ -129,7 +140,7 @@ class SystemAnalyticsController extends Controller
             'total_commissions' => $totalCommissions,
             'commission_by_tier' => $commissionByTier,
             'daily_trends' => $dailyTrends,
-            'average_commission' => round($avgCommission ?? 0, 2),
+            'average_commission' => $avgCommission,
             'success_rate' => $successRate,
             'successful_commissions' => $successfulCommissions,
             'total_attempts' => $totalCommissionAttempts
@@ -159,11 +170,17 @@ class SystemAnalyticsController extends Controller
         $conversionRate = $totalChains > 0 ? 
             round(($activeChains / $totalChains) * 100, 2) : 0;
 
-        // Average commission per chain
+        // Average commission per chain by currency
         $avgCommissionPerChain = ReferralChain::whereBetween('created_at', [$startDate, $endDate])
-            ->withSum('commissionPayments', 'amount')
+            ->join('commission_payments', 'referral_chains.id', '=', 'commission_payments.referral_chain_id')
+            ->select('commission_payments.currency_id', DB::raw('AVG(commission_payments.amount) as avg_amount'))
+            ->groupBy('commission_payments.currency_id')
             ->get()
-            ->avg('commission_payments_sum_amount');
+            ->mapWithKeys(function($item) {
+                $currency = \App\Models\Currency::find($item->currency_id);
+                return [$currency->code ?? 'NGN' => ['amount' => $item->avg_amount, 'symbol' => $currency->symbol ?? '₦']];
+            })
+            ->toArray();
 
         // Chain performance by tier
         $chainsByTier = DB::table('referral_chains')
@@ -190,7 +207,7 @@ class SystemAnalyticsController extends Controller
             'total_chains' => $totalChains,
             'active_chains' => $activeChains,
             'conversion_rate' => $conversionRate,
-            'average_commission_per_chain' => round($avgCommissionPerChain ?? 0, 2),
+            'average_commission_per_chain' => $avgCommissionPerChain,
             'chains_by_tier' => $chainsByTier,
             'top_performing_chains' => $topChains
         ];
@@ -211,12 +228,13 @@ class SystemAnalyticsController extends Controller
             ->whereBetween('commission_payments.created_at', [$startDate, $endDate])
             ->selectRaw('
                 users.state as region,
+                commission_payments.currency_id,
                 COUNT(*) as total_payments,
                 SUM(commission_payments.total_amount) as total_amount,
                 AVG(commission_payments.total_amount) as avg_amount,
                 SUM(CASE WHEN commission_payments.payment_status = "completed" THEN 1 ELSE 0 END) as successful_payments
             ')
-            ->groupBy('users.state')
+            ->groupBy('users.state', 'commission_payments.currency_id')
             ->orderBy('total_amount', 'desc')
             ->get();
 

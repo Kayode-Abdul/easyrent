@@ -12,6 +12,7 @@ use App\Models\Property;
 use App\Models\ArtisanTask;
 use App\Models\ArtisanBid;
 use Illuminate\Support\Facades\Log;
+use App\Mail\ExternalMessageMail;
 
 class MessageController extends Controller
 {
@@ -101,16 +102,22 @@ class MessageController extends Controller
                 ->first();
 
             if (!$recipient) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['receiver_lookup' => 'No user found with that ID or email address.']);
+                // If it's a valid email address, treat as external recipient
+                if (filter_var($lookup, FILTER_VALIDATE_EMAIL)) {
+                    $request->merge(['receiver_email' => $lookup]);
+                } else {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['receiver_lookup' => 'No user found with that ID or email address.']);
+                }
+            } else {
+                $request->merge(['receiver_id' => $recipient->user_id]);
             }
-
-            $request->merge(['receiver_id' => $recipient->user_id]);
         }
 
         $request->validate([
-            'receiver_id' => 'required|exists:users,user_id',
+            'receiver_id' => 'required_without:receiver_email|exists:users,user_id|nullable',
+            'receiver_email' => 'required_without:receiver_id|email|nullable',
             'subject' => 'nullable|string|max:255',
             'body' => 'required|string',
         ]);
@@ -118,15 +125,21 @@ class MessageController extends Controller
         $message = Message::create([
             'sender_id' => Auth::user()->user_id,
             'receiver_id' => $request->receiver_id,
+            'receiver_email' => $request->receiver_email,
             'subject' => $request->subject ?? 'New Message',
             'body' => $request->body,
         ]);
 
         // Send email notification to receiver
         try {
-            $receiver = User::where('user_id', $request->receiver_id)->first();
-            if ($receiver && $receiver->email) {
-                Mail::to($receiver->email)->send(new MessageNotification($message));
+            if ($request->receiver_id) {
+                $receiver = User::where('user_id', $request->receiver_id)->first();
+                if ($receiver && $receiver->email) {
+                    Mail::to($receiver->email)->send(new MessageNotification($message));
+                }
+            } elseif ($request->receiver_email) {
+                // Send external mail
+                Mail::to($request->receiver_email)->send(new ExternalMessageMail($message, Auth::user()));
             }
         }
         catch (\Exception $e) {

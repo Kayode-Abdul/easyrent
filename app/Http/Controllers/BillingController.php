@@ -45,10 +45,23 @@ class BillingController extends Controller
             'pending_count' => $pendingPayments->count()
         ]);
 
-        // Calculate total amount paid and pending
-        $totalPaid = $payments->sum('amount');
-        $totalPending = $pendingPayments->sum('amount');
+        // Calculate total amount paid and pending grouped by currency
+        $totalPaidByCurrency = $payments->groupBy('currency_id')->map(function ($group) {
+            $first = $group->first();
+            return [
+                'amount' => $group->sum('amount'),
+                'symbol' => $first->currency->symbol ?? '₦'
+            ];
+        })->toArray();
 
-        return view('billing.index', compact('payments', 'pendingPayments', 'totalPaid', 'totalPending'));
+        $totalPendingByCurrency = $pendingPayments->getCollection()->groupBy('currency_id')->map(function ($group) {
+            $first = $group->first();
+            return [
+                'amount' => $group->sum('total'), // Profoma uses total
+                'symbol' => $first->currency->symbol ?? '₦'
+            ];
+        })->toArray();
+
+        return view('billing.index', compact('payments', 'pendingPayments', 'totalPaidByCurrency', 'totalPendingByCurrency'));
     }
 }

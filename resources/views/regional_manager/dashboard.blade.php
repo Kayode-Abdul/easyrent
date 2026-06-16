@@ -260,7 +260,7 @@
                 <div class="stat-icon-modern">
                     <i class="fa fa-users"></i>
                 </div>
-                <div class="stat-value-modern">--</div>
+                <div class="stat-value-modern">{{ $activeMarketersCount ?? 0 }}</div>
                 <div class="stat-label-modern">Active Marketers</div>
                 <div class="stat-change positive">
                     <i class="fa fa-arrow-up me-1"></i>5% this month
@@ -272,7 +272,7 @@
                 <div class="stat-icon-modern">
                     <i class="fa fa-clock"></i>
                 </div>
-                <div class="stat-value-modern">--</div>
+                <div class="stat-value-modern">{{ $pendingApprovals ?? 0 }}</div>
                 <div class="stat-label-modern">Pending Approvals</div>
                 <div class="stat-change negative">
                     <i class="fa fa-arrow-down me-1"></i>3 new today
@@ -284,7 +284,9 @@
                 <div class="stat-icon-modern">
                     <i class="fa fa-dollar-sign"></i>
                 </div>
-                <div class="stat-value-modern">--</div>
+                <div class="mt-2 mb-2">
+                    <x-currency-carousel :currencies="$totalRevenueByCurrency ?? []" id="carousel-regional-revenue" />
+                </div>
                 <div class="stat-label-modern">Total Revenue</div>
                 <div class="stat-change positive">
                     <i class="fa fa-arrow-up me-1"></i>8% this month

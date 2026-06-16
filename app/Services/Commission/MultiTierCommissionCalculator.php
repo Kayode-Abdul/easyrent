@@ -40,6 +40,10 @@ class MultiTierCommissionCalculator
     const TIER_REGIONAL_MANAGER = 'regional_manager';
     const TIER_COMPANY = 'company';
 
+    const SUPER_MARKETER_ROLE_ID = 4;
+    const MARKETER_ROLE_ID = 3;
+    const REGIONAL_MANAGER_ROLE_ID = 9;
+
     private RegionalRateManager $rateManager;
 
     public function __construct(RegionalRateManager $rateManager)
@@ -69,7 +73,7 @@ class MultiTierCommissionCalculator
             $rates = $this->getRegionalRates($region);
 
             // Calculate individual commission amounts
-            $breakdown = $this->calculateIndividualCommissions($totalCommission, $referralChain, $rates);
+            $breakdown = $this->calculateIndividualCommissions($totalCommission, $referralChain, $rates, $region);
 
             // Validate total doesn't exceed available commission
             $this->validateCommissionTotal($breakdown, $totalCommission);
@@ -110,9 +114,10 @@ class MultiTierCommissionCalculator
             $totalAllocated += $split['amount'];
         }
 
-        if ($totalAllocated > $totalAvailable) {
+        // Use round to 2 decimal places to prevent floating point mismatch errors
+        if (round($totalAllocated, 2) > round($totalAvailable, 2)) {
             throw new Exception(
-                "Total allocated commission ({$totalAllocated}) exceeds available amount ({$totalAvailable})"
+                "Total allocated commission (" . round($totalAllocated, 2) . ") exceeds available amount (" . round($totalAvailable, 2) . ")"
             );
         }
 
@@ -265,10 +270,14 @@ class MultiTierCommissionCalculator
     private function calculateIndividualCommissions(
         float $totalCommission,
         array $referralChain,
-        array $rates
+        array $rates,
+        string $region = 'default'
     ): array {
         $breakdown = [];
         $totalAllocated = 0;
+
+        // Derive the rent amount from the 2.5% commission pool
+        $rentAmount = $totalCommission / 0.025;
 
         // Identify chain structure
         $chainStructure = $this->identifyChainStructure($referralChain);
@@ -277,43 +286,61 @@ class MultiTierCommissionCalculator
         foreach ($chainStructure as $tier => $userId) {
             $roleId = $this->getRoleIdForTier($tier);
             $rate = $rates[$roleId] ?? 0;
-            $amount = ($rate / 100) * $totalCommission;
+            $amount = ($rate / 100) * $rentAmount;
 
             if ($amount > 0) {
+                $roundedAmount = round($amount, 2);
                 $breakdown[] = [
                     'tier' => $tier,
                     'user_id' => $userId,
                     'role_id' => $roleId,
                     'rate_percentage' => $rate,
-                    'amount' => round($amount, 2)
+                    'amount' => $roundedAmount
                 ];
-                $totalAllocated += $amount;
+                $totalAllocated += $roundedAmount;
             }
         }
 
         // Add regional manager commission if applicable
         $regionalManagerRate = $rates[self::REGIONAL_MANAGER_ROLE_ID] ?? 0;
         if ($regionalManagerRate > 0) {
-            $regionalManagerAmount = ($regionalManagerRate / 100) * $totalCommission;
+            $regionalManagerAmount = round(($regionalManagerRate / 100) * $rentAmount, 2);
+            
+            $regionalManagerId = null;
+            $regionalManager = \App\Models\User::whereHas('roles', function($q) {
+                $q->where('name', 'regional_manager');
+            })->where('state', $region)->first();
+            
+            if (!$regionalManager) {
+                $regionalScope = \App\Models\RegionalScope::where('scope_type', 'state')
+                    ->where('scope_value', $region)
+                    ->first();
+                if ($regionalScope) {
+                    $regionalManagerId = $regionalScope->user_id;
+                }
+            } else {
+                $regionalManagerId = $regionalManager->user_id;
+            }
+
             $breakdown[] = [
                 'tier' => self::TIER_REGIONAL_MANAGER,
-                'user_id' => null, // Will be determined by region
+                'user_id' => $regionalManagerId,
                 'role_id' => self::REGIONAL_MANAGER_ROLE_ID,
                 'rate_percentage' => $regionalManagerRate,
-                'amount' => round($regionalManagerAmount, 2)
+                'amount' => $regionalManagerAmount
             ];
             $totalAllocated += $regionalManagerAmount;
         }
 
         // Add company profit (remaining amount)
-        $companyProfit = $totalCommission - $totalAllocated;
+        $companyProfit = round($totalCommission - $totalAllocated, 2);
         if ($companyProfit > 0) {
             $breakdown[] = [
                 'tier' => self::TIER_COMPANY,
                 'user_id' => null,
                 'role_id' => null,
-                'rate_percentage' => ($companyProfit / $totalCommission) * 100,
-                'amount' => round($companyProfit, 2)
+                'rate_percentage' => ($companyProfit / $totalCommission) * 100, // as a percentage of the total commission pool
+                'amount' => $companyProfit
             ];
         }
 

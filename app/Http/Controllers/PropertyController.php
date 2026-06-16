@@ -1270,7 +1270,7 @@ class PropertyController extends Controller
             
             // Basic apartment fields
             $updateData = [
-                'tenant_id' => $request->tenantId,
+                'tenant_id' => $request->filled('tenantId') ? $request->tenantId : null,
                 'duration' => $request->has('duration') ? (float) $request->duration : $apartment->duration,
                 'range_start' => Carbon::parse($request->fromRange),
                 'range_end' => Carbon::parse($request->toRange),
