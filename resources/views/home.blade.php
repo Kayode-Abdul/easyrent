@@ -1,116 +1,698 @@
 @include('header')
 <link rel="stylesheet" href="/assets/css/search-hero.css">
-<div class="hero-wrap ftco-degree-bg" style="background-image: url('assets/images/bg_1.jpg');"
-  data-stellar-background-ratio="0.5">
-  <div class="overlay"></div>
-  <div class="container">
-    <div class="row no-gutters slider-text justify-content-center align-items-center">
-      <div class="col-lg-10 col-md-12 ftco-animate d-flex align-items-center">
-        <div class="text text-center w-100">
-          <h1 class="mb-4 mt-5 mt-md-0">The Smartest <br>Way for Property Owners to Collect Rent and Manage Property
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ============ PREMIUM HERO SECTION ============ */
+  .er-hero {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+  }
+
+  .er-hero__bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .er-hero__bg img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: er-heroZoom 25s ease-in-out infinite alternate;
+    transition: opacity 0.8s ease;
+  }
+
+  /* Light mode: show day image, hide night */
+  .er-hero__bg-day { opacity: 1; }
+  .er-hero__bg-night { opacity: 0; }
+
+  /* Dark mode: show night image, hide day */
+  html[data-chrome-dark="true"] .er-hero__bg-day { opacity: 0; }
+  html[data-chrome-dark="true"] .er-hero__bg-night { opacity: 1; }
+
+  @keyframes er-heroZoom {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.08); }
+  }
+
+  .er-hero__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+      135deg,
+      rgba(0, 30, 32, 0.88) 0%,
+      rgba(12, 84, 85, 0.72) 40%,
+      rgba(12, 84, 85, 0.45) 70%,
+      rgba(0, 0, 0, 0.55) 100%
+    );
+    transition: opacity 0.8s ease;
+  }
+
+  /* Hide the overlay in dark mode since the night image is dark enough */
+  html[data-chrome-dark="true"] .er-hero__overlay {
+    opacity: 0;
+  }
+
+  /* CRITICAL: Completely opt out the entire hero section from global dark mode inversion.
+     This stops the dark search card from turning bright, the white text from turning black,
+     and prevents the "filmy" double-filter look on the background image. */
+  html[data-chrome-dark="true"] .er-hero {
+    filter: invert(1) hue-rotate(180deg) !important;
+  }
+  
+  html[data-chrome-dark="true"] .er-hero img,
+  html[data-chrome-dark="true"] .er-hero .er-hero__bg {
+    filter: none !important;
+  }
+
+  /* Force visible form controls and buttons in dark mode */
+  html[data-chrome-dark="true"] .er-search-card .form-control {
+    background: rgba(0, 0, 0, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+  }
+  html[data-chrome-dark="true"] .er-search-card .btn-search {
+    color: #ffffff !important;
+  }
+
+  /* Floating particles */
+  .er-hero__particles {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .er-hero__particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    animation: er-float linear infinite;
+  }
+
+  .er-hero__particle:nth-child(1) { left: 10%; animation-duration: 18s; animation-delay: 0s; width: 3px; height: 3px; }
+  .er-hero__particle:nth-child(2) { left: 25%; animation-duration: 22s; animation-delay: 2s; width: 5px; height: 5px; }
+  .er-hero__particle:nth-child(3) { left: 45%; animation-duration: 16s; animation-delay: 4s; }
+  .er-hero__particle:nth-child(4) { left: 60%; animation-duration: 20s; animation-delay: 1s; width: 6px; height: 6px; }
+  .er-hero__particle:nth-child(5) { left: 80%; animation-duration: 24s; animation-delay: 3s; width: 3px; height: 3px; }
+  .er-hero__particle:nth-child(6) { left: 92%; animation-duration: 19s; animation-delay: 5s; }
+
+  @keyframes er-float {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+  }
+
+  .er-hero__content {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    padding: 0 0 40px;
+  }
+
+  /* Badge / pill */
+  .er-hero__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50px;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    margin-bottom: 28px;
+    animation: er-fadeInUp 0.8s ease-out;
+  }
+
+  .er-hero__badge-dot {
+    width: 8px;
+    height: 8px;
+    background: #4ecdc4;
+    border-radius: 50%;
+    animation: er-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes er-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.3); }
+  }
+
+  /* Heading */
+  .er-hero__title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(44px, 7.5vw, 68px);
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.15;
+    margin-bottom: 30px;
+    animation: er-fadeInUp 0.8s ease-out 0.15s both;
+  }
+
+  .er-hero__title-accent {
+    background: linear-gradient(135deg, #4ecdc4, #44b8a8, #f7b71d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block !important;
+  }
+
+  .er-hero__subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(16px, 2vw, 20px);
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 500;
+    /* max-width: 560px; */
+    line-height: 1.7;
+    margin-bottom: 40px;
+    animation: er-fadeInUp 0.8s ease-out 0.3s both;
+  }
+
+  @keyframes er-fadeInUp {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Stats bar */
+  .er-hero__stats {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 48px;
+    animation: er-fadeInUp 0.8s ease-out 0.45s both;
+  }
+
+  .er-hero__stat {
+    text-align: center;
+    padding: 16px 24px;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    min-width: 120px;
+  }
+
+  .er-hero__stat:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-3px);
+    border-color: rgba(78, 205, 196, 0.3);
+  }
+
+  .er-hero__stat-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: #4ecdc4;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .er-hero__stat-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+
+  /* Search form card */
+  .er-hero__search {
+    animation: er-fadeInUp 0.8s ease-out 0.6s both;
+  }
+
+  .er-search-card {
+    background: #0a282ab3;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(78, 205, 196, 0.25);
+    border-top: 3px solid #4ecdc4;
+    border-radius: 20px;
+    padding: 28px 32px 20px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(78, 205, 196, 0.08);
+  }
+
+  .er-search-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .er-search-card__title {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .er-search-card__toggle {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #4ecdc4;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.3s;
+  }
+
+  .er-search-card__toggle:hover {
+    color: #f7b71d;
+    text-decoration: none;
+  }
+
+  .er-search-card .form-control {
+    height: 52px !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    color: #ffffff !important;
+    transition: all 0.3s ease;
+  }
+
+  .er-search-card .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .er-search-card .form-control option {
+    background: #0a282a;
+    color: #ffffff;
+  }
+
+  .er-search-card .form-control:focus {
+    background: rgba(255, 255, 255, 0.18) !important;
+    border-color: #4ecdc4 !important;
+    box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.15) !important;
+  }
+
+  .er-search-card .btn-search {
+    height: 52px;
+    background: linear-gradient(135deg, #4ecdc4 0%, #44b8a8 50%, #3e8189 100%) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    letter-spacing: 0.5px !important;
+    color: #fff !important;
+    transition: all 0.35s ease !important;
+    text-transform: uppercase;
+    box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+  }
+
+  .er-search-card .btn-search:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4) !important;
+  }
+
+  /* CTA buttons */
+  .er-hero__cta {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .er-hero__cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.35s ease;
+    letter-spacing: 0.3px;
+  }
+
+  .er-hero__cta-btn--primary {
+    background: linear-gradient(135deg, #4ecdc4, #3e8189);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(78, 205, 196, 0.3);
+  }
+
+  .er-hero__cta-btn--primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(78, 205, 196, 0.45);
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .er-hero__cta-btn--outline {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .er-hero__cta-btn--outline:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-3px);
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .er-hero__cta-btn--info {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(78, 205, 196, 0.6);
+  }
+
+  .er-hero__cta-btn--info:hover {
+    background: rgba(78, 205, 196, 0.15);
+    border-color: #4ecdc4;
+    transform: translateY(-3px);
+    color: #fff;
+    text-decoration: none;
+  }
+
+  /* --- Role Tabs --- */
+  .er-role-tabs-wrapper {
+    margin-top: 30px;
+    animation: er-fadeInUp 0.8s ease-out 0.45s both;
+    width: 100%;
+  }
+  
+  .er-role-tabs-nav {
+    display: inline-flex;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    padding: 6px;
+    gap: 8px;
+    margin-bottom: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .er-role-tab-btn {
+    background: transparent;
+    border: none;
+    color: rgba(0, 0, 0, 0.7);
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .er-role-tab-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .er-role-tab-btn.active {
+    background: #4ecdc4;
+    color: #0a282a;
+    box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+  }
+
+  .er-role-tab-content {
+    display: none;
+    background: rgba(10, 40, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(78, 205, 196, 0.2);
+    border-radius: 20px;
+    padding: 30px 40px;
+    text-align: left;
+    max-width: 650px;
+    margin: 0 auto;
+    animation: er-fadeIn 0.4s ease-in-out;
+  }
+
+  .er-role-tab-content.active {
+    display: block;
+  }
+
+  .er-role-tab-content h4 {
+    color: #fff;
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+
+  .er-role-tab-content p {
+    color: rgba(255, 255, 255, 0.85);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .er-role-tab-content .er-hero__cta-btn {
+    width: auto;
+    display: inline-flex;
+  }
+
+  @keyframes er-fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Scroll indicator */
+  .er-hero__scroll {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    text-align: center;
+    animation: er-fadeInUp 0.8s ease-out 1s both;
+  }
+
+  .er-hero__scroll-line {
+    width: 1px;
+    height: 50px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.5), transparent);
+    margin: 0 auto 8px;
+    animation: er-scrollLine 2s ease-in-out infinite;
+  }
+
+  @keyframes er-scrollLine {
+    0%, 100% { opacity: 0.3; transform: scaleY(0.5); }
+    50% { opacity: 1; transform: scaleY(1); }
+  }
+
+  .er-hero__scroll-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* Responsive */
+  @media (max-width: 991.98px) {
+    .er-hero__stats {
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .er-hero__stat {
+      min-width: 90px;
+      padding: 12px 16px;
+    }
+    .er-hero__stat-number { font-size: 22px; }
+  }
+
+  @media (max-width: 767.98px) {
+    .er-hero { min-height: 100vh; }
+    .er-hero__content { padding: 100px 0 100px; }
+    .er-hero__stats { gap: 10px; }
+    .er-hero__stat { min-width: 80px; padding: 10px 12px; }
+    .er-hero__stat-number { font-size: 20px; }
+    .er-hero__stat-label { font-size: 10px; }
+    .er-search-card { padding: 20px 18px 14px; }
+    .er-hero__cta-btn { width: 100%; justify-content: center; }
+    
+    .er-role-tabs-nav {
+      flex-direction: column;
+      border-radius: 16px;
+      width: 100%;
+    }
+    .er-role-tab-btn {
+      border-radius: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+    .er-role-tab-content {
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .er-role-tab-content .er-hero__cta-btn {
+      width: 100%;
+    }
+
+    .er-hero__scroll { display: none; }
+  }
+</style>
+
+<!-- ============ PREMIUM HERO SECTION ============ -->
+<div class="er-hero ftco-degree-bg">
+  <!-- Background images: day (light mode) + night (dark mode) -->
+  <div class="er-hero__bg">
+    <img src="{{ asset('assets/images/bg_1.jpg') }}" alt="EasyRent - Property Management" class="er-hero__bg-day">
+    <img src="{{ asset('assets/images/bg_1.png') }}" alt="EasyRent - Property Management" class="er-hero__bg-night">
+  </div>
+
+  <!-- Gradient overlay -->
+  <!-- <div class="er-hero__overlay"></div> -->
+
+  <!-- Floating particles -->
+  <div class="er-hero__particles">
+    <div class="er-hero__particle"></div>
+    <div class="er-hero__particle"></div>
+    <div class="er-hero__particle"></div>
+    <div class="er-hero__particle"></div>
+    <div class="er-hero__particle"></div>
+    <div class="er-hero__particle"></div>
+  </div>
+
+  <!-- Main content -->
+  <div class="er-hero__content">
+    <div class="container">
+      <div class="row no-gutters slider-text justify-content-center">
+        <!-- Left: Text -->
+        <div class="col-lg-10 col-md-12 ftco-animate d-flex fadeInUp ftco-animated">
+          <div class="text text-center w-100">
+<!-- 
+          <div class="er-hero__badge">
+            <span class="er-hero__badge-dot"></span>
+            Nigeria's #1 Rent Collection Platform
+          </div> -->
+
+          <h1 class="er-hero__title">
+            The Smart Way to <span class="er-hero__title-accent">Collect Rent</span><br/> &  <span class="er-hero__title-accent">Manage Property</span>
           </h1>
-          <form action="{{ route('search.apartments') }}" method="GET" class="search-location">
-            <div class="row justify-content-center">
-              <div class="col-lg-12">
-                <div class="search-form-wrap p-4 pt-0 bg-white shadow rounded">
 
-                  <!-- Advanced Fields (Toggled) -->
-                  <div class="row w-100 m-0 mb-3" id="advanced-location-fields" style="display: none;">
-                    <div class="col-md-4">
-                      <div class="form-group">
-                        <!--<label for="country">Country</label>-->
-                        <div class="form-field">
-                          <select name="country" id="country" class="form-control" onchange="loadStates(this.value)">
-                            <option value="">Any Country</option>
-                            @foreach($countries as $country)
-                              <option value="{{ $country }}">{{ $country }}</option>
-                            @endforeach
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="form-group">
-                        <!--<label for="state">State</label>-->
-                        <div class="form-field">
-                          <select name="state" id="state" class="form-control" onchange="loadCities(this.value)">
-                            <option value="">Any State</option>
-                            @foreach($states as $state)
-                              <option value="{{ $state->name }}">{{ $state->name }}</option>
-                            @endforeach
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="form-group">
-                        <!--<label for="lga">City/LGA</label>-->
-                        <div class="form-field">
-                          <select name="lga" id="lga" class="form-control">
-                            <option value="">Any City</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+          <!-- <p class="er-hero__subtitle">
+            Automate rent collection, track payments in real-time, and manage all your properties from a single powerful dashboard.
+          </p> -->
 
-                  <!-- Main Search Fields -->
-                  <div class="row w-100 m-0 align-items-end">
-                    <div class="col-md-5">
-                      <div class="form-group">
-                        <!--<label for="apartment_type">Type</label>-->
-                        <div class="form-field">
-                          <select name="apartment_type" id="apartment_type" class="form-control">
-                            <option value="">Any Type</option>
-                            @foreach($apartmentTypes as $type)
-                              <option value="{{ $type->name }}">{{ $type->name }}</option>
-                            @endforeach
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-5">
-                      <div class="form-group">
-                        <!--<label for="max_price">Max Price (₦)</label>-->
-                        <div class="form-field">
-                          <input type="number" name="max_price" class="form-control" placeholder="Max Price">
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-2">
-                      <div class="w-100">
-                        <button type="submit" class="btn btn-primary py-3 btn-block"
-                          style="padding: 0 !important; height: 50px;">
-                          <i class="bi bi-search"></i> Search
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+          <div class="er-hero__cta" style="margin-top: 20px;">
+            @auth
+              <a href="{{ url('/dashboard') }}" class="er-hero__cta-btn er-hero__cta-btn--primary">
+                <i class="bi bi-grid-1x2-fill"></i> Go to Dashboard
+              </a>
+            @else
+              <div class="er-role-tabs-wrapper">
+                <div class="er-role-tabs-nav">
+                  <button class="er-role-tab-btn" data-target="role-tenant">
+                    <i class="bi bi-person-check-fill"></i> I'm a Tenant
+                  </button>
+                  <button class="er-role-tab-btn active" data-target="role-landlord">
+                    <i class="bi bi-house-add-fill"></i> I'm a Landlord
+                  </button>
+                  <button class="er-role-tab-btn" data-target="role-manager">
+                    <i class="bi bi-building-fill-gear"></i> I'm a Property Manager
+                  </button>
+                </div>
+                
+                <div class="er-role-tab-content" id="role-tenant">
+                  <h4>Find Your Perfect Home</h4>
+                  <p>Browse thousands of available properties, apply online, and pay rent securely from anywhere. Enjoy a seamless renting experience with easy maintenance requests.</p>
+                  <a href="{{ route('register') }}" class="er-hero__cta-btn er-hero__cta-btn--outline">
+                    <i class="bi bi-rocket-takeoff-fill"></i> Get Started Free
+                  </a>
+                </div>
+                
+                <div class="er-role-tab-content active" id="role-landlord">
+                  <h4>Maximize Your Rental Income</h4>
+                  <p>List your properties to millions of users, find verified tenants quickly, and collect rent automatically. Say goodbye to late payments and stressful property management.</p>
+                  <a href="{{ route('onboarding.index') }}" class="er-hero__cta-btn er-hero__cta-btn--primary">
+                    <i class="bi bi-house-add-fill"></i> List Your Property
+                  </a>
+                </div>
 
-                  <!-- Toggle Button -->
-                  <div class="row w-100 m-0 mt-2">
-                    <div class="col-12 text-right px-0">
-                      <a href="javascript:void(0)" id="toggle-advanced-search"
-                        style="color: #fff; font-size: 14px; font-weight: 600; text-decoration: underline;">
-                        <i class="bi bi-sliders"></i> Advanced Search
-                      </a>
-                    </div>
-                  </div>
 
+                <div class="er-role-tab-content" id="role-manager">
+                  <h4>Scale Your Operations</h4>
+                  <p>Oversee multiple properties efficiently. Manage tenant communications, streamline maintenance workflows, and generate detailed financial reports in one centralized dashboard.</p>
+                  <a href="{{ route('register') }}" class="er-hero__cta-btn er-hero__cta-btn--info">
+                    <i class="bi bi-building"></i> Start Managing
+                  </a>
                 </div>
               </div>
-            </div>
-          </form>
+            @endauth
+          </div>
         </div>
+      </div>
       </div>
     </div>
   </div>
+
+  <!-- Scroll indicator -->
   <div class="mouse">
     <a href="#" class="mouse-icon">
       <div class="mouse-wheel"><span class="ion-ios-arrow-round-down"></span></div>
     </a>
   </div>
 </div>
+
+<script>
+// Animated counter for hero stats
+document.addEventListener('DOMContentLoaded', function() {
+  const counters = document.querySelectorAll('.er-hero__stat-number[data-count]');
+  const observerOptions = { threshold: 0.5 };
+
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const target = parseInt(el.getAttribute('data-count'));
+        let current = 0;
+        const duration = 2000;
+        const increment = target / (duration / 16);
+        const timer = setInterval(function() {
+          current += increment;
+          if (current >= target) {
+            el.textContent = target.toLocaleString() + '+';
+            clearInterval(timer);
+          } else {
+            el.textContent = Math.floor(current).toLocaleString();
+          }
+        }, 16);
+        observer.unobserve(el);
+      }
+    });
+  }, observerOptions);
+
+  counters.forEach(function(counter) { observer.observe(counter); });
+});
+</script>
 
 <section class="ftco-section">
   <div class="container">
@@ -232,6 +814,20 @@
             is time. Signup and enable automated reminder phone calls to owing tenants with feedback reports in audio
             and text formats.
           </p>
+                    <div class="er-hero__cta">
+            @auth
+              <a href="{{ url('/dashboard') }}" class="er-hero__cta-btn er-hero__cta-btn--primary">
+                <i class="bi bi-grid-1x2-fill"></i> Go to Dashboard
+              </a>
+            @else
+              <a href="{{ route('register') }}" class="er-hero__cta-btn er-hero__cta-btn--primary">
+                <i class="bi bi-rocket-takeoff-fill"></i> Get Started Free
+              </a>
+              <a href="{{ route('login') }}" class="er-hero__cta-btn er-hero__cta-btn--info">
+                <i class="bi bi-box-arrow-in-right"></i> Sign In
+              </a>
+            @endauth
+          </div> 
         </div>
       </div>
     </div>
@@ -290,6 +886,20 @@
             joint heirs of a property can view rent payments from a
             common dashboard.
           </p>
+                    <div class="er-hero__cta">
+            @auth
+              <a href="{{ url('/dashboard') }}" class="er-hero__cta-btn er-hero__cta-btn--primary">
+                <i class="bi bi-grid-1x2-fill"></i> Go to Dashboard
+              </a>
+            @else
+              <a href="{{ route('register') }}" class="er-hero__cta-btn er-hero__cta-btn--primary">
+                <i class="bi bi-rocket-takeoff-fill"></i> Get Started Free
+              </a>
+              <a href="{{ route('login') }}" class="er-hero__cta-btn er-hero__cta-btn--outline">
+                <i class="bi bi-box-arrow-in-right"></i> Sign In
+              </a>
+            @endauth
+          </div> 
         </div>
       </div>
       <div class="col-md-6 p-md-5 img img-2 d-flex justify-content-center align-items-center"
@@ -575,6 +1185,27 @@
           advancedFields.style.display = 'none';
           toggleBtn.innerHTML = '<i class="bi bi-sliders"></i> Advanced Search';
         }
+      });
+    }
+
+    // Role Tabs Logic
+    const tabBtns = document.querySelectorAll('.er-role-tab-btn');
+    const tabContents = document.querySelectorAll('.er-role-tab-content');
+
+    if (tabBtns.length > 0) {
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
+
+          btn.classList.add('active');
+
+          const targetId = btn.getAttribute('data-target');
+          const targetContent = document.getElementById(targetId);
+          if (targetContent) {
+            targetContent.classList.add('active');
+          }
+        });
       });
     }
 

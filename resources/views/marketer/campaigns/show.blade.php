@@ -111,7 +111,7 @@
                                                     </td>
                                                     <td>{{ $referral->conversion_date ? $referral->conversion_date->format('M d, Y') : 'N/A' }}</td>
                                                     <td>
-                                                        <strong>KSh {{ number_format($referral->commission_amount) }}</strong>
+                                                        <strong>{{ format_money($referral->commission_amount ?? ($referral->reward->amount ?? 0), $referral->reward->currency_id ?? null) }}</strong>
                                                     </td>
                                                     <td>
                                                         @switch($referral->commission_status)
@@ -168,7 +168,7 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Budget:</strong></td>
-                                    <td>{{ $campaign->budget ? 'KSh ' . number_format($campaign->budget) : 'Not set' }}</td>
+                                    <td>{{ $campaign->budget ? format_money($campaign->budget) : 'Not set' }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Start Date:</strong></td>
@@ -207,19 +207,19 @@
                             {{-- TODO: Replace commission_amount sums with rewards->sum('amount') once migration complete --}}
                             <div class="row text-center">
                                 <div class="col-6">
-                                    <h6 class="text-primary">KSh {{ number_format($totalCommission) }}</h6>
+                                    <h6 class="text-primary">{{ format_money($totalCommission) }}</h6>
                                     <small class="text-muted">Total Earned</small>
                                 </div>
                                 <div class="col-6">
-                                    <h6 class="text-success">KSh {{ number_format($paidCommission) }}</h6>
+                                    <h6 class="text-success">{{ format_money($paidCommission) }}</h6>
                                     <small class="text-muted">Paid Out</small>
                                 </div>
                                 <div class="col-6 mt-3">
-                                    <h6 class="text-warning">KSh {{ number_format($pendingCommission) }}</h6>
+                                    <h6 class="text-warning">{{ format_money($pendingCommission) }}</h6>
                                     <small class="text-muted">Pending</small>
                                 </div>
                                 <div class="col-6 mt-3">
-                                    <h6 class="text-info">KSh {{ number_format($approvedCommission) }}</h6>
+                                    <h6 class="text-info">{{ format_money($approvedCommission) }}</h6>
                                     <small class="text-muted">Approved</small>
                                 </div>
                             </div>

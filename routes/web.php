@@ -131,6 +131,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Reminders
     Route::post('/admin/reminders/send-overdue', [TenantReminderController::class , 'sendOverdueReminders'])->name('admin.reminders.overdue');
+    Route::get('/activity-logs', [App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity.logs');
     Route::get('/users', [UserController::class , 'users'])->name('admin.users.list');
 });
 
@@ -151,6 +152,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::put('/blog/{id}', [BlogController::class , 'update'])->name('admin.blog.update');
     Route::delete('/blog/{id}', [BlogController::class , 'destroy'])->name('admin.blog.destroy');
 });
+
+// Onboarding Flow
+Route::get('/onboarding', [\App\Http\Controllers\OnboardingController::class, 'index'])->name('onboarding.index');
+Route::post('/onboarding', [\App\Http\Controllers\OnboardingController::class, 'store'])->name('onboarding.store');
 
 // Auth routes
 Route::get('/register', [RegisterController::class , 'showRegistrationForm'])->name('register');
@@ -241,6 +246,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/dashboard/settings/payouts', [SettingsController::class, 'updatePayouts'])->name('settings.payouts.update');
     Route::post('/dashboard/settings/security', [SettingsController::class, 'updateSecurity'])->name('settings.security.update');
     Route::post('/dashboard/settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
+    Route::get('/dashboard/settings/verify-otp', [SettingsController::class, 'showOtpVerification'])->name('settings.otp.verify');
+    Route::post('/dashboard/settings/verify-otp', [SettingsController::class, 'confirmOtp'])->name('settings.otp.confirm');
 
     // User lookup API for tenant ID validation
     Route::get('/api/user/lookup/{userId}', [UserController::class , 'lookup'])->name('user.lookup');
@@ -573,6 +580,12 @@ Route::prefix('marketer')->name('marketer.')->middleware(['auth', 'check.approve
     Route::patch('/campaigns/{campaign}/pause', [App\Http\Controllers\MarketerController::class , 'pauseCampaign'])->name('campaigns.pause');
     Route::patch('/campaigns/{campaign}/resume', [App\Http\Controllers\MarketerController::class , 'resumeCampaign'])->name('campaigns.resume');
     Route::get('/campaigns/{campaign}/qr-code', [App\Http\Controllers\MarketerController::class , 'getCampaignQRCode'])->name('campaigns.qr-code');
+
+    // Dashboard AJAX endpoints
+    Route::get('/referral-chain', [App\Http\Controllers\MarketerController::class, 'getReferralChainVisualization'])->name('referral-chain');
+    Route::get('/commission-breakdown', [App\Http\Controllers\MarketerController::class, 'getCommissionBreakdownWithTiers'])->name('commission-breakdown');
+    Route::get('/super-marketer-info', [App\Http\Controllers\MarketerController::class, 'getReferringSuperMarketerInfo'])->name('super-marketer-info');
+    Route::get('/performance-comparison', [App\Http\Controllers\MarketerController::class, 'getReferralPerformanceComparison'])->name('performance-comparison');
 
     // Referrals and earnings
     Route::get('/referrals', [App\Http\Controllers\MarketerController::class , 'getReferrals'])->name('referrals.index');

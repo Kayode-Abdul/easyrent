@@ -83,7 +83,7 @@
                                                     $totalCommission = $campaign->referrals()->sum('commission_amount');
                                                 @endphp
                                                 {{-- TODO: migrate $campaign->referrals()->sum('commission_amount') to rewards sum('amount') --}}
-                                                <strong>KSh {{ number_format($totalCommission) }}</strong>
+                                                <strong>{{ format_money($totalCommission) }}</strong>
                                             </td>
                                             <td>
                                                 <div class="btn-group" role="group">

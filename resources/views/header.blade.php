@@ -57,6 +57,61 @@
 
 
     <!-- IMMEDIATE DARK MODE SCRIPT - Loads before any content -->
+    <style>
+        /* Navbar Dark Mode Fixes */
+        html[data-chrome-dark="true"] .ftco_navbar {
+            /* Opt navbar out of global inversion so text and logo colors stay true */
+            filter: invert(1) hue-rotate(180deg) !important;
+        }
+
+        /* Language Selector Fixes */
+        .premium-lang-selector .nav-link {
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 4px 12px !important;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .ftco-navbar-light.scrolled .premium-lang-selector .nav-link {
+            border-color: rgba(0,0,0,0.2);
+            color: #000000 !important;
+        }
+
+        .premium-lang-selector .dropdown-menu {
+            z-index: 999999 !important;
+            min-width: 130px;
+            border-radius: 12px;
+            padding: 8px 0;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            margin-top: 5px;
+            background-color: #ffffff !important;
+        }
+        
+        .premium-lang-selector .dropdown-item {
+            color: #333333 !important;
+            transition: all 0.2s ease;
+        }
+        
+        .premium-lang-selector .dropdown-item:hover {
+            background-color: #f8f9fa !important;
+            color: #0c5455 !important;
+        }
+        
+        /* Ensure navbar stays on top of everything */
+        .ftco_navbar {
+            z-index: 9999 !important;
+        }
+        
+        html[data-chrome-dark="true"] .ftco_navbar img,
+        html[data-chrome-dark="true"] .ftco_navbar a,
+        html[data-chrome-dark="true"] .ftco_navbar button,
+        html[data-chrome-dark="true"] .ftco_navbar select {
+            filter: none !important;
+        }
+    </style>
     <script>
         (function () {
             const STORAGE_KEY = 'chrome-dark-mode-preference';
@@ -93,7 +148,7 @@
     // $paymentPage = request()->segment(2);
     // $forPayment = in_array($paymentPage, ['invite']);
      $currentSegment = request()->segment(1);
-    $isDashboard = in_array($currentSegment, ['', 'contact', 'benefits', 'faq', 'login', 'password', 'register', 'apartment', 'payment','benefactor']);
+    $isDashboard = in_array($currentSegment, ['', 'contact', 'benefits', 'faq', 'login', 'password', 'register', 'apartment', 'payment','benefactor', 'onboarding']);
     @endphp
     @if($isDashboard )
     <!-- Add CSRF Token meta tag -->
@@ -300,8 +355,7 @@
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
                 pageLanguage: 'en',
-                includedLanguages: 'en,fr,de,ar,pt,hi,zh-CN',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+                includedLanguages: 'en,fr,es,de,ar,pt,hi,zh-CN'
             }, 'google_translate_element');
         }
     </script>
@@ -346,7 +400,45 @@
                         <a href="/contact" class="nav-link">Contact</a>
                     </li> 
                     <li class="nav-item d-flex align-items-center px-2">
-                        <div id="google_translate_element"></div>
+                        <div class="premium-lang-selector dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="langDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="bi bi-globe2"></i> <span id="current-lang" style="font-weight: 600; font-size: 13px; margin-left: 4px;">EN</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="langDropdown">
+                                <a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('en')" style="font-weight: 500; padding: 8px 16px; font-size: 14px;"><span class="mr-2">🇬🇧</span> English</a>
+                                <a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('fr')" style="font-weight: 500; padding: 8px 16px; font-size: 14px;"><span class="mr-2">🇫🇷</span> Français</a>
+                                <a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('es')" style="font-weight: 500; padding: 8px 16px; font-size: 14px;"><span class="mr-2">🇪🇸</span> Español</a>
+                                <a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('de')" style="font-weight: 500; padding: 8px 16px; font-size: 14px;"><span class="mr-2">🇩🇪</span> Deutsch</a>
+                                <a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('zh-CN')" style="font-weight: 500; padding: 8px 16px; font-size: 14px;"><span class="mr-2">🇨🇳</span> 中文</a>
+                                <a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('ar')" style="font-weight: 500; padding: 8px 16px; font-size: 14px;"><span class="mr-2">🇸🇦</span> العربية</a>
+                            </div>
+                        </div>
+                        <div style="position: absolute; left: -9999px; z-index: -9999;">
+                            <div id="google_translate_element"></div>
+                        </div>
+                        <script>
+                            function changeLanguage(langCode) {
+                                var selectField = document.querySelector(".goog-te-combo");
+                                if(selectField) {
+                                    selectField.value = langCode;
+                                    
+                                    // Trigger change event robustly
+                                    if (typeof(Event) === 'function') {
+                                        selectField.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+                                    } else {
+                                        var event = document.createEvent('HTMLEvents');
+                                        event.initEvent('change', true, true);
+                                        selectField.dispatchEvent(event);
+                                    }
+                                } else {
+                                    // Fallback: set the cookie manually and reload if the script hasn't injected the select
+                                    document.cookie = "googtrans=/en/" + langCode + "; path=/;";
+                                    window.location.reload();
+                                    return;
+                                }
+                                document.getElementById('current-lang').innerText = langCode.toUpperCase() === 'ZH-CN' ? 'ZH' : langCode.toUpperCase();
+                            }
+                        </script>
                     </li>
                      @guest
                     <li class="nav-item">
@@ -406,13 +498,11 @@
                 padding: 8px 12px;
                 transition: all 0.3s ease;
                 background: rgba(255, 255, 255, 0.1);
-                backdrop-filter: blur(10px);
             }
 
             .navbar-toggler:hover {
                 border-color: rgba(255, 255, 255, 0.5);
                 background: rgba(255, 255, 255, 0.2);
-                transform: translateY(-1px);
             }
 
             .navbar-toggler:focus {
@@ -420,24 +510,32 @@
                 outline: none;
             }
 
-            .navbar-toggler .oi {
-                font-size: 1.2rem;
-                margin-right: 5px;
-                transition: transform 0.3s ease;
+            /* CRITICAL: Ensure collapsed navbar is hidden by default on mobile/tab */
+            .navbar-collapse:not(.show) {
+                display: none !important;
             }
 
-            .navbar-toggler.collapsed .oi {
-                transform: rotate(90deg);
+            .navbar-collapse.show {
+                display: block !important;
             }
 
-            /* Mobile Menu Animation */
-            .navbar-collapse {
-                background: rgba(0, 0, 0, 0.95);
-                backdrop-filter: blur(10px);
+            .navbar-collapse.collapsing {
+                display: block !important;
+                height: 0;
+                overflow: hidden;
+                transition: height 0.35s ease;
+            }
+
+            /* Solid opaque background - no transparency */
+            #ftco-nav {
+                background: #000000 !important; /* Solid black to prevent bleeding */
                 border-radius: 12px;
                 margin-top: 10px;
                 padding: 20px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                position: relative;
+                z-index: 9999;
             }
 
             .navbar-nav .nav-item {
@@ -462,118 +560,64 @@
                 background: linear-gradient(135deg, #3e8189 0%, #51cbce 100%);
                 color: #fff !important;
             }
-
-            /* Smooth transitions for mobile */
-            .navbar-collapse.collapsing {
-                transition: height 0.3s ease;
-            }
-
-            /* Loading state for menu button */
-            .navbar-toggler.loading .oi {
-                animation: spin 1s linear infinite;
-            }
         }
 
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
+        /* Desktop: ensure navbar collapse is visible */
+        @media (min-width: 992px) {
+            .navbar-collapse {
+                display: flex !important;
             }
         }
     </style>
 
     <script>
         $(document).ready(function () {
-            // Remove default Bootstrap collapse behavior and add custom functionality
-            $('.navbar-toggler').on('click', function (e) {
+            // Simple, reliable hamburger toggle using Bootstrap's collapse
+            var $navToggler = $('.navbar-toggler');
+            var $navCollapse = $('#ftco-nav');
+
+            // Prevent Bootstrap's default data-toggle from conflicting
+            $navToggler.removeAttr('data-toggle');
+
+            $navToggler.on('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
 
-                const $this = $(this);
-                const target = $this.attr('data-target');
-                const $collapse = $(target);
+                if ($navCollapse.hasClass('show')) {
+                    // Close
+                    $navCollapse.removeClass('show');
+                    $(this).attr('aria-expanded', 'false');
+                } else {
+                    // Open
+                    $navCollapse.addClass('show');
+                    $(this).attr('aria-expanded', 'true');
+                }
+            });
 
-                // Toggle aria-expanded
-                const isExpanded = $this.attr('aria-expanded') === 'true';
-                $this.attr('aria-expanded', !isExpanded);
+            // Close mobile menu when clicking a nav link
+            $('#ftco-nav .nav-link').on('click', function () {
+                if ($(window).width() < 992) {
+                    $navCollapse.removeClass('show');
+                    $navToggler.attr('aria-expanded', 'false');
+                }
+            });
 
-                // Toggle menu with smooth animation
-            if (!isExpanded) {
-                // Open menu
-                $collapse.stop(true, true).slideDown(400, function () {
-                    $(this).addClass('show');
-                });
-                $this.addClass('collapsed');
-            } else {
-                // Close menu
-                $collapse.stop(true, true).slideUp(300, function () {
-                    $(this).removeClass('show');
-                });
-                $this.removeClass('collapsed');
-            }
-        });
-
-        // Close mobile menu when clicking on nav links
-        $('.navbar-nav .nav-link').on('click', function (e) {
-            if ($(window).width() < 992) {
-                const $collapse = $('.navbar-collapse');
-                const $toggler = $('.navbar-toggler');
-
-                // Close menu with animation
-                $collapse.stop(true, true).slideUp(300, function () {
-                    $(this).removeClass('show');
-                });
-                $toggler.attr('aria-expanded', 'false').removeClass('collapsed');
-            }
-        });
-
-        // Close mobile menu when clicking outside
-        $(document).on('click', function (e) {
-            if ($(window).width() < 992) {
-                const $navbar = $('.ftco_navbar');
-                const $collapse = $('.navbar-collapse');
-                const $toggler = $('.navbar-toggler');
-
-                // Check if click was outside navbar
-                if (!$navbar.is(e.target) && $navbar.has(e.target).length === 0) {
-                    if ($collapse.hasClass('show')) {
-                        $collapse.stop(true, true).slideUp(300, function () {
-                            $(this).removeClass('show');
-                        });
-                        $toggler.attr('aria-expanded', 'false').removeClass('collapsed');
+            // Close mobile menu when clicking outside
+            $(document).on('click', function (e) {
+                if ($(window).width() < 992 && $navCollapse.hasClass('show')) {
+                    if (!$(e.target).closest('.ftco_navbar').length) {
+                        $navCollapse.removeClass('show');
+                        $navToggler.attr('aria-expanded', 'false');
                     }
                 }
-            }
-        });
+            });
 
-        // Handle window resize
-        $(window).on('resize', function () {
-            if ($(window).width() >= 992) {
-                const $collapse = $('.navbar-collapse');
-                const $toggler = $('.navbar-toggler');
-
-                // Reset menu for desktop
-                $collapse.removeClass('show').removeAttr('style').show();
-                $toggler.attr('aria-expanded', 'false').removeClass('collapsed');
-            }
-        });
-
-        // Smooth scroll for anchor links
-        $('a[href^="#"]').on('click', function (e) {
-            const href = this.getAttribute('href');
-            if (href.length > 1) {
-                e.preventDefault();
-                const target = $(href);
-                if (target.length) {
-                    $('html, body').animate({
-                        scrollTop: target.offset().top - 70
-                    }, 800);
+            // Handle window resize
+            $(window).on('resize', function () {
+                if ($(window).width() >= 992) {
+                    $navCollapse.removeClass('show');
+                    $navToggler.attr('aria-expanded', 'false');
                 }
-            }
-        });
             });
         });
     </script>
@@ -593,6 +637,14 @@
                             <p>Dashboard</p>
                         </a>
                     </li>
+                    @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isLandlord()))
+                    <li class="{{ request()->is('activity-logs') ? 'active' : '' }}">
+                        <a href="{{ route('activity.logs') }}">
+                            <i class="nc-icon nc-zoom-split"></i>
+                            <p>Activity Logs</p>
+                        </a>
+                    </li>
+                    @endif
                     <li class="{{ request()->is('dashboard/user') ? 'active' : '' }}">
                         <a href="/dashboard/user">
                             <i class="nc-icon nc-single-02"></i>
@@ -962,7 +1014,22 @@
 
                         <ul class="navbar-nav">
                              <li class="nav-item d-flex align-items-center pr-3">
-                                 <div id="google_translate_element"></div>
+                                <div class="premium-lang-selector dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="dashLangDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="nc-icon nc-world-2"></i> <span id="dash-current-lang" style="font-weight: 600; font-size: 13px; margin-left: 4px;">EN</span>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dashLangDropdown">
+                                        <a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('en')" style="font-weight: 500; padding: 8px 16px; font-size: 14px;"><span class="mr-2">🇬🇧</span> English</a>
+                                        <a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('fr')" style="font-weight: 500; padding: 8px 16px; font-size: 14px;"><span class="mr-2">🇫🇷</span> Français</a>
+                                        <a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('es')" style="font-weight: 500; padding: 8px 16px; font-size: 14px;"><span class="mr-2">🇪🇸</span> Español</a>
+                                        <a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('de')" style="font-weight: 500; padding: 8px 16px; font-size: 14px;"><span class="mr-2">🇩🇪</span> Deutsch</a>
+                                        <a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('zh-CN')" style="font-weight: 500; padding: 8px 16px; font-size: 14px;"><span class="mr-2">🇨🇳</span> 中文</a>
+                                        <a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('ar')" style="font-weight: 500; padding: 8px 16px; font-size: 14px;"><span class="mr-2">🇸🇦</span> العربية</a>
+                                    </div>
+                                </div>
+                                <div style="position: absolute; left: -9999px; z-index: -9999;">
+                                    <div id="google_translate_element"></div>
+                                </div>
                              </li>
                              <li class="nav-item">
                                  <a class="nav-link btn-magnify" href="javascript:;">

@@ -181,6 +181,18 @@ nav[role="navigation"] {
 /* Fix table styling */
 .table th {
   background-color: #f8f9fa;
+  color: #495057;
+}
+
+.table .thead-light th,
+.table thead.thead-light th {
+  background-color: #e2e6ea !important;
+  color: #495057 !important;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.table thead.text-primary th {
+  color: #28a745 !important;
 }
 
 /* Fix footer styling */
@@ -483,13 +495,24 @@ nav[role="navigation"] {
 /* =============================================
    Frosted Glassmorphic Top Navbar Styling
    ============================================= */
-.ftco-navbar-light {
+/* .ftco-navbar-light {
+  margin-bottom: 0;
   background: rgba(255, 255, 255, 0.35) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.25) !important;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03) !important;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+} */
+.ftco-navbar-light {
+  margin-bottom: 0;
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(25px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06) !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
 }
 
 /* Scrolled state for Navbar */
@@ -509,7 +532,7 @@ nav[role="navigation"] {
 }
 
 /* Glassmorphic Dropdowns for submenus to match */
-.ftco-navbar-light .navbar-nav > .nav-item .dropdown-menu {
+.ftco-navbar-light .navbar-nav>.nav-item .dropdown-menu {
   background: rgba(255, 255, 255, 0.85) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
@@ -525,10 +548,11 @@ nav[role="navigation"] {
     padding-top: 15px !important;
     padding-bottom: 15px !important;
   }
-  
+
   /* Mobile navbar collapse dropdown container */
   .ftco_navbar .navbar-collapse {
-    background: rgba(12, 84, 85, 0.65) !important; /* Premium dark teal matching brand theme */
+    background: rgba(12, 84, 85, 0.65) !important;
+    /* Premium dark teal matching brand theme */
     backdrop-filter: blur(25px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
@@ -536,20 +560,620 @@ nav[role="navigation"] {
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25) !important;
     margin-top: 15px !important;
   }
-  
+
   /* Ensure clean text visibility in the mobile glass menu */
   .ftco_navbar .navbar-nav .nav-link {
     color: rgba(255, 255, 255, 0.9) !important;
   }
-  
+
   .ftco_navbar .navbar-nav .nav-link:hover {
     background: rgba(255, 255, 255, 0.1) !important;
     color: #fff !important;
   }
-  
+
   /* Dark mode filter adaptive support */
   html[data-chrome-dark="true"] .ftco_navbar .navbar-collapse {
     background: rgba(0, 0, 0, 0.65) !important;
     border-color: rgba(255, 255, 255, 0.08) !important;
   }
+}
+
+/* =============================================
+   Premium Color Refinement
+   Strict adherence to company brand palette:
+   Green (#28a745), Yellow (#fbc658), Red (#ef8157).
+   Uses darker/lighter shades for optimal UI/UX contrast.
+   ============================================= */
+
+/* ---------- Color Palette ----------
+   Primary (Brand Green):    #28a745
+   Success (Darker Green):   #1e7e34
+   Warning (Brand Yellow):   #e5a520 (deepened for white text)
+   Info (Lighter Yellow):    #d99216
+   Danger (Brand Red):       #e0603a (deepened for white text)
+   Secondary (Darker Red):   #bd411b
+   Default (Neutral Grey):   #66615B
+   ----------------------------------- */
+
+/* ── Badges ────────────────────────── */
+.badge {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.35em 0.65em;
+  font-size: 0.78em;
+  border-radius: 4px;
+}
+
+.badge.badge-primary,
+.badge-primary {
+  background-color: #28a745 !important;
+  border-color: #28a745 !important;
+  color: #fff !important;
+}
+
+.badge.badge-success,
+.badge-success {
+  background-color: #1e7e34 !important;
+  border-color: #1e7e34 !important;
+  color: #fff !important;
+}
+
+.badge.badge-info,
+.badge-info {
+  background-color: #d99216 !important;
+  border-color: #d99216 !important;
+  color: #fff !important;
+}
+
+.badge.badge-warning,
+.badge-warning {
+  background-color: #e5a520 !important;
+  border-color: #e5a520 !important;
+  color: #fff !important;
+}
+
+.badge.badge-danger,
+.badge-danger {
+  background-color: #e0603a !important;
+  border-color: #e0603a !important;
+  color: #fff !important;
+}
+
+.badge.badge-secondary,
+.badge-secondary {
+  background-color: #bd411b !important;
+  border-color: #bd411b !important;
+  color: #fff !important;
+}
+
+.badge.badge-default,
+.badge-default {
+  background-color: #66615B !important;
+  border-color: #66615B !important;
+  color: #fff !important;
+}
+
+/* ── Background Utilities ──────────── */
+.bg-primary   { background-color: #28a745 !important; }
+.bg-success   { background-color: #1e7e34 !important; }
+.bg-info      { background-color: #d99216 !important; }
+.bg-warning   { background-color: #e5a520 !important; }
+.bg-danger    { background-color: #e0603a !important; }
+.bg-secondary { background-color: #bd411b !important; }
+
+/* Ensure white text on colored backgrounds */
+.bg-primary,
+.bg-success,
+.bg-info,
+.bg-warning,
+.bg-danger,
+.bg-secondary {
+  color: #fff !important;
+}
+
+/* ── Text Utilities ────────────────── */
+.text-primary, a.text-primary:focus, a.text-primary:hover {
+  color: #28a745 !important;
+}
+.text-success, a.text-success:focus, a.text-success:hover {
+  color: #1e7e34 !important;
+}
+.text-info, a.text-info:focus, a.text-info:hover {
+  color: #d99216 !important;
+}
+.text-warning, a.text-warning:focus, a.text-warning:hover {
+  color: #e5a520 !important;
+}
+.text-danger, a.text-danger:focus, a.text-danger:hover {
+  color: #e0603a !important;
+}
+
+/* ── Alerts ────────────────────────── */
+.alert {
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.alert.alert-primary   { background-color: #28a745 !important; }
+.alert.alert-success   { background-color: #1e7e34 !important; }
+.alert.alert-info      { background-color: #d99216 !important; }
+.alert.alert-warning   { background-color: #e5a520 !important; }
+.alert.alert-danger    { background-color: #e0603a !important; }
+.alert.alert-secondary { background-color: #bd411b !important; }
+
+.alert .close {
+  color: #fff !important;
+  opacity: 0.85;
+  text-shadow: none;
+}
+
+.alert .close:hover {
+  opacity: 1;
+}
+
+/* ── Cards with bg-* colors ───────── */
+.card.bg-primary   { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important; }
+.card.bg-success   { background: linear-gradient(135deg, #1e7e34 0%, #155724 100%) !important; }
+.card.bg-info      { background: linear-gradient(135deg, #d99216 0%, #b3730e 100%) !important; }
+.card.bg-warning   { background: linear-gradient(135deg, #e5a520 0%, #c58610 100%) !important; }
+.card.bg-danger    { background: linear-gradient(135deg, #e0603a 0%, #c4401c 100%) !important; }
+.card.bg-secondary { background: linear-gradient(135deg, #bd411b 0%, #942b0d 100%) !important; }
+
+/* Card text on colored cards */
+.card.bg-primary .card-body,
+.card.bg-success .card-body,
+.card.bg-info .card-body,
+.card.bg-warning .card-body,
+.card.bg-danger .card-body,
+.card.bg-secondary .card-body {
+  color: #fff;
+}
+
+.card.bg-primary .card-body p,
+.card.bg-success .card-body p,
+.card.bg-info .card-body p,
+.card.bg-warning .card-body p,
+.card.bg-danger .card-body p,
+.card.bg-secondary .card-body p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Buttons ──────────────────────── */
+.btn-success { background-color: #1e7e34 !important; border-color: #1e7e34 !important; color: #fff !important; }
+.btn-success:hover { background-color: #155724 !important; border-color: #155724 !important; }
+
+.btn-info { background-color: #d99216 !important; border-color: #d99216 !important; color: #fff !important; }
+.btn-info:hover { background-color: #b3730e !important; border-color: #b3730e !important; }
+
+.btn-warning { background-color: #e5a520 !important; border-color: #e5a520 !important; color: #fff !important; }
+.btn-warning:hover { background-color: #c58610 !important; border-color: #c58610 !important; }
+
+.btn-danger { background-color: #e0603a !important; border-color: #e0603a !important; color: #fff !important; }
+.btn-danger:hover { background-color: #c4401c !important; border-color: #c4401c !important; }
+
+.btn-secondary { background-color: #bd411b !important; border-color: #bd411b !important; color: #fff !important; }
+.btn-secondary:hover { background-color: #942b0d !important; border-color: #942b0d !important; }
+
+/* ── Outline Buttons ─────────────── */
+.btn-outline-success { color: #1e7e34 !important; border-color: #1e7e34 !important; }
+.btn-outline-success:hover { background-color: #1e7e34 !important; color: #fff !important; }
+
+.btn-outline-info { color: #d99216 !important; border-color: #d99216 !important; }
+.btn-outline-info:hover { background-color: #d99216 !important; color: #fff !important; }
+
+.btn-outline-warning { color: #e5a520 !important; border-color: #e5a520 !important; }
+.btn-outline-warning:hover { background-color: #e5a520 !important; color: #fff !important; }
+
+.btn-outline-danger { color: #e0603a !important; border-color: #e0603a !important; }
+.btn-outline-danger:hover { background-color: #e0603a !important; color: #fff !important; }
+
+.btn-outline-secondary { color: #bd411b !important; border-color: #bd411b !important; }
+.btn-outline-secondary:hover { background-color: #bd411b !important; color: #fff !important; }
+
+/* ── Card Stats Icon Colors ───────── */
+.icon-big .nc-icon.text-success, .icon-big i.text-success { color: #1e7e34 !important; }
+.icon-big .nc-icon.text-info,    .icon-big i.text-info    { color: #d99216 !important; }
+.icon-big .nc-icon.text-warning, .icon-big i.text-warning { color: #e5a520 !important; }
+.icon-big .nc-icon.text-danger,  .icon-big i.text-danger  { color: #e0603a !important; }
+
+/* ── Border Utilities ─────────────── */
+.border-primary   { border-color: #28a745 !important; }
+.border-success   { border-color: #1e7e34 !important; }
+.border-info      { border-color: #d99216 !important; }
+.border-warning   { border-color: #e5a520 !important; }
+.border-danger    { border-color: #e0603a !important; }
+.border-secondary { border-color: #bd411b !important; }
+
+/* ── Progress Bars ────────────────── */
+.progress-bar.bg-success, .progress-bar-success { background-color: #1e7e34 !important; }
+.progress-bar.bg-info,    .progress-bar-info    { background-color: #d99216 !important; }
+.progress-bar.bg-warning, .progress-bar-warning { background-color: #e5a520 !important; }
+.progress-bar.bg-danger,  .progress-bar-danger  { background-color: #e0603a !important; }
+
+
+/* ---------- Color Palette ----------
+   Primary (brand green): #1b9e3e / #28a745
+   Success:               #0d9f6e (emerald)
+   Info:                   #2563eb (vivid blue)
+   Warning:               #d97706 (amber)
+   Danger:                #dc2626 (red)
+   Secondary:             #64748b (slate)
+   ----------------------------------- */
+
+/* ── Badges ────────────────────────── */
+.badge.badge-primary,
+.badge-primary {
+  background-color: #1b9e3e !important;
+  border-color: #1b9e3e !important;
+  color: #fff !important;
+}
+
+.badge.badge-success,
+.badge-success {
+  background-color: #0d9f6e !important;
+  border-color: #0d9f6e !important;
+  color: #fff !important;
+}
+
+.badge.badge-info,
+.badge-info {
+  background-color: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #fff !important;
+}
+
+.badge.badge-warning,
+.badge-warning {
+  background-color: #d97706 !important;
+  border-color: #d97706 !important;
+  color: #fff !important;
+}
+
+.badge.badge-danger,
+.badge-danger {
+  background-color: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #fff !important;
+}
+
+.badge.badge-secondary,
+.badge-secondary {
+  background-color: #64748b !important;
+  border-color: #64748b !important;
+  color: #fff !important;
+}
+
+.badge.badge-default,
+.badge-default {
+  background-color: #475569 !important;
+  border-color: #475569 !important;
+  color: #fff !important;
+}
+
+/* Pill-style refinement for all badges */
+.badge {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.35em 0.65em;
+  font-size: 0.78em;
+  border-radius: 4px;
+}
+
+/* ── Background Utilities ──────────── */
+.bg-primary {
+  background-color: #1b9e3e !important;
+}
+
+.bg-success {
+  background-color: #0d9f6e !important;
+}
+
+.bg-info {
+  background-color: #2563eb !important;
+}
+
+.bg-warning {
+  background-color: #d97706 !important;
+}
+
+.bg-danger {
+  background-color: #dc2626 !important;
+}
+
+.bg-secondary {
+  background-color: #64748b !important;
+}
+
+/* Ensure white text on colored backgrounds */
+.bg-primary,
+.bg-success,
+.bg-info,
+.bg-warning,
+.bg-danger,
+.bg-secondary {
+  color: #fff !important;
+}
+
+/* ── Text Utilities ────────────────── */
+.text-primary,
+a.text-primary:focus,
+a.text-primary:hover {
+  color: #1b9e3e !important;
+}
+
+.text-success,
+a.text-success:focus,
+a.text-success:hover {
+  color: #0d9f6e !important;
+}
+
+.text-info,
+a.text-info:focus,
+a.text-info:hover {
+  color: #2563eb !important;
+}
+
+.text-warning,
+a.text-warning:focus,
+a.text-warning:hover {
+  color: #b45309 !important;
+}
+
+.text-danger,
+a.text-danger:focus,
+a.text-danger:hover {
+  color: #dc2626 !important;
+}
+
+/* ── Alerts ────────────────────────── */
+.alert {
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.alert.alert-primary {
+  background-color: #1b9e3e !important;
+}
+
+.alert.alert-success {
+  background-color: #0d9f6e !important;
+}
+
+.alert.alert-info {
+  background-color: #2563eb !important;
+}
+
+.alert.alert-warning {
+  background-color: #d97706 !important;
+}
+
+.alert.alert-danger {
+  background-color: #dc2626 !important;
+}
+
+.alert.alert-secondary {
+  background-color: #64748b !important;
+}
+
+.alert .close {
+  color: #fff !important;
+  opacity: 0.85;
+  text-shadow: none;
+}
+
+.alert .close:hover {
+  opacity: 1;
+}
+
+/* ── Cards with bg-* colors ───────── */
+.card.bg-primary {
+  background: linear-gradient(135deg, #1b9e3e 0%, #15803d 100%) !important;
+}
+
+.card.bg-success {
+  background: linear-gradient(135deg, #0d9f6e 0%, #047857 100%) !important;
+}
+
+.card.bg-info {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+}
+
+.card.bg-warning {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+}
+
+.card.bg-danger {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+}
+
+.card.bg-secondary {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+}
+
+/* Card text on colored cards */
+.card.bg-primary .card-body,
+.card.bg-success .card-body,
+.card.bg-info .card-body,
+.card.bg-warning .card-body,
+.card.bg-danger .card-body,
+.card.bg-secondary .card-body {
+  color: #fff;
+}
+
+.card.bg-primary .card-body p,
+.card.bg-success .card-body p,
+.card.bg-info .card-body p,
+.card.bg-warning .card-body p,
+.card.bg-danger .card-body p,
+.card.bg-secondary .card-body p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Buttons ──────────────────────── */
+.btn-success {
+  background-color: #0d9f6e !important;
+  border-color: #0d9f6e !important;
+  color: #fff !important;
+}
+
+.btn-success:hover {
+  background-color: #047857 !important;
+  border-color: #047857 !important;
+}
+
+.btn-info {
+  background-color: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #fff !important;
+}
+
+.btn-info:hover {
+  background-color: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}
+
+.btn-warning {
+  background-color: #d97706 !important;
+  border-color: #d97706 !important;
+  color: #fff !important;
+}
+
+.btn-warning:hover {
+  background-color: #b45309 !important;
+  border-color: #b45309 !important;
+}
+
+.btn-danger {
+  background-color: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #fff !important;
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c !important;
+  border-color: #b91c1c !important;
+}
+
+.btn-secondary {
+  background-color: #64748b !important;
+  border-color: #64748b !important;
+  color: #fff !important;
+}
+
+.btn-secondary:hover {
+  background-color: #475569 !important;
+  border-color: #475569 !important;
+}
+
+/* ── Outline Buttons ─────────────── */
+.btn-outline-success {
+  color: #0d9f6e !important;
+  border-color: #0d9f6e !important;
+}
+.btn-outline-success:hover {
+  background-color: #0d9f6e !important;
+  color: #fff !important;
+}
+
+.btn-outline-info {
+  color: #2563eb !important;
+  border-color: #2563eb !important;
+}
+.btn-outline-info:hover {
+  background-color: #2563eb !important;
+  color: #fff !important;
+}
+
+.btn-outline-warning {
+  color: #d97706 !important;
+  border-color: #d97706 !important;
+}
+.btn-outline-warning:hover {
+  background-color: #d97706 !important;
+  color: #fff !important;
+}
+
+.btn-outline-danger {
+  color: #dc2626 !important;
+  border-color: #dc2626 !important;
+}
+.btn-outline-danger:hover {
+  background-color: #dc2626 !important;
+  color: #fff !important;
+}
+
+.btn-outline-secondary {
+  color: #64748b !important;
+  border-color: #64748b !important;
+}
+.btn-outline-secondary:hover {
+  background-color: #64748b !important;
+  color: #fff !important;
+}
+
+/* ── Card Stats Icon Colors ───────── */
+.icon-big .nc-icon.text-success,
+.icon-big i.text-success {
+  color: #0d9f6e !important;
+}
+
+.icon-big .nc-icon.text-info,
+.icon-big i.text-info {
+  color: #2563eb !important;
+}
+
+.icon-big .nc-icon.text-warning,
+.icon-big i.text-warning {
+  color: #d97706 !important;
+}
+
+.icon-big .nc-icon.text-danger,
+.icon-big i.text-danger {
+  color: #dc2626 !important;
+}
+
+/* ── Border Utilities ─────────────── */
+.border-success {
+  border-color: #0d9f6e !important;
+}
+
+.border-info {
+  border-color: #2563eb !important;
+}
+
+.border-warning {
+  border-color: #d97706 !important;
+}
+
+.border-danger {
+  border-color: #dc2626 !important;
+}
+
+.border-primary {
+  border-color: #1b9e3e !important;
+}
+
+/* ── Progress Bars ────────────────── */
+.progress-bar.bg-success,
+.progress-bar-success {
+  background-color: #0d9f6e !important;
+}
+
+.progress-bar.bg-info,
+.progress-bar-info {
+  background-color: #2563eb !important;
+}
+
+.progress-bar.bg-warning,
+.progress-bar-warning {
+  background-color: #d97706 !important;
+}
+
+.progress-bar.bg-danger,
+.progress-bar-danger {
+  background-color: #dc2626 !important;
 }

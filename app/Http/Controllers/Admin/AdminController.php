@@ -171,8 +171,8 @@ class AdminController extends Controller
         $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'username' => 'required|string|max:255|unique:users,username,' . $user->id,
+            'email' => 'required|email|unique:users,email,' . $user->user_id . ',user_id',
+            'username' => 'required|string|max:255|unique:users,username,' . $user->user_id . ',user_id',
             'role' => 'required|in:1,2,3,4',
             'phone' => 'nullable|string|max:20',
             'occupation' => 'nullable|string|max:255',
@@ -223,7 +223,7 @@ class AdminController extends Controller
         }
 
         // Prevent user from deleting themselves
-        if ($user->id === auth()->id()) {
+        if ($user->user_id == auth()->id()) {
             return redirect()->route('admin.users')
                 ->with('error', 'You cannot delete your own account.');
         }
@@ -885,6 +885,9 @@ class AdminController extends Controller
         $oldRole = $user->role;
         $user->role = $vpmRoleId;
         $user->save();
+        
+        // Ensure pivot table is updated so whereDoesntHave('roles', ...) filters properly
+        $user->roles()->sync([$vpmRoleId]);
 
         AuditLogController::logActivity(
             'property_manager_approved',

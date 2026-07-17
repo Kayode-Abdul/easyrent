@@ -57,7 +57,7 @@
                         <div class="col-md-3">
                             <div class="card bg-info text-white">
                                 <div class="card-body text-center">
-                                    <h4>KSh {{ number_format($stats['total_commission']) }}</h4>
+                                    <h4>{{ format_money($stats['total_commission']) }}</h4>
                                     <p class="mb-0">Total Commission</p>
                                 </div>
                             </div>
@@ -129,7 +129,7 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <strong class="text-success">KSh {{ number_format($referral->commission_amount ?? ($referral->reward->amount ?? 0)) }}</strong>
+                                                <strong class="text-success">{{ format_money($referral->commission_amount ?? ($referral->reward->amount ?? 0), $referral->reward->currency_id ?? null) }}</strong>
                                                 <br>
                                                 <small class="text-muted">{{ auth()->user()->commission_rate }}%</small>
                                             </td>
@@ -299,7 +299,7 @@ function viewReferralDetails(referralId) {
                             <div class="row">
                                 <div class="col-md-3">
                                     <div class="text-center">
-                                        <h5 class="text-success">KSh ${referral.commission_amount.toLocaleString()}</h5>
+                                        <h5 class="text-success">${referral.reward && referral.reward.currency ? referral.reward.currency.symbol : (window.currencySymbol || '₦')}${referral.commission_amount.toLocaleString()}</h5>
                                         <small class="text-muted">Commission Amount</small>
                                     </div>
                                 </div>

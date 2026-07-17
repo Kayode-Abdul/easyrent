@@ -270,12 +270,14 @@
         <div class="col-md-3">
             <div class="stat-card-modern orange">
                 <div class="stat-icon-modern">
-                    <i class="fa fa-clock"></i>
+                    <i class="fa fa-wallet"></i>
                 </div>
-                <div class="stat-value-modern">{{ $pendingApprovals ?? 0 }}</div>
-                <div class="stat-label-modern">Pending Approvals</div>
-                <div class="stat-change negative">
-                    <i class="fa fa-arrow-down me-1"></i>3 new today
+                <div class="mt-2 mb-2">
+                    <x-currency-carousel :currencies="$totalCommissionByCurrency ?? []" id="carousel-regional-commission" />
+                </div>
+                <div class="stat-label-modern">Total Commission</div>
+                <div class="stat-change positive">
+                    <i class="fa fa-arrow-up me-1"></i>Earned this month
                 </div>
             </div>
         </div>

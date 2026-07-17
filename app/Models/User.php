@@ -279,6 +279,17 @@ class User extends Authenticatable implements MustVerifyEmail
         return $hasRole || $hasLandlordReferral;
     }
 
+    /**
+     * Scope a query to only include users who are marketers (have referrals).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeMarketers($query)
+    {
+        return $query->whereHas('referrals');
+    }
+
     public function isArtisan()
     {
         $id = self::getRoleId('Artisan');
@@ -367,8 +378,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'total_campaigns' => $this->referralCampaigns()->count(),
             'total_clicks' => $this->referralCampaigns()->sum('clicks_count'),
-            'total_conversions' => $this->referralCampaigns()->sum('conversions_count'),
-            'total_commission' => $this->referralCampaigns()->sum('total_commission'),
+            'total_conversions' => $this->referrals()->where('referral_status', 'active')->count(),
+            'total_commission' => $this->referralRewards()->whereIn('status', ['paid', 'approved'])->sum('amount'),
             'conversion_rate' => $this->getConversionRateAttribute()
         ];
     }
@@ -449,6 +460,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Check if user is a regional manager
+     */
+    public function isRegionalManager()
+    {
+        return $this->hasRole('regional_manager') || (is_numeric($this->role) && (int)$this->role === self::getRoleId('regional_manager'));
+    }
+
+    /**
      * Check if the user is an administrator.
      */
     public function isAdmin(): bool
@@ -477,7 +496,22 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isSuperMarketer(): bool
     {
-        return $this->hasRole('super_marketer');
+        if ($this->hasRole('super_marketer')) {
+            return true;
+        }
+
+        // A super marketer is someone who referred a user, and that referred user is a marketer
+        // (i.e. that referred user has referred a landlord)
+        return $this->referrals()->whereHas('referred', function ($q) {
+            $q->whereHas('referrals', function ($sq) {
+                $sq->whereHas('referred', function ($ssq) {
+                    $ssq->where(function ($roleQuery) {
+                        $roleQuery->where('role', self::getRoleId('landlord'))
+                            ->orWhereHas('roles', fn($rq) => $rq->where('name', 'landlord'));
+                    });
+                });
+            });
+        })->exists();
     }
 
     /**

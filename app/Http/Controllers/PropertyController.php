@@ -28,6 +28,18 @@ class PropertyController extends Controller
     {
         $this->middleware('auth')->except(['getLocationData']);
     }
+
+    private function logActivity($action, $description)
+    {
+        if (auth()->check()) {
+            \App\Models\ActivityLog::create([
+                'user_id' => auth()->id(),
+                'action' => $action,
+                'description' => $description,
+                'ip_address' => request()->ip(),
+            ]);
+        }
+    }
     public function properties(Request $request): \Illuminate\View\View
     {
         $perPage = 10; // Number of properties per page
@@ -39,6 +51,7 @@ class PropertyController extends Controller
 
     public function add(PropertyRequest $request, ReferralChainService $referralChainService): \Illuminate\View\View|JsonResponse
     {
+
         if (!$request->isMethod('post')) {
             $states = State::where('country_name', 'Nigeria')->with('lgas')->get();
             $currencies = Currency::where('is_active', true)->get();
@@ -145,6 +158,8 @@ class PropertyController extends Controller
                 'prop_type' => $propType
             ]);
 
+            $this->logActivity('create_property', "Created property #{$property->property_id} at {$property->address}");
+
             // Handle Image Uploads
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $image) {
@@ -203,6 +218,9 @@ class PropertyController extends Controller
         try {
             Log::info('Apartment creation request data:', $request->all());
             $property = Property::where('property_id', $request->propertyId)->firstOrFail();
+            if (auth()->check() && auth()->user()->isRegionalManager() && !auth()->user()->isOwnerOrAdmin($property->user_id)) {
+                return response()->json(['success' => false, 'messages' => 'Action restricted. Regional Managers cannot create apartments.'], 403);
+            }
             $this->authorizeProperty($property);
             
             $createdApartments = [];
@@ -298,6 +316,9 @@ class PropertyController extends Controller
             }
             
             Log::info('Apartments created successfully:', ['count' => count($createdApartments)]);
+            
+            $this->logActivity('create_apartments', "Created " . count($createdApartments) . " apartments for property #{$property->property_id}");
+            
             return response()->json([
                 'success' => true,
                 'messages' => [
@@ -324,6 +345,9 @@ class PropertyController extends Controller
         try {
             Log::info('Single apartment creation request data:', $request->all());
             $property = Property::where('property_id', $request->propertyId)->firstOrFail();
+            if (auth()->check() && auth()->user()->isRegionalManager() && !auth()->user()->isOwnerOrAdmin($property->user_id)) {
+                return response()->json(['success' => false, 'message' => 'Action restricted. Regional Managers cannot create apartments.'], 403);
+            }
             $this->authorizeProperty($property);
             
             // Generate unique apartment ID
@@ -412,6 +436,9 @@ class PropertyController extends Controller
             }
             
             Log::info('Single apartment created successfully:', ['apartment_id' => $apartmentId]);
+            
+            $this->logActivity('create_apartment', "Created apartment #{$apartmentId} for property #{$property->property_id}");
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Apartment created successfully!',
@@ -578,7 +605,7 @@ class PropertyController extends Controller
                 ->with('currency')
                 ->get();
 
-            $totalPaidByCurrency = $landlordPayments->groupBy('currency_id')->map(function ($payments) {
+            $totalPaidByCurrency = $landlordPayments->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })->map(function ($payments) {
                 return [
                     'amount' => $payments->sum('amount'),
                     'symbol' => $payments->first()->currency->symbol ?? format_money(0)->getSymbol(),
@@ -588,7 +615,7 @@ class PropertyController extends Controller
             
             // Commission calculation (simplified for now, using the transparency logic if needed)
             // For a robust version, we'd iterate through each payment's commission breakdown.
-            $totalCommissionByCurrency = $landlordPayments->groupBy('currency_id')->map(function ($payments) {
+            $totalCommissionByCurrency = $landlordPayments->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })->map(function ($payments) {
                 // This is a placeholder logic - in a real app, we'd fetch actual commission deductions
                 return [
                     'amount' => 0, // We can fill this if there's a reliable way to get commission from payment
@@ -601,7 +628,7 @@ class PropertyController extends Controller
                 ->with('currency')
                 ->get();
 
-            $totalPaidByCurrency = $tenantPayments->groupBy('currency_id')->map(function ($payments) {
+            $totalPaidByCurrency = $tenantPayments->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })->map(function ($payments) {
                 return [
                     'amount' => $payments->sum('amount'),
                     'symbol' => $payments->first()->currency->symbol ?? format_money(0)->getSymbol(),
@@ -1266,6 +1293,9 @@ class PropertyController extends Controller
     {
         try {
             $apartment = Apartment::where('apartment_id', $apartmentId)->with('property')->firstOrFail();
+            if (auth()->check() && auth()->user()->isRegionalManager() && !auth()->user()->isOwnerOrAdmin($apartment->property->user_id)) {
+                return response()->json(['success' => false, 'messages' => 'Action restricted. Regional Managers cannot update apartments.'], 403);
+            }
             $this->authorizeApartment($apartment);
             
             // Basic apartment fields
@@ -1346,6 +1376,9 @@ class PropertyController extends Controller
     {
         try {
             $apartment = Apartment::where('apartment_id', $apartmentId)->with('property')->firstOrFail();
+            if (auth()->check() && auth()->user()->isRegionalManager() && !auth()->user()->isOwnerOrAdmin($apartment->property->user_id)) {
+                return response()->json(['success' => false, 'messages' => 'Action restricted. Regional Managers cannot delete apartments.'], 403);
+            }
             $this->authorizeApartment($apartment);
             $apartment->delete();
             return response()->json([
@@ -1389,6 +1422,10 @@ class PropertyController extends Controller
     public function resendProfoma(Request $request, $id): JsonResponse
     {
         $profoma = \App\Models\ProfomaReceipt::findOrFail($id);
+        $apartment = \App\Models\Apartment::where('apartment_id', $profoma->apartment_id)->with('property')->first();
+        if (auth()->check() && auth()->user()->isRegionalManager() && (!isset($apartment->property) || !auth()->user()->isOwnerOrAdmin($apartment->property->user_id))) {
+            return response()->json(['success' => false, 'messages' => 'Action restricted. Regional Managers cannot send proformas.'], 403);
+        }
         if ($profoma->status !== \App\Models\ProfomaReceipt::STATUS_REJECTED) {
             return response()->json([
                 'success' => false,
@@ -1418,6 +1455,9 @@ class PropertyController extends Controller
             return view('auth.login');
         }
         $property = Property::where('property_id', $propId)->firstOrFail();
+        if (auth()->check() && auth()->user()->isRegionalManager() && !auth()->user()->isOwnerOrAdmin($property->user_id)) {
+            return redirect()->route('dashboard')->with('error', 'Action restricted. Regional Managers cannot edit properties.');
+        }
         $this->authorizeProperty($property);
         $countries = json_decode(File::get(resource_path('/countries.json')), true);
         
@@ -1434,6 +1474,9 @@ class PropertyController extends Controller
     {
         try {
             $property = Property::where('property_id', $propId)->firstOrFail();
+            if (auth()->check() && auth()->user()->isRegionalManager() && !auth()->user()->isOwnerOrAdmin($property->user_id)) {
+                return response()->json(['success' => false, 'messages' => 'Action restricted. Regional Managers cannot update properties.'], 403);
+            }
             $this->authorizeProperty($property);
             $property->update([
                 'prop_type' => $request->propertyType,
@@ -1490,6 +1533,9 @@ class PropertyController extends Controller
     {
         try {
             $property = Property::where('property_id', $propId)->firstOrFail();
+            if (auth()->check() && auth()->user()->isRegionalManager() && !auth()->user()->isOwnerOrAdmin($property->user_id)) {
+                return response()->json(['success' => false, 'messages' => 'Action restricted. Regional Managers cannot delete properties.'], 403);
+            }
             
 
             $property->delete();
@@ -1522,6 +1568,9 @@ class PropertyController extends Controller
                     'success' => false,
                     'message' => 'Apartment not found.'
                 ], 404);
+            }
+            if (auth()->check() && auth()->user()->isRegionalManager() && (!isset($apartment->property) || !auth()->user()->isOwnerOrAdmin($apartment->property->user_id))) {
+                return response()->json(['success' => false, 'messages' => 'Action restricted. Regional Managers cannot send proformas.'], 403);
             }
             
             $profoma = \App\Models\ProfomaReceipt::where('apartment_id', $apartment->id)->first();
@@ -1605,6 +1654,9 @@ class PropertyController extends Controller
     {
         try {
             $image = PropertyImage::findOrFail($id);
+            if (auth()->check() && auth()->user()->isRegionalManager() && (!isset($image->property) || !auth()->user()->isOwnerOrAdmin($image->property->user_id))) {
+                return response()->json(['success' => false, 'messages' => 'Action restricted. Regional Managers cannot delete images.'], 403);
+            }
             
             // Security check: Only owner or admin can delete
             $property = null;
@@ -1641,6 +1693,9 @@ class PropertyController extends Controller
     {
         try {
             $property = Property::where('property_id', $propId)->first();
+            if ($property && auth()->check() && auth()->user()->isRegionalManager() && !auth()->user()->isOwnerOrAdmin($property->user_id)) {
+                return response()->json(['success' => false, 'messages' => 'Action restricted. Regional Managers cannot delete properties.'], 403);
+            }
             
             if (!$property) {
                 return response()->json([

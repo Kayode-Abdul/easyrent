@@ -31,7 +31,8 @@ class CommissionPayment extends Model
         'parent_payment_id',
         'regional_rate_applied',
         'region',
-        'source_payment_id'
+        'source_payment_id',
+        'currency_id'
     ];
 
     protected $casts = [
@@ -127,6 +128,14 @@ class CommissionPayment extends Model
     public function sourcePayment(): BelongsTo
     {
         return $this->belongsTo(Payment::class, 'source_payment_id');
+    }
+
+    /**
+     * Get the currency for this payment
+     */
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class, 'currency_id');
     }
 
     /**

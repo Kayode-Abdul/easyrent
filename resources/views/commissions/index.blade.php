@@ -11,6 +11,22 @@
         </div>
 
         <!-- Stats Row -->
+        @php
+            $earnedCurrencies = $stats['total_earned']->map(function($s) {
+                return [
+                    'code' => $s->currency ? $s->currency->code : 'NGN',
+                    'symbol' => $s->currency ? $s->currency->symbol : '₦',
+                    'amount' => $s->total,
+                ];
+            })->toArray();
+            $pendingCurrencies = $stats['pending_approval']->map(function($s) {
+                return [
+                    'code' => $s->currency ? $s->currency->code : 'NGN',
+                    'symbol' => $s->currency ? $s->currency->symbol : '₦',
+                    'amount' => $s->total,
+                ];
+            })->toArray();
+        @endphp
         <div class="row">
             <div class="col-lg-4 col-md-6">
                 <div class="card card-stats">
@@ -24,29 +40,7 @@
                             <div class="col-7">
                                 <div class="numbers">
                                     <p class="card-category">Total Earned</p>
-                                    <h4 class="card-title">
-                                        <div id="carouselTotalEarned" class="carousel slide d-flex align-items-center justify-content-between" data-ride="carousel" data-interval="false">
-                                            @if($stats['total_earned']->count() > 1)
-                                            <a href="#carouselTotalEarned" role="button" data-slide="prev" class="text-muted"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
-                                            @endif
-
-                                            <div class="carousel-inner text-center flex-grow-1">
-                                                @forelse($stats['total_earned'] as $index => $stat)
-                                                <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
-                                                    <span>{{ $stat->currency ? $stat->currency->symbol : '' }}{{ number_format($stat->total, 2) }}</span>
-                                                </div>
-                                                @empty
-                                                <div class="carousel-item active">
-                                                    <span>{{ format_money(0) }}</span>
-                                                </div>
-                                                @endforelse
-                                            </div>
-
-                                            @if($stats['total_earned']->count() > 1)
-                                            <a href="#carouselTotalEarned" role="button" data-slide="next" class="text-muted"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
-                                            @endif
-                                        </div>
-                                    </h4>
+                                    <x-currency-carousel :currencies="$earnedCurrencies" id="commission-earned" />
                                 </div>
                             </div>
                         </div>
@@ -65,29 +59,7 @@
                             <div class="col-7">
                                 <div class="numbers">
                                     <p class="card-category">Pending Approval</p>
-                                    <h4 class="card-title">
-                                        <div id="carouselPendingApproval" class="carousel slide d-flex align-items-center justify-content-between" data-ride="carousel" data-interval="false">
-                                            @if($stats['pending_approval']->count() > 1)
-                                            <a href="#carouselPendingApproval" role="button" data-slide="prev" class="text-muted"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
-                                            @endif
-
-                                            <div class="carousel-inner text-center flex-grow-1">
-                                                @forelse($stats['pending_approval'] as $index => $stat)
-                                                <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
-                                                    <span>{{ $stat->currency ? $stat->currency->symbol : '' }}{{ number_format($stat->total, 2) }}</span>
-                                                </div>
-                                                @empty
-                                                <div class="carousel-item active">
-                                                    <span>{{ format_money(0) }}</span>
-                                                </div>
-                                                @endforelse
-                                            </div>
-
-                                            @if($stats['pending_approval']->count() > 1)
-                                            <a href="#carouselPendingApproval" role="button" data-slide="next" class="text-muted"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
-                                            @endif
-                                        </div>
-                                    </h4>
+                                    <x-currency-carousel :currencies="$pendingCurrencies" id="commission-pending" />
                                 </div>
                             </div>
                         </div>
@@ -164,7 +136,7 @@
                                                 Direct Referral
                                             @endif
                                         </td>
-                                        <td><span class="text-success font-weight-bold">{{ $reward->currency ? $reward->currency->symbol : '' }}{{ format_money($reward->amount) }}</span></td>
+                                        <td><span class="text-success font-weight-bold">{{ format_money($reward->amount, $reward->currency) }}</span></td>
                                         <td>
                                             @php
                                                 $badgeClass = 'secondary';

@@ -101,7 +101,8 @@ class SystemAnalyticsController extends Controller
             ->groupBy('currency_id')
             ->with('currency')
             ->get()
-            ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })
+                    ->map(function($group) { return ['amount' => $group->sum('total'), 'symbol' => $group->first()->currency->symbol ?? '₦']; })
             ->toArray();
 
         // Commission by tier
@@ -124,7 +125,8 @@ class SystemAnalyticsController extends Controller
             ->groupBy('currency_id')
             ->with('currency')
             ->get()
-            ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->avg_amount, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })
+                    ->map(function($group) { return ['amount' => $group->avg('avg_amount'), 'symbol' => $group->first()->currency->symbol ?? '₦']; })
             ->toArray();
 
         // Commission success rate

@@ -110,7 +110,7 @@
 
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="budget">Campaign Budget (KSh)</label>
+                                        <label for="budget">Campaign Budget (₦)</label>
                                         <input type="number" class="form-control @error('budget') is-invalid @enderror"
                                             id="budget" name="budget" value="{{ old('budget') }}" min="0" step="1000"
                                             placeholder="e.g., 50000">

@@ -377,51 +377,293 @@
         background: linear-gradient(45deg, #28a745, #6bd098) !important;
     }
 
-    .faq-item {
-        margin-bottom: 10px;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
+    /* =========================================================
+       ENHANCED FAQ UI & GLASSMORPHISM 
+       ========================================================= */
+    .content {
+        padding-top: 40px;
+        padding-bottom: 80px;
+        background: #f8f9fa;
+        min-height: 100vh;
     }
 
-    .faq-item .card-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #e9ecef;
+    html[data-chrome-dark="true"] .content {
+        filter: invert(1) hue-rotate(180deg) !important;
+        background: #000000 !important;
+        color: #ffffff;
     }
 
-    .faq-item .btn-link {
-        color: #495057;
-        text-decoration: none;
-        font-weight: 500;
-        width: 100%;
-        text-align: left;
+    /* Hero Section Upgrade */
+    .card.bg-gradient-info {
+        background: linear-gradient(135deg, rgba(12, 84, 85, 0.95) 0%, rgba(30, 110, 110, 0.8) 100%) !important;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(12, 84, 85, 0.2);
+        overflow: hidden;
+        position: relative;
     }
 
-    .faq-item .btn-link:hover {
-        color: #007bff;
-        text-decoration: none;
+    html[data-chrome-dark="true"] .card.bg-gradient-info {
+        background: linear-gradient(135deg, rgba(0, 20, 22, 0.95) 0%, rgba(10, 40, 40, 0.8) 100%) !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+    }
+    
+    .card.bg-gradient-info::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: url('data:image/svg+xml;utf8,<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="2" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100%" height="100%" fill="url(%23dots)"/></svg>');
+        pointer-events: none;
     }
 
-    .faq-item .btn-link i {
-        margin-right: 10px;
-        transition: transform 0.3s ease;
+    .card.bg-gradient-info h1 {
+        font-weight: 800;
+        letter-spacing: -1px;
     }
-
-    .faq-item .btn-link[aria-expanded="true"] i {
-        transform: rotate(45deg);
+    
+    /* Search Bar Upgrade */
+    .input-group {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border-radius: 50px;
+        overflow: hidden;
     }
-
-    .faq-filter.active {
-        background-color: #007bff;
-        color: white;
-        border-color: #007bff;
+    
+    html[data-chrome-dark="true"] .input-group {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
     }
 
     #faqSearch {
-        border-radius: 25px;
+        border-radius: 50px 0 0 50px;
+        padding: 15px 30px;
+        border: 2px solid transparent;
+        background: rgba(255, 255, 255, 0.95);
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        height: auto;
+    }
+    
+    html[data-chrome-dark="true"] #faqSearch {
+        background: rgba(15, 25, 30, 0.8) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+    }
+
+    #faqSearch:focus {
+        box-shadow: none;
+        border-color: #0c5455;
+        background: #ffffff;
+    }
+    
+    html[data-chrome-dark="true"] #faqSearch:focus {
+        border-color: #51cbce !important;
+        background: rgba(0, 0, 0, 0.9) !important;
     }
 
     .input-group-text {
-        border-radius: 0 25px 25px 0;
+        border-radius: 0 50px 50px 0;
+        background: #0c5455;
+        color: white;
+        border: none;
+        padding: 0 25px;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
+    
+    html[data-chrome-dark="true"] .input-group-text {
+        background: #1e6e6e !important;
+        color: white !important;
+    }
+    
+    #faqSearch:focus + .input-group-append .input-group-text {
+        background: #1e6e6e;
+    }
+    
+    html[data-chrome-dark="true"] #faqSearch:focus + .input-group-append .input-group-text {
+        background: #51cbce !important;
+        color: #000 !important;
+    }
+
+    /* Category Filter Buttons */
+    .card:not(.bg-gradient-info):not(.faq-item) {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+    
+    html[data-chrome-dark="true"] .card:not(.bg-gradient-info):not(.faq-item) {
+        background: rgba(15, 25, 30, 0.7) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .faq-filter {
+        border-radius: 50px;
+        padding: 10px 25px;
+        font-weight: 600;
+        border: 2px solid #0c5455;
+        color: #0c5455;
+        background: transparent;
+        transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        margin: 5px;
+    }
+    
+    html[data-chrome-dark="true"] .faq-filter {
+        border-color: #51cbce !important;
+        color: #51cbce !important;
+    }
+
+    .faq-filter:hover {
+        background: rgba(12, 84, 85, 0.1);
+        color: #0c5455;
+        transform: translateY(-2px);
+    }
+    
+    html[data-chrome-dark="true"] .faq-filter:hover {
+        background: rgba(81, 203, 206, 0.1) !important;
+        color: #51cbce !important;
+    }
+
+    .faq-filter.active {
+        background: linear-gradient(135deg, #0c5455 0%, #1e6e6e 100%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 8px 15px rgba(12, 84, 85, 0.3);
+    }
+    
+    html[data-chrome-dark="true"] .faq-filter.active {
+        background: linear-gradient(135deg, #1e6e6e 0%, #0c5455 100%) !important;
+        color: white !important;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    /* Accordion FAQ Items */
+    .faq-item {
+        margin-bottom: 20px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 15px !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    html[data-chrome-dark="true"] .faq-item {
+        background: rgba(15, 25, 30, 0.8) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .faq-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(12, 84, 85, 0.1);
+    }
+    
+    html[data-chrome-dark="true"] .faq-item:hover {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    .faq-item .card-header {
+        background-color: transparent;
+        border-bottom: none;
+        padding: 0;
+    }
+
+    .faq-item .btn-link {
+        color: #2b343a;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1.1rem;
+        width: 100%;
+        text-align: left;
+        padding: 20px 25px;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    
+    html[data-chrome-dark="true"] .faq-item .btn-link {
+        color: #ffffff !important;
+    }
+
+    .faq-item .btn-link:hover, .faq-item .btn-link:focus {
+        color: #0c5455;
+        text-decoration: none;
+        background: rgba(12, 84, 85, 0.02);
+    }
+    
+    html[data-chrome-dark="true"] .faq-item .btn-link:hover,
+    html[data-chrome-dark="true"] .faq-item .btn-link:focus {
+        color: #51cbce !important;
+        background: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    .faq-item .btn-link i {
+        margin-right: 15px;
+        font-size: 1.2rem;
+        color: #0c5455;
+        transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        background: rgba(12, 84, 85, 0.1);
+        padding: 10px;
+        border-radius: 50%;
+    }
+    
+    html[data-chrome-dark="true"] .faq-item .btn-link i {
+        color: #51cbce !important;
+        background: rgba(81, 203, 206, 0.1) !important;
+    }
+
+    .faq-item .btn-link[aria-expanded="true"] {
+        color: #0c5455;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    html[data-chrome-dark="true"] .faq-item .btn-link[aria-expanded="true"] {
+        color: #51cbce !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .faq-item .btn-link[aria-expanded="true"] i {
+        transform: rotate(135deg);
+        background: #0c5455;
+        color: white;
+    }
+    
+    html[data-chrome-dark="true"] .faq-item .btn-link[aria-expanded="true"] i {
+        background: #51cbce !important;
+        color: black !important;
+    }
+
+    .faq-item .card-body {
+        padding: 25px;
+        color: #555;
+        line-height: 1.7;
+        font-size: 1.05rem;
+    }
+    
+    html[data-chrome-dark="true"] .faq-item .card-body {
+        color: #bbb !important;
+    }
+    
+    @media (max-width: 768px) {
+        .card.bg-gradient-info {
+            padding: 20px 10px;
+        }
+        .card.bg-gradient-info h1 {
+            font-size: 2.2rem;
+        }
+        .faq-item .btn-link {
+            font-size: 1rem;
+            padding: 15px;
+        }
+        #faqSearch {
+            font-size: 1rem;
+            padding: 12px 20px;
+        }
+        .input-group-text {
+            padding: 0 15px;
+        }
     }
 </style>
 

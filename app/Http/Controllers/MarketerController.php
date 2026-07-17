@@ -479,6 +479,7 @@ class MarketerController extends Controller
     public function requestPayment(Request $request)
     {
         $request->validate([
+            'currency_id' => 'required|exists:currencies,id',
             'payment_method' => 'required|in:bank_transfer,mobile_money',
             'bank_name' => 'required_if:payment_method,bank_transfer|string|max:255',
             'account_number' => 'required_if:payment_method,bank_transfer|string|max:50',
@@ -489,30 +490,44 @@ class MarketerController extends Controller
 
         $marketer = Auth::user();
         
-        $pendingAmount = $marketer->referralRewards()
+        $pendingRewards = $marketer->referralRewards()
             ->where('status', 'approved')
-            ->sum('amount');
+            ->where('currency_id', $request->currency_id)
+            ->get();
+
+        $pendingAmount = $pendingRewards->sum('amount');
+        $rewardIds = $pendingRewards->pluck('id')->toArray();
 
         if ($pendingAmount < 1000) {
-            return back()->with('error', 'Minimum payment amount is KSh 1,000');
+            $currency = \App\Models\Currency::find($request->currency_id);
+            return back()->with('error', 'Minimum payment amount is ' . ($currency ? $currency->code : '') . ' 1,000');
         }
 
-        $paymentReference = 'PAY' . strtoupper(substr(md5(time() . $marketer->id), 0, 8));
+        $paymentReference = 'PAY' . strtoupper(substr(md5(time() . $marketer->user_id), 0, 8));
 
-        CommissionPayment::create([
-            'marketer_id' => $marketer->id,
-            'total_amount' => $pendingAmount,
-            'payment_method' => $request->payment_method,
-            'payment_reference' => $paymentReference,
-            'payment_status' => 'pending',
-            'notes' => $request->notes,
-            'payment_details' => [
-                'bank_name' => $request->bank_name ?? $marketer->bank_name,
-                'account_number' => $request->account_number ?? $marketer->account_number,
-                'account_name' => $request->account_name ?? $marketer->account_name,
-                'mobile_number' => $request->mobile_number,
-            ]
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function() use ($marketer, $pendingAmount, $request, $paymentReference, $rewardIds) {
+            CommissionPayment::create([
+                'marketer_id' => $marketer->user_id,
+                'total_amount' => $pendingAmount,
+                'currency_id' => $request->currency_id,
+                'payment_method' => $request->payment_method,
+                'payment_reference' => $paymentReference,
+                'payment_status' => 'pending',
+                'referral_ids' => $rewardIds,
+                'notes' => $request->notes,
+                'payment_details' => [
+                    'bank_name' => $request->bank_name ?? $marketer->bank_name,
+                    'account_number' => $request->account_number ?? $marketer->account_number,
+                    'account_name' => $request->account_name ?? $marketer->account_name,
+                    'mobile_number' => $request->mobile_number,
+                ]
+            ]);
+
+            \App\Models\ReferralReward::whereIn('id', $rewardIds)->update([
+                'status' => 'processing',
+                'payment_reference' => $paymentReference
+            ]);
+        });
 
         return back()->with('success', 'Payment request submitted successfully! Reference: ' . $paymentReference);
     }
@@ -523,7 +538,7 @@ class MarketerController extends Controller
     public function showPayment($id)
     {
         $marketer = Auth::user();
-        $payment = $marketer->commissionPayments()->findOrFail($id);
+        $payment = $marketer->commissionPayments()->with('currency')->findOrFail($id);
         
         return response()->json([
             'success' => true,
@@ -651,7 +666,7 @@ class MarketerController extends Controller
     {
         $marketer = Auth::user();
         $referral = $marketer->referrals()
-            ->with(['referred', 'campaign', 'reward'])
+            ->with(['referred', 'campaign', 'reward.currency'])
             ->findOrFail($id);
         
         return response()->json([
@@ -677,7 +692,8 @@ class MarketerController extends Controller
                 'reward' => $referral->reward ? [
                     'created_at' => $referral->reward->created_at,
                     'approved_at' => $referral->reward->approved_at,
-                    'paid_at' => $referral->reward->paid_at
+                    'paid_at' => $referral->reward->paid_at,
+                    'currency' => $referral->reward->currency
                 ] : null
             ]
         ]);

@@ -1,9 +1,9 @@
 @extends('layout')
 
-@section('title', 'Marketer Dashboard')
 
 @section('content')
-    <div class="container-fluid py-4">
+@section('title', 'Marketer Dashboard')
+    <div class="content">
         <!-- Header -->
         <div class="row mb-4">
             <div class="col-12">

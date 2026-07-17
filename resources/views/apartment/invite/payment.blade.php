@@ -126,22 +126,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- <div class="col-md-4">
-                                    <div class="card border-secondary payment-method-card" data-method="googlepay"
-                                        style="cursor: pointer; transition: all 0.3s ease;">
-                                        <div class="card-body text-center p-4">
-                                            <div class="mb-3">
-                                                <i class="fab fa-google-pay fa-3x text-dark"></i>
-                                            </div>
-                                            <h6 class="fw-semibold">Google Pay</h6>
-                                            <p class="small text-muted mb-3">Fast & Secure</p>
-                                            <div class="form-check d-flex justify-content-center">
-                                                <input class="form-check-input" type="radio" name="payment_method"
-                                                    id="googlepay_gateway" value="googlepay">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div> -->
+
                             </div>
                         </div>
 
@@ -476,7 +461,7 @@
                     apartment_id: @json($invitation->apartment_id),
                     tenant_id: @json(auth()->check() ? auth()->user()->user_id : ''),
                     landlord_id: @json($invitation->landlord_id),
-                    gateway: gatewayMethod === 'googlepay' ? 'flutterwave' : gatewayMethod,
+                    gateway: gatewayMethod,
                     transaction_type: 'apartment_invitation_payment'
                 };
 
@@ -494,7 +479,7 @@
                     tx_ref: newReference,
                     amount: amount,
                     currency: currency,
-                    payment_options: gatewayMethod === 'googlepay' ? "googlepay" : "card, ussd, banktransfer",
+                    payment_options: "card, ussd, banktransfer",
                     customer: {
                         email: email,
                     },

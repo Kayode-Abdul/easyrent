@@ -46,7 +46,7 @@ class BillingController extends Controller
         ]);
 
         // Calculate total amount paid and pending grouped by currency
-        $totalPaidByCurrency = $payments->groupBy('currency_id')->map(function ($group) {
+        $totalPaidByCurrency = $payments->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })->map(function ($group) {
             $first = $group->first();
             return [
                 'amount' => $group->sum('amount'),
@@ -54,7 +54,7 @@ class BillingController extends Controller
             ];
         })->toArray();
 
-        $totalPendingByCurrency = $pendingPayments->getCollection()->groupBy('currency_id')->map(function ($group) {
+        $totalPendingByCurrency = $pendingPayments->getCollection()->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })->map(function ($group) {
             $first = $group->first();
             return [
                 'amount' => $group->sum('total'), // Profoma uses total

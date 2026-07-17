@@ -64,13 +64,7 @@
                                         <small class="text-muted">Card, USSD</small>
                                     </div>
 
-                                    <!-- Google Pay Option -->
-                                    <div class="payment-method-option p-3 border rounded text-center cursor-pointer"
-                                        onclick="selectPaymentMethod('googlepay')" id="method-googlepay">
-                                        <i class="fab fa-google-pay fa-2x mb-2 text-dark"></i>
-                                        <div class="font-weight-bold">Google Pay</div>
-                                        <small class="text-muted">Fast & Secure</small>
-                                    </div>
+
                                 </div>
 
                                 <input type="hidden" id="selectedPaymentMethod" value="paystack">
@@ -132,13 +126,13 @@
         const metadataField = document.querySelector('input[name="metadata"]');
         if (metadataField) {
             let metadata = JSON.parse(metadataField.value);
-            metadata.gateway = method === 'googlepay' ? 'flutterwave' : method;
+            metadata.gateway = method;
             metadataField.value = JSON.stringify(metadata);
         }
 
         if (method === 'paystack') {
             payWithPaystack();
-        } else if (method === 'flutterwave' || method === 'googlepay') {
+        } else if (method === 'flutterwave') {
             payWithFlutterwave(method);
         }
     }
@@ -181,7 +175,7 @@
                 tx_ref: newReference,
                 amount: amountNaira,
                 currency: currency,
-                payment_options: method === 'googlepay' ? "googlepay" : "card, ussd, banktransfer",
+                payment_options: "card, ussd, banktransfer",
                 customer: {
                     email: email,
                 },

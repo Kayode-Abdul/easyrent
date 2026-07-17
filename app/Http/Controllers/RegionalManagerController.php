@@ -56,7 +56,7 @@ class RegionalManagerController extends Controller
             $stateScopes = $scopes->where('scope_type', 'state')->pluck('scope_value')->filter();
             $lgaScopes = $scopes->where('scope_type', 'lga')->pluck('scope_value')->filter();
 
-            $activeMarketersCount = User::where('role', 3)
+            $activeMarketersCount = User::whereHas('referrals')
                 ->where(function ($q) use ($stateScopes, $lgaScopes) {
                     $hasCondition = false;
                     foreach ($stateScopes as $state) {
@@ -90,16 +90,53 @@ class RegionalManagerController extends Controller
                 ->groupBy('currency_id')
                 ->with('currency')
                 ->get()
-                ->mapWithKeys(fn($item) => [
-                    $item->currency->code ?? 'NGN' => [
-                        'amount' => $item->total,
-                        'symbol' => $item->currency->symbol ?? '₦'
-                    ]
-                ])
+                ->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })
+                ->map(function($group) {
+                    return [
+                        'amount' => $group->sum('total'),
+                        'symbol' => $group->first()->currency->symbol ?? '₦'
+                    ];
+                })
                 ->toArray();
         }
 
-        return view('regional_manager.dashboard', compact('scopes', 'propertyCount', 'activeMarketersCount', 'pendingApprovals', 'totalRevenueByCurrency'));
+        // Total Commission by Currency
+        $totalCommissionByCurrency = [];
+        if (method_exists($manager, 'commissionPayments')) {
+            $totalCommissionByCurrency = $manager->commissionPayments()
+                ->where('commission_tier', 'regional_manager')
+                ->whereIn('payment_status', ['completed', 'success'])
+                ->select('currency_id', DB::raw('SUM(total_amount) as total'))
+                ->groupBy('currency_id')
+                ->with('currency')
+                ->get()
+                ->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })
+                ->map(function($group) {
+                    return [
+                        'amount' => $group->sum('total'),
+                        'symbol' => $group->first()->currency->symbol ?? '₦'
+                    ];
+                })
+                ->toArray();
+        } else {
+            // Fallback to referral_rewards table
+            $totalCommissionByCurrency = \App\Models\ReferralReward::where('marketer_id', $manager->user_id)
+                ->whereIn('status', ['paid', 'approved'])
+                ->select('currency_id', DB::raw('SUM(amount) as total'))
+                ->groupBy('currency_id')
+                ->with('currency')
+                ->get()
+                ->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })
+                ->map(function($group) {
+                    return [
+                        'amount' => $group->sum('total'),
+                        'symbol' => $group->first()->currency->symbol ?? '₦'
+                    ];
+                })
+                ->toArray();
+        }
+
+        return view('regional_manager.dashboard', compact('scopes', 'propertyCount', 'activeMarketersCount', 'pendingApprovals', 'totalRevenueByCurrency', 'totalCommissionByCurrency'));
     }
 
     public function properties(Request $request)
@@ -165,10 +202,9 @@ class RegionalManagerController extends Controller
         $manager = $request->user();
         $scopes = $manager->regionalScopes()->get();
 
-        // Definition: A marketer is someone who has referred landlords through their referral link.
-        // We filter for users with role 'marketer' (ID 3) AND at least one referral record.
+        // Definition: A marketer is someone who has referred other users through their referral link.
+        // We filter for users with at least one referral record.
         $query = User::query()
-            ->where('role', 3) // Correct role ID
             ->whereHas('referrals') // Must have at least one referral
             ->withCount(['referrals' => function ($q) {
             // Count referrals that are landlords
@@ -275,10 +311,10 @@ class RegionalManagerController extends Controller
         $propertyType = $request->input('property_type');
         $referralTier = $request->input('referral_tier');
 
-        $hasReferralRewards = \Schema::hasTable('referral_rewards');
+        $hasReferralRewards = \Schema::hasTable('commission_payments');
         $hasReferrals = \Schema::hasTable('referrals');
 
-        // 6-month performance trend, tiered (defensive if table/columns missing)
+        // 6-month performance trend, tiered
         $performanceData = [];
         for ($i = 5; $i >= 0; $i--) {
             $m = now()->subMonths($i);
@@ -289,14 +325,14 @@ class RegionalManagerController extends Controller
                 'marketer_commissions' => 0.0,
                 'regional_manager_commissions' => 0.0,
             ];
-            if ($hasReferralRewards && \Schema::hasColumn('referral_rewards', 'tier') && \Schema::hasColumn('referral_rewards', 'amount')) {
-                $rows = DB::table('referral_rewards')
-                    ->select('tier', DB::raw('SUM(amount) as total'))
+            if ($hasReferralRewards) {
+                $rows = DB::table('commission_payments')
+                    ->select('commission_tier', DB::raw('SUM(total_amount) as total'))
                     ->whereYear('created_at', $m->year)
                     ->whereMonth('created_at', $m->month)
-                    ->whereIn('tier', ['super_marketer', 'marketer', 'regional_manager'])
-                    ->groupBy('tier')
-                    ->pluck('total', 'tier');
+                    ->whereIn('commission_tier', ['super_marketer', 'marketer', 'regional_manager'])
+                    ->groupBy('commission_tier')
+                    ->pluck('total', 'commission_tier');
                 $data['super_marketer_commissions'] = (float)($rows['super_marketer'] ?? 0);
                 $data['marketer_commissions'] = (float)($rows['marketer'] ?? 0);
                 $data['regional_manager_commissions'] = (float)($rows['regional_manager'] ?? 0);
@@ -307,14 +343,14 @@ class RegionalManagerController extends Controller
         // Commission breakdown by tier within date range
         $commissionBreakdown = ['total_amount' => 0.0, 'total_count' => 0];
         $tiers = ['super_marketer', 'marketer', 'regional_manager', 'company'];
-        if ($hasReferralRewards && \Schema::hasColumn('referral_rewards', 'tier') && \Schema::hasColumn('referral_rewards', 'amount')) {
+        if ($hasReferralRewards) {
             foreach ($tiers as $t) {
-                $query = DB::table('referral_rewards')->whereBetween('created_at', [$startDate, $endDate]);
+                $query = DB::table('commission_payments')->whereBetween('created_at', [$startDate, $endDate]);
                 if ($t !== 'company')
-                    $query->where('tier', $t);
+                    $query->where('commission_tier', $t);
                 else
-                    $query->where('tier', 'company');
-                $amount = (float)$query->sum('amount');
+                    $query->where('commission_tier', 'company'); // Assuming company tier exists
+                $amount = (float)$query->sum('total_amount');
                 $count = (int)$query->count();
                 $commissionBreakdown[$t] = ['total_amount' => $amount, 'count' => $count];
                 $commissionBreakdown['total_amount'] += $amount;
@@ -347,10 +383,10 @@ class RegionalManagerController extends Controller
             ->whereNotNull('state')
             ->groupBy('state')
             ->pluck('state');
-        if ($hasReferralRewards && \Schema::hasColumn('referral_rewards', 'region') && \Schema::hasColumn('referral_rewards', 'amount')) {
+        if ($hasReferralRewards) {
             foreach ($states as $state) {
-                $q = DB::table('referral_rewards')->whereBetween('created_at', [$startDate, $endDate])->where('region', $state);
-                $total = (float)$q->sum('amount');
+                $q = DB::table('commission_payments')->whereBetween('created_at', [$startDate, $endDate])->where('region', $state);
+                $total = (float)$q->sum('total_amount');
                 $count = (int)$q->count();
                 $regionalComparison[$state] = [
                     'total_commissions' => $total,
@@ -417,8 +453,9 @@ class RegionalManagerController extends Controller
 
     public function marketerProperties($id)
     {
+        $marketer = \App\Models\User::findOrFail($id);
         $properties = Property::where('agent_id', $id)->paginate(20);
-        return view('regional_manager.marketer_properties', compact('properties'));
+        return view('regional_manager.marketer_properties', compact('properties', 'marketer'));
     }
 
     public function approveProperty($propId)

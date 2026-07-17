@@ -7,7 +7,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h4 class="card-title">Properties by {{ $marketer->name }}</h4>
+                            <h4 class="card-title">Properties by {{ $marketer->first_name }} {{ $marketer->last_name }}</h4>
                             <p class="card-category">View and manage properties referred by this marketer</p>
                         </div>
                         <div>

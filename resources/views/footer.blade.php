@@ -1,5 +1,5 @@
 @php $currentSegment = request()->segment(1);
- $isDashboard = in_array($currentSegment, ['', 'contact', 'benefits', 'faq', 'login', 'password', 'register', 'apartment', 'payment','benefactor']);
+ $isDashboard = in_array($currentSegment, ['', 'contact', 'benefits', 'faq', 'login', 'password', 'register', 'apartment', 'payment','benefactor', 'onboarding']);
 @endphp
 @if(!$isDashboard)
   <footer class="footer footer-black  footer-white ">
@@ -179,11 +179,106 @@
     </div>
   </footer><!-- End Footer -->
   <!-- loader -->
+  <style>
+    /* Premium Loader Styles */
+    #ftco-loader {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #0a282a 0%, #0d3d3f 50%, #0a282a 100%);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 24px;
+      transition: opacity 0.6s ease-out, visibility 0.6s;
+    }
 
-     <div id="ftco-loader" class="show fullscreen"><img class="circular" style="border-top: 2px solid #1f849e; border-left: 2px solid #c8ff15ff; border-right: 2px solid #15fff3ff; border-bottom: 2px solid #15ff8aff;   width: 50px; height: 50px; background: rgba(255,94,21,0.1); border-radius: 35%; text-align: center;" width="48px" height="48px"  />
-    <circle class="path-bg" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke="#eeeeee" />
-    <circle class="path" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke-miterlimit="10" stroke="#F96D00" />
-    </svg>
+    #ftco-loader:not(.show) {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .er-loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* Building bars animation */
+    .er-loader__bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 5px;
+      height: 48px;
+    }
+
+    .er-loader__bar {
+      width: 8px;
+      background: linear-gradient(to top, #4ecdc4, #3e8189);
+      border-radius: 4px 4px 0 0;
+      animation: er-barGrow 1.2s ease-in-out infinite;
+    }
+
+    .er-loader__bar:nth-child(1) { height: 20px; animation-delay: 0s; }
+    .er-loader__bar:nth-child(2) { height: 32px; animation-delay: 0.15s; }
+    .er-loader__bar:nth-child(3) { height: 48px; animation-delay: 0.3s; }
+    .er-loader__bar:nth-child(4) { height: 36px; animation-delay: 0.45s; }
+    .er-loader__bar:nth-child(5) { height: 24px; animation-delay: 0.6s; }
+
+    @keyframes er-barGrow {
+      0%, 100% { opacity: 0.4; transform: scaleY(0.6); }
+      50% { opacity: 1; transform: scaleY(1); }
+    }
+
+    .er-loader__text {
+      font-family: 'Inter', 'Nunito Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .er-loader__progress {
+      width: 120px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .er-loader__progress-bar {
+      height: 100%;
+      width: 30%;
+      background: linear-gradient(90deg, #4ecdc4, #f7b71d);
+      border-radius: 3px;
+      animation: er-progress 1.5s ease-in-out infinite;
+    }
+
+    @keyframes er-progress {
+      0% { transform: translateX(-100%); width: 30%; }
+      50% { width: 60%; }
+      100% { transform: translateX(400%); width: 30%; }
+    }
+  </style>
+  <div id="ftco-loader" class="show fullscreen">
+    <div class="er-loader">
+      <div class="er-loader__bars">
+        <div class="er-loader__bar"></div>
+        <div class="er-loader__bar"></div>
+        <div class="er-loader__bar"></div>
+        <div class="er-loader__bar"></div>
+        <div class="er-loader__bar"></div>
+      </div>
+      <span class="er-loader__text">EasyRent</span>
+      <div class="er-loader__progress">
+        <div class="er-loader__progress-bar"></div>
+      </div>
+    </div>
   </div>
   <script src="/assets/js/jquery-migrate-3.0.1.min.js"></script>
   <script src="/assets/js/popper.min.js"></script>

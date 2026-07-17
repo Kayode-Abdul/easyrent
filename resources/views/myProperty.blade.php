@@ -265,11 +265,7 @@
                                         <div class="numbers">
                                             <p class="card-category">Total Revenue</p>
                                             @if(isset($totalPaidByCurrency) && count($totalPaidByCurrency) > 0)
-                                                @foreach($totalPaidByCurrency as $item)
-                                                    <p class="card-title" style="font-size: 1.1rem; margin-bottom: 0;">
-                                                        {{ format_money($item['amount'], $item['symbol']) }}
-                                                    </p>
-                                                @endforeach
+                                                <x-currency-carousel :currencies="$totalPaidByCurrency" id="carousel-property-revenue" />
                                             @else
                                                 <p class="card-title">{{ format_money(0) }}</p>
                                             @endif

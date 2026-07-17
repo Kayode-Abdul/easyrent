@@ -105,18 +105,48 @@
 <div class="content">
     <!-- Dashboard Mode Toggles -->
     <div class="container-fluid mb-3">
-        <div class="d-flex justify-content-end align-items-center">
+        <div class="d-flex justify-content-between align-items-center w-100">
 
             @php
                 $user = auth()->user();
                 $isAdmin = ($user->admin == 1 || $user->role == 7);
                 $isArtisan = $user->isArtisan();
                 $isPM = $user->isAgent();
+                $currentMode = session('dashboard_mode', 'personal');
             @endphp
 
+            <!-- Dashboard Mode Tabs (Left) -->
+            <ul class="nav nav-pills" style="gap: 10px;">
+                <li class="nav-item">
+                    <a class="nav-link {{ $currentMode === 'personal' ? 'active bg-primary text-white' : 'bg-light text-dark' }}" 
+                       href="javascript:void(0)" onclick="switchDashboardMode('personal')" 
+                       style="border-radius: 20px; padding: 8px 20px; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                       <i class="nc-icon nc-single-02 mr-1"></i> Personal
+                    </a>
+                </li>
+                @if($isPM)
+                <li class="nav-item">
+                    <a class="nav-link {{ $currentMode === 'property_manager' ? 'active bg-primary text-white' : 'bg-light text-dark' }}" 
+                       href="javascript:void(0)" onclick="switchDashboardMode('property_manager')"
+                       style="border-radius: 20px; padding: 8px 20px; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                       <i class="nc-icon nc-layout-11 mr-1"></i> Property Manager
+                    </a>
+                </li>
+                @endif
+                @if($isArtisan)
+                <li class="nav-item">
+                    <a class="nav-link {{ $currentMode === 'artisan' ? 'active bg-primary text-white' : 'bg-light text-dark' }}" 
+                       href="javascript:void(0)" onclick="switchDashboardMode('artisan')"
+                       style="border-radius: 20px; padding: 8px 20px; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                       <i class="nc-icon nc-settings-gear-65 mr-1"></i> Artisan
+                    </a>
+                </li>
+                @endif
+            </ul>
+
+            <!-- Admin Toggle (Right) -->
             @if($isAdmin)
-                <!-- Admin Toggle -->
-                <div class="mr-4">
+                <div class="ml-auto">
                     <span class="switch-label-left">Personal</span>
                     <label class="switch mb-0">
                         <input type="checkbox" id="adminDashboardSwitch" {{ session('admin_dashboard_mode') === 'admin' ? 'checked' : '' }}>
@@ -126,31 +156,47 @@
                 </div>
             @endif
 
-            @if($isPM)
-                <!-- Property Manager Toggle -->
-                <div class="mr-4">
-                    <span class="switch-label-left">Personal</span>
-                    <label class="switch mb-0">
-                        <input type="checkbox" id="propertyManagerDashboardSwitch" {{ (session('dashboard_mode') === 'property_manager') ? 'checked' : '' }}>
-                        <span class="slider"></span>
-                    </label>
-                    <span class="switch-label">PM Dashboard</span>
-                </div>
-            @endif
-
-            @if($isArtisan)
-                <!-- Artisan Toggle -->
-                <div>
-                    <span class="switch-label-left">Personal</span>
-                    <label class="switch mb-0">
-                        <input type="checkbox" id="artisanDashboardSwitch" {{ (session('dashboard_mode') === 'artisan') ? 'checked' : '' }}>
-                        <span class="slider"></span>
-                    </label>
-                    <span class="switch-label">Artisan Dashboard</span>
-                </div>
-            @endif
-
         </div>
+        <script>
+        function switchDashboardMode(mode) {
+            if (mode === '{{ $currentMode }}') return;
+            
+            Swal.fire({
+                title: 'Switching Dashboard...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // For switching back to personal, we can use the property manager endpoint as it resets the session
+            let endpoint = '/dashboard/switch-property-manager-mode';
+            if (mode === 'artisan') endpoint = '/dashboard/switch-artisan-mode';
+            
+            $.ajax({
+                url: endpoint,
+                method: 'POST',
+                data: { mode: mode },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function (res) {
+                    if (res.success) {
+                        if (res.mode === 'property_manager') window.location.href = '/property-manager/dashboard';
+                        else if (res.mode === 'artisan') window.location.href = '/artisan/dashboard';
+                        else window.location.href = '/dashboard';
+                    } else {
+                        Swal.close();
+                        alert('Failed to switch mode: ' + (res.message || 'Unknown error'));
+                    }
+                },
+                error: function () {
+                    Swal.close();
+                    alert('Error switching mode. Please try again.');
+                }
+            });
+        }
+        </script>
     </div>
 
 
@@ -584,7 +630,7 @@
                     <p class="mb-4 opacity-8">Refer a landlord and earn commissions on every successful rent paid.
                     </p>
                     <a href="{{ route('commissions.index') }}"
-                        class="btn btn-white btn-round text-primary font-weight-bold">
+                        class="btn btn-white btn-round text-info font-weight-bold">
                         <i class="nc-icon nc-share-66"></i> My Referral Hub
                     </a>
                 </div>

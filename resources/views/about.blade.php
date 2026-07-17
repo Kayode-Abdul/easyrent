@@ -383,3 +383,280 @@
 <!-- Footer area start -->
 @include('footer')
 <!-- Footer area end -->
+<style>
+    /* =========================================================
+       ENHANCED ABOUT UI & GLASSMORPHISM 
+       ========================================================= */
+       
+    /* Global Dark Mode Overrides */
+    html[data-chrome-dark="true"] .wpo-about-area,
+    html[data-chrome-dark="true"] .wpo-plan-section,
+    html[data-chrome-dark="true"] .wpo-place-section,
+    html[data-chrome-dark="true"] .partners-section {
+        filter: invert(1) hue-rotate(180deg) !important;
+        background-color: #000000 !important;
+        color: #ffffff !important;
+    }
+
+    /* About Area Enhancements */
+    .wpo-about-area {
+        position: relative;
+        background-color: #f8f9fa !important;
+    }
+    
+    .wpo-about-img {
+        transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+    }
+    
+    .wpo-about-img:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 30px 50px rgba(0,0,0,0.2) !important;
+    }
+    
+    html[data-chrome-dark="true"] .wpo-about-text h2,
+    html[data-chrome-dark="true"] .wpo-about-text h5 {
+        color: #ffffff !important;
+    }
+    
+    html[data-chrome-dark="true"] .wpo-about-text p {
+        color: #bbb !important;
+    }
+    
+    .theme-btn {
+        box-shadow: 0 10px 20px rgba(255, 94, 21, 0.3) !important;
+    }
+    
+    .theme-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 25px rgba(255, 94, 21, 0.4) !important;
+        background-color: #e04c0c !important;
+    }
+    
+    .video-holder {
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(255, 94, 21, 0.3);
+    }
+    
+    .video-holder:hover {
+        transform: scale(1.1);
+        box-shadow: 0 15px 25px rgba(255, 94, 21, 0.4);
+    }
+    
+    html[data-chrome-dark="true"] .video-btn:not(.btn) {
+        color: #ffffff !important;
+    }
+
+    /* Fun Fact Section */
+    .wpo-fun-fact-section-s2 {
+        background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(10, 10, 10, 0.95) 100%) !important;
+        position: relative;
+    }
+    
+    .wpo-fun-fact-grids .grid {
+        background: rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 20px !important;
+        transition: all 0.4s ease !important;
+    }
+    
+    .wpo-fun-fact-grids .grid:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(255, 94, 21, 0.15) !important;
+        border-color: rgba(255, 94, 21, 0.3) !important;
+    }
+
+    /* Plan Section Enhancements */
+    .wpo-plan-section {
+        background-color: #ffffff;
+    }
+    
+    .nav-tabs {
+        border-bottom: none !important;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 40px !important;
+    }
+    
+    .nav-tabs .nav-item .nav-link {
+        border: 2px solid transparent !important;
+        background: #f8f9fa !important;
+        color: #555 !important;
+        border-radius: 50px !important;
+        padding: 12px 30px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+        text-transform: capitalize;
+    }
+    
+    html[data-chrome-dark="true"] .nav-tabs .nav-item .nav-link {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+    }
+    
+    .nav-tabs .nav-item .nav-link:hover {
+        background: rgba(255, 94, 21, 0.1) !important;
+        color: #ff5e15 !important;
+    }
+    
+    .nav-tabs .nav-item .nav-link.active {
+        background: #ff5e15 !important;
+        color: #ffffff !important;
+        box-shadow: 0 10px 20px rgba(255, 94, 21, 0.3) !important;
+    }
+    
+    .wpo-plan-content-box {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+        padding: 30px;
+        border: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    
+    html[data-chrome-dark="true"] .wpo-plan-content-box {
+        background: rgba(20, 30, 35, 0.9) !important;
+        border-color: rgba(255,255,255,0.05) !important;
+    }
+    
+    .wpo-plan-content-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+    }
+    
+    .wpo-plan-content img {
+        border-radius: 15px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .wpo-plan-content ul li {
+        padding: 12px 0 !important;
+        border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+        color: #555;
+        font-weight: 500;
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    html[data-chrome-dark="true"] .wpo-plan-content ul li {
+        color: #ccc !important;
+        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+    }
+    
+    .wpo-plan-content ul li span {
+        font-weight: 700;
+        color: #333;
+    }
+    
+    html[data-chrome-dark="true"] .wpo-plan-content ul li span {
+        color: #fff !important;
+    }
+    
+    .wpo-plan-content a {
+        display: inline-block;
+        background: #ff5e15;
+        color: #fff !important;
+        padding: 12px 30px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-top: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 14px;
+        box-shadow: 0 10px 20px rgba(255, 94, 21, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .wpo-plan-content a:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 25px rgba(255, 94, 21, 0.4);
+    }
+    
+    .wpo-section-title h2 {
+        font-weight: 800;
+        letter-spacing: -1px;
+    }
+    
+    .wpo-section-title small {
+        color: #ff5e15;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 10px;
+    }
+    
+    /* Place Section (Maps) */
+    .wpo-place-section {
+        background: #f9f9f9;
+    }
+    
+    .place-right-wrap img {
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    .location .pin span {
+        background: rgba(255,255,255,0.95) !important;
+        backdrop-filter: blur(5px);
+        padding: 8px 15px !important;
+        border-radius: 50px !important;
+        font-weight: 600 !important;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+        color: #333 !important;
+    }
+    
+    html[data-chrome-dark="true"] .location .pin span {
+        background: rgba(20,30,35,0.95) !important;
+        color: #fff !important;
+    }
+    
+    .tabs button {
+        border-radius: 50px !important;
+        background: #fff !important;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05) !important;
+        margin-bottom: 15px !important;
+        transition: all 0.3s ease !important;
+        border: 1px solid transparent !important;
+    }
+    
+    html[data-chrome-dark="true"] .tabs button {
+        background: rgba(255,255,255,0.1) !important;
+        color: #fff !important;
+    }
+    
+    .tabs button:hover {
+        transform: translateX(5px);
+        border-color: #ff5e15 !important;
+    }
+    
+    @media (max-width: 768px) {
+        .wpo-breadcumb-wrap h2 {
+            font-size: 32px !important;
+        }
+        .wpo-about-text h2 {
+            font-size: 28px !important;
+        }
+        .wpo-fun-fact-section-s2 h2 {
+            font-size: 28px !important;
+        }
+        .wpo-fun-fact-grids .info h3 {
+            font-size: 32px !important;
+        }
+        .nav-tabs .nav-item .nav-link {
+            padding: 10px 15px !important;
+            font-size: 14px !important;
+        }
+        .wpo-page-title {
+            padding: 80px 0 !important;
+        }
+        .wpo-about-area {
+            padding: 60px 0 !important;
+        }
+    }
+</style>

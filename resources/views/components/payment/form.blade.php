@@ -15,7 +15,7 @@
                     <label for="amount">Payment Amount *</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <span class="input-group-text">{{ format_money(0)->getSymbol() }}</span>
+                            <span class="input-group-text">{{ $currencySymbol ?? format_money(0)->getSymbol() }}</span>
                         </div>
                         <input type="number" 
                                class="form-control" 
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (amount > 10000000) { // 10 million naira limit
                 e.preventDefault();
-                alert('Payment amount cannot exceed {{ format_money(0)->getSymbol() }}10,000,000');
+                alert('Payment amount cannot exceed {{ $currencySymbol ?? format_money(0)->getSymbol() }}10,000,000');
                 return false;
             }
             

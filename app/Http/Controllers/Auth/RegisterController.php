@@ -341,6 +341,11 @@ class RegisterController extends Controller
     {
         $marketer = \App\Models\User::where('user_id', $marketerId)->first();
         
+        if ($marketer) {
+            $marketer->evaluateMarketerPromotion();
+            $marketer = $marketer->fresh();
+        }
+        
         if (!$marketer || !$marketer->isMarketer() || !$marketer->isActiveMarketer()) {
             return;
         }

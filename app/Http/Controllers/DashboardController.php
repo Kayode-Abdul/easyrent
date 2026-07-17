@@ -135,7 +135,8 @@ class DashboardController extends Controller
                     ->groupBy('currency_id')
                     ->with('currency')
                     ->get()
-                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })
+                    ->map(function($group) { return ['amount' => $group->sum('total'), 'symbol' => $group->first()->currency->symbol ?? '₦']; })
                     ->toArray(),
                 'pending_payments' => Payment::where('status', 'pending')->count(),
 
@@ -164,7 +165,8 @@ class DashboardController extends Controller
                     ->groupBy('currency_id')
                     ->with('currency')
                     ->get()
-                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })
+                    ->map(function($group) { return ['amount' => $group->sum('total'), 'symbol' => $group->first()->currency->symbol ?? '₦']; })
                     ->toArray(),
                 'revenue_this_month_by_currency' => Payment::where('status', 'completed')
                     ->whereMonth('created_at', Carbon::now()->month)
@@ -172,7 +174,8 @@ class DashboardController extends Controller
                     ->groupBy('currency_id')
                     ->with('currency')
                     ->get()
-                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })
+                    ->map(function($group) { return ['amount' => $group->sum('total'), 'symbol' => $group->first()->currency->symbol ?? '₦']; })
                     ->toArray(),
                 'revenue_last_month_by_currency' => Payment::where('status', 'completed')
                     ->whereMonth('created_at', Carbon::now()->subMonth()->month)
@@ -180,7 +183,8 @@ class DashboardController extends Controller
                     ->groupBy('currency_id')
                     ->with('currency')
                     ->get()
-                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })
+                    ->map(function($group) { return ['amount' => $group->sum('total'), 'symbol' => $group->first()->currency->symbol ?? '₦']; })
                     ->toArray(),
                 'failed_payments' => Payment::where('status', 'failed')->count(),
                 'average_transaction_value' => Payment::where('status', 'completed')->avg('amount'),
@@ -223,7 +227,8 @@ class DashboardController extends Controller
                     ->groupBy('currency_id')
                     ->with('currency')
                     ->get()
-                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })
+                    ->map(function($group) { return ['amount' => $group->sum('total'), 'symbol' => $group->first()->currency->symbol ?? '₦']; })
                     ->toArray(),
                 'total_revenue_by_currency' => Payment::where('landlord_id', $userId)
                     ->where('status', 'completed')
@@ -231,7 +236,8 @@ class DashboardController extends Controller
                     ->groupBy('currency_id')
                     ->with('currency')
                     ->get()
-                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })
+                    ->map(function($group) { return ['amount' => $group->sum('total'), 'symbol' => $group->first()->currency->symbol ?? '₦']; })
                     ->toArray(),
             ];
         });
@@ -249,7 +255,8 @@ class DashboardController extends Controller
                     ->groupBy('currency_id')
                     ->with('currency')
                     ->get()
-                    ->mapWithKeys(fn($item) => [$item->currency->code ?? 'NGN' => ['amount' => $item->total, 'symbol' => $item->currency->symbol ?? '₦']])
+                    ->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })
+                    ->map(function($group) { return ['amount' => $group->sum('total'), 'symbol' => $group->first()->currency->symbol ?? '₦']; })
                     ->toArray(),
                 'my_pending_payments' => Payment::where('tenant_id', $userId)
                     ->where('status', 'pending')

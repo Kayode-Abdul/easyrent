@@ -1,94 +1,64 @@
 @extends('layout')
 
 @section('content')
-<div class="container-fluid">
+<div class="content">
     <div class="row">
         <div class="col-12">
             <!-- Earnings Summary -->
+            @php
+                // Transform Eloquent collections into format the component expects
+                $earnedCurrencies = $summary['total_earned']->map(function($s) {
+                    return [
+                        'code' => $s->currency ? $s->currency->code : 'NGN',
+                        'symbol' => $s->currency ? $s->currency->symbol : '₦',
+                        'amount' => $s->total,
+                    ];
+                })->toArray();
+                $paidCurrencies = $summary['total_paid']->map(function($s) {
+                    return [
+                        'code' => $s->currency ? $s->currency->code : 'NGN',
+                        'symbol' => $s->currency ? $s->currency->symbol : '₦',
+                        'amount' => $s->total,
+                    ];
+                })->toArray();
+                $pendingCurrencies = $summary['pending_payment']->map(function($s) {
+                    return [
+                        'code' => $s->currency ? $s->currency->code : 'NGN',
+                        'symbol' => $s->currency ? $s->currency->symbol : '₦',
+                        'amount' => $s->total,
+                    ];
+                })->toArray();
+            @endphp
             <div class="row mb-4">
                 <div class="col-md-3">
                     <div class="card bg-primary text-white">
                         <div class="card-body text-center">
-                            <div id="carouselMarketerTotalEarned" class="carousel slide d-flex align-items-center justify-content-between" data-ride="carousel" data-interval="false">
-                                @if($summary['total_earned']->count() > 1)
-                                <a href="#carouselMarketerTotalEarned" role="button" data-slide="prev" class="text-white"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
-                                @endif
-                                <div class="carousel-inner text-center flex-grow-1">
-                                    @forelse($summary['total_earned'] as $index => $stat)
-                                    <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
-                                        <h4>{{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}</h4>
-                                    </div>
-                                    @empty
-                                    <div class="carousel-item active">
-                                        <h4>KSh 0</h4>
-                                    </div>
-                                    @endforelse
-                                </div>
-                                @if($summary['total_earned']->count() > 1)
-                                <a href="#carouselMarketerTotalEarned" role="button" data-slide="next" class="text-white"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
-                                @endif
-                            </div>
-                            <p class="mb-0">Total Earned</p>
+                            <x-currency-carousel :currencies="$earnedCurrencies" :decimals="0" id="marketer-earned" />
+                            <p class="mb-0 mt-1">Total Earned</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card bg-success text-white">
                         <div class="card-body text-center">
-                            <div id="carouselMarketerTotalPaid" class="carousel slide d-flex align-items-center justify-content-between" data-ride="carousel" data-interval="false">
-                                @if($summary['total_paid']->count() > 1)
-                                <a href="#carouselMarketerTotalPaid" role="button" data-slide="prev" class="text-white"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
-                                @endif
-                                <div class="carousel-inner text-center flex-grow-1">
-                                    @forelse($summary['total_paid'] as $index => $stat)
-                                    <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
-                                        <h4>{{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}</h4>
-                                    </div>
-                                    @empty
-                                    <div class="carousel-item active">
-                                        <h4>KSh 0</h4>
-                                    </div>
-                                    @endforelse
-                                </div>
-                                @if($summary['total_paid']->count() > 1)
-                                <a href="#carouselMarketerTotalPaid" role="button" data-slide="next" class="text-white"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
-                                @endif
-                            </div>
-                            <p class="mb-0">Total Paid</p>
+                            <x-currency-carousel :currencies="$paidCurrencies" :decimals="0" id="marketer-paid" />
+                            <p class="mb-0 mt-1">Total Paid</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card bg-warning text-white">
                         <div class="card-body text-center">
-                            <div id="carouselMarketerPendingPayment" class="carousel slide d-flex align-items-center justify-content-between" data-ride="carousel" data-interval="false">
-                                @if($summary['pending_payment']->count() > 1)
-                                <a href="#carouselMarketerPendingPayment" role="button" data-slide="prev" class="text-white"><i class="fa fa-chevron-left" style="font-size: 0.6em;"></i></a>
-                                @endif
-                                <div class="carousel-inner text-center flex-grow-1">
-                                    @forelse($summary['pending_payment'] as $index => $stat)
-                                    <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
-                                        <h4>{{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}</h4>
-                                    </div>
-                                    @empty
-                                    <div class="carousel-item active">
-                                        <h4>KSh 0</h4>
-                                    </div>
-                                    @endforelse
-                                </div>
-                                @if($summary['pending_payment']->count() > 1)
-                                <a href="#carouselMarketerPendingPayment" role="button" data-slide="next" class="text-white"><i class="fa fa-chevron-right" style="font-size: 0.6em;"></i></a>
-                                @endif
-                            </div>
-                            <p class="mb-0">Pending Payment</p>
+                            <x-currency-carousel :currencies="$pendingCurrencies" :decimals="0" id="marketer-pending" />
+                            <p class="mb-0 mt-1">Pending Payment</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card bg-info text-white">
                         <div class="card-body text-center">
-                            <h4>{{ $summary['total_referrals'] }}</h4>
-                            <p class="mb-0">Total Referrals</p>
+                            <p class="cc-figure" style="font-weight:700; font-size:clamp(1rem,1.6vw,1.4rem); margin:0;">{{ $summary['total_referrals'] }}</p>
+                            <p class="mb-0 mt-1">Total Referrals</p>
                         </div>
                     </div>
                 </div>
@@ -100,7 +70,7 @@
                     <h5 class="mb-0">Payment History</h5>
                     <div>
                         <button class="btn btn-outline-primary" onclick="requestPayment()" 
-                                {{ $summary['pending_payment']->sum('total') < 1000 ? 'disabled' : '' }}>
+                                {{ !collect($summary['pending_payment'])->filter(function($s) { return $s->total >= 1000; })->isNotEmpty() ? 'disabled' : '' }}>
                             <i class="fa fa-money-bill-wave"></i> Request Payment
                         </button>
                         <a href="{{ route('marketer.dashboard') }}" class="btn btn-secondary ml-2">
@@ -109,22 +79,28 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if($summary['pending_payment']->sum('total') >= 1000)
+                    @php
+                        $canRequest = collect($summary['pending_payment'])->filter(function($s) { return $s->total >= 1000; })->isNotEmpty();
+                        $totalPendingAll = $summary['pending_payment']->sum('total');
+                    @endphp
+                    @if($canRequest)
                         <div class="alert alert-info">
                             <i class="fa fa-info-circle"></i>
                             <strong>Payment Available!</strong> You have 
                             @foreach($summary['pending_payment'] as $stat)
-                                {{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}
+                                @if($stat->total >= 1000)
+                                    <span class="badge badge-success">{{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}</span>
+                                @endif
                             @endforeach
                             ready for payment. Click "Request Payment" to initiate the process.
                         </div>
-                    @elseif($summary['pending_payment']->sum('total') > 0)
+                    @elseif($totalPendingAll > 0)
                         <div class="alert alert-warning">
                             <i class="fa fa-exclamation-triangle"></i>
-                            <strong>Minimum Payment:</strong> You need at least 1,000 to request a payment. 
-                            Current pending amount: 
+                            <strong>Minimum Payment:</strong> You need at least 1,000 in a single currency to request a payment. 
+                            Current pending amounts: 
                             @foreach($summary['pending_payment'] as $stat)
-                                {{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}
+                                <span class="badge badge-secondary">{{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}</span>
                             @endforeach
                         </div>
                     @endif
@@ -156,7 +132,7 @@
                                                 <code>{{ $payment->payment_reference }}</code>
                                             </td>
                                             <td>
-                                                <strong class="text-success">KSh {{ number_format($payment->total_amount) }}</strong>
+                                                <strong class="text-success">{{ format_money($payment->total_amount, $payment->currency_id) }}</strong>
                                             </td>
                                             <td>
                                                 @switch($payment->payment_method)
@@ -324,11 +300,23 @@
             <form method="POST" action="{{ route('marketer.payments.request') }}">
                 @csrf
                 <div class="modal-body">
-                    <div class="alert alert-info">
+                    <div class="form-group">
+                        <label for="currency_id">Select Currency to Withdraw</label>
+                        <select class="form-control" id="currency_id" name="currency_id" required onchange="updateAmountDisplay()">
+                            <option value="">Select Currency</option>
+                            @foreach($summary['pending_payment'] as $stat)
+                                @if($stat->total >= 1000)
+                                    <option value="{{ $stat->currency_id }}" data-symbol="{{ $stat->currency ? $stat->currency->symbol : '' }}" data-total="{{ number_format($stat->total) }}">
+                                        {{ $stat->currency ? $stat->currency->code : 'Unknown' }} ({{ $stat->currency ? $stat->currency->symbol : '' }}{{ number_format($stat->total) }})
+                                    </option>
+                                @endif
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="alert alert-info" id="amountDisplayWrapper" style="display: none;">
                         <strong>Amount to be paid:</strong> 
-                        @foreach($summary['pending_payment'] as $stat)
-                            {{ $stat->currency ? $stat->currency->symbol : '' }} {{ number_format($stat->total) }}@if(!$loop->last), @endif
-                        @endforeach
+                        <span id="amountDisplayValue"></span>
                     </div>
                     
                     <div class="form-group">
@@ -350,12 +338,12 @@
                         <div class="form-group">
                             <label for="account_number">Account Number</label>
                             <input type="text" class="form-control" id="account_number" name="account_number" 
-                                   value="{{ auth()->user()->account_number }}" readonly>
+                                   value="{{ auth()->user()->bank_account_number }}" readonly>
                         </div>
                         <div class="form-group">
                             <label for="account_name">Account Name</label>
                             <input type="text" class="form-control" id="account_name" name="account_name" 
-                                   value="{{ auth()->user()->account_name }}" readonly>
+                                   value="{{ auth()->user()->bank_account_name }}" readonly>
                         </div>
                     </div>
                     
@@ -424,6 +412,23 @@ document.getElementById('payment_method').addEventListener('change', function() 
     }
 });
 
+function updateAmountDisplay() {
+    const currencySelect = document.getElementById('currency_id');
+    const displayWrapper = document.getElementById('amountDisplayWrapper');
+    const displayValue = document.getElementById('amountDisplayValue');
+    
+    if (currencySelect.value) {
+        const selectedOption = currencySelect.options[currencySelect.selectedIndex];
+        const symbol = selectedOption.getAttribute('data-symbol');
+        const total = selectedOption.getAttribute('data-total');
+        
+        displayValue.textContent = symbol + ' ' + total;
+        displayWrapper.style.display = 'block';
+    } else {
+        displayWrapper.style.display = 'none';
+    }
+}
+
 function requestPayment() {
     $('#paymentRequestModal').modal('show');
 }
@@ -447,7 +452,7 @@ function viewPaymentDetails(paymentId) {
                                 </tr>
                                 <tr>
                                     <td><strong>Amount:</strong></td>
-                                    <td><strong class="text-success">KSh ${payment.total_amount.toLocaleString()}</strong></td>
+                                    <td><strong class="text-success">${payment.currency ? payment.currency.symbol : (window.currencySymbol || '₦')}${payment.total_amount.toLocaleString()}</strong></td>
                                 </tr>
                                 <tr>
                                     <td><strong>Method:</strong></td>

@@ -320,7 +320,7 @@
                             label += ': ';
                         }
                         if (context.parsed !== null) {
-                            label += (window.currencySymbol || '₦') + new Intl.NumberFormat().format(context.parsed);
+                            label += (window.currencySymbol || '{{ format_money(0)->getSymbol() }}') + new Intl.NumberFormat().format(context.parsed);
                         }
                         return label;
                     }
@@ -353,7 +353,7 @@
                 beginAtZero: true,
                 ticks: {
                     callback: function(value) {
-                        return (window.currencySymbol || '₦') + new Intl.NumberFormat().format(value);
+                        return (window.currencySymbol || '{{ format_money(0)->getSymbol() }}') + new Intl.NumberFormat().format(value);
                     }
                 }
             }
@@ -362,7 +362,7 @@
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        return context.dataset.label + ': ' + (window.currencySymbol || '₦') + new Intl.NumberFormat().format(context.parsed.y);
+                        return context.dataset.label + ': ' + (window.currencySymbol || '{{ format_money(0)->getSymbol() }}') + new Intl.NumberFormat().format(context.parsed.y);
                     }
                 }
             }
@@ -419,7 +419,7 @@
                 beginAtZero: true,
                 ticks: {
                     callback: function(value) {
-                        return (window.currencySymbol || '₦') + new Intl.NumberFormat().format(value);
+                        return (window.currencySymbol || '{{ format_money(0)->getSymbol() }}') + new Intl.NumberFormat().format(value);
                     }
                 }
             }
@@ -428,7 +428,7 @@
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        return context.dataset.label + ': ' + (window.currencySymbol || '₦') + new Intl.NumberFormat().format(context.parsed.y);
+                        return context.dataset.label + ': ' + (window.currencySymbol || '{{ format_money(0)->getSymbol() }}') + new Intl.NumberFormat().format(context.parsed.y);
                     }
                 }
             }
@@ -464,7 +464,7 @@
                 beginAtZero: true,
                 ticks: {
                     callback: function(value) {
-                        return (window.currencySymbol || '₦') + new Intl.NumberFormat().format(value);
+                        return (window.currencySymbol || '{{ format_money(0)->getSymbol() }}') + new Intl.NumberFormat().format(value);
                     }
                 }
             }
@@ -473,7 +473,7 @@
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        return context.dataset.label + ': ' + (window.currencySymbol || '₦') + new Intl.NumberFormat().format(context.parsed.y);
+                        return context.dataset.label + ': ' + (window.currencySymbol || '{{ format_money(0)->getSymbol() }}') + new Intl.NumberFormat().format(context.parsed.y);
                     }
                 }
             }

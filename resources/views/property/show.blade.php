@@ -33,7 +33,7 @@
         }
     }
 </style>
-@php
+<!--php
 $types = [
 1 => 'Mansion',
 2 => 'Duplex',
@@ -45,7 +45,7 @@ $types = [
 8 => 'Store',
 9 => 'Shop'
 ];
-@endphp
+@ endphp -->
 
 
 <div class="content">

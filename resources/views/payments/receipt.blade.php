@@ -3,7 +3,7 @@
 @section('content')
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'DejaVu Sans', Arial, sans-serif;
             margin: 0;
             padding: 20px;
         }
@@ -156,7 +156,18 @@
             <div class="print-section">
                 <button onclick="window.print();" class="print-button">Print Receipt</button>
             </div>
-            <img src="{{ asset('assets/img/logo.png') }}" alt="EasyRent Logo" class="logo">
+            @php
+                $logoPath = public_path('assets/images/logo-small.png');
+                $logoData = '';
+                if (file_exists($logoPath)) {
+                    $logoData = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+                }
+            @endphp
+            @if($logoData)
+                <img src="{{ $logoData }}" alt="EasyRent Logo" class="logo">
+            @else
+                <img src="{{ asset('assets/images/logo-small.png') }}" alt="EasyRent Logo" class="logo">
+            @endif
             <h1 class="receipt-title">Payment Receipt</h1>
             <p>Transaction ID: {{ $payment->transaction_id }}</p>
         </div>

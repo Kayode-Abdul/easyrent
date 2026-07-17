@@ -416,7 +416,7 @@ class RegionalCommissionController extends Controller
     private function validateCommissionRate(Request $request, $excludeId = null)
     {
         $rules = [
-            'region' => 'required|string|max:100',
+            'region' => ['required', 'string', 'max:100'],
             'role_id' => 'required|exists:roles,id',
             'commission_percentage' => 'required|numeric|min:0|max:100',
             'effective_from' => 'nullable|date',
@@ -431,7 +431,7 @@ class RegionalCommissionController extends Controller
         }
         
         if (!$request->boolean('replace_existing')) {
-            $rules['region'] = [$rules['region'], $uniqueRule];
+            $rules['region'][] = $uniqueRule;
         }
 
         return Validator::make($request->all(), $rules, [

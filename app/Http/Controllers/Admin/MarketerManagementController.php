@@ -31,9 +31,9 @@ class MarketerManagementController extends Controller
     public function index()
     {
         $stats = [
-            'total_marketers' => User::where('role', 3)->count(),
-            'active_marketers' => User::where('role', 3)->where('marketer_status', 'active')->count(),
-            'pending_marketers' => User::where('role', 3)->where('marketer_status', 'pending')->count(),
+            'total_marketers' => User::marketers()->count(),
+            'active_marketers' => User::marketers()->where('marketer_status', 'active')->count(),
+            'pending_marketers' => User::marketers()->where('marketer_status', 'pending')->count(),
             'total_referrals' => Referral::count(),
             'successful_referrals' => Referral::whereHas('referred', function ($q) {
             $q->where('role', 2); // Landlords
@@ -43,7 +43,7 @@ class MarketerManagementController extends Controller
         ];
 
         // Recent marketer applications
-        $recentApplications = User::where('role', 3)
+        $recentApplications = User::marketers()
             ->where('marketer_status', 'pending')
             ->with('marketerProfile')
             ->latest()
@@ -51,7 +51,7 @@ class MarketerManagementController extends Controller
             ->get();
 
         // Top performing marketers
-        $topMarketers = User::where('role', 3)
+        $topMarketers = User::marketers()
             ->where('marketer_status', 'active')
             ->withCount('referrals')
             ->orderBy('referrals_count', 'desc')
@@ -78,7 +78,7 @@ class MarketerManagementController extends Controller
      */
     public function marketers(Request $request)
     {
-        $query = User::where('role', 3)->with('marketerProfile');
+        $query = User::marketers()->with('marketerProfile');
 
         // Filter by status
         if ($request->filled('status')) {
@@ -370,7 +370,7 @@ class MarketerManagementController extends Controller
             $date = Carbon::now()->subMonths($i);
             $monthlyData[] = [
                 'month' => $date->format('M Y'),
-                'new_marketers' => User::where('role', 5)
+                'new_marketers' => User::marketers()
                 ->whereMonth('created_at', $date->month)
                 ->whereYear('created_at', $date->year)
                 ->count(),
@@ -385,7 +385,7 @@ class MarketerManagementController extends Controller
         }
 
         // Top performers
-        $topPerformers = User::where('role', 3)
+        $topPerformers = User::marketers()
             ->where('marketer_status', 'active')
             ->withCount('referrals')
             ->with('marketerProfile')

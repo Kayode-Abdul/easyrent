@@ -30,7 +30,8 @@ class MoneyAmount implements \JsonSerializable, \Stringable
 
     public function __toString(): string
     {
-        return $this->symbol . $this->formatted;
+        $space = preg_match('/[A-Za-z]/', $this->symbol) ? ' ' : '';
+        return $this->symbol . $space . $this->formatted;
     }
 
     public function jsonSerialize(): string

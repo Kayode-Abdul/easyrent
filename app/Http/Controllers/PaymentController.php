@@ -148,6 +148,38 @@ class PaymentController extends Controller
             $companyRetained = 0;
         }
 
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'payment' => [
+                    'transaction_id' => $payment->transaction_id,
+                    'amount_formatted' => $payment->getFormattedAmount(),
+                    'currency_code' => $payment->currency ? $payment->currency->code : ($payment->apartment->currency ? $payment->apartment->currency->code : null)
+                ],
+                'breakdown' => [
+                    'totalPlatformFee' => format_money($totalPlatformFee, $payment->currency ?? ($payment->apartment->currency ?? null)),
+                    'companyRetained' => format_money($companyRetained, $payment->currency ?? ($payment->apartment->currency ?? null)),
+                    'totalDistributed' => format_money($totalDistributed, $payment->currency ?? ($payment->apartment->currency ?? null))
+                ],
+                'commissions' => $commissionPayments->map(function($c) use ($payment) {
+                    $tierFormatted = '';
+                    if($c->commission_tier == 'super_marketer') $tierFormatted = 'Super Marketer';
+                    elseif($c->commission_tier == 'marketer') $tierFormatted = 'Marketer';
+                    elseif($c->commission_tier == 'regional_manager') $tierFormatted = 'Regional Manager';
+                    elseif($c->commission_tier == 'standard_referrer') $tierFormatted = 'Standard Referrer';
+                    else $tierFormatted = ucfirst(str_replace('_', ' ', $c->commission_tier));
+                    
+                    return [
+                        'tier' => $tierFormatted,
+                        'recipient' => $c->marketer ? $c->marketer->first_name . ' ' . $c->marketer->last_name . ' (' . $c->marketer->email . ')' : 'N/A',
+                        'rate' => $c->regional_rate_applied . '%',
+                        'amount' => format_money($c->total_amount, $payment->currency ?? ($payment->apartment->currency ?? null)),
+                        'status' => ucfirst($c->payment_status)
+                    ];
+                })
+            ]);
+        }
+
         return view('payments.commissions', compact('payment', 'commissionPayments', 'totalPlatformFee', 'totalDistributed', 'companyRetained'));
     }
 
@@ -213,7 +245,7 @@ class PaymentController extends Controller
                 'email' => 'required|email',
                 'amount' => 'required|numeric|min:0.01',
                 'metadata' => 'required',
-                'gateway' => 'required|in:paystack,flutterwave,googlepay'
+                'gateway' => 'required|in:paystack,flutterwave'
             ]);
 
             // Parse metadata
@@ -1416,7 +1448,7 @@ class PaymentController extends Controller
 
         $payments = $query->with('currency')->get();
         
-        $totalRevenueByCurrency = $payments->groupBy('currency_id')->map(function ($group) {
+        $totalRevenueByCurrency = $payments->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })->map(function ($group) {
             return [
                 'amount' => $group->sum('amount'),
                 'symbol' => $group->first()->currency->symbol ?? '₦',
@@ -1430,7 +1462,7 @@ class PaymentController extends Controller
             return $p->created_at->year == Carbon::now()->year;
         });
 
-        $monthlyAverageByCurrency = $currentYearPayments->groupBy('currency_id')->map(function ($group) {
+        $monthlyAverageByCurrency = $currentYearPayments->groupBy(function($item) { return $item->currency->code ?? 'NGN'; })->map(function ($group) {
             return [
                 'amount' => $group->avg('amount') ?? 0,
                 'symbol' => $group->first()->currency->symbol ?? '₦',
